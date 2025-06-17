@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search, Download, Edit, Trash2 } from 'lucide-react';
 import { useMaintenance } from '@/hooks/useMaintenance';
@@ -58,15 +57,13 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
     }
   };
 
-  const handleDateSelect = (date: Date | undefined) => {
-    if (date) {
-      setSelectedDate(date);
-      const tasksForDate = getTasksForDate(date);
-      if (tasksForDate.length > 0) {
-        setSelectedTask(tasksForDate[0]);
-      } else {
-        setSelectedTask(null);
-      }
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date);
+    const tasksForDate = getTasksForDate(date);
+    if (tasksForDate.length > 0) {
+      setSelectedTask(tasksForDate[0]);
+    } else {
+      setSelectedTask(null);
     }
   };
 
@@ -84,16 +81,16 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusTextColor = (status: string) => {
     switch (status) {
-      case 'overdue': return '🔴';
-      case 'due_soon': return '🟡';
-      case 'up_to_date': return '🟢';
-      default: return '⚪';
+      case 'overdue': return 'text-red-800 bg-red-100';
+      case 'due_soon': return 'text-yellow-800 bg-yellow-100';
+      case 'up_to_date': return 'text-green-800 bg-green-100';
+      default: return 'text-gray-800 bg-gray-100';
     }
   };
 
-  const navigateMonth = (direction: 'prev' | 'next') => {
+  const navigateDate = (direction: 'prev' | 'next') => {
     const newDate = new Date(selectedDate);
     if (direction === 'prev') {
       if (viewMode === 'day') {
@@ -126,36 +123,6 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
     }
   };
 
-  const selectedDateTasks = getTasksForDate(selectedDate);
-  const upcomingTasks = getUpcomingTasks();
-
-  // Custom day content for calendar with task indicators
-  const renderDayContent = (date: Date) => {
-    const dayTasks = getTasksForDate(date);
-    if (dayTasks.length === 0) return null;
-
-    return (
-      <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex flex-col gap-1 items-center">
-        <div className="flex gap-1 flex-wrap justify-center">
-          {dayTasks.slice(0, 3).map((task, index) => (
-            <div
-              key={task.id}
-              className={`w-2 h-2 rounded-full ${getStatusColor(task.status)}`}
-            />
-          ))}
-          {dayTasks.length > 3 && (
-            <div className="w-2 h-2 rounded-full bg-gray-400" />
-          )}
-        </div>
-        {dayTasks.length > 0 && (
-          <div className="text-xs text-gray-600 truncate max-w-12 text-center">
-            {dayTasks[0].title}
-          </div>
-        )}
-      </div>
-    );
-  };
-
   const formatDateHeader = () => {
     if (viewMode === 'day') {
       return selectedDate.toLocaleDateString('en-US', { 
@@ -175,6 +142,218 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
     }
   };
 
+  // Generate calendar grid
+  const generateCalendarGrid = () => {
+    if (viewMode === 'month') {
+      return generateMonthView();
+    } else if (viewMode === 'week') {
+      return generateWeekView();
+    } else {
+      return generateDayView();
+    }
+  };
+
+  const generateMonthView = () => {
+    const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+    const endOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
+    const startOfWeek = new Date(startOfMonth);
+    startOfWeek.setDate(startOfMonth.getDate() - startOfMonth.getDay());
+    
+    const days = [];
+    const current = new Date(startOfWeek);
+    
+    // Generate 6 weeks (42 days) to fill the grid
+    for (let week = 0; week < 6; week++) {
+      const weekDays = [];
+      for (let day = 0; day < 7; day++) {
+        const date = new Date(current);
+        const dayTasks = getTasksForDate(date);
+        const isCurrentMonth = date.getMonth() === selectedDate.getMonth();
+        const isSelected = date.toDateString() === selectedDate.toDateString();
+        const isToday = date.toDateString() === new Date().toDateString();
+        
+        weekDays.push(
+          <div
+            key={date.toISOString()}
+            className={`
+              min-h-[120px] p-2 border border-gray-100 cursor-pointer transition-all duration-200
+              ${isSelected ? 'ring-2 ring-primary/50 bg-primary/5' : 'hover:bg-gray-50'}
+              ${!isCurrentMonth ? 'text-gray-400 bg-gray-25' : ''}
+              ${isToday ? 'bg-blue-50 border-blue-200' : ''}
+            `}
+            onClick={() => handleDateSelect(date)}
+          >
+            <div className={`
+              text-sm font-medium mb-2 
+              ${isToday ? 'text-blue-600 font-semibold' : ''}
+              ${!isCurrentMonth ? 'text-gray-400' : ''}
+            `}>
+              {date.getDate()}
+            </div>
+            <div className="space-y-1">
+              {dayTasks.slice(0, 3).map((task, index) => (
+                <div
+                  key={task.id}
+                  className={`
+                    text-xs px-2 py-1 rounded-md truncate cursor-pointer transition-colors
+                    ${getStatusTextColor(task.status)}
+                    hover:shadow-sm
+                  `}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTaskClick(task);
+                  }}
+                  title={task.title}
+                >
+                  {task.title}
+                </div>
+              ))}
+              {dayTasks.length > 3 && (
+                <div className="text-xs text-gray-500 px-2 font-medium">
+                  +{dayTasks.length - 3} more
+                </div>
+              )}
+            </div>
+          </div>
+        );
+        current.setDate(current.getDate() + 1);
+      }
+      days.push(
+        <div key={week} className="grid grid-cols-7">
+          {weekDays}
+        </div>
+      );
+    }
+    
+    return days;
+  };
+
+  const generateWeekView = () => {
+    const startOfWeek = new Date(selectedDate);
+    startOfWeek.setDate(selectedDate.getDate() - selectedDate.getDay());
+    
+    const weekDays = [];
+    const current = new Date(startOfWeek);
+    
+    for (let day = 0; day < 7; day++) {
+      const date = new Date(current);
+      const dayTasks = getTasksForDate(date);
+      const isSelected = date.toDateString() === selectedDate.toDateString();
+      const isToday = date.toDateString() === new Date().toDateString();
+      
+      weekDays.push(
+        <div
+          key={date.toISOString()}
+          className={`
+            min-h-[400px] p-3 border border-gray-100 cursor-pointer transition-all duration-200
+            ${isSelected ? 'ring-2 ring-primary/50 bg-primary/5' : 'hover:bg-gray-50'}
+            ${isToday ? 'bg-blue-50 border-blue-200' : ''}
+          `}
+          onClick={() => handleDateSelect(date)}
+        >
+          <div className={`
+            text-center mb-3 pb-2 border-b border-gray-200
+            ${isToday ? 'text-blue-600 font-semibold' : ''}
+          `}>
+            <div className="text-xs text-gray-500 uppercase tracking-wide">
+              {date.toLocaleDateString('en-US', { weekday: 'short' })}
+            </div>
+            <div className="text-lg font-medium">
+              {date.getDate()}
+            </div>
+          </div>
+          <div className="space-y-2">
+            {dayTasks.map((task) => (
+              <div
+                key={task.id}
+                className={`
+                  text-sm px-3 py-2 rounded-lg cursor-pointer transition-colors
+                  ${getStatusTextColor(task.status)}
+                  hover:shadow-sm
+                `}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleTaskClick(task);
+                }}
+              >
+                <div className="font-medium truncate">{task.title}</div>
+                <div className="text-xs opacity-70">
+                  {task.itemId && getItemById(task.itemId)?.name}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+      current.setDate(current.getDate() + 1);
+    }
+    
+    return (
+      <div className="grid grid-cols-7 gap-1">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+          <div key={day} className="text-center text-sm font-medium text-gray-500 py-2 border-b">
+            {day}
+          </div>
+        ))}
+        {weekDays}
+      </div>
+    );
+  };
+
+  const generateDayView = () => {
+    const dayTasks = getTasksForDate(selectedDate);
+    const isToday = selectedDate.toDateString() === new Date().toDateString();
+    
+    return (
+      <div className="h-[600px] border border-gray-200 rounded-lg overflow-hidden">
+        <div className={`
+          p-4 border-b border-gray-200
+          ${isToday ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'}
+        `}>
+          <div className="text-center">
+            <div className="text-sm text-gray-500 uppercase tracking-wide">
+              {selectedDate.toLocaleDateString('en-US', { weekday: 'long' })}
+            </div>
+            <div className={`text-2xl font-semibold ${isToday ? 'text-blue-600' : ''}`}>
+              {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            </div>
+          </div>
+        </div>
+        <div className="p-4 space-y-3 overflow-y-auto max-h-[500px]">
+          {dayTasks.length === 0 ? (
+            <div className="text-center py-12">
+              <CalendarIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">No tasks scheduled for this day</p>
+            </div>
+          ) : (
+            dayTasks.map((task) => (
+              <div
+                key={task.id}
+                className={`
+                  p-4 rounded-lg cursor-pointer transition-all duration-200
+                  ${getStatusTextColor(task.status)}
+                  hover:shadow-md
+                `}
+                onClick={() => handleTaskClick(task)}
+              >
+                <div className="font-semibold text-lg mb-2">{task.title}</div>
+                {task.notes && (
+                  <div className="text-sm opacity-80 mb-2">{task.notes}</div>
+                )}
+                <div className="text-sm opacity-70">
+                  {task.itemId && getItemById(task.itemId)?.name}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const selectedDateTasks = getTasksForDate(selectedDate);
+  const upcomingTasks = getUpcomingTasks();
+
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Header Controls */}
@@ -184,8 +363,8 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigateMonth('prev')}
-              className="p-2"
+              onClick={() => navigateDate('prev')}
+              className="p-2 hover:bg-gray-100 rounded-full"
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
@@ -197,8 +376,8 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigateMonth('next')}
-              className="p-2"
+              onClick={() => navigateDate('next')}
+              className="p-2 hover:bg-gray-100 rounded-full"
             >
               <ChevronRight className="w-4 h-4" />
             </Button>
@@ -207,6 +386,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
               variant="outline"
               size="sm"
               onClick={goToToday}
+              className="ml-4"
             >
               Today
             </Button>
@@ -218,7 +398,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
                 variant={viewMode === 'day' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('day')}
-                className="px-3 py-1 text-xs"
+                className="px-3 py-1 text-xs rounded-md"
               >
                 Day
               </Button>
@@ -226,7 +406,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
                 variant={viewMode === 'week' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('week')}
-                className="px-3 py-1 text-xs"
+                className="px-3 py-1 text-xs rounded-md"
               >
                 Week
               </Button>
@@ -234,7 +414,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
                 variant={viewMode === 'month' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('month')}
-                className="px-3 py-1 text-xs"
+                className="px-3 py-1 text-xs rounded-md"
               >
                 Month
               </Button>
@@ -255,67 +435,35 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Calendar Section - Now 75% width and much larger */}
+        {/* Calendar Section */}
         <div className="flex-1 p-6" style={{ flex: '0 0 75%' }}>
           <Card className="h-full">
             <CardContent className="p-6 h-full">
-              <div className="h-full" style={{ minHeight: '700px' }}>
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={handleDateSelect}
-                  className="w-full h-full"
-                  classNames={{
-                    months: "flex flex-col space-y-4 h-full",
-                    month: "space-y-4 flex-1",
-                    table: "w-full border-collapse h-full",
-                    head_row: "flex mb-4",
-                    head_cell: "text-muted-foreground rounded-md flex-1 font-normal text-sm text-center py-2",
-                    row: "flex flex-1 mt-2",
-                    cell: "flex-1 text-center text-sm p-2 relative border border-gray-100 min-h-[120px] hover:bg-gray-50",
-                    day: "h-full w-full flex flex-col items-start justify-start p-2 font-normal hover:bg-transparent",
-                    day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
-                    day_today: "bg-accent text-accent-foreground font-semibold",
-                    day_outside: "text-muted-foreground opacity-50",
-                  }}
-                  components={{
-                    DayContent: ({ date }) => (
-                      <div className="relative w-full h-full flex flex-col">
-                        <span className="text-sm font-medium mb-2">{date.getDate()}</span>
-                        <div className="flex-1 w-full">
-                          {getTasksForDate(date).slice(0, 3).map((task, index) => (
-                            <div
-                              key={task.id}
-                              className={`text-xs px-2 py-1 mb-1 rounded truncate cursor-pointer ${
-                                task.status === 'overdue' ? 'bg-red-100 text-red-800' :
-                                task.status === 'due_soon' ? 'bg-yellow-100 text-yellow-800' : 
-                                'bg-green-100 text-green-800'
-                              }`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleTaskClick(task);
-                              }}
-                              title={task.title}
-                            >
-                              {task.title}
-                            </div>
-                          ))}
-                          {getTasksForDate(date).length > 3 && (
-                            <div className="text-xs text-gray-500 px-2">
-                              +{getTasksForDate(date).length - 3} more
-                            </div>
-                          )}
+              <div className="h-full min-h-[600px]">
+                {viewMode === 'month' && (
+                  <div className="h-full flex flex-col">
+                    {/* Month header */}
+                    <div className="grid grid-cols-7 mb-4">
+                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                        <div key={day} className="text-center text-sm font-medium text-gray-500 py-3 border-b">
+                          {day}
                         </div>
-                      </div>
-                    )
-                  }}
-                />
+                      ))}
+                    </div>
+                    {/* Calendar grid */}
+                    <div className="flex-1">
+                      {generateCalendarGrid()}
+                    </div>
+                  </div>
+                )}
+                {viewMode === 'week' && generateCalendarGrid()}
+                {viewMode === 'day' && generateCalendarGrid()}
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Sidebar - Now 25% width */}
+        {/* Sidebar */}
         <div className="p-6 space-y-6" style={{ flex: '0 0 25%', minWidth: '300px' }}>
           {/* Date Panel */}
           <Card>
@@ -342,7 +490,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
                     return (
                       <div
                         key={task.id}
-                        className="p-3 rounded-lg border cursor-pointer hover:bg-gray-50"
+                        className="p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors"
                         onClick={() => handleTaskClick(task)}
                       >
                         <div className="flex items-start justify-between mb-2">
@@ -385,11 +533,14 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
                     return (
                       <div
                         key={task.id}
-                        className="p-3 rounded-lg border cursor-pointer hover:bg-gray-50"
+                        className="p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors"
                         onClick={() => handleTaskClick(task)}
                       >
                         <div className="flex items-start gap-2">
-                          <span className="text-lg">{getStatusIcon(task.status)}</span>
+                          <span className="text-lg">
+                            {task.status === 'overdue' ? '🔴' : 
+                             task.status === 'due_soon' ? '🟡' : '🟢'}
+                          </span>
                           <div className="flex-1 min-w-0">
                             <h4 className="font-medium text-sm truncate">{task.title}</h4>
                             <p className="text-xs text-gray-600">
