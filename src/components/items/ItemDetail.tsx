@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Edit } from 'lucide-react';
-import { Item } from '@/hooks/useItems';
+import { Item, useItems } from '@/hooks/useItems';
 import { useMaintenance } from '@/hooks/useMaintenance';
 import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
 import TaskEditForm from '@/components/maintenance/TaskEditForm';
@@ -22,13 +22,22 @@ interface ItemDetailProps {
   highlightTaskId?: string;
 }
 
+interface Document {
+  id: string;
+  name: string;
+  type: string;
+  url: string;
+  uploadDate: string;
+}
+
 const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: ItemDetailProps) => {
   const { getTasksByItem } = useMaintenance();
+  const { updateItem } = useItems();
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isEditItemModalOpen, setIsEditItemModalOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
-  const [notes, setNotes] = useState(item.description || '');
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [notes, setNotes] = useState(item.notes || '');
+  const [documents, setDocuments] = useState<Document[]>(item.documents || []);
   const [activeTab, setActiveTab] = useState(defaultTab);
   
   const itemTasks = getTasksByItem(item.id);
@@ -57,24 +66,33 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
     }
   }, [highlightTaskId, activeTab]);
 
+  // Update local state when item changes
+  useEffect(() => {
+    setNotes(item.notes || '');
+    setDocuments(item.documents || []);
+  }, [item]);
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Simulate file upload
-      const newDoc = {
+      const newDoc: Document = {
         id: Date.now().toString(),
         name: file.name,
         type: file.type,
         url: URL.createObjectURL(file),
         uploadDate: new Date().toISOString(),
       };
-      setDocuments(prev => [...prev, newDoc]);
+      const updatedDocuments = [...documents, newDoc];
+      setDocuments(updatedDocuments);
+      
+      // Save to item data
+      updateItem(item.id, { documents: updatedDocuments });
     }
   };
 
   const handleSaveNotes = () => {
-    // In a real app, this would call updateItem
-    console.log('Saving notes:', notes);
+    updateItem(item.id, { notes });
+    console.log('Notes saved:', notes);
   };
 
   const handleEditTask = (taskId: string) => {

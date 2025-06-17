@@ -1,6 +1,14 @@
 
 import { createContext, useContext, useState, ReactNode } from 'react';
 
+interface Document {
+  id: string;
+  name: string;
+  type: string;
+  url: string;
+  uploadDate: string;
+}
+
 export interface Item {
   id: string;
   userId: string;
@@ -12,6 +20,8 @@ export interface Item {
   purchaseDate?: string;
   warrantyDate?: string;
   qrCodeId?: string;
+  notes?: string;
+  documents?: Document[];
   createdAt: string;
   updatedAt: string;
 }
@@ -35,6 +45,8 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
       category: 'Appliance',
       room: 'Kitchen',
       description: 'Samsung French Door - Model RF28R7351SR',
+      notes: '',
+      documents: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     },
@@ -45,6 +57,8 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
       category: 'Electronics',
       room: 'Office',
       description: '13-inch M2 - Serial: ABC123XYZ',
+      notes: '',
+      documents: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
