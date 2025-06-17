@@ -158,11 +158,18 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
     const startOfWeek = new Date(startOfMonth);
     startOfWeek.setDate(startOfMonth.getDate() - startOfMonth.getDay());
     
+    // Calculate how many weeks we need to show all days of the current month
+    const endOfWeek = new Date(endOfMonth);
+    endOfWeek.setDate(endOfMonth.getDate() + (6 - endOfMonth.getDay()));
+    
+    const totalDays = Math.ceil((endOfWeek.getTime() - startOfWeek.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const weeksNeeded = Math.ceil(totalDays / 7);
+    
     const days = [];
     const current = new Date(startOfWeek);
     
-    // Generate 6 weeks (42 days) to fill the grid
-    for (let week = 0; week < 6; week++) {
+    // Generate only the weeks needed to show the current month
+    for (let week = 0; week < weeksNeeded; week++) {
       const weekDays = [];
       for (let day = 0; day < 7; day++) {
         const date = new Date(current);
