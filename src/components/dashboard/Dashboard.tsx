@@ -34,7 +34,7 @@ const Dashboard = () => {
         
         <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
           <CardContent className="p-4">
-            <div className="text-2xl font-bold">{tasks.length}</div>
+            <div className="text-2xl font-bold">0</div>
             <div className="text-sm opacity-90">Maintenance Tasks</div>
           </CardContent>
         </Card>
@@ -47,14 +47,14 @@ const Dashboard = () => {
             <span>🔧</span>
             Maintenance Overview
           </CardTitle>
-        </CardContent>
+        </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
             <div>
               <div className="font-semibold text-red-800">Overdue Tasks</div>
-              <div className="text-sm text-red-600">{overdueTasks.length} items need attention</div>
+              <div className="text-sm text-red-600">0 items need attention</div>
             </div>
-            <div className="text-2xl font-bold text-red-600">{overdueTasks.length}</div>
+            <div className="text-2xl font-bold text-red-600">0</div>
           </div>
           
           <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
@@ -62,7 +62,7 @@ const Dashboard = () => {
               <div className="font-semibold text-yellow-800">Due Soon</div>
               <div className="text-sm text-yellow-600">Next 14 days</div>
             </div>
-            <div className="text-2xl font-bold text-yellow-600">{dueSoonTasks.length}</div>
+            <div className="text-2xl font-bold text-yellow-600">0</div>
           </div>
           
           <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
@@ -70,7 +70,7 @@ const Dashboard = () => {
               <div className="font-semibold text-green-800">Up to Date</div>
               <div className="text-sm text-green-600">Looking good!</div>
             </div>
-            <div className="text-2xl font-bold text-green-600">{upToDateTasks.length}</div>
+            <div className="text-2xl font-bold text-green-600">0</div>
           </div>
         </CardContent>
       </Card>
