@@ -7,10 +7,41 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { MaintenanceProvider } from "@/hooks/useMaintenance";
 import { ItemsProvider } from "@/hooks/useItems";
-import Index from "./pages/Index";
+import { useAuth } from "@/hooks/useAuth";
+import AuthForm from "@/components/auth/AuthForm";
+import NavBar from "@/components/navigation/NavBar";
+import DashboardPage from "./pages/Dashboard";
+import ItemsPage from "./pages/ItemsPage";
+import ItemDetailPage from "./pages/ItemDetailPage";
+import MaintenancePage from "./pages/MaintenancePage";
+import ScannerPage from "./pages/ScannerPage";
+import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+const AppContent = () => {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return <AuthForm />;
+  }
+
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/items" element={<ItemsPage />} />
+        <Route path="/items/:itemId" element={<ItemDetailPage />} />
+        <Route path="/maintenance" element={<MaintenancePage />} />
+        <Route path="/scanner" element={<ScannerPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <NavBar />
+    </>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -21,11 +52,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <AppContent />
             </BrowserRouter>
           </MaintenanceProvider>
         </ItemsProvider>
