@@ -9,15 +9,22 @@ import ItemForm from './ItemForm';
 
 interface ItemCardProps {
   item: Item;
+  onClick?: () => void;
 }
 
-const ItemCard = ({ item }: ItemCardProps) => {
+const ItemCard = ({ item, onClick }: ItemCardProps) => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
+  const handleCardClick = () => {
+    if (onClick) {
+      onClick();
+    }
+  };
+
   return (
     <>
-      <Card className="hover:shadow-md transition-shadow">
+      <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={handleCardClick}>
         <CardContent className="p-4">
           <div className="space-y-3">
             {/* Item Image/Icon */}
@@ -70,14 +77,20 @@ const ItemCard = ({ item }: ItemCardProps) => {
                 variant="outline" 
                 size="sm" 
                 className="flex-1"
-                onClick={() => setIsDetailModalOpen(true)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDetailModalOpen(true);
+                }}
               >
                 View Details
               </Button>
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => setIsEditModalOpen(true)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsEditModalOpen(true);
+                }}
               >
                 Edit
               </Button>
