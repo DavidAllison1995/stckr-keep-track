@@ -10,7 +10,11 @@ import MaintenanceTaskForm from './MaintenanceTaskForm';
 
 type StatusFilter = 'all' | 'overdue' | 'due_soon' | 'up_to_date';
 
-const MaintenanceCalendar = () => {
+interface MaintenanceCalendarProps {
+  onNavigateToItem?: (itemId: string, taskId?: string) => void;
+}
+
+const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => {
   const { tasks, getTasksByStatus } = useMaintenance();
   const { getItemById } = useItems();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -23,11 +27,18 @@ const MaintenanceCalendar = () => {
 
   const filteredTasks = statusFilter === 'all' ? tasks : getTasksByStatus(statusFilter);
 
+  const navigateToItem = (itemId: string, taskId?: string) => {
+    if (onNavigateToItem) {
+      onNavigateToItem(itemId, taskId);
+    } else {
+      // Default behavior - log for now
+      console.log('Navigate to item:', itemId, 'task:', taskId);
+    }
+  };
+
   const handleTaskClick = (task: any) => {
     if (task.itemId) {
-      // Navigate to item detail with maintenance tab open
-      // This would be implemented with navigation state
-      console.log('Navigate to item:', task.itemId, 'maintenance tab');
+      navigateToItem(task.itemId, task.id);
     }
   };
 
@@ -151,33 +162,36 @@ const MaintenanceCalendar = () => {
                     {filteredTasks.map((task) => {
                       const assignedItem = task.itemId ? getItemById(task.itemId) : null;
                       return (
-                        <div 
-                          key={task.id} 
-                          className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                        <Button
+                          key={task.id}
+                          variant="ghost"
+                          className="w-full justify-start p-0 h-auto hover:bg-gray-100"
                           onClick={() => handleTaskClick(task)}
                         >
-                          <div className={`w-3 h-3 rounded-full ${
-                            task.status === 'overdue' ? 'bg-red-500' :
-                            task.status === 'due_soon' ? 'bg-yellow-500' : 'bg-green-500'
-                          }`} />
-                          <div className="flex-1">
-                            <div className="font-medium">{task.title}</div>
-                            <div className="text-sm text-gray-600">Due: {new Date(task.date).toLocaleDateString()}</div>
-                            {assignedItem && (
-                              <div className="text-sm text-blue-600">📦 {assignedItem.name}</div>
-                            )}
-                            {task.notes && (
-                              <div className="text-sm text-gray-500">{task.notes}</div>
-                            )}
+                          <div className="flex items-center gap-3 p-3 w-full">
+                            <div className={`w-3 h-3 rounded-full ${
+                              task.status === 'overdue' ? 'bg-red-500' :
+                              task.status === 'due_soon' ? 'bg-yellow-500' : 'bg-green-500'
+                            }`} />
+                            <div className="flex-1 text-left">
+                              <div className="font-medium">{task.title}</div>
+                              <div className="text-sm text-gray-600">Due: {new Date(task.date).toLocaleDateString()}</div>
+                              {assignedItem && (
+                                <div className="text-sm text-blue-600">📦 {assignedItem.name}</div>
+                              )}
+                              {task.notes && (
+                                <div className="text-sm text-gray-500">{task.notes}</div>
+                              )}
+                            </div>
+                            <div className={`px-2 py-1 text-xs rounded-full ${
+                              task.status === 'overdue' ? 'bg-red-100 text-red-800' :
+                              task.status === 'due_soon' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
+                            }`}>
+                              {task.status === 'overdue' ? 'Overdue' :
+                               task.status === 'due_soon' ? 'Due Soon' : 'Up to Date'}
+                            </div>
                           </div>
-                          <div className={`px-2 py-1 text-xs rounded-full ${
-                            task.status === 'overdue' ? 'bg-red-100 text-red-800' :
-                            task.status === 'due_soon' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-                          }`}>
-                            {task.status === 'overdue' ? 'Overdue' :
-                             task.status === 'due_soon' ? 'Due Soon' : 'Up to Date'}
-                          </div>
-                        </div>
+                        </Button>
                       );
                     })}
                   </div>

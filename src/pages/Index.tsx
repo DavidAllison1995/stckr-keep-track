@@ -7,19 +7,48 @@ import ItemsList from '@/components/items/ItemsList';
 import MaintenanceCalendar from '@/components/maintenance/MaintenanceCalendar';
 import QRScanner from '@/components/qr/QRScanner';
 import Profile from '@/components/profile/Profile';
+import ItemDetail from '@/components/items/ItemDetail';
 import { useAuth } from '@/hooks/useAuth';
+import { useItems } from '@/hooks/useItems';
 
 const Index = () => {
   const { user, isAuthenticated } = useAuth();
+  const { getItemById } = useItems();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [itemDetailTab, setItemDetailTab] = useState('details');
+  const [highlightTaskId, setHighlightTaskId] = useState<string | null>(null);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
+    if (tab !== 'items') {
+      setSelectedItemId(null);
+    }
+  };
+
+  const handleNavigateToItem = (itemId: string, taskId?: string) => {
+    setSelectedItemId(itemId);
+    setItemDetailTab('maintenance');
+    setHighlightTaskId(taskId || null);
+    setActiveTab('items');
+  };
+
+  const handleItemSelect = (itemId: string) => {
+    setSelectedItemId(itemId);
+    setItemDetailTab('details');
+    setHighlightTaskId(null);
+  };
+
+  const handleCloseItemDetail = () => {
+    setSelectedItemId(null);
+    setHighlightTaskId(null);
   };
 
   if (!isAuthenticated) {
     return <AuthForm />;
   }
+
+  const selectedItem = selectedItemId ? getItemById(selectedItemId) : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
@@ -31,10 +60,19 @@ const Index = () => {
                 <Dashboard onTabChange={handleTabChange} />
               </TabsContent>
               <TabsContent value="items" className="mt-0">
-                <ItemsList />
+                {selectedItem ? (
+                  <ItemDetail 
+                    item={selectedItem} 
+                    onClose={handleCloseItemDetail}
+                    defaultTab={itemDetailTab}
+                    highlightTaskId={highlightTaskId}
+                  />
+                ) : (
+                  <ItemsList onItemSelect={handleItemSelect} />
+                )}
               </TabsContent>
               <TabsContent value="maintenance" className="mt-0">
-                <MaintenanceCalendar />
+                <MaintenanceCalendar onNavigateToItem={handleNavigateToItem} />
               </TabsContent>
               <TabsContent value="scanner" className="mt-0">
                 <QRScanner />

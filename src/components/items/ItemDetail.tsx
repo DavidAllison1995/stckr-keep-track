@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,23 +8,52 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Edit } from 'lucide-react';
 import { Item } from '@/hooks/useItems';
 import { useMaintenance } from '@/hooks/useMaintenance';
 import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
+import TaskEditForm from '@/components/maintenance/TaskEditForm';
 
 interface ItemDetailProps {
   item: Item;
   onClose: () => void;
   defaultTab?: string;
+  highlightTaskId?: string;
 }
 
-const ItemDetail = ({ item, onClose, defaultTab = 'details' }: ItemDetailProps) => {
+const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: ItemDetailProps) => {
   const { getTasksByItem } = useMaintenance();
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [notes, setNotes] = useState(item.description || '');
   const [documents, setDocuments] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState(defaultTab);
   
   const itemTasks = getTasksByItem(item.id);
+  const editingTask = editingTaskId ? itemTasks.find(task => task.id === editingTaskId) : null;
+
+  // Effect to handle tab switching and highlighting
+  useEffect(() => {
+    if (defaultTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
+
+  // Effect to scroll to highlighted task
+  useEffect(() => {
+    if (highlightTaskId && activeTab === 'maintenance') {
+      setTimeout(() => {
+        const element = document.getElementById(`task-${highlightTaskId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.classList.add('bg-blue-100', 'border-blue-300');
+          setTimeout(() => {
+            element.classList.remove('bg-blue-100', 'border-blue-300');
+          }, 2000);
+        }
+      }, 100);
+    }
+  }, [highlightTaskId, activeTab]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -44,6 +73,14 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details' }: ItemDetailProps) 
   const handleSaveNotes = () => {
     // In a real app, this would call updateItem
     console.log('Saving notes:', notes);
+  };
+
+  const handleEditTask = (taskId: string) => {
+    setEditingTaskId(taskId);
+  };
+
+  const handleTaskEditSuccess = () => {
+    setEditingTaskId(null);
   };
 
   return (
@@ -86,7 +123,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details' }: ItemDetailProps) 
         </CardContent>
       </Card>
 
-      <Tabs defaultValue={defaultTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
@@ -155,7 +192,13 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details' }: ItemDetailProps) 
               ) : (
                 <div className="space-y-3">
                   {itemTasks.map((task) => (
-                    <div key={task.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div 
+                      key={task.id} 
+                      id={`task-${task.id}`}
+                      className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                        highlightTaskId === task.id ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'
+                      }`}
+                    >
                       <div className={`w-3 h-3 rounded-full ${
                         task.status === 'overdue' ? 'bg-red-500' :
                         task.status === 'due_soon' ? 'bg-yellow-500' : 'bg-green-500'
@@ -176,12 +219,35 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details' }: ItemDetailProps) 
                         {task.status === 'overdue' ? 'Overdue' :
                          task.status === 'due_soon' ? 'Due Soon' : 'Up to Date'}
                       </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditTask(task.id)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
                     </div>
                   ))}
                 </div>
               )}
             </CardContent>
           </Card>
+
+          {/* Task Edit Modal */}
+          <Dialog open={!!editingTaskId} onOpenChange={() => setEditingTaskId(null)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Maintenance Task</DialogTitle>
+              </DialogHeader>
+              {editingTask && (
+                <TaskEditForm
+                  task={editingTask}
+                  onSuccess={handleTaskEditSuccess}
+                  onCancel={() => setEditingTaskId(null)}
+                />
+              )}
+            </DialogContent>
+          </Dialog>
         </TabsContent>
         
         <TabsContent value="notes">
