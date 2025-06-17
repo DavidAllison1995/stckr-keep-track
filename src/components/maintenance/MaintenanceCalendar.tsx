@@ -64,6 +64,38 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
     }
   };
 
+  const handleEditTask = () => {
+    if (selectedTask) {
+      setEditDialogOpen(true);
+    }
+  };
+
+  const handleDeleteTask = () => {
+    if (selectedTask) {
+      setDeleteDialogOpen(true);
+    }
+  };
+
+  const handleTaskUpdateSuccess = () => {
+    // Refresh selected task data if it was updated
+    if (selectedTask) {
+      const updatedTask = tasks.find(task => task.id === selectedTask.id);
+      setSelectedTask(updatedTask || null);
+    }
+  };
+
+  const confirmDeleteTask = () => {
+    if (selectedTask) {
+      deleteTask(selectedTask.id);
+      toast({
+        title: "Task deleted",
+        description: "The maintenance task has been deleted successfully.",
+      });
+      setSelectedTask(null);
+      setDeleteDialogOpen(false);
+    }
+  };
+
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
     const tasksForDate = getTasksForDate(date);
