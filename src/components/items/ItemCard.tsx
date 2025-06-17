@@ -4,10 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Item } from '@/hooks/useItems';
-import { useDocumentViewer } from '@/hooks/useDocumentViewer';
 import ItemDetail from './ItemDetail';
 import ItemForm from './ItemForm';
-import DocumentViewer from '@/components/documents/DocumentViewer';
 
 interface ItemCardProps {
   item: Item;
@@ -17,7 +15,6 @@ interface ItemCardProps {
 const ItemCard = ({ item, onClick }: ItemCardProps) => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const { isOpen: isDocViewerOpen, fileUrl, fileName, openViewer, closeViewer } = useDocumentViewer();
 
   const handleCardClick = () => {
     if (onClick) {
@@ -43,6 +40,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
               )}
             </div>
 
+            {/* Item Info */}
             <div className="space-y-2">
               <h3 className="font-semibold text-lg line-clamp-1">{item.name}</h3>
               
@@ -73,6 +71,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
               )}
             </div>
 
+            {/* Actions */}
             <div className="flex gap-2 pt-2">
               <Button 
                 variant="outline" 
@@ -125,14 +124,6 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
           />
         </DialogContent>
       </Dialog>
-
-      {/* Document Viewer */}
-      <DocumentViewer
-        isOpen={isDocViewerOpen}
-        fileUrl={fileUrl}
-        fileName={fileName}
-        onClose={closeViewer}
-      />
     </>
   );
 };
