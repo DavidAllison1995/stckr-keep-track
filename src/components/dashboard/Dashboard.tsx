@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useItems } from '@/hooks/useItems';
 import { useMaintenance } from '@/hooks/useMaintenance';
+import { useNavigate } from 'react-router-dom';
 
 interface DashboardProps {
   onTabChange?: (tab: string) => void;
@@ -13,6 +14,7 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
   const { user } = useAuth();
   const { items } = useItems();
   const { tasks, getTasksByStatus } = useMaintenance();
+  const navigate = useNavigate();
 
   const overdueTasks = getTasksByStatus('overdue');
   const dueSoonTasks = getTasksByStatus('due_soon');
@@ -22,6 +24,22 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
     if (onTabChange) {
       onTabChange(tab);
     }
+  };
+
+  const handleItemsClick = () => {
+    navigate('/items');
+  };
+
+  const handleMaintenanceClick = () => {
+    navigate('/maintenance');
+  };
+
+  const handleTaskStatusClick = (status: string) => {
+    navigate(`/tasks/${status}`);
+  };
+
+  const handleItemClick = (itemId: string) => {
+    navigate(`/items/${itemId}`);
   };
 
   return (
@@ -37,7 +55,7 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
       <div className="grid grid-cols-2 gap-4">
         <Card 
           className="bg-gradient-to-br from-blue-500 to-blue-600 text-white cursor-pointer hover:from-blue-600 hover:to-blue-700 transition-colors"
-          onClick={() => handleStatsClick('items')}
+          onClick={handleItemsClick}
         >
           <CardContent className="p-4">
             <div className="text-2xl font-bold">{items.length}</div>
@@ -47,7 +65,7 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
         
         <Card 
           className="bg-gradient-to-br from-green-500 to-green-600 text-white cursor-pointer hover:from-green-600 hover:to-green-700 transition-colors"
-          onClick={() => handleStatsClick('maintenance')}
+          onClick={handleMaintenanceClick}
         >
           <CardContent className="p-4">
             <div className="text-2xl font-bold">{tasks.length}</div>
@@ -67,7 +85,7 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
         <CardContent className="space-y-3">
           <div 
             className="flex items-center justify-between p-3 bg-red-50 rounded-lg cursor-pointer hover:bg-red-100 transition-colors"
-            onClick={() => handleStatsClick('maintenance')}
+            onClick={() => handleTaskStatusClick('overdue')}
           >
             <div>
               <div className="font-semibold text-red-800">Overdue Tasks</div>
@@ -78,7 +96,7 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
           
           <div 
             className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg cursor-pointer hover:bg-yellow-100 transition-colors"
-            onClick={() => handleStatsClick('maintenance')}
+            onClick={() => handleTaskStatusClick('due-soon')}
           >
             <div>
               <div className="font-semibold text-yellow-800">Due Soon</div>
@@ -89,7 +107,7 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
           
           <div 
             className="flex items-center justify-between p-3 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
-            onClick={() => handleStatsClick('maintenance')}
+            onClick={() => handleTaskStatusClick('up-to-date')}
           >
             <div>
               <div className="font-semibold text-green-800">Up to Date</div>
@@ -108,7 +126,7 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
               <span>📦</span>
               Recent Items
             </span>
-            <Button variant="ghost" size="sm" onClick={() => handleStatsClick('items')}>
+            <Button variant="ghost" size="sm" onClick={handleItemsClick}>
               View All
             </Button>
           </CardTitle>
@@ -118,7 +136,7 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
             <div className="text-center py-8">
               <div className="text-4xl mb-2">📦</div>
               <p className="text-gray-600 mb-4">No items yet</p>
-              <Button onClick={() => handleStatsClick('items')}>Add Your First Item</Button>
+              <Button onClick={handleItemsClick}>Add Your First Item</Button>
             </div>
           ) : (
             <div className="space-y-3">
@@ -126,7 +144,7 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
                 <div 
                   key={item.id} 
                   className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
-                  onClick={() => handleStatsClick('items')}
+                  onClick={() => handleItemClick(item.id)}
                 >
                   <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
                     {item.photoUrl ? (
