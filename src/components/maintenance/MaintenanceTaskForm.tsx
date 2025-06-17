@@ -32,7 +32,7 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
     }
 
     addTask({
-      itemId: formData.selectedItemId || undefined,
+      itemId: formData.selectedItemId === 'unassigned' ? undefined : formData.selectedItemId || undefined,
       title: formData.title.trim(),
       notes: formData.notes || undefined,
       date: formData.date,
@@ -59,12 +59,12 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
       {!itemId && (
         <div>
           <Label htmlFor="item">Assign to Item (Optional)</Label>
-          <Select value={formData.selectedItemId} onValueChange={(value) => setFormData(prev => ({ ...prev, selectedItemId: value }))}>
+          <Select value={formData.selectedItemId || 'unassigned'} onValueChange={(value) => setFormData(prev => ({ ...prev, selectedItemId: value }))}>
             <SelectTrigger>
               <SelectValue placeholder="Select an item" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">No specific item</SelectItem>
+              <SelectItem value="unassigned">No specific item</SelectItem>
               {items.map(item => (
                 <SelectItem key={item.id} value={item.id}>
                   {item.name} ({item.category})
