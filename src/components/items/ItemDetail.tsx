@@ -13,6 +13,7 @@ import { Item } from '@/hooks/useItems';
 import { useMaintenance } from '@/hooks/useMaintenance';
 import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
 import TaskEditForm from '@/components/maintenance/TaskEditForm';
+import ItemForm from './ItemForm';
 
 interface ItemDetailProps {
   item: Item;
@@ -24,6 +25,7 @@ interface ItemDetailProps {
 const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: ItemDetailProps) => {
   const { getTasksByItem } = useMaintenance();
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  const [isEditItemModalOpen, setIsEditItemModalOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [notes, setNotes] = useState(item.description || '');
   const [documents, setDocuments] = useState<any[]>([]);
@@ -83,15 +85,32 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
     setEditingTaskId(null);
   };
 
+  const handleItemEditSuccess = () => {
+    setIsEditItemModalOpen(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={onClose}>
           ← Back
         </Button>
-        <Button variant="outline" size="sm">
-          Edit Item
-        </Button>
+        <Dialog open={isEditItemModalOpen} onOpenChange={setIsEditItemModalOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm">
+              Edit Item
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Item</DialogTitle>
+            </DialogHeader>
+            <ItemForm 
+              item={item}
+              onSuccess={handleItemEditSuccess} 
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Item Overview */}
@@ -334,6 +353,22 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Task Edit Modal */}
+      <Dialog open={!!editingTaskId} onOpenChange={() => setEditingTaskId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Maintenance Task</DialogTitle>
+          </DialogHeader>
+          {editingTask && (
+            <TaskEditForm
+              task={editingTask}
+              onSuccess={handleTaskEditSuccess}
+              onCancel={() => setEditingTaskId(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -21,9 +21,9 @@ const Index = () => {
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    if (tab !== 'items') {
-      setSelectedItemId(null);
-    }
+    // Always clear item selection when switching tabs
+    setSelectedItemId(null);
+    setHighlightTaskId(null);
   };
 
   const handleNavigateToItem = (itemId: string, taskId?: string) => {
@@ -52,7 +52,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <div className="px-4 pt-4 pb-20">
           <div className="bg-white rounded-t-3xl shadow-lg min-h-screen">
             <div className="p-6 pb-8">
