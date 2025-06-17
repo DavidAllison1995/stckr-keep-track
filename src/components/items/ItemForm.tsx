@@ -1,18 +1,19 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useItems } from '@/hooks/useItems';
+import { useItems, Item } from '@/hooks/useItems';
 
 interface ItemFormProps {
+  item?: Item;
   onSuccess: () => void;
 }
 
-const ItemForm = ({ onSuccess }: ItemFormProps) => {
-  const { addItem } = useItems();
+const ItemForm = ({ item, onSuccess }: ItemFormProps) => {
+  const { addItem, updateItem } = useItems();
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -25,6 +26,20 @@ const ItemForm = ({ onSuccess }: ItemFormProps) => {
   const categories = ['Appliance', 'Electronics', 'Furniture', 'Vehicle', 'Tool', 'Other'];
   const rooms = ['Kitchen', 'Living Room', 'Bedroom', 'Office', 'Garage', 'Outdoors', 'Other'];
 
+  // Pre-populate form when editing
+  useEffect(() => {
+    if (item) {
+      setFormData({
+        name: item.name,
+        category: item.category,
+        room: item.room || '',
+        description: item.description || '',
+        purchaseDate: item.purchaseDate || '',
+        warrantyDate: item.warrantyDate || '',
+      });
+    }
+  }, [item]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -32,14 +47,27 @@ const ItemForm = ({ onSuccess }: ItemFormProps) => {
       return;
     }
 
-    addItem({
-      name: formData.name.trim(),
-      category: formData.category || 'Other',
-      room: formData.room || undefined,
-      description: formData.description || undefined,
-      purchaseDate: formData.purchaseDate || undefined,
-      warrantyDate: formData.warrantyDate || undefined,
-    });
+    if (item) {
+      // Update existing item
+      updateItem(item.id, {
+        name: formData.name.trim(),
+        category: formData.category || 'Other',
+        room: formData.room || undefined,
+        description: formData.description || undefined,
+        purchaseDate: formData.purchaseDate || undefined,
+        warrantyDate: formData.warrantyDate || undefined,
+      });
+    } else {
+      // Add new item
+      addItem({
+        name: formData.name.trim(),
+        category: formData.category || 'Other',
+        room: formData.room || undefined,
+        description: formData.description || undefined,
+        purchaseDate: formData.purchaseDate || undefined,
+        warrantyDate: formData.warrantyDate || undefined,
+      });
+    }
 
     onSuccess();
   };
@@ -122,7 +150,7 @@ const ItemForm = ({ onSuccess }: ItemFormProps) => {
 
         <div className="flex gap-3 pt-4">
           <Button type="submit" className="flex-1">
-            Add Item
+            {item ? 'Update Item' : 'Add Item'}
           </Button>
           <Button type="button" variant="outline" onClick={onSuccess}>
             Cancel

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -5,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMaintenance } from '@/hooks/useMaintenance';
+import { useItems } from '@/hooks/useItems';
 
 interface MaintenanceTaskFormProps {
   itemId?: string;
@@ -13,22 +15,14 @@ interface MaintenanceTaskFormProps {
 
 const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) => {
   const { addTask } = useMaintenance();
+  const { items } = useItems();
   const [formData, setFormData] = useState({
     title: '',
     notes: '',
     date: '',
     recurrence: 'none' as 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly',
+    selectedItemId: itemId || '',
   });
-
-  const calculateStatus = (date: string): 'up_to_date' | 'due_soon' | 'overdue' => {
-    const taskDate = new Date(date);
-    const today = new Date();
-    const daysDiff = Math.ceil((taskDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (daysDiff < 0) return 'overdue';
-    if (daysDiff <= 14) return 'due_soon';
-    return 'up_to_date';
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +32,7 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
     }
 
     addTask({
-      itemId,
+      itemId: formData.selectedItemId || undefined,
       title: formData.title.trim(),
       notes: formData.notes || undefined,
       date: formData.date,
@@ -61,6 +55,25 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
           required
         />
       </div>
+
+      {!itemId && (
+        <div>
+          <Label htmlFor="item">Assign to Item (Optional)</Label>
+          <Select value={formData.selectedItemId} onValueChange={(value) => setFormData(prev => ({ ...prev, selectedItemId: value }))}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select an item" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">No specific item</SelectItem>
+              {items.map(item => (
+                <SelectItem key={item.id} value={item.id}>
+                  {item.name} ({item.category})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div>
         <Label htmlFor="date">Due Date *</Label>

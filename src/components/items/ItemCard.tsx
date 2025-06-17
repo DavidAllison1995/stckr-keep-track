@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Item } from '@/hooks/useItems';
 import ItemDetail from './ItemDetail';
+import ItemForm from './ItemForm';
 
 interface ItemCardProps {
   item: Item;
@@ -12,6 +13,7 @@ interface ItemCardProps {
 
 const ItemCard = ({ item }: ItemCardProps) => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   return (
     <>
@@ -72,7 +74,11 @@ const ItemCard = ({ item }: ItemCardProps) => {
               >
                 View Details
               </Button>
-              <Button variant="ghost" size="sm">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setIsEditModalOpen(true)}
+              >
                 Edit
               </Button>
             </div>
@@ -80,6 +86,7 @@ const ItemCard = ({ item }: ItemCardProps) => {
         </CardContent>
       </Card>
 
+      {/* Detail Modal */}
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -88,6 +95,19 @@ const ItemCard = ({ item }: ItemCardProps) => {
           <ItemDetail 
             item={item} 
             onClose={() => setIsDetailModalOpen(false)} 
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Item</DialogTitle>
+          </DialogHeader>
+          <ItemForm 
+            item={item}
+            onSuccess={() => setIsEditModalOpen(false)} 
           />
         </DialogContent>
       </Dialog>

@@ -5,16 +5,31 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useMaintenance } from '@/hooks/useMaintenance';
+import { useItems } from '@/hooks/useItems';
 import MaintenanceTaskForm from './MaintenanceTaskForm';
+
+type StatusFilter = 'all' | 'overdue' | 'due_soon' | 'up_to_date';
 
 const MaintenanceCalendar = () => {
   const { tasks, getTasksByStatus } = useMaintenance();
+  const { getItemById } = useItems();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   const overdueTasks = getTasksByStatus('overdue');
   const dueSoonTasks = getTasksByStatus('due_soon');
   const upToDateTasks = getTasksByStatus('up_to_date');
+
+  const filteredTasks = statusFilter === 'all' ? tasks : getTasksByStatus(statusFilter);
+
+  const handleTaskClick = (task: any) => {
+    if (task.itemId) {
+      // Navigate to item detail with maintenance tab open
+      // This would be implemented with navigation state
+      console.log('Navigate to item:', task.itemId, 'maintenance tab');
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -49,7 +64,12 @@ const MaintenanceCalendar = () => {
           <div className="grid gap-4">
             {/* Status Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="border-red-200 bg-red-50">
+              <Card 
+                className={`border-red-200 bg-red-50 cursor-pointer transition-all ${
+                  statusFilter === 'overdue' ? 'ring-2 ring-red-500' : 'hover:shadow-md'
+                }`}
+                onClick={() => setStatusFilter(statusFilter === 'overdue' ? 'all' : 'overdue')}
+              >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -61,7 +81,12 @@ const MaintenanceCalendar = () => {
                 </CardContent>
               </Card>
               
-              <Card className="border-yellow-200 bg-yellow-50">
+              <Card 
+                className={`border-yellow-200 bg-yellow-50 cursor-pointer transition-all ${
+                  statusFilter === 'due_soon' ? 'ring-2 ring-yellow-500' : 'hover:shadow-md'
+                }`}
+                onClick={() => setStatusFilter(statusFilter === 'due_soon' ? 'all' : 'due_soon')}
+              >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -73,7 +98,12 @@ const MaintenanceCalendar = () => {
                 </CardContent>
               </Card>
               
-              <Card className="border-green-200 bg-green-50">
+              <Card 
+                className={`border-green-200 bg-green-50 cursor-pointer transition-all ${
+                  statusFilter === 'up_to_date' ? 'ring-2 ring-green-500' : 'hover:shadow-md'
+                }`}
+                onClick={() => setStatusFilter(statusFilter === 'up_to_date' ? 'all' : 'up_to_date')}
+              >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -89,40 +119,67 @@ const MaintenanceCalendar = () => {
             {/* Task List */}
             <Card>
               <CardHeader>
-                <CardTitle>Recent Tasks</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>
+                    {statusFilter === 'all' ? 'All Tasks' : 
+                     statusFilter === 'overdue' ? 'Overdue Tasks' :
+                     statusFilter === 'due_soon' ? 'Due Soon Tasks' : 'Up to Date Tasks'}
+                  </CardTitle>
+                  {statusFilter !== 'all' && (
+                    <Button variant="outline" size="sm" onClick={() => setStatusFilter('all')}>
+                      Show All
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
-                {tasks.length === 0 ? (
+                {filteredTasks.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="text-6xl mb-4">🔧</div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No maintenance tasks</h3>
-                    <p className="text-gray-600 mb-6">Start by adding your first maintenance task</p>
-                    <Button onClick={() => setIsAddTaskModalOpen(true)}>Add Your First Task</Button>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      {statusFilter === 'all' ? 'No maintenance tasks' : `No ${statusFilter.replace('_', ' ')} tasks`}
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      {statusFilter === 'all' ? 'Start by adding your first maintenance task' : 'Great! No tasks in this category.'}
+                    </p>
+                    {statusFilter === 'all' && (
+                      <Button onClick={() => setIsAddTaskModalOpen(true)}>Add Your First Task</Button>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {tasks.map((task) => (
-                      <div key={task.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <div className={`w-3 h-3 rounded-full ${
-                          task.status === 'overdue' ? 'bg-red-500' :
-                          task.status === 'due_soon' ? 'bg-yellow-500' : 'bg-green-500'
-                        }`} />
-                        <div className="flex-1">
-                          <div className="font-medium">{task.title}</div>
-                          <div className="text-sm text-gray-600">Due: {new Date(task.date).toLocaleDateString()}</div>
-                          {task.notes && (
-                            <div className="text-sm text-gray-500">{task.notes}</div>
-                          )}
+                    {filteredTasks.map((task) => {
+                      const assignedItem = task.itemId ? getItemById(task.itemId) : null;
+                      return (
+                        <div 
+                          key={task.id} 
+                          className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                          onClick={() => handleTaskClick(task)}
+                        >
+                          <div className={`w-3 h-3 rounded-full ${
+                            task.status === 'overdue' ? 'bg-red-500' :
+                            task.status === 'due_soon' ? 'bg-yellow-500' : 'bg-green-500'
+                          }`} />
+                          <div className="flex-1">
+                            <div className="font-medium">{task.title}</div>
+                            <div className="text-sm text-gray-600">Due: {new Date(task.date).toLocaleDateString()}</div>
+                            {assignedItem && (
+                              <div className="text-sm text-blue-600">📦 {assignedItem.name}</div>
+                            )}
+                            {task.notes && (
+                              <div className="text-sm text-gray-500">{task.notes}</div>
+                            )}
+                          </div>
+                          <div className={`px-2 py-1 text-xs rounded-full ${
+                            task.status === 'overdue' ? 'bg-red-100 text-red-800' :
+                            task.status === 'due_soon' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
+                          }`}>
+                            {task.status === 'overdue' ? 'Overdue' :
+                             task.status === 'due_soon' ? 'Due Soon' : 'Up to Date'}
+                          </div>
                         </div>
-                        <div className={`px-2 py-1 text-xs rounded-full ${
-                          task.status === 'overdue' ? 'bg-red-100 text-red-800' :
-                          task.status === 'due_soon' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-                        }`}>
-                          {task.status === 'overdue' ? 'Overdue' :
-                           task.status === 'due_soon' ? 'Due Soon' : 'Up to Date'}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>

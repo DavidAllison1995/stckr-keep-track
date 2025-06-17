@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Item } from '@/hooks/useItems';
 import { useMaintenance } from '@/hooks/useMaintenance';
 import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
@@ -12,13 +15,36 @@ import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
 interface ItemDetailProps {
   item: Item;
   onClose: () => void;
+  defaultTab?: string;
 }
 
-const ItemDetail = ({ item, onClose }: ItemDetailProps) => {
+const ItemDetail = ({ item, onClose, defaultTab = 'details' }: ItemDetailProps) => {
   const { getTasksByItem } = useMaintenance();
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
+  const [notes, setNotes] = useState(item.description || '');
+  const [documents, setDocuments] = useState<any[]>([]);
   
   const itemTasks = getTasksByItem(item.id);
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Simulate file upload
+      const newDoc = {
+        id: Date.now().toString(),
+        name: file.name,
+        type: file.type,
+        url: URL.createObjectURL(file),
+        uploadDate: new Date().toISOString(),
+      };
+      setDocuments(prev => [...prev, newDoc]);
+    }
+  };
+
+  const handleSaveNotes = () => {
+    // In a real app, this would call updateItem
+    console.log('Saving notes:', notes);
+  };
 
   return (
     <div className="space-y-6">
@@ -60,10 +86,11 @@ const ItemDetail = ({ item, onClose }: ItemDetailProps) => {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="details" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue={defaultTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+          <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
         
@@ -157,17 +184,86 @@ const ItemDetail = ({ item, onClose }: ItemDetailProps) => {
           </Card>
         </TabsContent>
         
+        <TabsContent value="notes">
+          <Card>
+            <CardHeader>
+              <CardTitle>Notes</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="notes">Item Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Add notes about this item..."
+                  rows={6}
+                />
+              </div>
+              <Button onClick={handleSaveNotes}>Save Notes</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
         <TabsContent value="documents">
           <Card>
             <CardHeader>
-              <CardTitle>Documents & Notes</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Documents & Files</CardTitle>
+                <div className="flex gap-2">
+                  <Input
+                    type="file"
+                    id="file-upload"
+                    className="hidden"
+                    onChange={handleFileUpload}
+                    accept="image/*,application/pdf,.doc,.docx"
+                  />
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => document.getElementById('file-upload')?.click()}
+                  >
+                    Upload File
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8">
-                <div className="text-4xl mb-2">📄</div>
-                <p className="text-gray-600 mb-4">No documents uploaded yet</p>
-                <Button variant="outline">Upload Document</Button>
-              </div>
+              {documents.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-2">📄</div>
+                  <p className="text-gray-600 mb-4">No documents uploaded yet</p>
+                  <Button 
+                    variant="outline"
+                    onClick={() => document.getElementById('file-upload')?.click()}
+                  >
+                    Upload Document
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {documents.map((doc) => (
+                    <div key={doc.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        {doc.type.startsWith('image/') ? '🖼️' : '📄'}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">{doc.name}</div>
+                        <div className="text-sm text-gray-600">
+                          Uploaded: {new Date(doc.uploadDate).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => window.open(doc.url, '_blank')}
+                      >
+                        View
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
