@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useMaintenance } from '@/hooks/useMaintenance';
 
 interface MaintenanceTaskFormProps {
-  itemId: string;
+  itemId?: string;
   onSuccess: () => void;
 }
 
@@ -44,7 +43,6 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
       notes: formData.notes || undefined,
       date: formData.date,
       recurrence: formData.recurrence,
-      status: calculateStatus(formData.date),
     });
 
     onSuccess();
