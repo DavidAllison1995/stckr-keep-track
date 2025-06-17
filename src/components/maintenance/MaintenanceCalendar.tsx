@@ -28,6 +28,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null);
 
   // Get tasks for selected date
   const getTasksForDate = (date: Date) => {
@@ -65,6 +66,8 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
     } else {
       setSelectedTask(null);
     }
+    // Clear any highlighting when manually selecting a date
+    setHighlightedTaskId(null);
   };
 
   const handleTaskSearchSelect = (taskSuggestion: TaskSuggestion) => {
@@ -79,6 +82,15 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
     const actualTask = tasks.find(task => task.id === taskSuggestion.id);
     if (actualTask) {
       setSelectedTask(actualTask);
+      setHighlightedTaskId(actualTask.id);
+      
+      // Scroll to task details after a brief delay to ensure DOM is updated
+      setTimeout(() => {
+        const taskDetailsElement = document.getElementById('task-details-panel');
+        if (taskDetailsElement) {
+          taskDetailsElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 100);
     }
   };
 
@@ -355,6 +367,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
                   p-4 rounded-lg cursor-pointer transition-all duration-200
                   ${getStatusTextColor(task.status)}
                   hover:shadow-md
+                  ${highlightedTaskId === task.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''}
                 `}
                 onClick={() => handleTaskClick(task)}
               >
@@ -509,7 +522,10 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
                     return (
                       <div
                         key={task.id}
-                        className="p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors"
+                        className={`
+                          p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors
+                          ${highlightedTaskId === task.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''}
+                        `}
                         onClick={() => handleTaskClick(task)}
                       >
                         <div className="flex items-start justify-between mb-2">
@@ -578,7 +594,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
       </div>
 
       {/* Task Details Panel - Full width below main content */}
-      <div className="border-t bg-white w-full">
+      <div className="border-t bg-white w-full" id="task-details-panel">
         <div className="px-6 py-4">
           <Card className="w-full">
             <CardHeader>
