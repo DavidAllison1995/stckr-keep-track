@@ -1,9 +1,9 @@
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 export interface MaintenanceTask {
   id: string;
-  itemId: string;
+  itemId?: string;
   title: string;
   notes?: string;
   date: string;
@@ -15,7 +15,7 @@ export interface MaintenanceTask {
 
 interface MaintenanceContextType {
   tasks: MaintenanceTask[];
-  addTask: (task: Omit<MaintenanceTask, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  addTask: (task: Omit<MaintenanceTask, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => void;
   updateTask: (id: string, updates: Partial<MaintenanceTask>) => void;
   deleteTask: (id: string) => void;
   getTasksByStatus: (status: MaintenanceTask['status']) => MaintenanceTask[];
@@ -27,10 +27,26 @@ const MaintenanceContext = createContext<MaintenanceContextType | undefined>(und
 export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
   const [tasks, setTasks] = useState<MaintenanceTask[]>([]);
 
-  const addTask = (taskData: Omit<MaintenanceTask, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const calculateTaskStatus = (dueDate: string): MaintenanceTask['status'] => {
+    const now = new Date();
+    const due = new Date(dueDate);
+    const diffInDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays < 0) {
+      return 'overdue';
+    } else if (diffInDays <= 14) {
+      return 'due_soon';
+    } else {
+      return 'up_to_date';
+    }
+  };
+
+  const addTask = (taskData: Omit<MaintenanceTask, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => {
+    const status = calculateTaskStatus(taskData.date);
     const newTask: MaintenanceTask = {
       ...taskData,
       id: Date.now().toString(),
+      status,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -38,11 +54,16 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateTask = (id: string, updates: Partial<MaintenanceTask>) => {
-    setTasks(prev => prev.map(task => 
-      task.id === id 
-        ? { ...task, ...updates, updatedAt: new Date().toISOString() }
-        : task
-    ));
+    setTasks(prev => prev.map(task => {
+      if (task.id === id) {
+        const updatedTask = { ...task, ...updates, updatedAt: new Date().toISOString() };
+        if (updates.date) {
+          updatedTask.status = calculateTaskStatus(updates.date);
+        }
+        return updatedTask;
+      }
+      return task;
+    }));
   };
 
   const deleteTask = (id: string) => {
@@ -56,6 +77,22 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
   const getTasksByItem = (itemId: string) => {
     return tasks.filter(task => task.itemId === itemId);
   };
+
+  // Update task statuses periodically
+  useEffect(() => {
+    const updateStatuses = () => {
+      setTasks(prev => prev.map(task => ({
+        ...task,
+        status: calculateTaskStatus(task.date)
+      })));
+    };
+
+    // Update statuses on mount and every hour
+    updateStatuses();
+    const interval = setInterval(updateStatuses, 60 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <MaintenanceContext.Provider value={{ 

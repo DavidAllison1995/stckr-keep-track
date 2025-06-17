@@ -3,11 +3,14 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useMaintenance } from '@/hooks/useMaintenance';
+import MaintenanceTaskForm from './MaintenanceTaskForm';
 
 const MaintenanceCalendar = () => {
   const { tasks, getTasksByStatus } = useMaintenance();
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
 
   const overdueTasks = getTasksByStatus('overdue');
   const dueSoonTasks = getTasksByStatus('due_soon');
@@ -20,10 +23,20 @@ const MaintenanceCalendar = () => {
           <h1 className="text-2xl font-bold text-gray-900">Maintenance Calendar</h1>
           <p className="text-gray-600">Track and schedule your maintenance tasks</p>
         </div>
-        <Button className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700">
-          <span className="mr-2">+</span>
-          Add Task
-        </Button>
+        <Dialog open={isAddTaskModalOpen} onOpenChange={setIsAddTaskModalOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700">
+              <span className="mr-2">+</span>
+              Add Task
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Maintenance Task</DialogTitle>
+            </DialogHeader>
+            <MaintenanceTaskForm onSuccess={() => setIsAddTaskModalOpen(false)} />
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
@@ -84,7 +97,7 @@ const MaintenanceCalendar = () => {
                     <div className="text-6xl mb-4">🔧</div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">No maintenance tasks</h3>
                     <p className="text-gray-600 mb-6">Start by adding your first maintenance task</p>
-                    <Button>Add Your First Task</Button>
+                    <Button onClick={() => setIsAddTaskModalOpen(true)}>Add Your First Task</Button>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -97,6 +110,9 @@ const MaintenanceCalendar = () => {
                         <div className="flex-1">
                           <div className="font-medium">{task.title}</div>
                           <div className="text-sm text-gray-600">Due: {new Date(task.date).toLocaleDateString()}</div>
+                          {task.notes && (
+                            <div className="text-sm text-gray-500">{task.notes}</div>
+                          )}
                         </div>
                         <div className={`px-2 py-1 text-xs rounded-full ${
                           task.status === 'overdue' ? 'bg-red-100 text-red-800' :

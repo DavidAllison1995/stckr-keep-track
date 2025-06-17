@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AuthForm from '@/components/auth/AuthForm';
@@ -10,6 +11,11 @@ import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
   const { user, isAuthenticated } = useAuth();
+  const [activeTab, setActiveTab] = useState('dashboard');
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+  };
 
   if (!isAuthenticated) {
     return <AuthForm />;
@@ -17,12 +23,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-      <Tabs defaultValue="dashboard" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="px-4 pt-4 pb-20">
           <div className="bg-white rounded-t-3xl shadow-lg min-h-screen">
             <div className="p-6 pb-8">
               <TabsContent value="dashboard" className="mt-0">
-                <Dashboard />
+                <Dashboard onTabChange={handleTabChange} />
               </TabsContent>
               <TabsContent value="items" className="mt-0">
                 <ItemsList />
