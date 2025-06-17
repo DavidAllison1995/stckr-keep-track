@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,8 +10,10 @@ import { Label } from '@/components/ui/label';
 import { Edit } from 'lucide-react';
 import { Item, useItems } from '@/hooks/useItems';
 import { useMaintenance } from '@/hooks/useMaintenance';
+import { useDocumentViewer } from '@/hooks/useDocumentViewer';
 import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
 import TaskEditForm from '@/components/maintenance/TaskEditForm';
+import DocumentViewer from '@/components/documents/DocumentViewer';
 import ItemForm from './ItemForm';
 
 interface ItemDetailProps {
@@ -33,6 +34,7 @@ interface Document {
 const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: ItemDetailProps) => {
   const { getTasksByItem } = useMaintenance();
   const { updateItem } = useItems();
+  const { isOpen: isDocViewerOpen, fileUrl, fileName, openViewer, closeViewer } = useDocumentViewer();
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isEditItemModalOpen, setIsEditItemModalOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
@@ -105,6 +107,10 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
 
   const handleItemEditSuccess = () => {
     setIsEditItemModalOpen(false);
+  };
+
+  const handleViewDocument = (doc: Document) => {
+    openViewer(doc.url, doc.name);
   };
 
   return (
@@ -359,7 +365,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => window.open(doc.url, '_blank')}
+                        onClick={() => handleViewDocument(doc)}
                       >
                         View
                       </Button>
@@ -371,6 +377,14 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Document Viewer */}
+      <DocumentViewer
+        isOpen={isDocViewerOpen}
+        fileUrl={fileUrl}
+        fileName={fileName}
+        onClose={closeViewer}
+      />
 
       {/* Task Edit Modal */}
       <Dialog open={!!editingTaskId} onOpenChange={() => setEditingTaskId(null)}>
