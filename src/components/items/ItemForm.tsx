@@ -46,11 +46,6 @@ const ItemForm = ({ onSuccess }: ItemFormProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-xl font-bold text-gray-900">Add New Item</h2>
-        <p className="text-gray-600">Fill in the details below</p>
-      </div>
-
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <Label htmlFor="name">Item Name *</Label>

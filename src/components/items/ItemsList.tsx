@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useItems } from '@/hooks/useItems';
 import ItemForm from './ItemForm';
 import ItemCard from './ItemCard';
@@ -44,6 +44,9 @@ const ItemsList = () => {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Add New Item</DialogTitle>
+            </DialogHeader>
             <ItemForm onSuccess={() => setIsAddModalOpen(false)} />
           </DialogContent>
         </Dialog>
@@ -104,6 +107,9 @@ const ItemsList = () => {
                 <Button size="lg">Add Your First Item</Button>
               </DialogTrigger>
               <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Add New Item</DialogTitle>
+                </DialogHeader>
                 <ItemForm onSuccess={() => setIsAddModalOpen(false)} />
               </DialogContent>
             </Dialog>
