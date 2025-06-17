@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search, Download, 
 import { useMaintenance } from '@/hooks/useMaintenance';
 import { useItems } from '@/hooks/useItems';
 import { generateICSFile } from '@/utils/calendarExport';
+import StatusBar from './StatusBar';
 
 type ViewMode = 'day' | 'week' | 'month';
 
@@ -437,6 +438,11 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Status Bar */}
+      <div className="px-6 py-4">
+        <StatusBar />
       </div>
 
       {/* Main Content */}

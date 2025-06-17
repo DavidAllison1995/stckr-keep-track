@@ -13,6 +13,7 @@ import DashboardPage from "./pages/Dashboard";
 import ItemsPage from "./pages/ItemsPage";
 import ItemDetailPage from "./pages/ItemDetailPage";
 import MaintenancePage from "./pages/MaintenancePage";
+import TasksPage from "./pages/TasksPage";
 import ScannerPage from "./pages/ScannerPage";
 import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
@@ -33,6 +34,7 @@ const AppContent = () => {
         <Route path="/items" element={<ItemsPage />} />
         <Route path="/items/:itemId" element={<ItemDetailPage />} />
         <Route path="/maintenance" element={<MaintenancePage />} />
+        <Route path="/tasks/:status" element={<TasksPage />} />
         <Route path="/scanner" element={<ScannerPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="*" element={<NotFound />} />
