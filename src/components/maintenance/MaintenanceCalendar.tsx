@@ -2,12 +2,15 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search, Download, Edit, Trash2 } from 'lucide-react';
 import { useMaintenance } from '@/hooks/useMaintenance';
 import { useItems } from '@/hooks/useItems';
+import { useToast } from '@/hooks/use-toast';
 import { generateICSFile } from '@/utils/calendarExport';
 import StatusBar from './StatusBar';
 import TaskSearch from './TaskSearch';
+import TaskEditDialog from './TaskEditDialog';
 
 type ViewMode = 'day' | 'week' | 'month';
 
@@ -23,12 +26,15 @@ interface TaskSuggestion {
 }
 
 const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => {
-  const { tasks } = useMaintenance();
+  const { tasks, deleteTask } = useMaintenance();
   const { getItemById } = useItems();
+  const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Get tasks for selected date
   const getTasksForDate = (date: Date) => {
@@ -638,6 +644,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
                     <Button
                       size="sm"
                       variant="outline"
+                      onClick={handleEditTask}
                       className="flex items-center gap-2"
                     >
                       <Edit className="w-4 h-4" />
@@ -646,6 +653,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
                     <Button
                       size="sm"
                       variant="outline"
+                      onClick={handleDeleteTask}
                       className="flex items-center gap-2 text-red-600 hover:text-red-700"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -662,6 +670,32 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
           </Card>
         </div>
       </div>
+
+      {/* Edit Task Dialog */}
+      <TaskEditDialog
+        task={selectedTask}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSuccess={handleTaskUpdateSuccess}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Task</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the task "{selectedTask?.title}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteTask} className="bg-red-600 hover:bg-red-700">
+              Delete Task
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
