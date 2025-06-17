@@ -33,7 +33,7 @@ const AppContent = () => {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/items" element={<ItemsPage />} />
         <Route path="/items/:itemId" element={<ItemDetailPage />} />
-        <Route path="/maintenance" element={<MaintenancePage />} />
+        <Route path="/calendar" element={<MaintenancePage />} />
         <Route path="/tasks/:status" element={<TasksPage />} />
         <Route path="/scanner" element={<ScannerPage />} />
         <Route path="/profile" element={<ProfilePage />} />
