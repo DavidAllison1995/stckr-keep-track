@@ -84,14 +84,14 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
         </CardHeader>
         <CardContent className="space-y-3">
           <div 
-            className="flex items-center justify-between p-3 bg-red-50 rounded-lg cursor-pointer hover:bg-red-100 transition-colors"
-            onClick={() => handleTaskStatusClick('overdue')}
+            className="flex items-center justify-between p-3 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
+            onClick={() => handleTaskStatusClick('up-to-date')}
           >
             <div>
-              <div className="font-semibold text-red-800">Overdue Tasks</div>
-              <div className="text-sm text-red-600">{overdueTasks.length} items need attention</div>
+              <div className="font-semibold text-green-800">Up to Date</div>
+              <div className="text-sm text-green-600">Looking good!</div>
             </div>
-            <div className="text-2xl font-bold text-red-600">{overdueTasks.length}</div>
+            <div className="text-2xl font-bold text-green-600">{upToDateTasks.length}</div>
           </div>
           
           <div 
@@ -106,14 +106,14 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
           </div>
           
           <div 
-            className="flex items-center justify-between p-3 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
-            onClick={() => handleTaskStatusClick('up-to-date')}
+            className="flex items-center justify-between p-3 bg-red-50 rounded-lg cursor-pointer hover:bg-red-100 transition-colors"
+            onClick={() => handleTaskStatusClick('overdue')}
           >
             <div>
-              <div className="font-semibold text-green-800">Up to Date</div>
-              <div className="text-sm text-green-600">Looking good!</div>
+              <div className="font-semibold text-red-800">Overdue Tasks</div>
+              <div className="text-sm text-red-600">{overdueTasks.length} items need attention</div>
             </div>
-            <div className="text-2xl font-bold text-green-600">{upToDateTasks.length}</div>
+            <div className="text-2xl font-bold text-red-600">{overdueTasks.length}</div>
           </div>
         </CardContent>
       </Card>
