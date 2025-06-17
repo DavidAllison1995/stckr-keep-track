@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -176,7 +175,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
           <div
             key={date.toISOString()}
             className={`
-              min-h-[120px] p-2 border border-gray-100 cursor-pointer transition-all duration-200
+              min-h-[100px] p-2 border border-gray-100 cursor-pointer transition-all duration-200
               ${isSelected ? 'ring-2 ring-primary/50 bg-primary/5' : 'hover:bg-gray-50'}
               ${!isCurrentMonth ? 'text-gray-400 bg-gray-25' : ''}
               ${isToday ? 'bg-blue-50 border-blue-200' : ''}
@@ -305,7 +304,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
     const isToday = selectedDate.toDateString() === new Date().toDateString();
     
     return (
-      <div className="h-[600px] border border-gray-200 rounded-lg overflow-hidden">
+      <div className="h-full border border-gray-200 rounded-lg overflow-visible">
         <div className={`
           p-4 border-b border-gray-200
           ${isToday ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'}
@@ -319,7 +318,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
             </div>
           </div>
         </div>
-        <div className="p-4 space-y-3 overflow-y-auto max-h-[500px]">
+        <div className="p-4 space-y-3 overflow-visible">
           {dayTasks.length === 0 ? (
             <div className="text-center py-12">
               <CalendarIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -355,7 +354,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
   const upcomingTasks = getUpcomingTasks();
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen w-full bg-gray-50">
       {/* Header Controls */}
       <div className="bg-white border-b px-6 py-4">
         <div className="flex items-center justify-between mb-4">
@@ -434,16 +433,16 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Calendar Section */}
-        <div className="flex-1 p-6" style={{ flex: '0 0 75%' }}>
-          <Card className="h-full">
-            <CardContent className="p-6 h-full">
-              <div className="h-full min-h-[600px]">
+      <div className="flex flex-col lg:flex-row w-full">
+        {/* Calendar Section - Full width on mobile, 75% on desktop */}
+        <div className="w-full lg:w-3/4 p-6">
+          <Card className="w-full">
+            <CardContent className="p-0 w-full">
+              <div className="w-full min-h-[600px] h-[75vh]">
                 {viewMode === 'month' && (
-                  <div className="h-full flex flex-col">
+                  <div className="h-full flex flex-col w-full">
                     {/* Month header */}
-                    <div className="grid grid-cols-7 mb-4">
+                    <div className="grid grid-cols-7 w-full">
                       {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                         <div key={day} className="text-center text-sm font-medium text-gray-500 py-3 border-b">
                           {day}
@@ -451,7 +450,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
                       ))}
                     </div>
                     {/* Calendar grid */}
-                    <div className="flex-1">
+                    <div className="flex-1 w-full">
                       {generateCalendarGrid()}
                     </div>
                   </div>
@@ -463,8 +462,8 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
           </Card>
         </div>
 
-        {/* Sidebar */}
-        <div className="p-6 space-y-6" style={{ flex: '0 0 25%', minWidth: '300px' }}>
+        {/* Sidebar - Hidden on mobile, 25% on desktop */}
+        <div className="w-full lg:w-1/4 p-6 space-y-6">
           {/* Date Panel */}
           <Card>
             <CardHeader>
@@ -558,10 +557,10 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
         </div>
       </div>
 
-      {/* Task Details Panel */}
-      <div className="border-t bg-white">
+      {/* Task Details Panel - Full width below main content */}
+      <div className="border-t bg-white w-full">
         <div className="px-6 py-4">
-          <Card>
+          <Card className="w-full">
             <CardHeader>
               <CardTitle className="text-lg">Task Details</CardTitle>
             </CardHeader>
