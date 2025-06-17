@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search, Download, Edit, Trash2 } from 'lucide-react';
 import { useMaintenance } from '@/hooks/useMaintenance';
 import { useItems } from '@/hooks/useItems';
 import { generateICSFile } from '@/utils/calendarExport';
 import StatusBar from './StatusBar';
+import TaskSearch from './TaskSearch';
 
 type ViewMode = 'day' | 'week' | 'month';
 
@@ -15,30 +15,30 @@ interface MaintenanceCalendarProps {
   onNavigateToItem?: (itemId: string, taskId?: string) => void;
 }
 
+interface TaskSuggestion {
+  id: string;
+  title: string;
+  scheduledDate: string;
+  itemName: string;
+}
+
 const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => {
   const { tasks } = useMaintenance();
   const { getItemById } = useItems();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedTask, setSelectedTask] = useState<any>(null);
-
-  // Filter tasks based on search query
-  const filteredTasks = tasks.filter(task => 
-    task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (task.itemId && getItemById(task.itemId)?.name.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
 
   // Get tasks for selected date
   const getTasksForDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
-    return filteredTasks.filter(task => task.date.startsWith(dateStr));
+    return tasks.filter(task => task.date.startsWith(dateStr));
   };
 
   // Get upcoming tasks (after selected date)
   const getUpcomingTasks = () => {
     const selectedDateStr = selectedDate.toISOString().split('T')[0];
-    return filteredTasks
+    return tasks
       .filter(task => task.date > selectedDateStr)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .slice(0, 10);
@@ -64,6 +64,21 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
       setSelectedTask(tasksForDate[0]);
     } else {
       setSelectedTask(null);
+    }
+  };
+
+  const handleTaskSearchSelect = (taskSuggestion: TaskSuggestion) => {
+    // Switch to day view
+    setViewMode('day');
+    
+    // Navigate to the task's date
+    const taskDate = new Date(taskSuggestion.scheduledDate);
+    setSelectedDate(taskDate);
+    
+    // Find and select the actual task
+    const actualTask = tasks.find(task => task.id === taskSuggestion.id);
+    if (actualTask) {
+      setSelectedTask(actualTask);
     }
   };
 
@@ -427,15 +442,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
               </Button>
             </div>
 
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Search tasks..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-64"
-              />
-            </div>
+            <TaskSearch onTaskSelect={handleTaskSearchSelect} />
           </div>
         </div>
       </div>
