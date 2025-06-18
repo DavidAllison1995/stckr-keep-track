@@ -1,8 +1,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Search } from 'lucide-react';
-import { useMaintenance } from '@/hooks/useMaintenance';
-import { useItems } from '@/hooks/useItems';
+import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
+import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 
 interface TaskSuggestion {
   id: string;
@@ -22,8 +22,8 @@ const TaskSearch = ({ onTaskSelect }: TaskSearchProps) => {
   const [error, setError] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  const { tasks } = useMaintenance();
-  const { getItemById } = useItems();
+  const { tasks } = useSupabaseMaintenance();
+  const { getItemById } = useSupabaseItems();
 
   // Debounced search function
   const debouncedSearch = useCallback(
@@ -45,7 +45,7 @@ const TaskSearch = ({ onTaskSelect }: TaskSearchProps) => {
           const filteredTasks = tasks
             .filter(task => {
               const taskTitle = task.title.toLowerCase();
-              const itemName = task.itemId ? getItemById(task.itemId)?.name.toLowerCase() || '' : '';
+              const itemName = task.item_id ? getItemById(task.item_id)?.name.toLowerCase() || '' : '';
               const searchTerm = query.toLowerCase();
               
               return taskTitle.includes(searchTerm) || itemName.includes(searchTerm);
@@ -55,7 +55,7 @@ const TaskSearch = ({ onTaskSelect }: TaskSearchProps) => {
               id: task.id,
               title: task.title,
               scheduledDate: task.date,
-              itemName: task.itemId ? getItemById(task.itemId)?.name || 'Unknown Item' : 'No Item'
+              itemName: task.item_id ? getItemById(task.item_id)?.name || 'Unknown Item' : 'No Item'
             }));
 
           setSuggestions(filteredTasks);
