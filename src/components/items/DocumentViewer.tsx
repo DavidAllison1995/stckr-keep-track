@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { ZoomIn, ZoomOut, RotateCw, Download, AlertCircle } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCw, Download, AlertCircle, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface DocumentViewerProps {
@@ -17,6 +17,7 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
   const [rotation, setRotation] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [showFallback, setShowFallback] = useState(false);
 
   const handleZoomIn = () => {
     setZoom(prev => Math.min(prev + 25, 200));
@@ -38,6 +39,16 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
   const handleImageError = () => {
     setIsLoading(false);
     setHasError(true);
+  };
+
+  const handlePdfError = () => {
+    setIsLoading(false);
+    setHasError(true);
+    setShowFallback(true);
+  };
+
+  const openInNewTab = () => {
+    window.open(document.url, '_blank', 'noopener,noreferrer');
   };
 
   if (document.type === 'image') {
@@ -85,6 +96,14 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
               <div className="text-center text-gray-500">
                 <AlertCircle className="w-12 h-12 mx-auto mb-4" />
                 <p>Failed to load image</p>
+                <Button 
+                  variant="outline" 
+                  onClick={openInNewTab}
+                  className="mt-2 flex items-center gap-2"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Open in new tab
+                </Button>
               </div>
             )}
             {!hasError && (
@@ -116,40 +135,56 @@ const DocumentViewer = ({ document }: DocumentViewerProps) => {
           <div className="text-sm text-gray-600">
             PDF Document
           </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={openInNewTab}
+              className="flex items-center gap-2"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Open in new tab
+            </Button>
+          </div>
         </div>
 
         {/* PDF Display */}
-        <div className="flex-1 overflow-hidden">
-          <iframe
-            src={`${document.url}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH`}
-            title={document.name}
-            className="w-full h-full border-0"
-            onLoad={() => setIsLoading(false)}
-            onError={() => {
-              setIsLoading(false);
-              setHasError(true);
-            }}
-          />
-          {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-              <div className="text-gray-500">Loading PDF...</div>
-            </div>
-          )}
-          {hasError && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-              <div className="text-center text-gray-500">
-                <AlertCircle className="w-12 h-12 mx-auto mb-4" />
-                <p>Failed to load PDF</p>
-                <p className="text-sm mt-2">
-                  <a 
-                    href={document.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
-                    Open in new tab
-                  </a>
+        <div className="flex-1 relative">
+          {!showFallback ? (
+            <>
+              <iframe
+                src={`${document.url}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH`}
+                title={document.name}
+                className="w-full h-full border-0"
+                onLoad={() => setIsLoading(false)}
+                onError={handlePdfError}
+              />
+              {isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                  <div className="text-gray-500">Loading PDF...</div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-full bg-gray-100">
+              <div className="text-center text-gray-600 max-w-md p-6">
+                <AlertCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-lg font-semibold mb-2">PDF Preview Unavailable</h3>
+                <p className="text-sm mb-4">
+                  This PDF cannot be displayed in the browser viewer. This is a common limitation with certain PDF files or browser security settings.
                 </p>
+                <div className="space-y-2">
+                  <Button 
+                    onClick={openInNewTab}
+                    className="w-full flex items-center gap-2"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Open in new tab
+                  </Button>
+                  <p className="text-xs text-gray-500">
+                    Opening in a new tab usually resolves viewing issues
+                  </p>
+                </div>
               </div>
             </div>
           )}
