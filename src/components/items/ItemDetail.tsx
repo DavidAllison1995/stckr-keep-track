@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { ArrowLeft, Calendar, FileText, Settings, Plus, Edit, Trash2, CheckCircle, Clock, AlertTriangle, Upload, Download, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, Settings, Plus, Edit, Trash2, CheckCircle, Clock, AlertTriangle, Upload, Download, Eye, EyeOff, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import ItemForm from './ItemForm';
 import MaintenanceTaskForm from '../maintenance/MaintenanceTaskForm';
 import TaskEditDialog from '../maintenance/TaskEditDialog';
+import DocumentViewer from './DocumentViewer';
 import { Item } from '@/hooks/useSupabaseItems';
 
 interface ItemDetailProps {
@@ -31,6 +31,8 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
   const [showCompletedTasks, setShowCompletedTasks] = useState(false);
   const [newNote, setNewNote] = useState('');
   const [isAddingNote, setIsAddingNote] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [viewingDocument, setViewingDocument] = useState<any>(null);
   
   const { 
     tasks, 
@@ -38,7 +40,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
     markTaskComplete, 
     getTasksByItem 
   } = useSupabaseMaintenance();
-  const { updateItem } = useSupabaseItems();
+  const { updateItem, uploadDocument, deleteDocument } = useSupabaseItems();
   const { toast } = useToast();
 
   // Get tasks for this item
@@ -106,14 +108,36 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Error",
+        description: "Please upload a PDF or image file (JPEG, PNG)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (10MB max)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "File size must be less than 10MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+
     try {
-      const { uploadDocument } = useSupabaseItems();
       const documentUrl = await uploadDocument(item.id, file);
       
       const newDocument = {
         id: Date.now().toString(),
         name: file.name,
-        type: file.type,
+        type: file.type.startsWith('image') ? 'image' : 'pdf',
         url: documentUrl,
         uploadDate: new Date().toISOString()
       };
@@ -126,11 +150,16 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
         description: "Document uploaded successfully",
       });
     } catch (error) {
+      console.error('Upload error:', error);
       toast({
         title: "Error",
-        description: "Failed to upload document",
+        description: error instanceof Error ? error.message : "Failed to upload document",
         variant: "destructive",
       });
+    } finally {
+      setIsUploading(false);
+      // Reset the input
+      event.target.value = '';
     }
   };
 
@@ -138,7 +167,6 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
     try {
       const documentToDelete = documents.find(doc => doc.id === documentId);
       if (documentToDelete) {
-        const { deleteDocument } = useSupabaseItems();
         await deleteDocument(documentToDelete.url);
         
         const updatedDocuments = documents.filter(doc => doc.id !== documentId);
@@ -153,6 +181,27 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
       toast({
         title: "Error",
         description: "Failed to delete document",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownloadDocument = async (doc: any) => {
+    try {
+      const response = await fetch(doc.url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = doc.name;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to download document",
         variant: "destructive",
       });
     }
@@ -527,12 +576,13 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
                   id="file-upload"
                   className="hidden"
                   onChange={handleFileUpload}
-                  accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                  accept="application/pdf,image/jpeg,image/png,image/jpg"
+                  disabled={isUploading}
                 />
-                <Button asChild className="flex items-center gap-2">
+                <Button asChild className="flex items-center gap-2" disabled={isUploading}>
                   <label htmlFor="file-upload" className="cursor-pointer">
                     <Upload className="w-4 h-4" />
-                    Upload Document
+                    {isUploading ? 'Uploading...' : 'Upload Document'}
                   </label>
                 </Button>
               </div>
@@ -544,10 +594,10 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
                   <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <h4 className="text-lg font-semibold text-gray-900 mb-2">No documents</h4>
                   <p className="text-gray-600 mb-4">Upload documents like manuals, receipts, or warranties.</p>
-                  <Button asChild>
+                  <Button asChild disabled={isUploading}>
                     <label htmlFor="file-upload" className="cursor-pointer flex items-center gap-2">
                       <Upload className="w-4 h-4" />
-                      Upload Document
+                      {isUploading ? 'Uploading...' : 'Upload Document'}
                     </label>
                   </Button>
                 </CardContent>
@@ -563,7 +613,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
                           <div>
                             <h4 className="font-semibold text-gray-900">{doc.name}</h4>
                             <p className="text-sm text-gray-600">
-                              Uploaded {formatDate(doc.uploadDate)}
+                              Uploaded {formatDate(doc.uploadDate)} • {doc.type.toUpperCase()}
                             </p>
                           </div>
                         </div>
@@ -571,11 +621,20 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => window.open(doc.url, '_blank')}
+                            onClick={() => setViewingDocument(doc)}
+                            className="flex items-center gap-2"
+                          >
+                            <Eye className="w-4 h-4" />
+                            View
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownloadDocument(doc)}
                             className="flex items-center gap-2"
                           >
                             <Download className="w-4 h-4" />
-                            View
+                            Download
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
@@ -675,6 +734,29 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Document Viewer Modal */}
+      {viewingDocument && (
+        <Dialog open={!!viewingDocument} onOpenChange={() => setViewingDocument(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+            <DialogHeader>
+              <DialogTitle className="flex items-center justify-between">
+                <span>{viewingDocument.name}</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDownloadDocument(viewingDocument)}
+                  className="flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </Button>
+              </DialogTitle>
+            </DialogHeader>
+            <DocumentViewer document={viewingDocument} />
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Task Edit Dialog */}
       <TaskEditDialog
