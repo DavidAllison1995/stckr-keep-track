@@ -1,4 +1,3 @@
-
 export interface UserSettings {
   notifications: {
     taskDueSoon: boolean;
@@ -10,6 +9,7 @@ export interface UserSettings {
     dateFormat: 'MM/dd/yyyy' | 'dd/MM/yyyy';
   };
   pushNotifications: boolean;
+  theme: 'light' | 'dark' | 'system';
 }
 
 export interface UserProfile {

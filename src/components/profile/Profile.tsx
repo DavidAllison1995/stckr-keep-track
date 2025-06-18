@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import ChangePasswordDialog from './ChangePasswordDialog';
 import ConnectedAccountsDialog from './ConnectedAccountsDialog';
 import DeleteAccountDialog from './DeleteAccountDialog';
@@ -13,6 +15,7 @@ import DeleteAccountDialog from './DeleteAccountDialog';
 const Profile = () => {
   const { user, logout } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const [firstName, setFirstName] = useState(user?.firstName || '');
   const [lastName, setLastName] = useState(user?.lastName || '');
@@ -59,9 +62,26 @@ const Profile = () => {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
-        <p className="text-gray-600">Manage your account and preferences</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Profile</h1>
+        <p className="text-gray-600 dark:text-gray-300">Manage your account and preferences</p>
       </div>
+
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            className="w-full flex items-center gap-2"
+            onClick={() => navigate('/settings')}
+          >
+            <Settings className="w-4 h-4" />
+            App Settings
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Profile Information */}
       <Card>
@@ -109,7 +129,7 @@ const Profile = () => {
               id="email"
               value={user?.email || ''}
               disabled
-              className="bg-gray-50"
+              className="bg-gray-50 dark:bg-gray-700"
             />
           </div>
 
@@ -129,10 +149,10 @@ const Profile = () => {
           <CardTitle>Security</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <div>
               <div className="font-medium">Password</div>
-              <div className="text-sm text-gray-600">Change your account password</div>
+              <div className="text-sm text-gray-600 dark:text-gray-300">Change your account password</div>
             </div>
             <Button
               variant="outline"
@@ -143,10 +163,10 @@ const Profile = () => {
             </Button>
           </div>
           
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <div>
               <div className="font-medium">Connected Accounts</div>
-              <div className="text-sm text-gray-600">Manage linked social accounts</div>
+              <div className="text-sm text-gray-600 dark:text-gray-300">Manage linked social accounts</div>
             </div>
             <Button
               variant="outline"

@@ -52,14 +52,43 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
       <div className="px-4 pt-4 pb-20">
-        <div className="bg-white rounded-t-3xl shadow-lg min-h-screen">
+        <div className="bg-white dark:bg-gray-800 rounded-t-3xl shadow-lg min-h-screen">
           <div className="p-6 pb-8 space-y-6">
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-              <p className="text-gray-600">Customize your app preferences</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
+              <p className="text-gray-600 dark:text-gray-300">Customize your app preferences</p>
             </div>
+
+            {/* Theme Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Appearance</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Label>Theme</Label>
+                <RadioGroup
+                  value={localSettings.theme}
+                  onValueChange={(value) => 
+                    setLocalSettings(prev => ({ ...prev, theme: value as 'light' | 'dark' | 'system' }))
+                  }
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="light" id="light" />
+                    <Label htmlFor="light">Light</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="dark" id="dark" />
+                    <Label htmlFor="dark">Dark</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="system" id="system" />
+                    <Label htmlFor="system">System</Label>
+                  </div>
+                </RadioGroup>
+              </CardContent>
+            </Card>
 
             {/* Notifications Settings */}
             <Card>
