@@ -1,10 +1,9 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/hooks/useAuth';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -14,12 +13,12 @@ import ConnectedAccountsDialog from './ConnectedAccountsDialog';
 import DeleteAccountDialog from './DeleteAccountDialog';
 
 const Profile = () => {
-  const { user, logout } = useAuth();
+  const { user, logout } = useSupabaseAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  const [firstName, setFirstName] = useState(user?.firstName || '');
-  const [lastName, setLastName] = useState(user?.lastName || '');
+  const [firstName, setFirstName] = useState(user?.user_metadata?.first_name || '');
+  const [lastName, setLastName] = useState(user?.user_metadata?.last_name || '');
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [isAccountsDialogOpen, setIsAccountsDialogOpen] = useState(false);
@@ -38,13 +37,7 @@ const Profile = () => {
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update user in localStorage
-      const updatedUser = { ...user, firstName, lastName };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      
+      // TODO: Implement profile update with Supabase when user profiles are added
       toast({
         title: 'Success',
         description: 'Profile updated successfully',
@@ -58,6 +51,11 @@ const Profile = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/auth');
   };
 
   return (
@@ -190,7 +188,7 @@ const Profile = () => {
             <Button 
               variant="outline" 
               className="w-full"
-              onClick={logout}
+              onClick={handleLogout}
             >
               Sign Out
             </Button>

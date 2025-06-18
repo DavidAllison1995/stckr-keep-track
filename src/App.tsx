@@ -1,75 +1,107 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider, useAuth } from "@/hooks/useAuth";
-import { MaintenanceProvider } from "@/hooks/useMaintenance";
-import { ItemsProvider } from "@/hooks/useItems";
-import { ThemeProvider } from "@/contexts/ThemeContext";
-import AuthForm from "@/components/auth/AuthForm";
-import NavBar from "@/components/navigation/NavBar";
-import DashboardPage from "./pages/Dashboard";
-import ItemsPage from "./pages/ItemsPage";
-import ItemDetailPage from "./pages/ItemDetailPage";
-import MaintenancePage from "./pages/MaintenancePage";
-import MaintenanceTasksPage from "./pages/MaintenanceTasksPage";
-import TasksPage from "./pages/TasksPage";
-import ScannerPage from "./pages/ScannerPage";
-import ProfilePage from "./pages/ProfilePage";
-import NotFound from "./pages/NotFound";
-import SettingsPage from "./pages/SettingsPage";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import { AuthProvider } from '@/hooks/useSupabaseAuth';
+import { ItemsProvider } from '@/hooks/useSupabaseItems';
+import { MaintenanceProvider } from '@/hooks/useSupabaseMaintenance';
+import { Toaster } from '@/components/ui/toaster';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import AuthPage from '@/pages/AuthPage';
+import Index from '@/pages/Index';
+import Dashboard from '@/pages/Dashboard';
+import ItemsPage from '@/pages/ItemsPage';
+import ItemDetailPage from '@/pages/ItemDetailPage';
+import MaintenancePage from '@/pages/MaintenancePage';
+import MaintenanceTasksPage from '@/pages/MaintenanceTasksPage';
+import TasksPage from '@/pages/TasksPage';
+import ProfilePage from '@/pages/ProfilePage';
+import SettingsPage from '@/pages/SettingsPage';
+import ScannerPage from '@/pages/ScannerPage';
+import NotFound from '@/pages/NotFound';
 
-const queryClient = new QueryClient();
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
-const AppContent = () => {
-  const { isAuthenticated } = useAuth();
-
-  if (!isAuthenticated) {
-    return <AuthForm />;
-  }
-
+function App() {
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<DashboardPage />} />
-        <Route path="/items" element={<ItemsPage />} />
-        <Route path="/items/:itemId" element={<ItemDetailPage />} />
-        <Route path="/calendar" element={<MaintenancePage />} />
-        <Route path="/maintenance/overview" element={<MaintenanceTasksPage />} />
-        <Route path="/maintenance/up-to-date" element={<MaintenanceTasksPage />} />
-        <Route path="/maintenance/due-soon" element={<MaintenanceTasksPage />} />
-        <Route path="/maintenance/overdue" element={<MaintenanceTasksPage />} />
-        <Route path="/tasks/:status" element={<TasksPage />} />
-        <Route path="/scanner" element={<ScannerPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <NavBar />
-    </>
-  );
-};
-
-const App = () => (
-  <BrowserRouter>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <ThemeProvider>
-          <AuthProvider>
-            <ItemsProvider>
-              <MaintenanceProvider>
-                <AppContent />
+      <ThemeProvider>
+        <AuthProvider>
+          <ItemsProvider>
+            <MaintenanceProvider>
+              <Router>
+                <div className="App">
+                  <Routes>
+                    <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/" element={
+                      <ProtectedRoute>
+                        <Index />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/dashboard" element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/items" element={
+                      <ProtectedRoute>
+                        <ItemsPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/items/:id" element={
+                      <ProtectedRoute>
+                        <ItemDetailPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/maintenance" element={
+                      <ProtectedRoute>
+                        <MaintenancePage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/maintenance-tasks" element={
+                      <ProtectedRoute>
+                        <MaintenanceTasksPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/tasks" element={
+                      <ProtectedRoute>
+                        <TasksPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/profile" element={
+                      <ProtectedRoute>
+                        <ProfilePage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/settings" element={
+                      <ProtectedRoute>
+                        <SettingsPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/scanner" element={
+                      <ProtectedRoute>
+                        <ScannerPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </div>
                 <Toaster />
-                <Sonner />
-              </MaintenanceProvider>
-            </ItemsProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </TooltipProvider>
+              </Router>
+            </MaintenanceProvider>
+          </ItemsProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
-  </BrowserRouter>
-);
+  );
+}
 
 export default App;

@@ -7,9 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Edit, Check, Trash2 } from 'lucide-react';
-import { Item, useItems } from '@/hooks/useItems';
-import { useMaintenance, MaintenanceTask } from '@/hooks/useMaintenance';
+import { Edit, Check, Trash2, Upload } from 'lucide-react';
+import { Item, useSupabaseItems } from '@/hooks/useSupabaseItems';
+import { useSupabaseMaintenance, MaintenanceTask } from '@/hooks/useSupabaseMaintenance';
+import { useToast } from '@/hooks/use-toast';
 import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
 import TaskEditForm from '@/components/maintenance/TaskEditForm';
 import ItemForm from './ItemForm';
@@ -32,8 +33,9 @@ interface Document {
 }
 
 const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: ItemDetailProps) => {
-  const { getTasksByItem, markTaskComplete, deleteTask } = useMaintenance();
-  const { updateItem } = useItems();
+  const { getTasksByItem, markTaskComplete, deleteTask } = useSupabaseMaintenance();
+  const { updateItem, uploadDocument, deleteDocument } = useSupabaseItems();
+  const { toast } = useToast();
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isEditItemModalOpen, setIsEditItemModalOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
@@ -45,6 +47,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
   const [showCompleted, setShowCompleted] = useState(false);
   const [recurringDeleteDialogOpen, setRecurringDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<MaintenanceTask | null>(null);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
   
   // Get tasks based on the toggle state
   const upcomingTasks = getTasksByItem(item.id, false); // Exclude completed
@@ -82,29 +85,99 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
     setDocuments(item.documents || []);
   }, [item]);
 
-  const IconComponent = getIconComponent(item.iconId || 'box');
+  const IconComponent = getIconComponent(item.icon_id || 'box');
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
+    if (!file) return;
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: 'File too large',
+        description: 'Please select a file smaller than 10MB',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsUploadingFile(true);
+    try {
+      const publicUrl = await uploadDocument(item.id, file);
+      
       const newDoc: Document = {
         id: Date.now().toString(),
         name: file.name,
         type: file.type,
-        url: URL.createObjectURL(file),
+        url: publicUrl,
         uploadDate: new Date().toISOString(),
       };
+      
       const updatedDocuments = [...documents, newDoc];
       setDocuments(updatedDocuments);
       
       // Save to item data
-      updateItem(item.id, { documents: updatedDocuments });
+      await updateItem(item.id, { documents: updatedDocuments });
+      
+      toast({
+        title: 'Success',
+        description: 'Document uploaded successfully',
+      });
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast({
+        title: 'Upload failed',
+        description: 'Failed to upload document',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploadingFile(false);
+      // Reset file input
+      if (event.target) {
+        event.target.value = '';
+      }
     }
   };
 
-  const handleSaveNotes = () => {
-    updateItem(item.id, { notes });
-    console.log('Notes saved:', notes);
+  const handleDeleteDocument = async (doc: Document) => {
+    try {
+      await deleteDocument(doc.url);
+      
+      const updatedDocuments = documents.filter(d => d.id !== doc.id);
+      setDocuments(updatedDocuments);
+      
+      // Save to item data
+      await updateItem(item.id, { documents: updatedDocuments });
+      
+      toast({
+        title: 'Success',
+        description: 'Document deleted successfully',
+      });
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast({
+        title: 'Delete failed',
+        description: 'Failed to delete document',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleSaveNotes = async () => {
+    try {
+      await updateItem(item.id, { notes });
+      toast({
+        title: 'Success',
+        description: 'Notes saved successfully',
+      });
+    } catch (error) {
+      console.error('Error saving notes:', error);
+      toast({
+        title: 'Save failed',
+        description: 'Failed to save notes',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleEditTask = (taskId: string) => {
@@ -460,14 +533,18 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
                     id="file-upload"
                     className="hidden"
                     onChange={handleFileUpload}
-                    accept="image/*,application/pdf,.doc,.docx"
+                    accept="image/*,application/pdf,.doc,.docx,.txt"
+                    disabled={isUploadingFile}
                   />
                   <Button 
                     variant="outline" 
                     size="sm"
                     onClick={() => document.getElementById('file-upload')?.click()}
+                    disabled={isUploadingFile}
+                    className="flex items-center gap-2"
                   >
-                    Upload File
+                    <Upload className="h-4 w-4" />
+                    {isUploadingFile ? 'Uploading...' : 'Upload File'}
                   </Button>
                 </div>
               </div>
@@ -480,6 +557,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
                   <Button 
                     variant="outline"
                     onClick={() => document.getElementById('file-upload')?.click()}
+                    disabled={isUploadingFile}
                   >
                     Upload Document
                   </Button>
@@ -503,6 +581,14 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
                         onClick={() => window.open(doc.url, '_blank')}
                       >
                         View
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteDocument(doc)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   ))}
