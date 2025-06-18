@@ -7,14 +7,11 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { useUserSettings } from '@/hooks/useUserSettings';
-import { useTheme } from '@/contexts/ThemeContext';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import DataManagement from './DataManagement';
 
 const SettingsPage = () => {
   const { settings, updateSettings, isLoading } = useUserSettings();
   const [localSettings, setLocalSettings] = useState(settings);
-  const { theme, setTheme } = useTheme();
   const { toast } = useToast();
 
   const handleSave = async () => {
@@ -59,40 +56,10 @@ const SettingsPage = () => {
       <div className="px-4 pt-4 pb-20">
         <div className="bg-white dark:bg-gray-800 rounded-t-3xl shadow-lg min-h-screen">
           <div className="p-6 pb-8 space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="text-center flex-1">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
-                <p className="text-gray-600 dark:text-gray-300">Customize your app preferences</p>
-              </div>
-              <ThemeToggle />
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
+              <p className="text-gray-600 dark:text-gray-300">Customize your app preferences</p>
             </div>
-
-            {/* Theme Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Appearance</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Label>Theme</Label>
-                <RadioGroup
-                  value={theme}
-                  onValueChange={(value) => setTheme(value as 'light' | 'dark' | 'system')}
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="light" id="light" />
-                    <Label htmlFor="light">Light</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="dark" id="dark" />
-                    <Label htmlFor="dark">Dark</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="system" id="system" />
-                    <Label htmlFor="system">System</Label>
-                  </div>
-                </RadioGroup>
-              </CardContent>
-            </Card>
 
             {/* Notifications Settings */}
             <Card>
