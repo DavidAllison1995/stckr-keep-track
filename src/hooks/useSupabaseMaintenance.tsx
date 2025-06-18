@@ -28,7 +28,8 @@ interface MaintenanceContextType {
   isLoading: boolean;
   addTask: (task: Omit<MaintenanceTask, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
   updateTask: (id: string, updates: Partial<MaintenanceTask>) => Promise<void>;
-  deleteTask: (id: string) => Promise<void>;
+  deleteTask: (id: string, scope?: 'single' | 'all') => Promise<void>;
+  markTaskComplete: (id: string) => Promise<void>;
   getTaskById: (id: string) => MaintenanceTask | undefined;
   getTasksByItem: (itemId: string, includeCompleted?: boolean) => MaintenanceTask[];
   getTasksByStatus: (status: MaintenanceTaskStatus) => MaintenanceTask[];
@@ -133,13 +134,28 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const deleteTaskMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('maintenance_tasks')
-        .delete()
-        .eq('id', id);
+    mutationFn: async ({ id, scope }: { id: string; scope?: 'single' | 'all' }) => {
+      if (scope === 'all') {
+        // Find the parent task
+        const task = tasks.find(t => t.id === id);
+        const parentId = task?.parent_task_id || id;
+        
+        // Delete parent and all children
+        const { error } = await supabase
+          .from('maintenance_tasks')
+          .delete()
+          .or(`id.eq.${parentId},parent_task_id.eq.${parentId}`);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Delete only this task
+        const { error } = await supabase
+          .from('maintenance_tasks')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['maintenance-tasks', user?.id] });
@@ -158,6 +174,35 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
     },
   });
 
+  const markTaskCompleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase
+        .from('maintenance_tasks')
+        .update({ status: 'completed' })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['maintenance-tasks', user?.id] });
+      toast({
+        title: 'Success',
+        description: 'Task marked as complete',
+      });
+    },
+    onError: (error) => {
+      console.error('Error marking task complete:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to mark task as complete',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const addTask = async (taskData: Omit<MaintenanceTask, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     await addTaskMutation.mutateAsync(taskData);
   };
@@ -166,8 +211,12 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
     await updateTaskMutation.mutateAsync({ id, updates });
   };
 
-  const deleteTask = async (id: string) => {
-    await deleteTaskMutation.mutateAsync(id);
+  const deleteTask = async (id: string, scope: 'single' | 'all' = 'single') => {
+    await deleteTaskMutation.mutateAsync({ id, scope });
+  };
+
+  const markTaskComplete = async (id: string) => {
+    await markTaskCompleteMutation.mutateAsync(id);
   };
 
   const getTaskById = (id: string) => {
@@ -210,6 +259,7 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
       addTask,
       updateTask,
       deleteTask,
+      markTaskComplete,
       getTaskById,
       getTasksByItem,
       getTasksByStatus,

@@ -1,10 +1,11 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { useItems } from '@/hooks/useItems';
+import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { getIconComponent } from '@/components/icons';
 import ItemCard from './ItemCard';
 import ItemForm from './ItemForm';
@@ -14,7 +15,7 @@ interface ItemsListProps {
 }
 
 const ItemsList = ({ onItemSelect }: ItemsListProps) => {
-  const { items } = useItems();
+  const { items } = useSupabaseItems();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [roomFilter, setRoomFilter] = useState('all');

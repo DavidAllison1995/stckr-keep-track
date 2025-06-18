@@ -1,6 +1,6 @@
 
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { useItems } from '@/hooks/useItems';
+import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import ItemDetail from '@/components/items/ItemDetail';
 
 const ItemDetailPage = () => {
@@ -9,9 +9,9 @@ const ItemDetailPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
-  console.log('About to call useItems');
-  const { getItemById } = useItems();
-  console.log('useItems call successful');
+  console.log('About to call useSupabaseItems');
+  const { getItemById } = useSupabaseItems();
+  console.log('useSupabaseItems call successful');
 
   const item = itemId ? getItemById(itemId) : null;
   const defaultTab = searchParams.get('tab') || 'details';
