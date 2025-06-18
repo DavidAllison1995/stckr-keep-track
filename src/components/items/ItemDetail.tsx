@@ -14,6 +14,7 @@ import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
 import TaskEditForm from '@/components/maintenance/TaskEditForm';
 import ItemForm from './ItemForm';
 import { getIconComponent } from '@/components/icons';
+import RecurringTaskDeleteDialog from '@/components/maintenance/RecurringTaskDeleteDialog';
 
 interface ItemDetailProps {
   item: Item;
@@ -42,6 +43,8 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [recurringDeleteDialogOpen, setRecurringDeleteDialogOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<any>(null);
   
   // Get tasks based on the toggle state
   const upcomingTasks = getTasksByItem(item.id, false); // Exclude completed
@@ -125,12 +128,43 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
     }
   };
 
-  const handleDeleteTask = async (taskId: string) => {
-    setDeletingTaskId(taskId);
-    try {
-      deleteTask(taskId);
-    } finally {
-      setDeletingTaskId(null);
+  const handleDeleteTask = async (task: any) => {
+    const isRecurring = task.recurrence !== 'none' || task.parentTaskId;
+    
+    if (isRecurring) {
+      setTaskToDelete(task);
+      setRecurringDeleteDialogOpen(true);
+    } else {
+      setDeletingTaskId(task.id);
+      try {
+        deleteTask(task.id);
+      } finally {
+        setDeletingTaskId(null);
+      }
+    }
+  };
+
+  const handleDeleteSingle = () => {
+    if (taskToDelete) {
+      setDeletingTaskId(taskToDelete.id);
+      try {
+        deleteTask(taskToDelete.id, 'single');
+      } finally {
+        setDeletingTaskId(null);
+        setTaskToDelete(null);
+      }
+    }
+  };
+
+  const handleDeleteAll = () => {
+    if (taskToDelete) {
+      setDeletingTaskId(taskToDelete.id);
+      try {
+        deleteTask(taskToDelete.id, 'all');
+      } finally {
+        setDeletingTaskId(null);
+        setTaskToDelete(null);
+      }
     }
   };
 
@@ -287,7 +321,14 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
                         task.status === 'due_soon' ? 'bg-yellow-500' : 'bg-green-500'
                       }`} />
                       <div className="flex-1">
-                        <div className="font-medium">{task.title}</div>
+                        <div className="font-medium flex items-center gap-2">
+                          {task.title}
+                          {(task.recurrence !== 'none' || task.parentTaskId) && (
+                            <Badge variant="outline" className="text-xs">
+                              {task.parentTaskId ? 'Recurring' : task.recurrence}
+                            </Badge>
+                          )}
+                        </div>
                         <div className="text-sm text-gray-600">
                           {showCompleted ? 'Completed: ' : 'Due: '}{new Date(task.date).toLocaleDateString()}
                         </div>
@@ -309,7 +350,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDeleteTask(task.id)}
+                          onClick={() => handleDeleteTask(task)}
                           disabled={deletingTaskId === task.id}
                           aria-label="Delete completed task"
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -359,6 +400,15 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
               )}
             </DialogContent>
           </Dialog>
+
+          {/* Recurring Task Delete Dialog */}
+          <RecurringTaskDeleteDialog
+            task={taskToDelete}
+            open={recurringDeleteDialogOpen}
+            onOpenChange={setRecurringDeleteDialogOpen}
+            onDeleteSingle={handleDeleteSingle}
+            onDeleteAll={handleDeleteAll}
+          />
         </TabsContent>
         
         <TabsContent value="notes">

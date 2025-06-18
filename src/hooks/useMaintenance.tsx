@@ -8,6 +8,8 @@ export interface MaintenanceTask {
   notes?: string;
   date: string;
   recurrence: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+  recurrenceRule?: string;
+  parentTaskId?: string;
   status: 'up_to_date' | 'due_soon' | 'overdue' | 'completed';
   createdAt: string;
   updatedAt: string;
@@ -17,7 +19,7 @@ interface MaintenanceContextType {
   tasks: MaintenanceTask[];
   addTask: (task: Omit<MaintenanceTask, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => void;
   updateTask: (id: string, updates: Partial<MaintenanceTask>) => void;
-  deleteTask: (id: string) => void;
+  deleteTask: (id: string, scope?: 'single' | 'all') => void;
   markTaskComplete: (id: string) => void;
   getTasksByStatus: (status: MaintenanceTask['status']) => MaintenanceTask[];
   getTasksByItem: (itemId: string, includeCompleted?: boolean) => MaintenanceTask[];
@@ -42,16 +44,77 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const generateRecurrenceRule = (recurrence: string): string | undefined => {
+    switch (recurrence) {
+      case 'daily': return 'FREQ=DAILY;INTERVAL=1';
+      case 'weekly': return 'FREQ=WEEKLY;INTERVAL=1';
+      case 'monthly': return 'FREQ=MONTHLY;INTERVAL=1';
+      case 'yearly': return 'FREQ=YEARLY;INTERVAL=1';
+      default: return undefined;
+    }
+  };
+
+  const generateRecurringTasks = (parentTask: MaintenanceTask) => {
+    if (parentTask.recurrence === 'none' || !parentTask.recurrenceRule) return [];
+
+    const recurringTasks: MaintenanceTask[] = [];
+    const startDate = new Date(parentTask.date);
+    const endDate = new Date();
+    endDate.setMonth(endDate.getMonth() + 3); // Generate 3 months ahead
+
+    let currentDate = new Date(startDate);
+    
+    // Generate future instances based on recurrence
+    while (currentDate <= endDate) {
+      switch (parentTask.recurrence) {
+        case 'daily':
+          currentDate.setDate(currentDate.getDate() + 1);
+          break;
+        case 'weekly':
+          currentDate.setDate(currentDate.getDate() + 7);
+          break;
+        case 'monthly':
+          currentDate.setMonth(currentDate.getMonth() + 1);
+          break;
+        case 'yearly':
+          currentDate.setFullYear(currentDate.getFullYear() + 1);
+          break;
+      }
+
+      if (currentDate <= endDate) {
+        const newTask: MaintenanceTask = {
+          ...parentTask,
+          id: `${parentTask.id}-${currentDate.toISOString().split('T')[0]}`,
+          date: currentDate.toISOString().split('T')[0],
+          parentTaskId: parentTask.id,
+          status: calculateTaskStatus(currentDate.toISOString().split('T')[0]),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        recurringTasks.push(newTask);
+      }
+    }
+
+    return recurringTasks;
+  };
+
   const addTask = (taskData: Omit<MaintenanceTask, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => {
     const status = calculateTaskStatus(taskData.date);
+    const recurrenceRule = generateRecurrenceRule(taskData.recurrence);
+    
     const newTask: MaintenanceTask = {
       ...taskData,
       id: Date.now().toString(),
+      recurrenceRule,
       status,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    setTasks(prev => [newTask, ...prev]);
+
+    // Generate recurring tasks if applicable
+    const recurringTasks = generateRecurringTasks(newTask);
+    
+    setTasks(prev => [newTask, ...recurringTasks, ...prev]);
   };
 
   const updateTask = (id: string, updates: Partial<MaintenanceTask>) => {
@@ -76,8 +139,20 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
-  const deleteTask = (id: string) => {
-    setTasks(prev => prev.filter(task => task.id !== id));
+  const deleteTask = (id: string, scope: 'single' | 'all' = 'single') => {
+    setTasks(prev => {
+      if (scope === 'all') {
+        // Find the parent task
+        const task = prev.find(t => t.id === id);
+        const parentId = task?.parentTaskId || id;
+        
+        // Delete parent and all children
+        return prev.filter(t => t.id !== parentId && t.parentTaskId !== parentId);
+      } else {
+        // Delete only this task
+        return prev.filter(task => task.id !== id);
+      }
+    });
   };
 
   const getTasksByStatus = (status: MaintenanceTask['status']) => {

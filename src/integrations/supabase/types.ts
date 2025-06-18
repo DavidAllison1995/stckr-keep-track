@@ -70,7 +70,9 @@ export type Database = {
           id: string
           item_id: string | null
           notes: string | null
+          parent_task_id: string | null
           recurrence: string
+          recurrence_rule: string | null
           status: string
           title: string
           updated_at: string
@@ -82,7 +84,9 @@ export type Database = {
           id?: string
           item_id?: string | null
           notes?: string | null
+          parent_task_id?: string | null
           recurrence?: string
+          recurrence_rule?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -94,7 +98,9 @@ export type Database = {
           id?: string
           item_id?: string | null
           notes?: string | null
+          parent_task_id?: string | null
           recurrence?: string
+          recurrence_rule?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -106,6 +112,13 @@ export type Database = {
             columns: ["item_id"]
             isOneToOne: false
             referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_tasks_parent_task_id_fkey"
+            columns: ["parent_task_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_tasks"
             referencedColumns: ["id"]
           },
         ]
