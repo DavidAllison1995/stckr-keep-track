@@ -19,11 +19,14 @@ const RecurringTaskDeleteDialog = ({
   onDeleteSingle,
   onDeleteAll
 }: RecurringTaskDeleteDialogProps) => {
-  const isRecurring = task && (task.recurrence !== 'none' || task.parentTaskId);
-  const recurrenceText = task?.recurrence && task.recurrence !== 'none' 
-    ? task.recurrence.charAt(0).toUpperCase() + task.recurrence.slice(1)
-    : 'Unknown';
+  if (!task) return null;
 
+  const isRecurring = task.recurrence !== 'none' || task.parentTaskId;
+  const recurrenceText = task.recurrence && task.recurrence !== 'none' 
+    ? task.recurrence.charAt(0).toUpperCase() + task.recurrence.slice(1)
+    : task.parentTaskId ? 'Recurring' : 'Unknown';
+
+  // Only show dialog for recurring tasks
   if (!isRecurring) {
     return null;
   }
@@ -44,9 +47,9 @@ const RecurringTaskDeleteDialog = ({
         
         <div className="py-4">
           <div className="bg-gray-50 rounded-lg p-3 mb-4">
-            <h4 className="font-medium text-sm mb-1">{task?.title}</h4>
+            <h4 className="font-medium text-sm mb-1">{task.title}</h4>
             <p className="text-sm text-gray-600">
-              Scheduled: {task && new Date(task.date).toLocaleDateString()}
+              Scheduled: {new Date(task.date).toLocaleDateString()}
             </p>
           </div>
         </div>

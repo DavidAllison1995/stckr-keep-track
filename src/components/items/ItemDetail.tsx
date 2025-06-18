@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Edit, Check, Trash2 } from 'lucide-react';
 import { Item, useItems } from '@/hooks/useItems';
-import { useMaintenance } from '@/hooks/useMaintenance';
+import { useMaintenance, MaintenanceTask } from '@/hooks/useMaintenance';
 import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
 import TaskEditForm from '@/components/maintenance/TaskEditForm';
 import ItemForm from './ItemForm';
@@ -44,7 +44,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
   const [recurringDeleteDialogOpen, setRecurringDeleteDialogOpen] = useState(false);
-  const [taskToDelete, setTaskToDelete] = useState<any>(null);
+  const [taskToDelete, setTaskToDelete] = useState<MaintenanceTask | null>(null);
   
   // Get tasks based on the toggle state
   const upcomingTasks = getTasksByItem(item.id, false); // Exclude completed
@@ -128,8 +128,15 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
     }
   };
 
-  const handleDeleteTask = async (task: any) => {
+  const handleDeleteTask = async (task: MaintenanceTask) => {
+    console.log('Deleting task:', task);
+    console.log('Task recurrence:', task.recurrence);
+    console.log('Task parentTaskId:', task.parentTaskId);
+    
+    // Check if this is a recurring task (either has recurrence set or is a child of a recurring task)
     const isRecurring = task.recurrence !== 'none' || task.parentTaskId;
+    
+    console.log('Is recurring?', isRecurring);
     
     if (isRecurring) {
       setTaskToDelete(task);
@@ -137,7 +144,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
     } else {
       setDeletingTaskId(task.id);
       try {
-        deleteTask(task.id);
+        deleteTask(task.id, 'single');
       } finally {
         setDeletingTaskId(null);
       }
@@ -375,6 +382,16 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
                             onClick={() => handleEditTask(task.id)}
                           >
                             <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteTask(task)}
+                            disabled={deletingTaskId === task.id}
+                            aria-label="Delete task"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </>
                       )}
