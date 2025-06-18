@@ -74,7 +74,7 @@ function App() {
                         </>
                       </ProtectedRoute>
                     } />
-                    <Route path="/maintenance" element={
+                    <Route path="/calendar" element={
                       <ProtectedRoute>
                         <>
                           <MaintenancePage />

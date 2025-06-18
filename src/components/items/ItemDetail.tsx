@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { ArrowLeft, Calendar, FileText, Settings, Plus, Edit, Trash2, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -245,7 +244,6 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
               description: "Item updated successfully",
             });
           }}
-          onCancel={() => setIsEditMode(false)}
         />
       </div>
     );
@@ -378,7 +376,6 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
                         description: "Maintenance task added successfully",
                       });
                     }}
-                    onCancel={() => setShowTaskForm(false)}
                   />
                 </DialogContent>
               </Dialog>
