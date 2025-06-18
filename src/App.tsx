@@ -90,6 +90,14 @@ function App() {
                         </>
                       </ProtectedRoute>
                     } />
+                    <Route path="/tasks/:status" element={
+                      <ProtectedRoute>
+                        <>
+                          <TasksPage />
+                          <NavBar />
+                        </>
+                      </ProtectedRoute>
+                    } />
                     <Route path="/tasks" element={
                       <ProtectedRoute>
                         <>
