@@ -42,8 +42,8 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
           <p className="text-gray-500">{item.category} {item.room ? ` - ${item.room}` : ''}</p>
         </div>
         <div>
-          <button onClick={handleClose} className="px-4 py-2 text-gray-600 hover:text-gray-800">
-            Close
+          <button onClick={handleEdit} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+            Edit
           </button>
         </div>
       </div>
