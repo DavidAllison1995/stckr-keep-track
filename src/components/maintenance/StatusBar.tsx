@@ -1,15 +1,33 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, Clock, AlertTriangle } from 'lucide-react';
-import { useMaintenance } from '@/hooks/useMaintenance';
+import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { Link } from 'react-router-dom';
 
 const StatusBar = () => {
-  const { getTasksByStatus } = useMaintenance();
+  const { tasks } = useSupabaseMaintenance();
 
-  const upToDateTasks = getTasksByStatus('up_to_date');
-  const dueSoonTasks = getTasksByStatus('due_soon');
-  const overdueTasks = getTasksByStatus('overdue');
+  // Calculate task statuses based on dates
+  const now = new Date();
+  const fourteenDaysFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+
+  const upToDateTasks = tasks.filter(task => {
+    if (task.status === 'completed') return false;
+    const taskDate = new Date(task.date);
+    return taskDate > fourteenDaysFromNow;
+  });
+
+  const dueSoonTasks = tasks.filter(task => {
+    if (task.status === 'completed') return false;
+    const taskDate = new Date(task.date);
+    return taskDate >= now && taskDate <= fourteenDaysFromNow;
+  });
+
+  const overdueTasks = tasks.filter(task => {
+    if (task.status === 'completed') return false;
+    const taskDate = new Date(task.date);
+    return taskDate < now;
+  });
 
   const statusCards = [{
     title: 'Up-to-Date',
