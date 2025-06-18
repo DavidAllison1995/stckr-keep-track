@@ -106,61 +106,72 @@ const QRScanner = () => {
 
       <Card>
         <CardContent className="p-0">
-          {!isScanning && hasPermission !== false ? (
-            <div className="text-center py-12 px-6">
-              <Camera className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Ready to Scan
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Tap the button below to start scanning QR codes
-              </p>
-              <Button 
-                onClick={handleStartScan}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                disabled={isProcessing}
-              >
-                <Camera className="w-4 h-4 mr-2" />
-                {isProcessing ? 'Processing...' : 'Start Scanning'}
-              </Button>
-            </div>
-          ) : hasPermission === false ? (
-            <div className="text-center py-12 px-6">
-              <AlertCircle className="w-16 h-16 mx-auto mb-4 text-red-400" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Camera Access Needed
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Allow camera access to scan QR codes.
-              </p>
-              <Button onClick={retryPermission} variant="outline">
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Retry
-              </Button>
-            </div>
-          ) : (
-            <div className="relative">
-              <video
-                ref={videoRef}
-                className="w-full h-64 sm:h-80 object-cover"
-                playsInline
-                muted
-              />
-              {isProcessing && (
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                  <div className="bg-white rounded-lg p-4 flex items-center gap-2">
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Processing...</span>
-                  </div>
+          <div className="relative">
+            {/* Video element - always rendered but conditionally visible */}
+            <video
+              ref={videoRef}
+              className={`w-full h-64 sm:h-80 object-cover ${isScanning ? 'block' : 'hidden'}`}
+              playsInline
+              muted
+            />
+            
+            {/* Overlay content when not scanning */}
+            {!isScanning && hasPermission !== false && (
+              <div className="text-center py-12 px-6">
+                <Camera className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Ready to Scan
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Tap the button below to start scanning QR codes
+                </p>
+                <Button 
+                  onClick={handleStartScan}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  disabled={isProcessing}
+                >
+                  <Camera className="w-4 h-4 mr-2" />
+                  {isProcessing ? 'Processing...' : 'Start Scanning'}
+                </Button>
+              </div>
+            )}
+
+            {/* Permission error overlay */}
+            {hasPermission === false && (
+              <div className="text-center py-12 px-6">
+                <AlertCircle className="w-16 h-16 mx-auto mb-4 text-red-400" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Camera Access Needed
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Allow camera access to scan QR codes.
+                </p>
+                <Button onClick={retryPermission} variant="outline">
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Retry
+                </Button>
+              </div>
+            )}
+
+            {/* Processing overlay when scanning */}
+            {isScanning && isProcessing && (
+              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                <div className="bg-white rounded-lg p-4 flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Processing...</span>
                 </div>
-              )}
+              </div>
+            )}
+
+            {/* Stop button when scanning */}
+            {isScanning && (
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
                 <Button onClick={handleStopScan} variant="secondary">
                   Stop Scanning
                 </Button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </CardContent>
       </Card>
 
