@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,7 +41,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
   const [isEditItemModalOpen, setIsEditItemModalOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [notes, setNotes] = useState(item.notes || '');
-  const [documents, setDocuments] = useState<Document[]>(item.documents || []);
+  const [documents, setDocuments] = useState<Document[]>((item.documents as Document[]) || []);
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
@@ -82,7 +83,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
   // Update local state when item changes
   useEffect(() => {
     setNotes(item.notes || '');
-    setDocuments(item.documents || []);
+    setDocuments((item.documents as Document[]) || []);
   }, [item]);
 
   const IconComponent = getIconComponent(item.icon_id || 'box');
@@ -117,7 +118,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
       setDocuments(updatedDocuments);
       
       // Save to item data
-      await updateItem(item.id, { documents: updatedDocuments });
+      await updateItem(item.id, { documents: updatedDocuments as any });
       
       toast({
         title: 'Success',
@@ -147,7 +148,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
       setDocuments(updatedDocuments);
       
       // Save to item data
-      await updateItem(item.id, { documents: updatedDocuments });
+      await updateItem(item.id, { documents: updatedDocuments as any });
       
       toast({
         title: 'Success',
@@ -204,10 +205,10 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
   const handleDeleteTask = async (task: MaintenanceTask) => {
     console.log('Deleting task:', task);
     console.log('Task recurrence:', task.recurrence);
-    console.log('Task parentTaskId:', task.parentTaskId);
+    console.log('Task parent_task_id:', task.parent_task_id);
     
     // Check if this is a recurring task (either has recurrence set or is a child of a recurring task)
-    const isRecurring = task.recurrence !== 'none' || task.parentTaskId;
+    const isRecurring = task.recurrence !== 'none' || task.parent_task_id;
     
     console.log('Is recurring?', isRecurring);
     
@@ -277,9 +278,9 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
         <CardContent className="p-6">
           <div className="flex gap-4">
             <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              {item.photoUrl ? (
+              {item.photo_url ? (
                 <img 
-                  src={item.photoUrl} 
+                  src={item.photo_url} 
                   alt={item.name} 
                   className="w-full h-full object-cover rounded-lg" 
                 />
@@ -318,22 +319,22 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
               <CardTitle>Item Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {item.purchaseDate && (
+              {item.purchase_date && (
                 <div>
                   <label className="text-sm font-medium text-gray-700">Purchase Date</label>
-                  <p className="text-sm">{new Date(item.purchaseDate).toLocaleDateString()}</p>
+                  <p className="text-sm">{new Date(item.purchase_date).toLocaleDateString()}</p>
                 </div>
               )}
-              {item.warrantyDate && (
+              {item.warranty_date && (
                 <div>
                   <label className="text-sm font-medium text-gray-700">Warranty Until</label>
-                  <p className="text-sm">{new Date(item.warrantyDate).toLocaleDateString()}</p>
+                  <p className="text-sm">{new Date(item.warranty_date).toLocaleDateString()}</p>
                 </div>
               )}
               <div>
                 <label className="text-sm font-medium text-gray-700">QR Code</label>
                 <p className="text-sm text-gray-500">
-                  {item.qrCodeId ? `Assigned: ${item.qrCodeId}` : 'No QR code assigned'}
+                  {item.qr_code_id ? `Assigned: ${item.qr_code_id}` : 'No QR code assigned'}
                 </p>
               </div>
             </CardContent>
@@ -403,9 +404,9 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
                       <div className="flex-1">
                         <div className="font-medium flex items-center gap-2">
                           {task.title}
-                          {(task.recurrence !== 'none' || task.parentTaskId) && (
+                          {(task.recurrence !== 'none' || task.parent_task_id) && (
                             <Badge variant="outline" className="text-xs">
-                              {task.parentTaskId ? 'Recurring' : task.recurrence}
+                              {task.parent_task_id ? 'Recurring' : task.recurrence}
                             </Badge>
                           )}
                         </div>

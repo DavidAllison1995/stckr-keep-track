@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Item } from '@/hooks/useItems';
+import { Item } from '@/hooks/useSupabaseItems';
 import { getIconComponent } from '@/components/icons';
 import ItemDetail from './ItemDetail';
 import ItemForm from './ItemForm';
@@ -17,7 +17,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const IconComponent = getIconComponent(item.iconId || 'box');
+  const IconComponent = getIconComponent(item.icon_id || 'box');
 
   const handleCardClick = () => {
     if (onClick) {
@@ -32,9 +32,9 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
           <div className="space-y-3">
             {/* Item Image/Icon */}
             <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center">
-              {item.photoUrl ? (
+              {item.photo_url ? (
                 <img 
-                  src={item.photoUrl} 
+                  src={item.photo_url} 
                   alt={item.name} 
                   className="w-full h-full object-cover rounded-lg" 
                 />
@@ -64,13 +64,13 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                 <p className="text-sm text-gray-600 line-clamp-2">{item.description}</p>
               )}
 
-              {(item.purchaseDate || item.warrantyDate) && (
+              {(item.purchase_date || item.warranty_date) && (
                 <div className="text-xs text-gray-500 space-y-1">
-                  {item.purchaseDate && (
-                    <div>Purchased: {new Date(item.purchaseDate).toLocaleDateString()}</div>
+                  {item.purchase_date && (
+                    <div>Purchased: {new Date(item.purchase_date).toLocaleDateString()}</div>
                   )}
-                  {item.warrantyDate && (
-                    <div>Warranty: {new Date(item.warrantyDate).toLocaleDateString()}</div>
+                  {item.warranty_date && (
+                    <div>Warranty: {new Date(item.warranty_date).toLocaleDateString()}</div>
                   )}
                 </div>
               )}

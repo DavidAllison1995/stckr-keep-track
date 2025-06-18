@@ -26,7 +26,7 @@ export interface Item {
   warranty_date?: string;
   qr_code_id?: string;
   notes?: string;
-  documents?: Document[];
+  documents?: Document[] | any;
   created_at: string;
   updated_at: string;
 }
@@ -70,7 +70,10 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
         throw error;
       }
 
-      return data || [];
+      return (data || []).map(item => ({
+        ...item,
+        documents: Array.isArray(item.documents) ? item.documents : []
+      }));
     },
     enabled: !!user,
   });
@@ -79,11 +82,14 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
     mutationFn: async (itemData: Omit<Item, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       if (!user) throw new Error('User not authenticated');
 
+      const { documents, ...itemWithoutDocuments } = itemData;
+      
       const { data, error } = await supabase
         .from('items')
         .insert([{
-          ...itemData,
+          ...itemWithoutDocuments,
           user_id: user.id,
+          documents: documents ? JSON.stringify(documents) : null,
         }])
         .select()
         .single();
@@ -110,9 +116,16 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
 
   const updateItemMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Item> }) => {
+      const { documents, ...updatesWithoutDocuments } = updates;
+      
+      const updateData: any = { ...updatesWithoutDocuments };
+      if (documents !== undefined) {
+        updateData.documents = documents ? JSON.stringify(documents) : null;
+      }
+      
       const { data, error } = await supabase
         .from('items')
-        .update(updates)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
