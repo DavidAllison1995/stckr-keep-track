@@ -13,7 +13,7 @@ interface ItemMaintenanceTabProps {
 }
 
 const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps) => {
-  const { tasks, updateTaskStatus } = useSupabaseMaintenance();
+  const { tasks, updateTask } = useSupabaseMaintenance();
   const [showAddForm, setShowAddForm] = useState(false);
 
   const itemTasks = tasks.filter(task => task.item_id === itemId);
@@ -21,7 +21,7 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
   const completedTasks = itemTasks.filter(task => task.status === 'completed');
 
   const handleTaskComplete = (taskId: string) => {
-    updateTaskStatus(taskId, 'completed');
+    updateTask(taskId, { status: 'completed' });
   };
 
   if (showAddForm) {

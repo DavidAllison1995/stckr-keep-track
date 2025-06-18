@@ -55,6 +55,14 @@ const ItemDetailsTab = ({ item }: ItemDetailsTabProps) => {
           </div>
         )}
 
+        {/* Notes */}
+        {item.notes && (
+          <div>
+            <label className="text-sm font-medium text-gray-500">Notes</label>
+            <p className="text-gray-900 mt-1">{item.notes}</p>
+          </div>
+        )}
+
         {/* Dates */}
         <div>
           <h3 className="font-semibold text-lg mb-2">Important Dates</h3>
@@ -74,44 +82,28 @@ const ItemDetailsTab = ({ item }: ItemDetailsTabProps) => {
           </div>
         </div>
 
-        {/* Purchase Info */}
-        {(item.purchase_price || item.purchase_location) && (
+        {/* QR Code */}
+        {item.qr_code_id && (
           <div>
-            <h3 className="font-semibold text-lg mb-2">Purchase Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {item.purchase_price && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Purchase Price</label>
-                  <p className="text-gray-900">${item.purchase_price}</p>
-                </div>
-              )}
-              {item.purchase_location && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Purchase Location</label>
-                  <p className="text-gray-900">{item.purchase_location}</p>
-                </div>
-              )}
+            <h3 className="font-semibold text-lg mb-2">QR Code</h3>
+            <div>
+              <label className="text-sm font-medium text-gray-500">Code ID</label>
+              <p className="text-gray-900 font-mono">{item.qr_code_id}</p>
             </div>
           </div>
         )}
 
-        {/* Additional Info */}
-        {(item.model_number || item.serial_number) && (
+        {/* Documents */}
+        {item.documents && item.documents.length > 0 && (
           <div>
-            <h3 className="font-semibold text-lg mb-2">Technical Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {item.model_number && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Model Number</label>
-                  <p className="text-gray-900">{item.model_number}</p>
+            <h3 className="font-semibold text-lg mb-2">Documents</h3>
+            <div className="space-y-2">
+              {item.documents.map((doc) => (
+                <div key={doc.id} className="flex items-center gap-2">
+                  <Badge variant="outline">{doc.type}</Badge>
+                  <span className="text-gray-900">{doc.name}</span>
                 </div>
-              )}
-              {item.serial_number && (
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Serial Number</label>
-                  <p className="text-gray-900">{item.serial_number}</p>
-                </div>
-              )}
+              ))}
             </div>
           </div>
         )}
