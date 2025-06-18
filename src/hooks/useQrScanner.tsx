@@ -16,12 +16,26 @@ export const useQrScanner = ({ onScan, onError }: UseQrScannerProps) => {
   const lastScanTimeRef = useRef<number>(0);
 
   const startScanning = useCallback(async () => {
-    if (!videoRef.current || scannerRef.current) return;
+    console.log('startScanning called');
+    if (!videoRef.current) {
+      console.error('Video ref not available');
+      return;
+    }
+    
+    if (scannerRef.current) {
+      console.log('Scanner already exists, stopping first');
+      scannerRef.current.stop();
+      scannerRef.current.destroy();
+      scannerRef.current = null;
+    }
 
     try {
+      console.log('Requesting camera access...');
+      
       const scanner = new QrScanner(
         videoRef.current,
         (result) => {
+          console.log('QR Scanner detected code:', result.data);
           const now = Date.now();
           // Debounce: only process if different code or 2+ seconds have passed
           if (result.data !== lastScanRef.current || now - lastScanTimeRef.current > 2000) {
@@ -33,7 +47,10 @@ export const useQrScanner = ({ onScan, onError }: UseQrScannerProps) => {
               navigator.vibrate(100);
             }
             
+            console.log('Processing QR code:', result.data);
             onScan(result.data);
+          } else {
+            console.log('Ignoring duplicate scan:', result.data);
           }
         },
         {
@@ -44,7 +61,9 @@ export const useQrScanner = ({ onScan, onError }: UseQrScannerProps) => {
       );
 
       scannerRef.current = scanner;
+      console.log('Starting QR scanner...');
       await scanner.start();
+      console.log('QR scanner started successfully');
       setIsScanning(true);
       setHasPermission(true);
     } catch (error) {
@@ -57,7 +76,9 @@ export const useQrScanner = ({ onScan, onError }: UseQrScannerProps) => {
   }, [onScan, onError]);
 
   const stopScanning = useCallback(() => {
+    console.log('stopScanning called');
     if (scannerRef.current) {
+      console.log('Stopping and destroying scanner');
       scannerRef.current.stop();
       scannerRef.current.destroy();
       scannerRef.current = null;
@@ -66,12 +87,14 @@ export const useQrScanner = ({ onScan, onError }: UseQrScannerProps) => {
   }, []);
 
   const retryPermission = useCallback(() => {
+    console.log('retryPermission called');
     setHasPermission(null);
     startScanning();
   }, [startScanning]);
 
   useEffect(() => {
     return () => {
+      console.log('useQrScanner cleanup');
       stopScanning();
     };
   }, [stopScanning]);

@@ -19,16 +19,23 @@ const QRScanner = () => {
   const [error, setError] = useState<string>('');
 
   const handleScan = async (code: string) => {
-    if (isProcessing) return;
+    console.log('QR Code scanned:', code);
+    if (isProcessing) {
+      console.log('Already processing, ignoring scan');
+      return;
+    }
     
     setIsProcessing(true);
     setError('');
     
     try {
+      console.log('Checking QR code status...');
       const status = await qrService.getStatus(code);
+      console.log('QR status:', status);
       
       if (status.isAssigned && status.itemId) {
         // Navigate to assigned item
+        console.log('Navigating to item:', status.itemId);
         toast({
           title: 'QR Code Found',
           description: `Opening ${status.itemName}...`,
@@ -36,6 +43,7 @@ const QRScanner = () => {
         navigate(`/items/${status.itemId}?tab=maintenance`);
       } else {
         // Show assignment modal
+        console.log('Showing assignment modal for unassigned QR code');
         setCurrentQrCode(code);
         setShowAssignmentModal(true);
       }
@@ -63,8 +71,14 @@ const QRScanner = () => {
   });
 
   const handleStartScan = () => {
+    console.log('Start scan button clicked');
     setError('');
     startScanning();
+  };
+
+  const handleStopScan = () => {
+    console.log('Stop scan button clicked');
+    stopScanning();
   };
 
   const handleCloseAssignment = () => {
@@ -141,7 +155,7 @@ const QRScanner = () => {
                 </div>
               )}
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-                <Button onClick={stopScanning} variant="secondary">
+                <Button onClick={handleStopScan} variant="secondary">
                   Stop Scanning
                 </Button>
               </div>
