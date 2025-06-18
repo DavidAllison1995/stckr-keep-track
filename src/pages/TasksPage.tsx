@@ -4,14 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, Package } from 'lucide-react';
-import { useMaintenance } from '@/hooks/useMaintenance';
-import { useItems } from '@/hooks/useItems';
+import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
+import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 
 const TasksPage = () => {
   const { status } = useParams<{ status: string }>();
   const navigate = useNavigate();
-  const { getTasksByStatus } = useMaintenance();
-  const { getItemById } = useItems();
+  const { getTasksByStatus } = useSupabaseMaintenance();
+  const { getItemById } = useSupabaseItems();
 
   const getStatusInfo = (status: string) => {
     switch (status) {
@@ -20,7 +20,12 @@ const TasksPage = () => {
           title: 'Up-to-Date Tasks',
           description: 'Tasks due in 14+ days',
           color: 'text-green-800 bg-green-100',
-          tasks: getTasksByStatus('up_to_date')
+          tasks: getTasksByStatus('pending').filter(task => {
+            const taskDate = new Date(task.date);
+            const now = new Date();
+            const fourteenDaysFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+            return taskDate > fourteenDaysFromNow;
+          })
         };
       case 'due-soon':
         return {
@@ -83,7 +88,7 @@ const TasksPage = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/maintenance')}
+                onClick={() => navigate('/calendar')}
                 className="flex items-center gap-2"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -109,14 +114,14 @@ const TasksPage = () => {
             ) : (
               <div className="space-y-4">
                 {sortedTasks.map((task) => {
-                  const assignedItem = task.itemId ? getItemById(task.itemId) : null;
+                  const assignedItem = task.item_id ? getItemById(task.item_id) : null;
                   const daysUntilDue = getDaysUntilDue(task.date);
                   
                   return (
                     <Card
                       key={task.id}
                       className="cursor-pointer hover:shadow-md transition-all duration-200"
-                      onClick={() => task.itemId && handleItemClick(task.itemId, task.id)}
+                      onClick={() => task.item_id && handleItemClick(task.item_id, task.id)}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
@@ -155,7 +160,7 @@ const TasksPage = () => {
                                     className="text-blue-600 hover:underline cursor-pointer"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleItemClick(task.itemId!, task.id);
+                                      handleItemClick(task.item_id!, task.id);
                                     }}
                                   >
                                     {assignedItem.name}
