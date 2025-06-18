@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Edit, Check, Trash2, Upload } from 'lucide-react';
 import { Item, useSupabaseItems } from '@/hooks/useSupabaseItems';
-import { useSupabaseMaintenance, MaintenanceTask } from '@/hooks/useSupabaseMaintenance';
+import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useToast } from '@/hooks/use-toast';
 import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
 import TaskEditForm from '@/components/maintenance/TaskEditForm';
@@ -46,7 +47,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
   const [recurringDeleteDialogOpen, setRecurringDeleteDialogOpen] = useState(false);
-  const [taskToDelete, setTaskToDelete] = useState<MaintenanceTask | null>(null);
+  const [taskToDelete, setTaskToDelete] = useState<any>(null);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   
   // Get tasks based on the toggle state
@@ -201,7 +202,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
     }
   };
 
-  const handleDeleteTask = async (task: MaintenanceTask) => {
+  const handleDeleteTask = async (task: any) => {
     console.log('Deleting task:', task);
     console.log('Task recurrence:', task.recurrence);
     console.log('Task parent_task_id:', task.parent_task_id);

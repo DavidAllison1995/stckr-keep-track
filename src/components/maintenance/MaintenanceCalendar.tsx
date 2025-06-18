@@ -6,7 +6,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search, Download, Edit, Trash2, Check } from 'lucide-react';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
-import { useItems } from '@/hooks/useItems';
+import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { useToast } from '@/hooks/use-toast';
 import { generateICSFile } from '@/utils/calendarExport';
 import StatusBar from './StatusBar';
@@ -28,7 +28,7 @@ interface TaskSuggestion {
 
 const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => {
   const { tasks, deleteTask, markTaskComplete } = useSupabaseMaintenance();
-  const { getItemById } = useItems();
+  const { getItemById } = useSupabaseItems();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
