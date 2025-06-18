@@ -7,6 +7,7 @@ import { ItemsProvider } from '@/hooks/useSupabaseItems';
 import { MaintenanceProvider } from '@/hooks/useSupabaseMaintenance';
 import { Toaster } from '@/components/ui/toaster';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import NavBar from '@/components/navigation/NavBar';
 import AuthPage from '@/pages/AuthPage';
 import Index from '@/pages/Index';
 import Dashboard from '@/pages/Dashboard';
@@ -43,52 +44,82 @@ function App() {
                     <Route path="/auth" element={<AuthPage />} />
                     <Route path="/" element={
                       <ProtectedRoute>
-                        <Index />
+                        <>
+                          <Index />
+                          <NavBar />
+                        </>
                       </ProtectedRoute>
                     } />
                     <Route path="/dashboard" element={
                       <ProtectedRoute>
-                        <Dashboard />
+                        <>
+                          <Dashboard />
+                          <NavBar />
+                        </>
                       </ProtectedRoute>
                     } />
                     <Route path="/items" element={
                       <ProtectedRoute>
-                        <ItemsPage />
+                        <>
+                          <ItemsPage />
+                          <NavBar />
+                        </>
                       </ProtectedRoute>
                     } />
                     <Route path="/items/:id" element={
                       <ProtectedRoute>
-                        <ItemDetailPage />
+                        <>
+                          <ItemDetailPage />
+                          <NavBar />
+                        </>
                       </ProtectedRoute>
                     } />
                     <Route path="/maintenance" element={
                       <ProtectedRoute>
-                        <MaintenancePage />
+                        <>
+                          <MaintenancePage />
+                          <NavBar />
+                        </>
                       </ProtectedRoute>
                     } />
                     <Route path="/maintenance-tasks" element={
                       <ProtectedRoute>
-                        <MaintenanceTasksPage />
+                        <>
+                          <MaintenanceTasksPage />
+                          <NavBar />
+                        </>
                       </ProtectedRoute>
                     } />
                     <Route path="/tasks" element={
                       <ProtectedRoute>
-                        <TasksPage />
+                        <>
+                          <TasksPage />
+                          <NavBar />
+                        </>
                       </ProtectedRoute>
                     } />
                     <Route path="/profile" element={
                       <ProtectedRoute>
-                        <ProfilePage />
+                        <>
+                          <ProfilePage />
+                          <NavBar />
+                        </>
                       </ProtectedRoute>
                     } />
                     <Route path="/settings" element={
                       <ProtectedRoute>
-                        <SettingsPage />
+                        <>
+                          <SettingsPage />
+                          <NavBar />
+                        </>
                       </ProtectedRoute>
                     } />
                     <Route path="/scanner" element={
                       <ProtectedRoute>
-                        <ScannerPage />
+                        <>
+                          <ScannerPage />
+                          <NavBar />
+                        </>
                       </ProtectedRoute>
                     } />
                     <Route path="*" element={<NotFound />} />
