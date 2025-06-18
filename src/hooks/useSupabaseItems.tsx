@@ -1,3 +1,4 @@
+
 import { createContext, useContext, ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -78,11 +79,26 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
         
         if (item.documents) {
           try {
+            let parsedDocuments: unknown;
+            
             // Parse the JSONB documents field
             if (typeof item.documents === 'string') {
-              documents = JSON.parse(item.documents);
-            } else if (Array.isArray(item.documents)) {
-              documents = item.documents;
+              parsedDocuments = JSON.parse(item.documents);
+            } else {
+              parsedDocuments = item.documents;
+            }
+            
+            // Type guard to ensure we have an array of valid documents
+            if (Array.isArray(parsedDocuments)) {
+              documents = parsedDocuments.filter((doc): doc is Document => {
+                return typeof doc === 'object' && 
+                       doc !== null && 
+                       typeof (doc as any).id === 'string' &&
+                       typeof (doc as any).name === 'string' &&
+                       typeof (doc as any).type === 'string' &&
+                       typeof (doc as any).url === 'string' &&
+                       typeof (doc as any).uploadDate === 'string';
+              });
             }
           } catch (error) {
             console.error('Error parsing documents for item:', item.id, error);
