@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { MaintenanceProvider } from "@/hooks/useMaintenance";
 import { ItemsProvider } from "@/hooks/useItems";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import AuthForm from "@/components/auth/AuthForm";
 import NavBar from "@/components/navigation/NavBar";
 import DashboardPage from "./pages/Dashboard";
@@ -49,15 +51,17 @@ const App = () => (
   <BrowserRouter>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <AuthProvider>
-          <ItemsProvider>
-            <MaintenanceProvider>
-              <AppContent />
-              <Toaster />
-              <Sonner />
-            </MaintenanceProvider>
-          </ItemsProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <ItemsProvider>
+              <MaintenanceProvider>
+                <AppContent />
+                <Toaster />
+                <Sonner />
+              </MaintenanceProvider>
+            </ItemsProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </TooltipProvider>
     </QueryClientProvider>
   </BrowserRouter>
