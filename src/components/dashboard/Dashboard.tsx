@@ -1,4 +1,3 @@
-
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
@@ -35,7 +34,7 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
   };
 
   const handleTaskStatusClick = (status: string) => {
-    navigate(`/tasks`);
+    navigate(`/tasks/${status}`);
   };
 
   const handleItemClick = (itemId: string) => {
