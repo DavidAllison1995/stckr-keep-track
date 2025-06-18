@@ -31,7 +31,7 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
   };
 
   const handleMaintenanceClick = () => {
-    navigate('/maintenance');
+    navigate('/calendar');
   };
 
   const handleTaskStatusClick = (status: string) => {
