@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Edit, Check } from 'lucide-react';
+import { Edit, Check, Trash2 } from 'lucide-react';
 import { Item, useItems } from '@/hooks/useItems';
 import { useMaintenance } from '@/hooks/useMaintenance';
 import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
@@ -31,7 +31,7 @@ interface Document {
 }
 
 const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: ItemDetailProps) => {
-  const { getTasksByItem, markTaskComplete } = useMaintenance();
+  const { getTasksByItem, markTaskComplete, deleteTask } = useMaintenance();
   const { updateItem } = useItems();
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isEditItemModalOpen, setIsEditItemModalOpen] = useState(false);
@@ -40,10 +40,15 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
   const [documents, setDocuments] = useState<Document[]>(item.documents || []);
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
+  const [showCompleted, setShowCompleted] = useState(false);
   
-  // Filter out completed tasks from the item's maintenance tab
-  const itemTasks = getTasksByItem(item.id, false);
-  const editingTask = editingTaskId ? itemTasks.find(task => task.id === editingTaskId) : null;
+  // Get tasks based on the toggle state
+  const upcomingTasks = getTasksByItem(item.id, false); // Exclude completed
+  const completedTasks = getTasksByItem(item.id, true).filter(task => task.status === 'completed'); // Only completed
+  const displayTasks = showCompleted ? completedTasks : upcomingTasks;
+  
+  const editingTask = editingTaskId ? displayTasks.find(task => task.id === editingTaskId) : null;
 
   // Effect to handle tab switching and highlighting
   useEffect(() => {
@@ -117,6 +122,15 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
       markTaskComplete(taskId);
     } finally {
       setCompletingTaskId(null);
+    }
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    setDeletingTaskId(taskId);
+    try {
+      deleteTask(taskId);
+    } finally {
+      setDeletingTaskId(null);
     }
   };
 
@@ -217,34 +231,49 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Maintenance Tasks</CardTitle>
-                <Dialog open={isAddTaskModalOpen} onOpenChange={setIsAddTaskModalOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm">+ Add Task</Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add Maintenance Task</DialogTitle>
-                    </DialogHeader>
-                    <MaintenanceTaskForm 
-                      itemId={item.id}
-                      onSuccess={() => setIsAddTaskModalOpen(false)} 
-                    />
-                  </DialogContent>
-                </Dialog>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowCompleted(!showCompleted)}
+                  >
+                    {showCompleted ? 'View Upcoming Tasks' : 'View Completed Tasks'}
+                  </Button>
+                  {!showCompleted && (
+                    <Dialog open={isAddTaskModalOpen} onOpenChange={setIsAddTaskModalOpen}>
+                      <DialogTrigger asChild>
+                        <Button size="sm">+ Add Task</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Add Maintenance Task</DialogTitle>
+                        </DialogHeader>
+                        <MaintenanceTaskForm 
+                          itemId={item.id}
+                          onSuccess={() => setIsAddTaskModalOpen(false)} 
+                        />
+                      </DialogContent>
+                    </Dialog>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent>
-              {itemTasks.length === 0 ? (
+              {displayTasks.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="text-4xl mb-2">🔧</div>
-                  <p className="text-gray-600 mb-4">No pending maintenance tasks</p>
-                  <Button onClick={() => setIsAddTaskModalOpen(true)}>
-                    Add First Task
-                  </Button>
+                  <p className="text-gray-600 mb-4">
+                    {showCompleted ? 'No completed maintenance tasks' : 'No pending maintenance tasks'}
+                  </p>
+                  {!showCompleted && (
+                    <Button onClick={() => setIsAddTaskModalOpen(true)}>
+                      Add First Task
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {itemTasks.map((task) => (
+                  {displayTasks.map((task) => (
                     <div 
                       key={task.id} 
                       id={`task-${task.id}`}
@@ -253,42 +282,61 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
                       }`}
                     >
                       <div className={`w-3 h-3 rounded-full ${
+                        task.status === 'completed' ? 'bg-blue-500' :
                         task.status === 'overdue' ? 'bg-red-500' :
                         task.status === 'due_soon' ? 'bg-yellow-500' : 'bg-green-500'
                       }`} />
                       <div className="flex-1">
                         <div className="font-medium">{task.title}</div>
                         <div className="text-sm text-gray-600">
-                          Due: {new Date(task.date).toLocaleDateString()}
+                          {showCompleted ? 'Completed: ' : 'Due: '}{new Date(task.date).toLocaleDateString()}
                         </div>
                         {task.notes && (
                           <div className="text-sm text-gray-500">{task.notes}</div>
                         )}
                       </div>
                       <Badge variant={
+                        task.status === 'completed' ? 'default' :
                         task.status === 'overdue' ? 'destructive' :
                         task.status === 'due_soon' ? 'secondary' : 'default'
                       }>
-                        {task.status === 'overdue' ? 'Overdue' :
+                        {task.status === 'completed' ? 'Completed' :
+                         task.status === 'overdue' ? 'Overdue' :
                          task.status === 'due_soon' ? 'Due Soon' : 'Up to Date'}
                       </Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleMarkComplete(task.id)}
-                        disabled={completingTaskId === task.id}
-                        aria-label="Mark task complete"
-                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                      >
-                        <Check className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditTask(task.id)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
+                      
+                      {showCompleted ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteTask(task.id)}
+                          disabled={deletingTaskId === task.id}
+                          aria-label="Delete completed task"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleMarkComplete(task.id)}
+                            disabled={completingTaskId === task.id}
+                            aria-label="Mark task complete"
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditTask(task.id)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>
