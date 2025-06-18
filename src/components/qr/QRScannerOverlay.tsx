@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, RotateCcw, Loader2, AlertCircle } from 'lucide-react';
@@ -64,11 +63,13 @@ const QRScannerOverlay = ({ isOpen, onClose, onItemView }: QRScannerOverlayProps
     console.error('Camera error:', error);
     
     if (error.name === 'NotAllowedError') {
-      setCameraError('Camera access blocked. Please enable camera permissions and try again.');
+      setCameraError('Camera access denied. Please allow camera access and try again.');
     } else if (error.name === 'NotReadableError') {
-      setCameraError('Camera is in use by another app. Please close other apps and try again.');
+      setCameraError('Camera hardware error or already in use. Please close other apps using the camera.');
     } else if (error.name === 'NotFoundError') {
       setCameraError('No camera found on this device.');
+    } else if (error.message === 'Camera permission denied') {
+      setCameraError('Camera permission is required to scan QR codes.');
     } else {
       setCameraError('Camera error occurred. Please try again.');
     }
@@ -90,6 +91,7 @@ const QRScannerOverlay = ({ isOpen, onClose, onItemView }: QRScannerOverlayProps
   // Auto-start scanning when overlay opens
   useEffect(() => {
     if (isOpen && hasPermission !== false) {
+      console.log('Auto-starting scanner, permission state:', hasPermission);
       startScanning();
       
       // Set timeout for no detection
@@ -239,13 +241,17 @@ const QRScannerOverlay = ({ isOpen, onClose, onItemView }: QRScannerOverlayProps
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 bg-black"
       >
-        {/* Camera Feed */}
+        {/* Camera Feed - Always render but control visibility */}
         <video
           ref={videoRef}
           className="absolute inset-0 w-full h-full object-cover"
           playsInline
           muted
-          style={{ display: isScanning ? 'block' : 'none' }}
+          autoPlay
+          style={{ 
+            display: (isScanning && hasPermission === true) ? 'block' : 'none',
+            transform: 'scaleX(-1)' // Mirror for better UX
+          }}
         />
 
         {/* Overlay Dimming */}
@@ -279,11 +285,9 @@ const QRScannerOverlay = ({ isOpen, onClose, onItemView }: QRScannerOverlayProps
                 <p className="text-muted-foreground mb-2 text-sm">
                   {cameraError || 'We need camera access to scan QR codes'}
                 </p>
-                {retryCount > 0 && (
-                  <p className="text-xs text-muted-foreground mb-6">
-                    Make sure the page is served over HTTPS and no other apps are using the camera.
-                  </p>
-                )}
+                <p className="text-xs text-muted-foreground mb-6">
+                  Please ensure your browser allows camera access and no other apps are using it.
+                </p>
                 <Button onClick={retryPermission} className="w-full">
                   <RotateCcw className="w-4 h-4 mr-2" />
                   {retryCount > 0 ? 'Try Again' : 'Allow Camera Access'}
@@ -305,7 +309,7 @@ const QRScannerOverlay = ({ isOpen, onClose, onItemView }: QRScannerOverlayProps
         )}
 
         {/* Scan Guide Frame - Only show when actively scanning */}
-        {isScanning && !scannedData && !isProcessing && (
+        {isScanning && !scannedData && !isProcessing && hasPermission === true && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="relative">
               {/* Scanning Frame */}

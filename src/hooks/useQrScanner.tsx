@@ -17,12 +17,27 @@ export const useQrScanner = ({ onScan, onError }: UseQrScannerProps) => {
   const lastScanRef = useRef<string>('');
   const lastScanTimeRef = useRef<number>(0);
 
+  const checkCameraPermission = async () => {
+    try {
+      const result = await navigator.permissions.query({ name: 'camera' as PermissionName });
+      console.log('Camera permission status:', result.state);
+      return result.state === 'granted';
+    } catch (error) {
+      console.log('Permission API not available, will request directly');
+      return null;
+    }
+  };
+
   const enumerateDevices = async () => {
     try {
       console.log('Enumerating media devices...');
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices.filter(device => device.kind === 'videoinput');
-      console.log('Available video devices:', videoDevices);
+      console.log('Available video devices:', videoDevices.map(d => ({
+        deviceId: d.deviceId,
+        label: d.label,
+        groupId: d.groupId
+      })));
       console.log('Total video devices found:', videoDevices.length);
       return videoDevices;
     } catch (error) {
@@ -33,6 +48,11 @@ export const useQrScanner = ({ onScan, onError }: UseQrScannerProps) => {
 
   const requestCameraStream = async (): Promise<MediaStream | null> => {
     console.log('Requesting camera stream...');
+    
+    // Check if getUserMedia is available
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('Camera API not supported in this browser');
+    }
     
     // First try with back camera constraints
     const backCameraConstraints = {
@@ -47,6 +67,12 @@ export const useQrScanner = ({ onScan, onError }: UseQrScannerProps) => {
       console.log('Attempting to get back camera with constraints:', backCameraConstraints);
       const stream = await navigator.mediaDevices.getUserMedia(backCameraConstraints);
       console.log('✅ Successfully got back camera stream');
+      console.log('Stream active:', stream.active);
+      console.log('Video tracks:', stream.getVideoTracks().map(track => ({
+        label: track.label,
+        enabled: track.enabled,
+        readyState: track.readyState
+      })));
       return stream;
     } catch (backCameraError) {
       console.warn('❌ Back camera failed, trying fallback...', {
@@ -78,33 +104,57 @@ export const useQrScanner = ({ onScan, onError }: UseQrScannerProps) => {
 
     try {
       console.log('Setting up video element...');
-      videoRef.current.srcObject = stream;
+      const video = videoRef.current;
+      
+      // Set video attributes for better mobile support
+      video.setAttribute('playsinline', 'true');
+      video.setAttribute('muted', 'true');
+      video.setAttribute('autoplay', 'true');
+      
+      video.srcObject = stream;
       
       // Wait for video to be ready
       await new Promise<void>((resolve, reject) => {
-        const video = videoRef.current!;
-        
         const onLoadedMetadata = () => {
+          console.log('Video metadata loaded');
           video.removeEventListener('loadedmetadata', onLoadedMetadata);
-          video.removeEventListener('error', onError);
+          video.removeEventListener('error', onVideoError);
           resolve();
         };
         
-        const onError = (event: Event) => {
+        const onVideoError = (event: Event) => {
+          console.error('Video error event:', event);
           video.removeEventListener('loadedmetadata', onLoadedMetadata);
-          video.removeEventListener('error', onError);
+          video.removeEventListener('error', onVideoError);
           reject(new Error('Video loading failed'));
         };
         
         video.addEventListener('loadedmetadata', onLoadedMetadata);
-        video.addEventListener('error', onError);
+        video.addEventListener('error', onVideoError);
+        
+        // Timeout after 5 seconds
+        setTimeout(() => {
+          video.removeEventListener('loadedmetadata', onLoadedMetadata);
+          video.removeEventListener('error', onVideoError);
+          reject(new Error('Video loading timeout'));
+        }, 5000);
       });
 
-      await videoRef.current.play();
-      console.log('✅ Video playing, readyState:', videoRef.current.readyState);
+      // Explicitly play the video
+      try {
+        await video.play();
+        console.log('✅ Video playing successfully');
+      } catch (playError) {
+        console.warn('Video play() failed, but continuing:', playError);
+        // On some browsers, this might fail but video still works
+      }
+      
+      console.log('Video readyState:', video.readyState);
       console.log('Video dimensions:', {
-        videoWidth: videoRef.current.videoWidth,
-        videoHeight: videoRef.current.videoHeight
+        videoWidth: video.videoWidth,
+        videoHeight: video.videoHeight,
+        clientWidth: video.clientWidth,
+        clientHeight: video.clientHeight
       });
       
       return true;
@@ -123,10 +173,15 @@ export const useQrScanner = ({ onScan, onError }: UseQrScannerProps) => {
       });
       streamRef.current = null;
     }
+    
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
   };
 
   const startScanning = useCallback(async () => {
     console.log('🎥 Starting QR scanner...');
+    
     if (!videoRef.current) {
       console.error('Video ref not available');
       return;
@@ -142,8 +197,17 @@ export const useQrScanner = ({ onScan, onError }: UseQrScannerProps) => {
     cleanupStream();
 
     try {
+      // Check camera permission first
+      const permissionGranted = await checkCameraPermission();
+      if (permissionGranted === false) {
+        throw new Error('Camera permission denied');
+      }
+
       // Enumerate devices first
-      await enumerateDevices();
+      const devices = await enumerateDevices();
+      if (devices.length === 0) {
+        throw new Error('No camera devices found');
+      }
       
       // Request camera stream
       const stream = await requestCameraStream();
@@ -158,6 +222,9 @@ export const useQrScanner = ({ onScan, onError }: UseQrScannerProps) => {
       if (!videoReady) {
         throw new Error('Failed to setup video element');
       }
+
+      // Small delay to ensure video is fully ready
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // Initialize QR scanner
       console.log('Initializing QR scanner...');
@@ -185,7 +252,7 @@ export const useQrScanner = ({ onScan, onError }: UseQrScannerProps) => {
         {
           highlightScanRegion: true,
           highlightCodeOutline: true,
-          preferredCamera: 'environment', // Back camera on mobile
+          preferredCamera: 'environment',
         }
       );
 
@@ -211,10 +278,12 @@ export const useQrScanner = ({ onScan, onError }: UseQrScannerProps) => {
         console.error('🚫 Camera access denied by user');
         setHasPermission(false);
       } else if (error.name === 'NotReadableError') {
-        console.error('📷 Camera is in use by another application');
+        console.error('📷 Camera hardware error or in use');
         setHasPermission(false);
       } else if (error.name === 'NotFoundError') {
         console.error('📷 No camera found on device');
+        setHasPermission(false);
+      } else if (error.message === 'Camera permission denied') {
         setHasPermission(false);
       } else {
         // Generic error - might be temporary
@@ -245,7 +314,7 @@ export const useQrScanner = ({ onScan, onError }: UseQrScannerProps) => {
     setRetryCount(prev => prev + 1);
     
     // Add small delay before retry
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 1000));
     startScanning();
   }, [startScanning]);
 
