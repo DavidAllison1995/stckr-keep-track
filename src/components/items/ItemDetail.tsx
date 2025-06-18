@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import ItemDetailsTab from './ItemDetailsTab';
 import ItemMaintenanceTab from './ItemMaintenanceTab';
 import ItemDocumentsTab from './ItemDocumentsTab';
-
+import ItemForm from './ItemForm';
 import QRSection from '@/components/qr/QRSection';
 
 interface ItemDetailProps {
@@ -19,9 +19,16 @@ interface ItemDetailProps {
 const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: ItemDetailProps) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>(defaultTab);
+  const [isEditing, setIsEditing] = useState(false);
 
   const handleEdit = () => {
-    navigate(`/items/edit/${item.id}`);
+    setIsEditing(true);
+  };
+
+  const handleEditSuccess = () => {
+    setIsEditing(false);
+    // Trigger a refetch of item data
+    window.location.reload(); // Simple approach - could be optimized with proper state management
   };
 
   const handleClose = () => {
@@ -32,6 +39,23 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
     // Trigger a refetch of item data
     window.location.reload(); // Simple approach - could be optimized with proper state management
   };
+
+  if (isEditing) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Edit {item.name}</h2>
+          <button 
+            onClick={() => setIsEditing(false)} 
+            className="px-4 py-2 text-gray-600 hover:text-gray-800"
+          >
+            Cancel
+          </button>
+        </div>
+        <ItemForm item={item} onSuccess={handleEditSuccess} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
