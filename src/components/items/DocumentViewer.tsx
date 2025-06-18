@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { ZoomIn, ZoomOut, RotateCw, Download, AlertCircle, ExternalLink } from 'lucide-react';
+import { Download, ExternalLink, FileText, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface DocumentViewerProps {
@@ -9,205 +9,113 @@ interface DocumentViewerProps {
     name: string;
     type: string;
     url: string;
+    thumbnailUrl?: string;
   };
+  onDownload?: () => void;
 }
 
-const DocumentViewer = ({ document }: DocumentViewerProps) => {
-  const [zoom, setZoom] = useState(100);
-  const [rotation, setRotation] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-  const [showFallback, setShowFallback] = useState(false);
+const DocumentViewer = ({ document, onDownload }: DocumentViewerProps) => {
+  const [imageError, setImageError] = useState(false);
 
-  const handleZoomIn = () => {
-    setZoom(prev => Math.min(prev + 25, 200));
-  };
-
-  const handleZoomOut = () => {
-    setZoom(prev => Math.max(prev - 25, 50));
-  };
-
-  const handleRotate = () => {
-    setRotation(prev => (prev + 90) % 360);
-  };
-
-  const handleImageLoad = () => {
-    setIsLoading(false);
-    setHasError(false);
-  };
-
-  const handleImageError = () => {
-    setIsLoading(false);
-    setHasError(true);
-  };
-
-  const handlePdfError = () => {
-    setIsLoading(false);
-    setHasError(true);
-    setShowFallback(true);
-  };
-
-  const openInNewTab = () => {
+  const handleOpenInNewTab = () => {
     window.open(document.url, '_blank', 'noopener,noreferrer');
   };
 
-  if (document.type === 'image') {
-    return (
-      <div className="flex flex-col h-full">
-        {/* Image Controls */}
-        <div className="flex items-center justify-between p-4 border-b bg-gray-50">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleZoomOut}
-              disabled={zoom <= 50}
-            >
-              <ZoomOut className="w-4 h-4" />
-            </Button>
-            <span className="text-sm font-medium min-w-16 text-center">
-              {zoom}%
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleZoomIn}
-              disabled={zoom >= 200}
-            >
-              <ZoomIn className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRotate}
-            >
-              <RotateCw className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
+  const handleDownload = () => {
+    if (onDownload) {
+      onDownload();
+    } else {
+      // Fallback download method
+      const link = document.createElement('a');
+      link.href = document.url;
+      link.download = document.name;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
 
-        {/* Image Display */}
-        <div className="flex-1 overflow-auto bg-gray-100 p-4">
-          <div className="flex items-center justify-center min-h-full">
-            {isLoading && (
-              <div className="text-gray-500">Loading image...</div>
-            )}
-            {hasError && (
-              <div className="text-center text-gray-500">
-                <AlertCircle className="w-12 h-12 mx-auto mb-4" />
-                <p>Failed to load image</p>
-                <Button 
-                  variant="outline" 
-                  onClick={openInNewTab}
-                  className="mt-2 flex items-center gap-2"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  Open in new tab
-                </Button>
-              </div>
-            )}
-            {!hasError && (
-              <img
-                src={document.url}
-                alt={document.name}
-                onLoad={handleImageLoad}
-                onError={handleImageError}
-                style={{
-                  transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
-                  transition: 'transform 0.2s ease',
-                  maxWidth: 'none',
-                  maxHeight: 'none',
-                }}
-                className="shadow-lg"
-              />
-            )}
-          </div>
+  const renderThumbnail = () => {
+    // For images, use the original file as thumbnail
+    if (document.type === 'image') {
+      return (
+        <img
+          src={document.url}
+          alt={document.name}
+          className="w-full h-32 object-cover rounded-lg"
+          onError={() => setImageError(true)}
+        />
+      );
+    }
+
+    // For PDFs, use thumbnail if available, otherwise show PDF icon
+    if (document.type === 'pdf') {
+      if (document.thumbnailUrl && !imageError) {
+        return (
+          <img
+            src={document.thumbnailUrl}
+            alt={`${document.name} preview`}
+            className="w-full h-32 object-cover rounded-lg"
+            onError={() => setImageError(true)}
+          />
+        );
+      }
+      
+      return (
+        <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+          <FileText className="w-12 h-12 text-gray-400" />
         </div>
+      );
+    }
+
+    // Fallback for other file types
+    return (
+      <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+        <FileText className="w-12 h-12 text-gray-400" />
       </div>
     );
-  }
-
-  if (document.type === 'pdf') {
-    return (
-      <div className="flex flex-col h-full">
-        {/* PDF Controls */}
-        <div className="flex items-center justify-between p-4 border-b bg-gray-50">
-          <div className="text-sm text-gray-600">
-            PDF Document
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={openInNewTab}
-              className="flex items-center gap-2"
-            >
-              <ExternalLink className="w-4 h-4" />
-              Open in new tab
-            </Button>
-          </div>
-        </div>
-
-        {/* PDF Display */}
-        <div className="flex-1 relative">
-          {!showFallback ? (
-            <>
-              <iframe
-                src={`${document.url}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH`}
-                title={document.name}
-                className="w-full h-full border-0"
-                onLoad={() => setIsLoading(false)}
-                onError={handlePdfError}
-              />
-              {isLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                  <div className="text-gray-500">Loading PDF...</div>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="flex items-center justify-center h-full bg-gray-100">
-              <div className="text-center text-gray-600 max-w-md p-6">
-                <AlertCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-semibold mb-2">PDF Preview Unavailable</h3>
-                <p className="text-sm mb-4">
-                  This PDF cannot be displayed in the browser viewer. This is a common limitation with certain PDF files or browser security settings.
-                </p>
-                <div className="space-y-2">
-                  <Button 
-                    onClick={openInNewTab}
-                    className="w-full flex items-center gap-2"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Open in new tab
-                  </Button>
-                  <p className="text-xs text-gray-500">
-                    Opening in a new tab usually resolves viewing issues
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
+  };
 
   return (
-    <div className="flex items-center justify-center h-64 text-gray-500">
-      <div className="text-center">
-        <AlertCircle className="w-12 h-12 mx-auto mb-4" />
-        <p>Unsupported file type</p>
-        <p className="text-sm mt-2">
-          <a 
-            href={document.url} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
+    <div className="bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow">
+      {/* Thumbnail */}
+      <div className="mb-3">
+        {renderThumbnail()}
+      </div>
+
+      {/* Document Info */}
+      <div className="space-y-3">
+        <div>
+          <h4 className="font-medium text-gray-900 truncate" title={document.name}>
+            {document.name}
+          </h4>
+          <p className="text-sm text-gray-500 capitalize">
+            {document.type.toUpperCase()} Document
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleOpenInNewTab}
+            className="flex-1 flex items-center gap-2"
           >
-            Download to view
-          </a>
-        </p>
+            <ExternalLink className="w-4 h-4" />
+            Open
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownload}
+            className="flex-1 flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Download
+          </Button>
+        </div>
       </div>
     </div>
   );

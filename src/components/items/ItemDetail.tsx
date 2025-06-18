@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { ArrowLeft, Calendar, FileText, Settings, Plus, Edit, Trash2, CheckCircle, Clock, AlertTriangle, Upload, Download, Eye, EyeOff, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,7 +32,6 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
   const [newNote, setNewNote] = useState('');
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [viewingDocument, setViewingDocument] = useState<any>(null);
   
   const { 
     tasks, 
@@ -109,7 +107,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type only (no size limit)
+    // Validate file type (no size limit)
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
     if (!allowedTypes.includes(file.type)) {
       toast({
@@ -205,6 +203,11 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      
+      toast({
+        title: "Success",
+        description: `${doc.name} downloaded successfully`,
+      });
     } catch (error) {
       toast({
         title: "Error",
@@ -610,71 +613,42 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {documents.map(doc => (
-                  <Card key={doc.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <FileText className="w-8 h-8 text-blue-600" />
-                          <div>
-                            <h4 className="font-semibold text-gray-900">{doc.name}</h4>
-                            <p className="text-sm text-gray-600">
-                              Uploaded {formatDate(doc.uploadDate)} • {doc.type.toUpperCase()}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setViewingDocument(doc)}
-                            className="flex items-center gap-2"
+                  <div key={doc.id} className="relative">
+                    <DocumentViewer 
+                      document={doc} 
+                      onDownload={() => handleDownloadDocument(doc)}
+                    />
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="absolute top-2 right-2 h-6 w-6 p-0 bg-white shadow-sm text-red-600 hover:text-red-700"
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Document</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete "{doc.name}"? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => handleDeleteDocument(doc.id)}
+                            className="bg-red-600 hover:bg-red-700"
                           >
-                            <Eye className="w-4 h-4" />
-                            View
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDownloadDocument(doc)}
-                            className="flex items-center gap-2"
-                          >
-                            <Download className="w-4 h-4" />
-                            Download
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Document</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete "{doc.name}"? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction 
-                                  onClick={() => handleDeleteDocument(doc.id)}
-                                  className="bg-red-600 hover:bg-red-700"
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 ))}
               </div>
             )}
@@ -742,29 +716,6 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
         </Tabs>
       </div>
 
-      {/* Document Viewer Modal */}
-      {viewingDocument && (
-        <Dialog open={!!viewingDocument} onOpenChange={() => setViewingDocument(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-            <DialogHeader>
-              <DialogTitle className="flex items-center justify-between">
-                <span>{viewingDocument.name}</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDownloadDocument(viewingDocument)}
-                  className="flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Download
-                </Button>
-              </DialogTitle>
-            </DialogHeader>
-            <DocumentViewer document={viewingDocument} />
-          </DialogContent>
-        </Dialog>
-      )}
-
       {/* Task Edit Dialog */}
       <TaskEditDialog
         task={editingTask}
@@ -783,4 +734,3 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
 };
 
 export default ItemDetail;
-
