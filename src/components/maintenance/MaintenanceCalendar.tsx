@@ -842,8 +842,8 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
               Delete Task
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogFooter>
-        </AlertDialog>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
