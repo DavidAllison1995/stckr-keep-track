@@ -1,8 +1,9 @@
+
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
-import { useItems } from '@/hooks/useItems';
-import { useMaintenance } from '@/hooks/useMaintenance';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { useSupabaseItems } from '@/hooks/useSupabaseItems';
+import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useNavigate } from 'react-router-dom';
 
 interface DashboardProps {
@@ -10,14 +11,14 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ onTabChange }: DashboardProps) => {
-  const { user } = useAuth();
-  const { items } = useItems();
-  const { tasks, getTasksByStatus } = useMaintenance();
+  const { user } = useSupabaseAuth();
+  const { items } = useSupabaseItems();
+  const { tasks, getTasksByStatus } = useSupabaseMaintenance();
   const navigate = useNavigate();
 
   const overdueTasks = getTasksByStatus('overdue');
   const dueSoonTasks = getTasksByStatus('due_soon');
-  const upToDateTasks = getTasksByStatus('up_to_date');
+  const upToDateTasks = getTasksByStatus('completed');
 
   const handleStatsClick = (tab: string) => {
     if (onTabChange) {
@@ -30,22 +31,25 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
   };
 
   const handleMaintenanceClick = () => {
-    navigate('/calendar');
+    navigate('/maintenance');
   };
 
   const handleTaskStatusClick = (status: string) => {
-    navigate(`/tasks/${status}`);
+    navigate(`/tasks`);
   };
 
   const handleItemClick = (itemId: string) => {
     navigate(`/items/${itemId}`);
   };
 
+  // Get user's first name from metadata or email
+  const userName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'User';
+
   return (
     <div className="space-y-6">
       <div className="text-center">
         <h1 className="text-2xl font-bold text-gray-900">
-          Welcome back, {user?.firstName}!
+          Welcome back, {userName}!
         </h1>
         <p className="text-gray-600 mt-1">Here's what's happening with your items</p>
       </div>
@@ -84,7 +88,7 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
         <CardContent className="space-y-3">
           <div 
             className="flex items-center justify-between p-3 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
-            onClick={() => handleTaskStatusClick('up-to-date')}
+            onClick={() => handleTaskStatusClick('completed')}
           >
             <div>
               <div className="font-semibold text-green-800">Up to Date</div>
@@ -146,8 +150,8 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
                   onClick={() => handleItemClick(item.id)}
                 >
                   <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                    {item.photoUrl ? (
-                      <img src={item.photoUrl} alt={item.name} className="w-full h-full object-cover rounded-lg" />
+                    {item.photo_url ? (
+                      <img src={item.photo_url} alt={item.name} className="w-full h-full object-cover rounded-lg" />
                     ) : (
                       <span className="text-xl">📦</span>
                     )}
