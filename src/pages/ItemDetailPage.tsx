@@ -14,7 +14,7 @@ const ItemDetailPage = () => {
   console.log('useSupabaseItems call successful');
 
   const item = id ? getItemById(id) : null;
-  const defaultTab = searchParams.get('tab') || 'maintenance';
+  const defaultTab = searchParams.get('tab') || 'details';
   const highlightTaskId = searchParams.get('highlight') || undefined;
 
   const handleClose = () => {

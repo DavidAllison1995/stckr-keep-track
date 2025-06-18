@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Item } from '@/hooks/useSupabaseItems';
@@ -15,7 +16,7 @@ interface ItemDetailProps {
   highlightTaskId?: string;
 }
 
-const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId }: ItemDetailProps) => {
+const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: ItemDetailProps) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>(defaultTab);
 
@@ -50,18 +51,18 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="maintenance">Tasks</TabsTrigger>
           <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="maintenance">Tasks</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="qr">QR Code</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="maintenance" className="space-y-4">
-          <ItemMaintenanceTab itemId={item.id} highlightTaskId={highlightTaskId} />
-        </TabsContent>
-
         <TabsContent value="details" className="space-y-4">
           <ItemDetailsTab item={item} />
+        </TabsContent>
+
+        <TabsContent value="maintenance" className="space-y-4">
+          <ItemMaintenanceTab itemId={item.id} highlightTaskId={highlightTaskId} />
         </TabsContent>
 
         <TabsContent value="documents" className="space-y-4">
