@@ -21,6 +21,29 @@ export { default as BookIcon } from './BookIcon';
 export { default as ToolboxIcon } from './ToolboxIcon';
 export { default as BoxIcon } from './BoxIcon';
 
+// Import the components for internal use
+import FridgeIcon from './FridgeIcon';
+import OvenIcon from './OvenIcon';
+import WasherIcon from './WasherIcon';
+import DryerIcon from './DryerIcon';
+import TvIcon from './TvIcon';
+import LampIcon from './LampIcon';
+import BoilerIcon from './BoilerIcon';
+import BikeIcon from './BikeIcon';
+import CarIcon from './CarIcon';
+import VacuumIcon from './VacuumIcon';
+import LaptopIcon from './LaptopIcon';
+import PhoneIcon from './PhoneIcon';
+import ToolIcon from './ToolIcon';
+import SofaIcon from './SofaIcon';
+import BedIcon from './BedIcon';
+import TableIcon from './TableIcon';
+import ChairIcon from './ChairIcon';
+import PlantIcon from './PlantIcon';
+import BookIcon from './BookIcon';
+import ToolboxIcon from './ToolboxIcon';
+import BoxIcon from './BoxIcon';
+
 export interface IconData {
   id: string;
   name: string;
