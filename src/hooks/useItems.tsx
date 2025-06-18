@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode } from 'react';
 
 interface Document {
@@ -37,6 +38,7 @@ interface ItemsContextType {
 const ItemsContext = createContext<ItemsContextType | undefined>(undefined);
 
 export const ItemsProvider = ({ children }: { children: ReactNode }) => {
+  console.log('ItemsProvider rendering');
   const [items, setItems] = useState<Item[]>([
     {
       id: '1',
@@ -93,16 +95,22 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
     return items.find(item => item.id === id);
   };
 
+  const contextValue = { items, addItem, updateItem, deleteItem, getItemById };
+  console.log('ItemsProvider context value:', contextValue);
+
   return (
-    <ItemsContext.Provider value={{ items, addItem, updateItem, deleteItem, getItemById }}>
+    <ItemsContext.Provider value={contextValue}>
       {children}
     </ItemsContext.Provider>
   );
 };
 
 export const useItems = () => {
+  console.log('useItems called');
   const context = useContext(ItemsContext);
+  console.log('useItems context:', context);
   if (context === undefined) {
+    console.error('useItems must be used within an ItemsProvider');
     throw new Error('useItems must be used within an ItemsProvider');
   }
   return context;

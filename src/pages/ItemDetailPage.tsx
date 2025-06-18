@@ -4,10 +4,14 @@ import { useItems } from '@/hooks/useItems';
 import ItemDetail from '@/components/items/ItemDetail';
 
 const ItemDetailPage = () => {
+  console.log('ItemDetailPage rendering');
   const { itemId } = useParams<{ itemId: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  
+  console.log('About to call useItems');
   const { getItemById } = useItems();
+  console.log('useItems call successful');
 
   const item = itemId ? getItemById(itemId) : null;
   const defaultTab = searchParams.get('tab') || 'details';
