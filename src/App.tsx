@@ -14,6 +14,7 @@ import DashboardPage from "./pages/Dashboard";
 import ItemsPage from "./pages/ItemsPage";
 import ItemDetailPage from "./pages/ItemDetailPage";
 import MaintenancePage from "./pages/MaintenancePage";
+import MaintenanceTasksPage from "./pages/MaintenanceTasksPage";
 import TasksPage from "./pages/TasksPage";
 import ScannerPage from "./pages/ScannerPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -36,6 +37,10 @@ const AppContent = () => {
         <Route path="/items" element={<ItemsPage />} />
         <Route path="/items/:itemId" element={<ItemDetailPage />} />
         <Route path="/calendar" element={<MaintenancePage />} />
+        <Route path="/maintenance/overview" element={<MaintenanceTasksPage />} />
+        <Route path="/maintenance/up-to-date" element={<MaintenanceTasksPage />} />
+        <Route path="/maintenance/due-soon" element={<MaintenanceTasksPage />} />
+        <Route path="/maintenance/overdue" element={<MaintenanceTasksPage />} />
         <Route path="/tasks/:status" element={<TasksPage />} />
         <Route path="/scanner" element={<ScannerPage />} />
         <Route path="/profile" element={<ProfilePage />} />
