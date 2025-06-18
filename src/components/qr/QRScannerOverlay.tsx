@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Flashlight, FlashlightOff, RotateCcw, Loader2 } from 'lucide-react';
+import { X, RotateCcw, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +25,6 @@ const QRScannerOverlay = ({ isOpen, onClose, onItemView }: QRScannerOverlayProps
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [currentQrCode, setCurrentQrCode] = useState<string>('');
-  const [flashlightOn, setFlashlightOn] = useState(false);
   const [cameraError, setCameraError] = useState<string>('');
   const [scanAttempts, setScanAttempts] = useState(0);
   const scanTimeoutRef = useRef<NodeJS.Timeout>();
@@ -61,19 +60,31 @@ const QRScannerOverlay = ({ isOpen, onClose, onItemView }: QRScannerOverlayProps
     }
   };
 
+  const handleCameraError = (error: Error) => {
+    console.error('Camera error:', error);
+    
+    if (error.name === 'NotAllowedError') {
+      setCameraError('Camera access blocked. Please enable camera permissions and try again.');
+    } else if (error.name === 'NotReadableError') {
+      setCameraError('Camera is in use by another app. Please close other apps and try again.');
+    } else if (error.name === 'NotFoundError') {
+      setCameraError('No camera found on this device.');
+    } else {
+      setCameraError('Camera error occurred. Please try again.');
+    }
+  };
+
   const {
     videoRef,
     isScanning,
     hasPermission,
+    retryCount,
     startScanning,
     stopScanning,
     retryPermission,
   } = useQrScanner({
     onScan: handleScan,
-    onError: (error) => {
-      console.error('Scanner error:', error);
-      setCameraError('Camera error occurred');
-    },
+    onError: handleCameraError,
   });
 
   // Auto-start scanning when overlay opens
@@ -134,26 +145,7 @@ const QRScannerOverlay = ({ isOpen, onClose, onItemView }: QRScannerOverlayProps
     setCameraError('');
     setScanAttempts(0);
     setScannedData(null);
-    startScanning();
-  };
-
-  const toggleFlashlight = async () => {
-    try {
-      if (videoRef.current?.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        const track = stream.getVideoTracks()[0];
-        const capabilities = track.getCapabilities();
-        
-        if (capabilities.torch) {
-          await track.applyConstraints({
-            advanced: [{ torch: !flashlightOn }]
-          });
-          setFlashlightOn(!flashlightOn);
-        }
-      }
-    } catch (error) {
-      console.error('Flashlight error:', error);
-    }
+    retryPermission();
   };
 
   const renderScannedItem = () => {
@@ -272,18 +264,7 @@ const QRScannerOverlay = ({ isOpen, onClose, onItemView }: QRScannerOverlayProps
           
           <h2 className="text-white font-semibold text-lg">Scan QR Code</h2>
           
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleFlashlight}
-            className="text-white hover:bg-white/20"
-          >
-            {flashlightOn ? (
-              <FlashlightOff className="w-6 h-6" />
-            ) : (
-              <Flashlight className="w-6 h-6" />
-            )}
-          </Button>
+          <div className="w-10 h-10"></div> {/* Spacer for balance */}
         </div>
 
         {/* Camera Permission/Loading States */}
@@ -292,15 +273,20 @@ const QRScannerOverlay = ({ isOpen, onClose, onItemView }: QRScannerOverlayProps
             <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-xl mx-6">
               <CardContent className="p-8 text-center">
                 <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <X className="w-8 h-8 text-red-600" />
+                  <AlertCircle className="w-8 h-8 text-red-600" />
                 </div>
                 <h3 className="font-semibold text-lg mb-2">Camera Access Required</h3>
-                <p className="text-muted-foreground mb-6">
-                  We need camera access to scan QR codes
+                <p className="text-muted-foreground mb-2 text-sm">
+                  {cameraError || 'We need camera access to scan QR codes'}
                 </p>
+                {retryCount > 0 && (
+                  <p className="text-xs text-muted-foreground mb-6">
+                    Make sure the page is served over HTTPS and no other apps are using the camera.
+                  </p>
+                )}
                 <Button onClick={retryPermission} className="w-full">
                   <RotateCcw className="w-4 h-4 mr-2" />
-                  Allow Camera Access
+                  {retryCount > 0 ? 'Try Again' : 'Allow Camera Access'}
                 </Button>
               </CardContent>
             </Card>
@@ -380,7 +366,7 @@ const QRScannerOverlay = ({ isOpen, onClose, onItemView }: QRScannerOverlayProps
         )}
 
         {/* Error State */}
-        {cameraError && (
+        {cameraError && isScanning && (
           <motion.div
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
