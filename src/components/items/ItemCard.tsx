@@ -106,7 +106,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
 
       {/* Detail Modal */}
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{item.name}</DialogTitle>
           </DialogHeader>

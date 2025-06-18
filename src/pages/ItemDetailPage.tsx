@@ -5,7 +5,7 @@ import ItemDetail from '@/components/items/ItemDetail';
 
 const ItemDetailPage = () => {
   console.log('ItemDetailPage rendering');
-  const { itemId } = useParams<{ itemId: string }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
@@ -13,8 +13,8 @@ const ItemDetailPage = () => {
   const { getItemById } = useSupabaseItems();
   console.log('useSupabaseItems call successful');
 
-  const item = itemId ? getItemById(itemId) : null;
-  const defaultTab = searchParams.get('tab') || 'details';
+  const item = id ? getItemById(id) : null;
+  const defaultTab = searchParams.get('tab') || 'maintenance';
   const highlightTaskId = searchParams.get('highlight') || undefined;
 
   const handleClose = () => {
