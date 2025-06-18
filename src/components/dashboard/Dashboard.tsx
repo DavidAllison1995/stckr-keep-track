@@ -1,3 +1,4 @@
+
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
@@ -17,7 +18,13 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
 
   const overdueTasks = getTasksByStatus('overdue');
   const dueSoonTasks = getTasksByStatus('due_soon');
-  const upToDateTasks = getTasksByStatus('completed');
+  // For up-to-date tasks, we need to filter pending tasks that are due more than 14 days from now
+  const upToDateTasks = getTasksByStatus('pending').filter(task => {
+    const taskDate = new Date(task.date);
+    const now = new Date();
+    const fourteenDaysFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+    return taskDate > fourteenDaysFromNow;
+  });
 
   const handleStatsClick = (tab: string) => {
     if (onTabChange) {
