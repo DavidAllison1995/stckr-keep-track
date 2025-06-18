@@ -1,4 +1,3 @@
-
 import { createContext, useContext, ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,7 +25,7 @@ export interface Item {
   warranty_date?: string;
   qr_code_id?: string;
   notes?: string;
-  documents?: Document[] | any;
+  documents?: Document[];
   created_at: string;
   updated_at: string;
 }
@@ -54,6 +53,8 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
     queryFn: async () => {
       if (!user) return [];
       
+      console.log('Fetching items for user:', user.id);
+      
       const { data, error } = await supabase
         .from('items')
         .select('*')
@@ -70,10 +71,32 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
         throw error;
       }
 
-      return (data || []).map(item => ({
-        ...item,
-        documents: Array.isArray(item.documents) ? item.documents : []
-      }));
+      console.log('Raw items data:', data);
+
+      return (data || []).map(item => {
+        let documents: Document[] = [];
+        
+        if (item.documents) {
+          try {
+            // Parse the JSONB documents field
+            if (typeof item.documents === 'string') {
+              documents = JSON.parse(item.documents);
+            } else if (Array.isArray(item.documents)) {
+              documents = item.documents;
+            }
+          } catch (error) {
+            console.error('Error parsing documents for item:', item.id, error);
+            documents = [];
+          }
+        }
+        
+        console.log(`Item ${item.id} documents:`, documents);
+        
+        return {
+          ...item,
+          documents
+        };
+      });
     },
     enabled: !!user,
   });
@@ -116,11 +139,14 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
 
   const updateItemMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Item> }) => {
+      console.log('Updating item:', id, 'with:', updates);
+      
       const { documents, ...updatesWithoutDocuments } = updates;
       
       const updateData: any = { ...updatesWithoutDocuments };
       if (documents !== undefined) {
-        updateData.documents = documents ? JSON.stringify(documents) : null;
+        updateData.documents = documents && documents.length > 0 ? JSON.stringify(documents) : null;
+        console.log('Storing documents as:', updateData.documents);
       }
       
       const { data, error } = await supabase
@@ -130,10 +156,16 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase update error:', error);
+        throw error;
+      }
+      
+      console.log('Updated item data:', data);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Update successful, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['items', user?.id] });
     },
     onError: (error) => {
@@ -174,6 +206,8 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
 
   const uploadDocument = async (itemId: string, file: File): Promise<string> => {
     if (!user) throw new Error('User not authenticated');
+
+    console.log('Starting document upload for item:', itemId);
 
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}.${fileExt}`;
@@ -244,7 +278,9 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const getItemById = (id: string) => {
-    return items.find(item => item.id === id);
+    const item = items.find(item => item.id === id);
+    console.log('Getting item by ID:', id, 'found:', item);
+    return item;
   };
 
   return (
