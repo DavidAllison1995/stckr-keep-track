@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useMaintenance, MaintenanceTask } from '@/hooks/useMaintenance';
+import { useSupabaseMaintenance, MaintenanceTask } from '@/hooks/useSupabaseMaintenance';
 import { useToast } from '@/hooks/use-toast';
 
 interface TaskEditDialogProps {
@@ -17,7 +17,7 @@ interface TaskEditDialogProps {
 }
 
 const TaskEditDialog = ({ task, open, onOpenChange, onSuccess }: TaskEditDialogProps) => {
-  const { updateTask } = useMaintenance();
+  const { updateTask } = useSupabaseMaintenance();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     title: task?.title || '',
@@ -38,27 +38,35 @@ const TaskEditDialog = ({ task, open, onOpenChange, onSuccess }: TaskEditDialogP
     }
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!task || !formData.title.trim() || !formData.date) {
       return;
     }
 
-    updateTask(task.id, {
-      title: formData.title.trim(),
-      notes: formData.notes || undefined,
-      date: formData.date,
-      recurrence: formData.recurrence,
-    });
+    try {
+      await updateTask(task.id, {
+        title: formData.title.trim(),
+        notes: formData.notes || null,
+        date: formData.date,
+        recurrence: formData.recurrence,
+      });
 
-    toast({
-      title: "Task updated",
-      description: "The maintenance task has been updated successfully.",
-    });
+      toast({
+        title: "Task updated",
+        description: "The maintenance task has been updated successfully.",
+      });
 
-    onSuccess();
-    onOpenChange(false);
+      onSuccess();
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update task. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCancel = () => {

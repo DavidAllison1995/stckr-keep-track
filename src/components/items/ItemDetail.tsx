@@ -1,21 +1,18 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { useState } from 'react';
+import { ArrowLeft, Calendar, FileText, Settings, Plus, Edit, Trash2, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Edit, Check, Trash2, Upload } from 'lucide-react';
-import { Item, useSupabaseItems } from '@/hooks/useSupabaseItems';
-import { useSupabaseMaintenance, type MaintenanceTask } from '@/hooks/useSupabaseMaintenance';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useSupabaseMaintenance, MaintenanceTask } from '@/hooks/useSupabaseMaintenance';
 import { useToast } from '@/hooks/use-toast';
-import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
-import TaskEditForm from '@/components/maintenance/TaskEditForm';
 import ItemForm from './ItemForm';
-import { getIconComponent } from '@/components/icons';
-import RecurringTaskDeleteDialog from '@/components/maintenance/RecurringTaskDeleteDialog';
+import MaintenanceTaskForm from '../maintenance/MaintenanceTaskForm';
+import TaskEditDialog from '../maintenance/TaskEditDialog';
+import { Item } from '@/hooks/useSupabaseItems';
 
 interface ItemDetailProps {
   item: Item;
@@ -24,596 +21,421 @@ interface ItemDetailProps {
   highlightTaskId?: string;
 }
 
-interface Document {
-  id: string;
-  name: string;
-  type: string;
-  url: string;
-  uploadDate: string;
-}
-
 const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: ItemDetailProps) => {
-  const { getTasksByItem, markTaskComplete, deleteTask } = useSupabaseMaintenance();
-  const { updateItem, uploadDocument, deleteDocument } = useSupabaseItems();
-  const { toast } = useToast();
-  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
-  const [isEditItemModalOpen, setIsEditItemModalOpen] = useState(false);
-  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
-  const [notes, setNotes] = useState(item.notes || '');
-  const [documents, setDocuments] = useState<Document[]>((item.documents as Document[]) || []);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [showTaskForm, setShowTaskForm] = useState(false);
+  const [editingTask, setEditingTask] = useState<MaintenanceTask | null>(null);
   const [activeTab, setActiveTab] = useState(defaultTab);
-  const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
-  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
-  const [showCompleted, setShowCompleted] = useState(false);
-  const [recurringDeleteDialogOpen, setRecurringDeleteDialogOpen] = useState(false);
-  const [taskToDelete, setTaskToDelete] = useState<MaintenanceTask | null>(null);
-  const [isUploadingFile, setIsUploadingFile] = useState(false);
   
-  // Get tasks based on the toggle state
-  const upcomingTasks = getTasksByItem(item.id, false); // Exclude completed
-  const completedTasks = getTasksByItem(item.id, true).filter(task => task.status === 'completed'); // Only completed
-  const displayTasks = showCompleted ? completedTasks : upcomingTasks;
-  
-  const editingTask = editingTaskId ? displayTasks.find(task => task.id === editingTaskId) : null;
+  const { 
+    tasks, 
+    deleteTask, 
+    markTaskComplete, 
+    getTasksByItem 
+  } = useSupabaseMaintenance();
+  const { toast } = useToast();
 
-  // Effect to handle tab switching and highlighting
-  useEffect(() => {
-    if (defaultTab) {
-      setActiveTab(defaultTab);
-    }
-  }, [defaultTab]);
+  // Get tasks for this item
+  const itemTasks = getTasksByItem(item.id, true);
 
-  // Effect to scroll to highlighted task
-  useEffect(() => {
-    if (highlightTaskId && activeTab === 'maintenance') {
-      setTimeout(() => {
-        const element = document.getElementById(`task-${highlightTaskId}`);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          element.classList.add('bg-blue-100', 'border-blue-300');
-          setTimeout(() => {
-            element.classList.remove('bg-blue-100', 'border-blue-300');
-          }, 2000);
-        }
-      }, 100);
-    }
-  }, [highlightTaskId, activeTab]);
+  // Separate completed and pending tasks
+  const completedTasks = itemTasks.filter(task => task.status === 'completed');
+  const pendingTasks = itemTasks.filter(task => task.status !== 'completed');
 
-  // Update local state when item changes
-  useEffect(() => {
-    setNotes(item.notes || '');
-    setDocuments((item.documents as Document[]) || []);
-  }, [item]);
-
-  const IconComponent = getIconComponent(item.icon_id || 'box');
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      toast({
-        title: 'File too large',
-        description: 'Please select a file smaller than 10MB',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsUploadingFile(true);
+  const handleDeleteTask = async (taskId: string) => {
     try {
-      const publicUrl = await uploadDocument(item.id, file);
-      
-      const newDoc: Document = {
-        id: Date.now().toString(),
-        name: file.name,
-        type: file.type,
-        url: publicUrl,
-        uploadDate: new Date().toISOString(),
+      await deleteTask(taskId);
+      toast({
+        title: "Success",
+        description: "Task deleted successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete task",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCompleteTask = async (taskId: string) => {
+    try {
+      await markTaskComplete(taskId);
+      toast({
+        title: "Success",
+        description: "Task marked as complete",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to complete task",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getTaskStatusInfo = (task: MaintenanceTask) => {
+    const now = new Date();
+    const taskDate = new Date(task.date);
+    const diffInDays = Math.ceil((taskDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (task.status === 'completed') {
+      return {
+        icon: CheckCircle,
+        color: 'text-green-600',
+        bgColor: 'bg-green-100',
+        text: 'Completed',
+        variant: 'default' as const
       };
-      
-      const updatedDocuments = [...documents, newDoc];
-      setDocuments(updatedDocuments);
-      
-      // Save to item data
-      await updateItem(item.id, { documents: updatedDocuments as any });
-      
-      toast({
-        title: 'Success',
-        description: 'Document uploaded successfully',
-      });
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      toast({
-        title: 'Upload failed',
-        description: 'Failed to upload document',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUploadingFile(false);
-      // Reset file input
-      if (event.target) {
-        event.target.value = '';
-      }
     }
-  };
 
-  const handleDeleteDocument = async (doc: Document) => {
-    try {
-      await deleteDocument(doc.url);
-      
-      const updatedDocuments = documents.filter(d => d.id !== doc.id);
-      setDocuments(updatedDocuments);
-      
-      // Save to item data
-      await updateItem(item.id, { documents: updatedDocuments as any });
-      
-      toast({
-        title: 'Success',
-        description: 'Document deleted successfully',
-      });
-    } catch (error) {
-      console.error('Error deleting document:', error);
-      toast({
-        title: 'Delete failed',
-        description: 'Failed to delete document',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleSaveNotes = async () => {
-    try {
-      await updateItem(item.id, { notes });
-      toast({
-        title: 'Success',
-        description: 'Notes saved successfully',
-      });
-    } catch (error) {
-      console.error('Error saving notes:', error);
-      toast({
-        title: 'Save failed',
-        description: 'Failed to save notes',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleEditTask = (taskId: string) => {
-    setEditingTaskId(taskId);
-  };
-
-  const handleTaskEditSuccess = () => {
-    setEditingTaskId(null);
-  };
-
-  const handleItemEditSuccess = () => {
-    setIsEditItemModalOpen(false);
-  };
-
-  const handleMarkComplete = async (taskId: string) => {
-    setCompletingTaskId(taskId);
-    try {
-      markTaskComplete(taskId);
-    } finally {
-      setCompletingTaskId(null);
-    }
-  };
-
-  const handleDeleteTask = async (task: MaintenanceTask) => {
-    console.log('Deleting task:', task);
-    console.log('Task recurrence:', task.recurrence);
-    console.log('Task parent_task_id:', task.parent_task_id);
-    
-    // Check if this is a recurring task (either has recurrence set or is a child of a recurring task)
-    const isRecurring = task.recurrence !== 'none' || task.parent_task_id;
-    
-    console.log('Is recurring?', isRecurring);
-    
-    if (isRecurring) {
-      setTaskToDelete(task);
-      setRecurringDeleteDialogOpen(true);
+    if (diffInDays < 0) {
+      return {
+        icon: AlertTriangle,
+        color: 'text-red-600',
+        bgColor: 'bg-red-100',
+        text: `${Math.abs(diffInDays)} days overdue`,
+        variant: 'destructive' as const
+      };
+    } else if (diffInDays <= 14) {
+      return {
+        icon: Clock,
+        color: 'text-yellow-600',
+        bgColor: 'bg-yellow-100',
+        text: diffInDays === 0 ? 'Due today' : `Due in ${diffInDays} days`,
+        variant: 'secondary' as const
+      };
     } else {
-      setDeletingTaskId(task.id);
-      try {
-        deleteTask(task.id, 'single');
-      } finally {
-        setDeletingTaskId(null);
-      }
+      return {
+        icon: CheckCircle,
+        color: 'text-green-600',
+        bgColor: 'bg-green-100',
+        text: `Due in ${diffInDays} days`,
+        variant: 'default' as const
+      };
     }
   };
 
-  const handleDeleteSingle = () => {
-    if (taskToDelete) {
-      setDeletingTaskId(taskToDelete.id);
-      try {
-        deleteTask(taskToDelete.id, 'single');
-      } finally {
-        setDeletingTaskId(null);
-        setTaskToDelete(null);
-      }
-    }
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
-  const handleDeleteAll = () => {
-    if (taskToDelete) {
-      setDeletingTaskId(taskToDelete.id);
-      try {
-        deleteTask(taskToDelete.id, 'all');
-      } finally {
-        setDeletingTaskId(null);
-        setTaskToDelete(null);
-      }
-    }
-  };
+  const renderTaskCard = (task: MaintenanceTask, isCompleted = false) => {
+    const statusInfo = getTaskStatusInfo(task);
+    const StatusIcon = statusInfo.icon;
+    const isHighlighted = task.id === highlightTaskId;
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" onClick={onClose}>
-          ← Back
-        </Button>
-        <Dialog open={isEditItemModalOpen} onOpenChange={setIsEditItemModalOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
-              Edit Item
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Edit Item</DialogTitle>
-            </DialogHeader>
-            <ItemForm 
-              item={item}
-              onSuccess={handleItemEditSuccess} 
-            />
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Item Overview */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex gap-4">
-            <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              {item.photo_url ? (
-                <img 
-                  src={item.photo_url} 
-                  alt={item.name} 
-                  className="w-full h-full object-cover rounded-lg" 
-                />
-              ) : (
-                <IconComponent className="w-12 h-12 text-gray-600" />
-              )}
-            </div>
+    return (
+      <Card 
+        key={task.id} 
+        className={`transition-all duration-200 hover:shadow-md ${
+          isHighlighted ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+        }`}
+      >
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between">
             <div className="flex-1">
-              <div className="mb-2">
-                <h1 className="text-2xl font-bold">{item.name}</h1>
+              <div className="flex items-center gap-2 mb-2">
+                <h4 className={`font-semibold ${isCompleted ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+                  {task.title}
+                </h4>
+                <Badge variant={statusInfo.variant} className="text-xs">
+                  <StatusIcon className="w-3 h-3 mr-1" />
+                  {statusInfo.text}
+                </Badge>
               </div>
-              <div className="flex gap-2 mb-3">
-                <Badge variant="secondary">{item.category}</Badge>
-                {item.room && <Badge variant="outline">{item.room}</Badge>}
+              
+              <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  {formatDate(task.date)}
+                </span>
+                {task.recurrence !== 'none' && (
+                  <Badge variant="outline" className="text-xs">
+                    Repeats {task.recurrence}
+                  </Badge>
+                )}
               </div>
-              {item.description && (
-                <p className="text-gray-600 text-sm">{item.description}</p>
+
+              {task.notes && (
+                <p className={`text-sm ${isCompleted ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {task.notes}
+                </p>
               )}
             </div>
+
+            {!isCompleted && (
+              <div className="flex items-center gap-2 ml-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingTask(task)}
+                  className="h-8 w-8 p-0"
+                >
+                  <Edit className="w-4 h-4" />
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCompleteTask(task.id)}
+                  className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                </Button>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Task</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete "{task.title}"? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={() => handleDeleteTask(task.id)}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
+    );
+  };
 
-      {/* Tabs component */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
-          <TabsTrigger value="notes">Notes</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="details">
-          <Card>
-            <CardHeader>
-              <CardTitle>Item Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {item.purchase_date && (
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Purchase Date</label>
-                  <p className="text-sm">{new Date(item.purchase_date).toLocaleDateString()}</p>
-                </div>
-              )}
-              {item.warranty_date && (
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Warranty Until</label>
-                  <p className="text-sm">{new Date(item.warranty_date).toLocaleDateString()}</p>
-                </div>
-              )}
-              <div>
-                <label className="text-sm font-medium text-gray-700">QR Code</label>
-                <p className="text-sm text-gray-500">
-                  {item.qr_code_id ? `Assigned: ${item.qr_code_id}` : 'No QR code assigned'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="maintenance">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Maintenance Tasks</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setShowCompleted(!showCompleted)}
-                  >
-                    {showCompleted ? 'View Upcoming Tasks' : 'View Completed Tasks'}
-                  </Button>
-                  {!showCompleted && (
-                    <Dialog open={isAddTaskModalOpen} onOpenChange={setIsAddTaskModalOpen}>
-                      <DialogTrigger asChild>
-                        <Button size="sm">+ Add Task</Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Add Maintenance Task</DialogTitle>
-                        </DialogHeader>
-                        <MaintenanceTaskForm 
-                          itemId={item.id}
-                          onSuccess={() => setIsAddTaskModalOpen(false)} 
-                        />
-                      </DialogContent>
-                    </Dialog>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {displayTasks.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-2">🔧</div>
-                  <p className="text-gray-600 mb-4">
-                    {showCompleted ? 'No completed maintenance tasks' : 'No pending maintenance tasks'}
-                  </p>
-                  {!showCompleted && (
-                    <Button onClick={() => setIsAddTaskModalOpen(true)}>
-                      Add First Task
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {displayTasks.map((task) => (
-                    <div 
-                      key={task.id} 
-                      id={`task-${task.id}`}
-                      className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                        highlightTaskId === task.id ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'
-                      }`}
-                    >
-                      <div className={`w-3 h-3 rounded-full ${
-                        task.status === 'completed' ? 'bg-blue-500' :
-                        task.status === 'overdue' ? 'bg-red-500' :
-                        task.status === 'due_soon' ? 'bg-yellow-500' : 'bg-green-500'
-                      }`} />
-                      <div className="flex-1">
-                        <div className="font-medium flex items-center gap-2">
-                          {task.title}
-                          {(task.recurrence !== 'none' || task.parent_task_id) && (
-                            <Badge variant="outline" className="text-xs">
-                              {task.parent_task_id ? 'Recurring' : task.recurrence}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {showCompleted ? 'Completed: ' : 'Due: '}{new Date(task.date).toLocaleDateString()}
-                        </div>
-                        {task.notes && (
-                          <div className="text-sm text-gray-500">{task.notes}</div>
-                        )}
-                      </div>
-                      <Badge variant={
-                        task.status === 'completed' ? 'default' :
-                        task.status === 'overdue' ? 'destructive' :
-                        task.status === 'due_soon' ? 'secondary' : 'default'
-                      }>
-                        {task.status === 'completed' ? 'Completed' :
-                         task.status === 'overdue' ? 'Overdue' :
-                         task.status === 'due_soon' ? 'Due Soon' : 'Up to Date'}
-                      </Badge>
-                      
-                      {showCompleted ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteTask(task)}
-                          disabled={deletingTaskId === task.id}
-                          aria-label="Delete completed task"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      ) : (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleMarkComplete(task.id)}
-                            disabled={completingTaskId === task.id}
-                            aria-label="Mark task complete"
-                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                          >
-                            <Check className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditTask(task.id)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteTask(task)}
-                            disabled={deletingTaskId === task.id}
-                            aria-label="Delete task"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+  if (isEditMode) {
+    return (
+      <div className="h-full">
+        <div className="flex items-center justify-between mb-6">
+          <button 
+            onClick={() => setIsEditMode(false)}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back to Item
+          </button>
+        </div>
+        <ItemForm
+          item={item}
+          onSuccess={() => {
+            setIsEditMode(false);
+            toast({
+              title: "Success",
+              description: "Item updated successfully",
+            });
+          }}
+          onCancel={() => setIsEditMode(false)}
+        />
+      </div>
+    );
+  }
 
-          {/* Task Edit Modal */}
-          <Dialog open={!!editingTaskId} onOpenChange={() => setEditingTaskId(null)}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Edit Maintenance Task</DialogTitle>
-              </DialogHeader>
-              {editingTask && (
-                <TaskEditForm
-                  task={editingTask}
-                  onSuccess={handleTaskEditSuccess}
-                  onCancel={() => setEditingTaskId(null)}
-                />
-              )}
-            </DialogContent>
-          </Dialog>
+  return (
+    <div className="h-full">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <button 
+          onClick={onClose}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Back to Items
+        </button>
+        <Button
+          variant="outline"
+          onClick={() => setIsEditMode(true)}
+          className="flex items-center gap-2"
+        >
+          <Settings className="w-4 h-4" />
+          Edit Item
+        </Button>
+      </div>
 
-          {/* Recurring Task Delete Dialog */}
-          <RecurringTaskDeleteDialog
-            task={taskToDelete}
-            open={recurringDeleteDialogOpen}
-            onOpenChange={setRecurringDeleteDialogOpen}
-            onDeleteSingle={handleDeleteSingle}
-            onDeleteAll={handleDeleteAll}
-          />
-        </TabsContent>
-        
-        <TabsContent value="notes">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notes</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="notes">Item Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Add notes about this item..."
-                  rows={6}
-                />
-              </div>
-              <Button onClick={handleSaveNotes}>Save Notes</Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="documents">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Documents & Files</CardTitle>
-                <div className="flex gap-2">
-                  <Input
-                    type="file"
-                    id="file-upload"
-                    className="hidden"
-                    onChange={handleFileUpload}
-                    accept="image/*,application/pdf,.doc,.docx,.txt"
-                    disabled={isUploadingFile}
-                  />
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => document.getElementById('file-upload')?.click()}
-                    disabled={isUploadingFile}
-                    className="flex items-center gap-2"
-                  >
-                    <Upload className="h-4 w-4" />
-                    {isUploadingFile ? 'Uploading...' : 'Upload File'}
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {documents.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-2">📄</div>
-                  <p className="text-gray-600 mb-4">No documents uploaded yet</p>
-                  <Button 
-                    variant="outline"
-                    onClick={() => document.getElementById('file-upload')?.click()}
-                    disabled={isUploadingFile}
-                  >
-                    Upload Document
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {documents.map((doc) => (
-                    <div key={doc.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        {doc.type.startsWith('image/') ? '🖼️' : '📄'}
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-medium">{doc.name}</div>
-                        <div className="text-sm text-gray-600">
-                          Uploaded: {new Date(doc.uploadDate).toLocaleDateString()}
-                        </div>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => window.open(doc.url, '_blank')}
-                      >
-                        View
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteDocument(doc)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Task Edit Modal */}
-      <Dialog open={!!editingTaskId} onOpenChange={() => setEditingTaskId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Maintenance Task</DialogTitle>
-          </DialogHeader>
-          {editingTask && (
-            <TaskEditForm
-              task={editingTask}
-              onSuccess={handleTaskEditSuccess}
-              onCancel={() => setEditingTaskId(null)}
-            />
+      {/* Content */}
+      <div className="space-y-6">
+        {/* Item Header */}
+        <div className="text-center space-y-4">
+          {item.photo_url && (
+            <div className="mx-auto w-32 h-32 rounded-lg overflow-hidden bg-gray-100">
+              <img 
+                src={item.photo_url} 
+                alt={item.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
           )}
-        </DialogContent>
-      </Dialog>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">{item.name}</h1>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Badge variant="secondary">{item.category}</Badge>
+              {item.room && <Badge variant="outline">{item.room}</Badge>}
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="details" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Details
+            </TabsTrigger>
+            <TabsTrigger value="maintenance" className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              Maintenance
+              {pendingTasks.length > 0 && (
+                <Badge variant="secondary" className="ml-1 text-xs">
+                  {pendingTasks.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="history" className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              History
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="details" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Item Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {item.description && (
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Description</h4>
+                    <p className="text-gray-600">{item.description}</p>
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 gap-4">
+                  {item.purchase_date && (
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-1">Purchase Date</h4>
+                      <p className="text-gray-600">{formatDate(item.purchase_date)}</p>
+                    </div>
+                  )}
+                  
+                  {item.warranty_date && (
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-1">Warranty Until</h4>
+                      <p className="text-gray-600">{formatDate(item.warranty_date)}</p>
+                    </div>
+                  )}
+                </div>
+
+                {item.notes && (
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-1">Notes</h4>
+                    <p className="text-gray-600">{item.notes}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="maintenance" className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Maintenance Tasks</h3>
+              <Dialog open={showTaskForm} onOpenChange={setShowTaskForm}>
+                <DialogTrigger asChild>
+                  <Button className="flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Task
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle>Add Maintenance Task</DialogTitle>
+                  </DialogHeader>
+                  <MaintenanceTaskForm
+                    itemId={item.id}
+                    onSuccess={() => {
+                      setShowTaskForm(false);
+                      toast({
+                        title: "Success",
+                        description: "Maintenance task added successfully",
+                      });
+                    }}
+                    onCancel={() => setShowTaskForm(false)}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {pendingTasks.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Settings className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">No maintenance tasks</h4>
+                  <p className="text-gray-600 mb-4">Create your first maintenance task for this item.</p>
+                  <Button onClick={() => setShowTaskForm(true)} className="flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Task
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {pendingTasks.map(task => renderTaskCard(task))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="history" className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">Completed Tasks</h3>
+            
+            {completedTasks.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <CheckCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">No completed tasks</h4>
+                  <p className="text-gray-600">Completed maintenance tasks will appear here.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {completedTasks.map(task => renderTaskCard(task, true))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Task Edit Dialog */}
+      <TaskEditDialog
+        task={editingTask}
+        open={!!editingTask}
+        onOpenChange={(open) => !open && setEditingTask(null)}
+        onSuccess={() => {
+          setEditingTask(null);
+          toast({
+            title: "Success",
+            description: "Task updated successfully",
+          });
+        }}
+      />
     </div>
   );
 };
