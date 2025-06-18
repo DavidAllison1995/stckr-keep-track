@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { ArrowLeft, Calendar, FileText, Settings, Plus, Edit, Trash2, CheckCircle, Clock, AlertTriangle, Upload, Download, Eye, EyeOff, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -108,7 +109,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
+    // Validate file type only (no size limit)
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
     if (!allowedTypes.includes(file.type)) {
       toast({
@@ -119,21 +120,15 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
       return;
     }
 
-    // Validate file size (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      toast({
-        title: "Error",
-        description: "File size must be less than 10MB",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsUploading(true);
 
     try {
+      console.log('Starting upload process for file:', file.name, 'Size:', file.size, 'bytes');
+      
+      // Upload file to Supabase Storage
       const documentUrl = await uploadDocument(item.id, file);
       
+      // Create document object
       const newDocument = {
         id: Date.now().toString(),
         name: file.name,
@@ -142,13 +137,20 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
         uploadDate: new Date().toISOString()
       };
 
+      console.log('Created document object:', newDocument);
+
+      // Update item with new document
       const updatedDocuments = [...documents, newDocument];
+      console.log('Updating item with documents:', updatedDocuments);
+      
       await updateItem(item.id, { documents: updatedDocuments });
       
       toast({
         title: "Success",
-        description: "Document uploaded successfully",
+        description: `${file.name} uploaded successfully`,
       });
+      
+      console.log('Upload completed successfully');
     } catch (error) {
       console.error('Upload error:', error);
       toast({
@@ -167,8 +169,12 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
     try {
       const documentToDelete = documents.find(doc => doc.id === documentId);
       if (documentToDelete) {
+        console.log('Deleting document:', documentToDelete);
+        
+        // Delete from storage
         await deleteDocument(documentToDelete.url);
         
+        // Update item documents list
         const updatedDocuments = documents.filter(doc => doc.id !== documentId);
         await updateItem(item.id, { documents: updatedDocuments });
         
@@ -178,6 +184,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
         });
       }
     } catch (error) {
+      console.error('Delete error:', error);
       toast({
         title: "Error",
         description: "Failed to delete document",
@@ -776,3 +783,4 @@ const ItemDetail = ({ item, onClose, defaultTab = 'maintenance', highlightTaskId
 };
 
 export default ItemDetail;
+

@@ -1,4 +1,5 @@
 
+
 import { createContext, useContext, ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -183,6 +184,10 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
     onSuccess: (data) => {
       console.log('Update successful, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['items', user?.id] });
+      toast({
+        title: 'Success',
+        description: 'Item updated successfully',
+      });
     },
     onError: (error) => {
       console.error('Error updating item:', error);
@@ -223,7 +228,7 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
   const uploadDocument = async (itemId: string, file: File): Promise<string> => {
     if (!user) throw new Error('User not authenticated');
 
-    console.log('Starting document upload for item:', itemId);
+    console.log('Starting document upload for item:', itemId, 'File:', file.name, 'Size:', file.size);
 
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}.${fileExt}`;
@@ -322,3 +327,4 @@ export const useSupabaseItems = () => {
   }
   return context;
 };
+
