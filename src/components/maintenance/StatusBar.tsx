@@ -34,21 +34,21 @@ const StatusBar = () => {
     count: upToDateTasks.length,
     icon: CheckCircle,
     color: 'text-green-600 bg-green-100',
-    route: '/maintenance/up-to-date',
+    route: '/tasks/up-to-date',
     description: 'Tasks due in 14+ days'
   }, {
     title: 'Due Soon',
     count: dueSoonTasks.length,
     icon: Clock,
     color: 'text-yellow-600 bg-yellow-100',
-    route: '/maintenance/due-soon',
+    route: '/tasks/due-soon',
     description: 'Tasks due within 14 days'
   }, {
     title: 'Overdue',
     count: overdueTasks.length,
     icon: AlertTriangle,
     color: 'text-red-600 bg-red-100',
-    route: '/maintenance/overdue',
+    route: '/tasks/overdue',
     description: 'Tasks past due date'
   }];
 
