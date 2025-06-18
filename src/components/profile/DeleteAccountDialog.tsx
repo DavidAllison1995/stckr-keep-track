@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 
 interface DeleteAccountDialogProps {
   open: boolean;
@@ -16,7 +16,7 @@ const DeleteAccountDialog = ({ open, onOpenChange }: DeleteAccountDialogProps) =
   const [confirmText, setConfirmText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { logout } = useAuth();
+  const { logout } = useSupabaseAuth();
 
   const handleDelete = async () => {
     if (confirmText !== 'DELETE') {
