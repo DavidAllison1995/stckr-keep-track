@@ -149,8 +149,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
               )}
             </div>
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <IconComponent className="w-6 h-6" />
+              <div className="mb-2">
                 <h1 className="text-2xl font-bold">{item.name}</h1>
               </div>
               <div className="flex gap-2 mb-3">
@@ -165,6 +164,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
         </CardContent>
       </Card>
 
+      {/* Tabs component */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="details">Details</TabsTrigger>
