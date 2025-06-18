@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,7 +7,7 @@ import { useQrScanner } from '@/hooks/useQrScanner';
 import { qrService } from '@/services/qr';
 import { useToast } from '@/hooks/use-toast';
 import QRAssignmentModal from './QRAssignmentModal';
-import { Camera, RefreshCw, AlertCircle } from 'lucide-react';
+import { Camera, RefreshCw, AlertCircle, X } from 'lucide-react';
 
 const QRScanner = () => {
   const navigate = useNavigate();
@@ -107,15 +106,70 @@ const QRScanner = () => {
       <Card>
         <CardContent className="p-0">
           <div className="relative">
-            {/* Video element - always rendered but conditionally visible */}
+            {/* Video element - always rendered for ref access */}
             <video
               ref={videoRef}
-              className={`w-full h-64 sm:h-80 object-cover ${isScanning ? 'block' : 'hidden'}`}
+              className="w-full h-64 sm:h-80 object-cover rounded-lg"
               playsInline
               muted
+              style={{ display: isScanning ? 'block' : 'none' }}
             />
             
-            {/* Overlay content when not scanning */}
+            {/* Scanning overlay with viewfinder */}
+            {isScanning && (
+              <div className="absolute inset-0">
+                {/* Scanning frame overlay */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="relative">
+                    {/* Viewfinder frame */}
+                    <div className="w-64 h-64 border-4 border-white rounded-lg relative">
+                      {/* Corner indicators */}
+                      <div className="absolute -top-1 -left-1 w-8 h-8 border-l-4 border-t-4 border-blue-500 rounded-tl-lg"></div>
+                      <div className="absolute -top-1 -right-1 w-8 h-8 border-r-4 border-t-4 border-blue-500 rounded-tr-lg"></div>
+                      <div className="absolute -bottom-1 -left-1 w-8 h-8 border-l-4 border-b-4 border-blue-500 rounded-bl-lg"></div>
+                      <div className="absolute -bottom-1 -right-1 w-8 h-8 border-r-4 border-b-4 border-blue-500 rounded-br-lg"></div>
+                      
+                      {/* Scanning line animation */}
+                      <div className="absolute inset-0 overflow-hidden rounded-lg">
+                        <div className="w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent animate-pulse"></div>
+                      </div>
+                    </div>
+                    
+                    {/* Instructions */}
+                    <div className="mt-4 text-center">
+                      <p className="text-white text-sm font-medium bg-black bg-opacity-50 px-3 py-1 rounded-full">
+                        {isProcessing ? 'Processing...' : 'Position QR code within the frame'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stop button */}
+                <div className="absolute top-4 right-4">
+                  <Button
+                    onClick={handleStopScan}
+                    size="sm"
+                    variant="secondary"
+                    className="bg-black bg-opacity-50 text-white border-white hover:bg-opacity-70"
+                  >
+                    <X className="w-4 h-4 mr-1" />
+                    Stop
+                  </Button>
+                </div>
+
+                {/* Processing overlay */}
+                {isProcessing && (
+                  <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+                    <div className="bg-white rounded-lg p-4 flex items-center gap-2">
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Processing QR code...</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Start scanning UI when not scanning */}
             {!isScanning && hasPermission !== false && (
               <div className="text-center py-12 px-6">
                 <Camera className="w-16 h-16 mx-auto mb-4 text-gray-400" />
@@ -149,25 +203,6 @@ const QRScanner = () => {
                 <Button onClick={retryPermission} variant="outline">
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Retry
-                </Button>
-              </div>
-            )}
-
-            {/* Processing overlay when scanning */}
-            {isScanning && isProcessing && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                <div className="bg-white rounded-lg p-4 flex items-center gap-2">
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Processing...</span>
-                </div>
-              </div>
-            )}
-
-            {/* Stop button when scanning */}
-            {isScanning && (
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-                <Button onClick={handleStopScan} variant="secondary">
-                  Stop Scanning
                 </Button>
               </div>
             )}
