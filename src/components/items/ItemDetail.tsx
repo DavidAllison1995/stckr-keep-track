@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,7 @@ import { useMaintenance } from '@/hooks/useMaintenance';
 import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
 import TaskEditForm from '@/components/maintenance/TaskEditForm';
 import ItemForm from './ItemForm';
+import { getIconComponent } from '@/components/icons';
 
 interface ItemDetailProps {
   item: Item;
@@ -71,6 +71,8 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
     setNotes(item.notes || '');
     setDocuments(item.documents || []);
   }, [item]);
+
+  const IconComponent = getIconComponent(item.iconId || 'box');
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -143,11 +145,14 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
                   className="w-full h-full object-cover rounded-lg" 
                 />
               ) : (
-                <span className="text-3xl">📦</span>
+                <IconComponent className="w-12 h-12 text-gray-600" />
               )}
             </div>
             <div className="flex-1">
-              <h1 className="text-2xl font-bold mb-2">{item.name}</h1>
+              <div className="flex items-center gap-2 mb-2">
+                <IconComponent className="w-6 h-6" />
+                <h1 className="text-2xl font-bold">{item.name}</h1>
+              </div>
               <div className="flex gap-2 mb-3">
                 <Badge variant="secondary">{item.category}</Badge>
                 {item.room && <Badge variant="outline">{item.room}</Badge>}

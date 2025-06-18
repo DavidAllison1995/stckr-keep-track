@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useItems, Item } from '@/hooks/useItems';
+import IconPicker from '@/components/IconPicker';
 
 interface ItemFormProps {
   item?: Item;
@@ -17,6 +18,7 @@ const ItemForm = ({ item, onSuccess }: ItemFormProps) => {
   const [formData, setFormData] = useState({
     name: '',
     category: '',
+    iconId: 'box',
     room: '',
     description: '',
     purchaseDate: '',
@@ -32,6 +34,7 @@ const ItemForm = ({ item, onSuccess }: ItemFormProps) => {
       setFormData({
         name: item.name,
         category: item.category,
+        iconId: item.iconId || 'box',
         room: item.room || '',
         description: item.description || '',
         purchaseDate: item.purchaseDate || '',
@@ -52,6 +55,7 @@ const ItemForm = ({ item, onSuccess }: ItemFormProps) => {
       updateItem(item.id, {
         name: formData.name.trim(),
         category: formData.category || 'Other',
+        iconId: formData.iconId,
         room: formData.room || undefined,
         description: formData.description || undefined,
         purchaseDate: formData.purchaseDate || undefined,
@@ -62,6 +66,7 @@ const ItemForm = ({ item, onSuccess }: ItemFormProps) => {
       addItem({
         name: formData.name.trim(),
         category: formData.category || 'Other',
+        iconId: formData.iconId,
         room: formData.room || undefined,
         description: formData.description || undefined,
         purchaseDate: formData.purchaseDate || undefined,
@@ -86,6 +91,11 @@ const ItemForm = ({ item, onSuccess }: ItemFormProps) => {
             required
           />
         </div>
+
+        <IconPicker
+          selectedIconId={formData.iconId}
+          onChange={(iconId) => setFormData(prev => ({ ...prev, iconId }))}
+        />
 
         <div>
           <Label htmlFor="category">Category</Label>

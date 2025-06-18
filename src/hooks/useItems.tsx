@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode } from 'react';
 
 interface Document {
@@ -14,6 +13,7 @@ export interface Item {
   userId: string;
   name: string;
   category: string;
+  iconId?: string;
   room?: string;
   description?: string;
   photoUrl?: string;
@@ -43,6 +43,7 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
       userId: '1',
       name: 'Kitchen Refrigerator',
       category: 'Appliance',
+      iconId: 'fridge',
       room: 'Kitchen',
       description: 'Samsung French Door - Model RF28R7351SR',
       notes: '',
@@ -55,6 +56,7 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
       userId: '1',
       name: 'MacBook Pro',
       category: 'Electronics',
+      iconId: 'laptop',
       room: 'Office',
       description: '13-inch M2 - Serial: ABC123XYZ',
       notes: '',

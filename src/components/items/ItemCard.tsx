@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Item } from '@/hooks/useItems';
+import { getIconComponent } from '@/components/icons';
 import ItemDetail from './ItemDetail';
 import ItemForm from './ItemForm';
 
@@ -15,6 +16,8 @@ interface ItemCardProps {
 const ItemCard = ({ item, onClick }: ItemCardProps) => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const IconComponent = getIconComponent(item.iconId || 'box');
 
   const handleCardClick = () => {
     if (onClick) {
@@ -36,13 +39,16 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                   className="w-full h-full object-cover rounded-lg" 
                 />
               ) : (
-                <span className="text-4xl">📦</span>
+                <IconComponent className="w-12 h-12 text-gray-600" />
               )}
             </div>
 
             {/* Item Info */}
             <div className="space-y-2">
-              <h3 className="font-semibold text-lg line-clamp-1">{item.name}</h3>
+              <div className="flex items-center gap-2">
+                <IconComponent className="w-5 h-5 flex-shrink-0" />
+                <h3 className="font-semibold text-lg line-clamp-1">{item.name}</h3>
+              </div>
               
               <div className="flex items-center gap-2">
                 <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">

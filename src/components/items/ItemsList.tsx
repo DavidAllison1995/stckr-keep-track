@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useItems } from '@/hooks/useItems';
+import { getIconComponent } from '@/components/icons';
 import ItemCard from './ItemCard';
 import ItemForm from './ItemForm';
 
@@ -38,12 +38,17 @@ const ItemsList = ({ onItemSelect }: ItemsListProps) => {
     }
   };
 
+  const BoxIcon = getIconComponent('box');
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Items</h1>
-          <p className="text-gray-600">Manage your household inventory</p>
+        <div className="flex items-center gap-3">
+          <BoxIcon className="w-8 h-8 text-blue-600" />
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">My Items</h1>
+            <p className="text-gray-600">Manage your household inventory</p>
+          </div>
         </div>
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
           <DialogTrigger asChild>
