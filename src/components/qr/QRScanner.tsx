@@ -4,14 +4,57 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Camera, Scan, Zap } from 'lucide-react';
-import QRScannerOverlay from './QRScannerOverlay';
+import SimpleQRScanner from './SimpleQRScanner';
+import { qrService } from '@/services/qr';
+import { useSupabaseItems } from '@/hooks/useSupabaseItems';
+import { useToast } from '@/hooks/use-toast';
+import QRAssignmentModal from './QRAssignmentModal';
 
 const QRScanner = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { getItemById } = useSupabaseItems();
   const [showScanner, setShowScanner] = useState(false);
+  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+  const [currentQrCode, setCurrentQrCode] = useState<string>('');
 
-  const handleItemView = (itemId: string) => {
-    navigate(`/items/${itemId}?tab=maintenance`);
+  const handleScan = async (code: string) => {
+    console.log('QR Code scanned:', code);
+    
+    try {
+      const status = await qrService.getStatus(code);
+      console.log('QR status:', status);
+      
+      if (status.isAssigned && status.itemId) {
+        // Navigate to item details
+        navigate(`/items/${status.itemId}?tab=maintenance`);
+        setShowScanner(false);
+        
+        toast({
+          title: "Item Found",
+          description: `Opened ${status.itemName || 'item'}`,
+        });
+      } else {
+        // Show assignment modal for unassigned QR codes
+        setCurrentQrCode(code);
+        setShowScanner(false);
+        setShowAssignmentModal(true);
+      }
+    } catch (error) {
+      console.error('QR scan error:', error);
+      setShowScanner(false);
+      
+      toast({
+        title: "Scan Error",
+        description: "Unable to process this QR code",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAssignmentClose = () => {
+    setShowAssignmentModal(false);
+    setCurrentQrCode('');
   };
 
   return (
@@ -115,11 +158,19 @@ const QRScanner = () => {
         </CardContent>
       </Card>
 
-      {/* Scanner Overlay */}
-      <QRScannerOverlay
-        isOpen={showScanner}
-        onClose={() => setShowScanner(false)}
-        onItemView={handleItemView}
+      {/* Simple QR Scanner */}
+      {showScanner && (
+        <SimpleQRScanner
+          onScan={handleScan}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
+
+      {/* Assignment Modal */}
+      <QRAssignmentModal
+        isOpen={showAssignmentModal}
+        onClose={handleAssignmentClose}
+        qrCode={currentQrCode}
       />
     </div>
   );
