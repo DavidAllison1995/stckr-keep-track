@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search, Download, Edit, Trash2, Check } from 'lucide-react';
-import { useMaintenance } from '@/hooks/useMaintenance';
+import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useItems } from '@/hooks/useItems';
 import { useToast } from '@/hooks/use-toast';
 import { generateICSFile } from '@/utils/calendarExport';
@@ -28,7 +27,7 @@ interface TaskSuggestion {
 }
 
 const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => {
-  const { tasks, deleteTask, markTaskComplete } = useMaintenance();
+  const { tasks, deleteTask, markTaskComplete } = useSupabaseMaintenance();
   const { getItemById } = useItems();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -69,7 +68,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
   const handleMarkComplete = async (taskId: string) => {
     setCompletingTaskId(taskId);
     try {
-      markTaskComplete(taskId);
+      await markTaskComplete(taskId);
       toast({
         title: "Task completed",
         description: "The maintenance task has been marked as complete.",
@@ -78,6 +77,8 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
       if (selectedTask && selectedTask.id === taskId) {
         setSelectedTask({ ...selectedTask, status: 'completed' });
       }
+    } catch (error) {
+      console.error('Error marking task complete:', error);
     } finally {
       setCompletingTaskId(null);
     }
@@ -103,15 +104,19 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
     }
   };
 
-  const confirmDeleteTask = () => {
+  const confirmDeleteTask = async () => {
     if (selectedTask) {
-      deleteTask(selectedTask.id);
-      toast({
-        title: "Task deleted",
-        description: "The maintenance task has been deleted successfully.",
-      });
-      setSelectedTask(null);
-      setDeleteDialogOpen(false);
+      try {
+        await deleteTask(selectedTask.id);
+        toast({
+          title: "Task deleted",
+          description: "The maintenance task has been deleted successfully.",
+        });
+        setSelectedTask(null);
+        setDeleteDialogOpen(false);
+      } catch (error) {
+        console.error('Error deleting task:', error);
+      }
     }
   };
 
@@ -152,7 +157,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
   };
 
   const handleExportToCalendar = (task: any) => {
-    const assignedItem = task.itemId ? getItemById(task.itemId) : null;
+    const assignedItem = task.item_id ? getItemById(task.item_id) : null;
     generateICSFile(task, assignedItem?.name);
   };
 
@@ -371,7 +376,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
               >
                 <div className="font-medium truncate">{task.title}</div>
                 <div className="text-xs opacity-70">
-                  {task.itemId && getItemById(task.itemId)?.name}
+                  {task.item_id && getItemById(task.item_id)?.name}
                 </div>
               </div>
             ))}
@@ -435,7 +440,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
                   <div className="text-sm opacity-80 mb-2">{task.notes}</div>
                 )}
                 <div className="text-sm opacity-70">
-                  {task.itemId && getItemById(task.itemId)?.name}
+                  {task.item_id && getItemById(task.item_id)?.name}
                 </div>
               </div>
             ))
@@ -577,7 +582,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
               ) : (
                 <div className="space-y-3">
                   {selectedDateTasks.map((task) => {
-                    const assignedItem = task.itemId ? getItemById(task.itemId) : null;
+                    const assignedItem = task.item_id ? getItemById(task.item_id) : null;
                     return (
                       <div
                         key={task.id}
@@ -625,7 +630,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
               ) : (
                 <div className="space-y-3">
                   {upcomingTasks.map((task) => {
-                    const assignedItem = task.itemId ? getItemById(task.itemId) : null;
+                    const assignedItem = task.item_id ? getItemById(task.item_id) : null;
                     return (
                       <div
                         key={task.id}
@@ -677,11 +682,11 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
                       <span className="font-medium">Scheduled Date:</span>
                       <p className="text-gray-600">{new Date(selectedTask.date).toLocaleDateString()}</p>
                     </div>
-                    {selectedTask.itemId && (
+                    {selectedTask.item_id && (
                       <div>
                         <span className="font-medium">Item:</span>
                         <p className="text-blue-600 cursor-pointer hover:underline">
-                          {getItemById(selectedTask.itemId)?.name}
+                          {getItemById(selectedTask.item_id)?.name}
                         </p>
                       </div>
                     )}
@@ -766,12 +771,12 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
                      selectedTask.status === 'due_soon' ? 'Due Soon' : 'Up to Date'}
                   </Badge>
                 </div>
-                {selectedTask.itemId && (
+                {selectedTask.item_id && (
                   <div>
                     <span className="font-medium">Item:</span>
                     <p className="text-blue-600 cursor-pointer hover:underline"
-                       onClick={() => navigateToItem(selectedTask.itemId, selectedTask.id)}>
-                      {getItemById(selectedTask.itemId)?.name}
+                       onClick={() => navigateToItem(selectedTask.item_id, selectedTask.id)}>
+                      {getItemById(selectedTask.item_id)?.name}
                     </p>
                   </div>
                 )}
