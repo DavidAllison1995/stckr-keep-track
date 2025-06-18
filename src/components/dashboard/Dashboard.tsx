@@ -1,4 +1,3 @@
-
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
@@ -88,7 +87,7 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
         <CardContent className="space-y-3">
           <div 
             className="flex items-center justify-between p-3 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
-            onClick={() => handleTaskStatusClick('completed')}
+            onClick={() => handleTaskStatusClick('up-to-date')}
           >
             <div>
               <div className="font-semibold text-green-800">Up to Date</div>
