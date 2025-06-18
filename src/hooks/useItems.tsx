@@ -38,65 +38,29 @@ interface ItemsContextType {
 const ItemsContext = createContext<ItemsContextType | undefined>(undefined);
 
 export const ItemsProvider = ({ children }: { children: ReactNode }) => {
-  console.log('ItemsProvider rendering');
-  const [items, setItems] = useState<Item[]>([
-    {
-      id: '1',
-      userId: '1',
-      name: 'Kitchen Refrigerator',
-      category: 'Appliance',
-      iconId: 'fridge',
-      room: 'Kitchen',
-      description: 'Samsung French Door - Model RF28R7351SR',
-      notes: '',
-      documents: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      userId: '1',
-      name: 'MacBook Pro',
-      category: 'Electronics',
-      iconId: 'laptop',
-      room: 'Office',
-      description: '13-inch M2 - Serial: ABC123XYZ',
-      notes: '',
-      documents: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-  ]);
+  console.warn('DEPRECATED: useItems hook is deprecated. Use useSupabaseItems instead.');
+  
+  // Return empty data to prevent errors but encourage migration
+  const [items] = useState<Item[]>([]);
 
-  const addItem = (itemData: Omit<Item, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
-    const newItem: Item = {
-      ...itemData,
-      id: Date.now().toString(),
-      userId: '1',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setItems(prev => [newItem, ...prev]);
+  const addItem = () => {
+    console.error('DEPRECATED: Use useSupabaseItems.addItem instead');
   };
 
-  const updateItem = (id: string, updates: Partial<Item>) => {
-    setItems(prev => prev.map(item => 
-      item.id === id 
-        ? { ...item, ...updates, updatedAt: new Date().toISOString() }
-        : item
-    ));
+  const updateItem = () => {
+    console.error('DEPRECATED: Use useSupabaseItems.updateItem instead');
   };
 
-  const deleteItem = (id: string) => {
-    setItems(prev => prev.filter(item => item.id !== id));
+  const deleteItem = () => {
+    console.error('DEPRECATED: Use useSupabaseItems.deleteItem instead');
   };
 
-  const getItemById = (id: string) => {
-    return items.find(item => item.id === id);
+  const getItemById = () => {
+    console.error('DEPRECATED: Use useSupabaseItems.getItemById instead');
+    return undefined;
   };
 
   const contextValue = { items, addItem, updateItem, deleteItem, getItemById };
-  console.log('ItemsProvider context value:', contextValue);
 
   return (
     <ItemsContext.Provider value={contextValue}>
@@ -106,12 +70,10 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useItems = () => {
-  console.log('useItems called');
+  console.warn('DEPRECATED: useItems hook is deprecated. Use useSupabaseItems instead.');
   const context = useContext(ItemsContext);
-  console.log('useItems context:', context);
   if (context === undefined) {
-    console.error('useItems must be used within an ItemsProvider');
-    throw new Error('useItems must be used within an ItemsProvider');
+    throw new Error('useItems must be used within an ItemsProvider - DEPRECATED: Use useSupabaseItems instead');
   }
   return context;
 };

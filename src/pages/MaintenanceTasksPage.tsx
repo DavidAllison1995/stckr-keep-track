@@ -1,17 +1,18 @@
 
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useMaintenance } from '@/hooks/useMaintenance';
-import { useItems } from '@/hooks/useItems';
+import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
+import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { ArrowLeft, Calendar, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const MaintenanceTasksPage = () => {
   const location = useLocation();
-  const { tasks } = useMaintenance();
-  const { getItemById } = useItems();
+  const navigate = useNavigate();
+  const { tasks } = useSupabaseMaintenance();
+  const { getItemById } = useSupabaseItems();
 
   // Determine filter based on current path
   const getFilterFromPath = () => {
@@ -72,6 +73,12 @@ const MaintenanceTasksPage = () => {
     }
   };
 
+  const handleTaskClick = (task: any) => {
+    if (task.item_id) {
+      navigate(`/items/${task.item_id}?tab=maintenance&highlight=${task.id}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
       <div className="px-4 pt-4 pb-20">
@@ -104,9 +111,13 @@ const MaintenanceTasksPage = () => {
                 </Card>
               ) : (
                 filteredTasks.map((task) => {
-                  const assignedItem = task.itemId ? getItemById(task.itemId) : null;
+                  const assignedItem = task.item_id ? getItemById(task.item_id) : null;
                   return (
-                    <Card key={task.id} className="hover:shadow-md transition-shadow">
+                    <Card 
+                      key={task.id} 
+                      className="hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => handleTaskClick(task)}
+                    >
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-2">
                           <h3 className="font-semibold text-lg">{task.title}</h3>
