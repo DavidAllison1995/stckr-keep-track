@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useItems, Item } from '@/hooks/useItems';
+import { useSupabaseItems, Item } from '@/hooks/useSupabaseItems';
 import IconPicker from '@/components/IconPicker';
 
 interface ItemFormProps {
@@ -14,15 +14,15 @@ interface ItemFormProps {
 }
 
 const ItemForm = ({ item, onSuccess }: ItemFormProps) => {
-  const { addItem, updateItem } = useItems();
+  const { addItem, updateItem } = useSupabaseItems();
   const [formData, setFormData] = useState({
     name: '',
     category: '',
-    iconId: 'box',
+    icon_id: 'box',
     room: '',
     description: '',
-    purchaseDate: '',
-    warrantyDate: '',
+    purchase_date: '',
+    warranty_date: '',
   });
 
   const categories = ['Appliance', 'Electronics', 'Furniture', 'Vehicle', 'Tool', 'Other'];
@@ -34,11 +34,11 @@ const ItemForm = ({ item, onSuccess }: ItemFormProps) => {
       setFormData({
         name: item.name,
         category: item.category,
-        iconId: item.iconId || 'box',
+        icon_id: item.icon_id || 'box',
         room: item.room || '',
         description: item.description || '',
-        purchaseDate: item.purchaseDate || '',
-        warrantyDate: item.warrantyDate || '',
+        purchase_date: item.purchase_date || '',
+        warranty_date: item.warranty_date || '',
       });
     }
   }, [item]);
@@ -55,22 +55,26 @@ const ItemForm = ({ item, onSuccess }: ItemFormProps) => {
       updateItem(item.id, {
         name: formData.name.trim(),
         category: formData.category || 'Other',
-        iconId: formData.iconId,
+        icon_id: formData.icon_id,
         room: formData.room || undefined,
         description: formData.description || undefined,
-        purchaseDate: formData.purchaseDate || undefined,
-        warrantyDate: formData.warrantyDate || undefined,
+        purchase_date: formData.purchase_date || undefined,
+        warranty_date: formData.warranty_date || undefined,
       });
     } else {
       // Add new item
       addItem({
         name: formData.name.trim(),
         category: formData.category || 'Other',
-        iconId: formData.iconId,
+        icon_id: formData.icon_id,
         room: formData.room || undefined,
         description: formData.description || undefined,
-        purchaseDate: formData.purchaseDate || undefined,
-        warrantyDate: formData.warrantyDate || undefined,
+        purchase_date: formData.purchase_date || undefined,
+        warranty_date: formData.warranty_date || undefined,
+        photo_url: undefined,
+        qr_code_id: undefined,
+        notes: undefined,
+        documents: [],
       });
     }
 
@@ -93,8 +97,8 @@ const ItemForm = ({ item, onSuccess }: ItemFormProps) => {
         </div>
 
         <IconPicker
-          selectedIconId={formData.iconId}
-          onChange={(iconId) => setFormData(prev => ({ ...prev, iconId }))}
+          selectedIconId={formData.icon_id}
+          onChange={(iconId) => setFormData(prev => ({ ...prev, icon_id: iconId }))}
         />
 
         <div>
@@ -142,8 +146,8 @@ const ItemForm = ({ item, onSuccess }: ItemFormProps) => {
             <Input
               id="purchaseDate"
               type="date"
-              value={formData.purchaseDate}
-              onChange={(e) => setFormData(prev => ({ ...prev, purchaseDate: e.target.value }))}
+              value={formData.purchase_date}
+              onChange={(e) => setFormData(prev => ({ ...prev, purchase_date: e.target.value }))}
             />
           </div>
           
@@ -152,8 +156,8 @@ const ItemForm = ({ item, onSuccess }: ItemFormProps) => {
             <Input
               id="warrantyDate"
               type="date"
-              value={formData.warrantyDate}
-              onChange={(e) => setFormData(prev => ({ ...prev, warrantyDate: e.target.value }))}
+              value={formData.warranty_date}
+              onChange={(e) => setFormData(prev => ({ ...prev, warranty_date: e.target.value }))}
             />
           </div>
         </div>
