@@ -5,8 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useMaintenance } from '@/hooks/useMaintenance';
-import { useItems } from '@/hooks/useItems';
+import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
+import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 
 interface MaintenanceTaskFormProps {
   itemId?: string;
@@ -14,8 +14,8 @@ interface MaintenanceTaskFormProps {
 }
 
 const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) => {
-  const { addTask } = useMaintenance();
-  const { items } = useItems();
+  const { addTask } = useSupabaseMaintenance();
+  const { items } = useSupabaseItems();
   const [formData, setFormData] = useState({
     title: '',
     notes: '',
@@ -32,11 +32,14 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
     }
 
     addTask({
-      itemId: formData.selectedItemId === 'unassigned' ? undefined : formData.selectedItemId || undefined,
+      item_id: formData.selectedItemId === 'unassigned' ? null : formData.selectedItemId || null,
       title: formData.title.trim(),
-      notes: formData.notes || undefined,
+      notes: formData.notes || null,
       date: formData.date,
       recurrence: formData.recurrence,
+      recurrence_rule: null,
+      parent_task_id: null,
+      status: 'pending',
     });
 
     onSuccess();
