@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search, Download, Edit, Trash2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search, Download, Edit, Trash2, Check } from 'lucide-react';
 import { useMaintenance } from '@/hooks/useMaintenance';
 import { useItems } from '@/hooks/useItems';
 import { useToast } from '@/hooks/use-toast';
@@ -26,7 +27,7 @@ interface TaskSuggestion {
 }
 
 const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => {
-  const { tasks, deleteTask } = useMaintenance();
+  const { tasks, deleteTask, markTaskComplete } = useMaintenance();
   const { getItemById } = useItems();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -35,18 +36,20 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
   const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [taskDetailModalOpen, setTaskDetailModalOpen] = useState(false);
+  const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
 
-  // Get tasks for selected date
+  // Get tasks for selected date (include completed tasks for calendar view)
   const getTasksForDate = (date: Date) => {
     const dateStr = date.toISOString().split('T')[0];
     return tasks.filter(task => task.date.startsWith(dateStr));
   };
 
-  // Get upcoming tasks (after selected date)
+  // Get upcoming tasks (after selected date, exclude completed)
   const getUpcomingTasks = () => {
     const selectedDateStr = selectedDate.toISOString().split('T')[0];
     return tasks
-      .filter(task => task.date > selectedDateStr)
+      .filter(task => task.date > selectedDateStr && task.status !== 'completed')
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .slice(0, 10);
   };
@@ -59,8 +62,23 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
 
   const handleTaskClick = (task: any) => {
     setSelectedTask(task);
-    if (task.itemId) {
-      navigateToItem(task.itemId, task.id);
+    setTaskDetailModalOpen(true);
+  };
+
+  const handleMarkComplete = async (taskId: string) => {
+    setCompletingTaskId(taskId);
+    try {
+      markTaskComplete(taskId);
+      toast({
+        title: "Task completed",
+        description: "The maintenance task has been marked as complete.",
+      });
+      // Update selected task if it was the one completed
+      if (selectedTask && selectedTask.id === taskId) {
+        setSelectedTask({ ...selectedTask, status: 'completed' });
+      }
+    } finally {
+      setCompletingTaskId(null);
     }
   };
 
@@ -139,18 +157,20 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'completed': return 'bg-green-500';
       case 'overdue': return 'bg-red-500';
       case 'due_soon': return 'bg-yellow-500';
-      case 'up_to_date': return 'bg-green-500';
+      case 'up_to_date': return 'bg-blue-500';
       default: return 'bg-gray-500';
     }
   };
 
   const getStatusTextColor = (status: string) => {
     switch (status) {
+      case 'completed': return 'text-green-800 bg-green-100';
       case 'overdue': return 'text-red-800 bg-red-100';
       case 'due_soon': return 'text-yellow-800 bg-yellow-100';
-      case 'up_to_date': return 'text-green-800 bg-green-100';
+      case 'up_to_date': return 'text-blue-800 bg-blue-100';
       default: return 'text-gray-800 bg-gray-100';
     }
   };
@@ -664,28 +684,36 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
                   </div>
 
                   <div className="flex gap-2 pt-4">
+                    {selectedTask.status !== 'completed' && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleMarkComplete(selectedTask.id)}
+                        disabled={completingTaskId === selectedTask.id}
+                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                      >
+                        <Check className="w-4 h-4" />
+                        Mark Complete
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleExportToCalendar(selectedTask)}
+                      onClick={() => {
+                        setTaskDetailModalOpen(false);
+                        setEditDialogOpen(true);
+                      }}
                       className="flex items-center gap-2"
                     >
-                      <Download className="w-4 h-4" />
-                      Add to Calendar
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleEditTask}
-                      className="flex items-center gap-2"
-                    >
-                      <Edit className="w-4 h-4" />
+                      <Edit className="w-4 w-4" />
                       Edit
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={handleDeleteTask}
+                      onClick={() => {
+                        setTaskDetailModalOpen(false);
+                        setDeleteDialogOpen(true);
+                      }}
                       className="flex items-center gap-2 text-red-600 hover:text-red-700"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -702,6 +730,90 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
           </Card>
         </div>
       </div>
+
+      {/* Task Detail Modal */}
+      <Dialog open={taskDetailModalOpen} onOpenChange={setTaskDetailModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Task Details</DialogTitle>
+          </DialogHeader>
+          {selectedTask && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-semibold text-lg mb-2">{selectedTask.title}</h3>
+                {selectedTask.notes && (
+                  <p className="text-gray-600 mb-4">{selectedTask.notes}</p>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-1 gap-3 text-sm">
+                <div>
+                  <span className="font-medium">Scheduled Date:</span>
+                  <p className="text-gray-600">{new Date(selectedTask.date).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <span className="font-medium">Status:</span>
+                  <Badge
+                    variant="secondary"
+                    className={`ml-2 ${getStatusTextColor(selectedTask.status)}`}
+                  >
+                    {selectedTask.status === 'completed' ? 'Completed' :
+                     selectedTask.status === 'overdue' ? 'Overdue' :
+                     selectedTask.status === 'due_soon' ? 'Due Soon' : 'Up to Date'}
+                  </Badge>
+                </div>
+                {selectedTask.itemId && (
+                  <div>
+                    <span className="font-medium">Item:</span>
+                    <p className="text-blue-600 cursor-pointer hover:underline"
+                       onClick={() => navigateToItem(selectedTask.itemId, selectedTask.id)}>
+                      {getItemById(selectedTask.itemId)?.name}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                {selectedTask.status !== 'completed' && (
+                  <Button
+                    size="sm"
+                    onClick={() => handleMarkComplete(selectedTask.id)}
+                    disabled={completingTaskId === selectedTask.id}
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                  >
+                    <Check className="w-4 h-4" />
+                    Mark Complete
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setTaskDetailModalOpen(false);
+                    setEditDialogOpen(true);
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Edit className="w-4 w-4" />
+                  Edit
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setTaskDetailModalOpen(false);
+                    setDeleteDialogOpen(true);
+                  }}
+                  className="flex items-center gap-2 text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Task Dialog */}
       <TaskEditDialog

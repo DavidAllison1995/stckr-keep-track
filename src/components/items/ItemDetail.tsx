@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Edit } from 'lucide-react';
+import { Edit, Check } from 'lucide-react';
 import { Item, useItems } from '@/hooks/useItems';
 import { useMaintenance } from '@/hooks/useMaintenance';
 import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
@@ -31,7 +31,7 @@ interface Document {
 }
 
 const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: ItemDetailProps) => {
-  const { getTasksByItem } = useMaintenance();
+  const { getTasksByItem, markTaskComplete } = useMaintenance();
   const { updateItem } = useItems();
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isEditItemModalOpen, setIsEditItemModalOpen] = useState(false);
@@ -39,8 +39,10 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
   const [notes, setNotes] = useState(item.notes || '');
   const [documents, setDocuments] = useState<Document[]>(item.documents || []);
   const [activeTab, setActiveTab] = useState(defaultTab);
+  const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
   
-  const itemTasks = getTasksByItem(item.id);
+  // Filter out completed tasks from the item's maintenance tab
+  const itemTasks = getTasksByItem(item.id, false);
   const editingTask = editingTaskId ? itemTasks.find(task => task.id === editingTaskId) : null;
 
   // Effect to handle tab switching and highlighting
@@ -107,6 +109,15 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
 
   const handleItemEditSuccess = () => {
     setIsEditItemModalOpen(false);
+  };
+
+  const handleMarkComplete = async (taskId: string) => {
+    setCompletingTaskId(taskId);
+    try {
+      markTaskComplete(taskId);
+    } finally {
+      setCompletingTaskId(null);
+    }
   };
 
   return (
@@ -226,7 +237,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
               {itemTasks.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="text-4xl mb-2">🔧</div>
-                  <p className="text-gray-600 mb-4">No maintenance tasks yet</p>
+                  <p className="text-gray-600 mb-4">No pending maintenance tasks</p>
                   <Button onClick={() => setIsAddTaskModalOpen(true)}>
                     Add First Task
                   </Button>
@@ -261,6 +272,16 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
                         {task.status === 'overdue' ? 'Overdue' :
                          task.status === 'due_soon' ? 'Due Soon' : 'Up to Date'}
                       </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleMarkComplete(task.id)}
+                        disabled={completingTaskId === task.id}
+                        aria-label="Mark task complete"
+                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
