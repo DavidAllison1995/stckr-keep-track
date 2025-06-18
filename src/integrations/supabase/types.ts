@@ -9,7 +9,107 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      items: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          documents: Json | null
+          icon_id: string | null
+          id: string
+          name: string
+          notes: string | null
+          photo_url: string | null
+          purchase_date: string | null
+          qr_code_id: string | null
+          room: string | null
+          updated_at: string
+          user_id: string
+          warranty_date: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          documents?: Json | null
+          icon_id?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          photo_url?: string | null
+          purchase_date?: string | null
+          qr_code_id?: string | null
+          room?: string | null
+          updated_at?: string
+          user_id: string
+          warranty_date?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          documents?: Json | null
+          icon_id?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          photo_url?: string | null
+          purchase_date?: string | null
+          qr_code_id?: string | null
+          room?: string | null
+          updated_at?: string
+          user_id?: string
+          warranty_date?: string | null
+        }
+        Relationships: []
+      }
+      maintenance_tasks: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          item_id: string | null
+          notes: string | null
+          recurrence: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          item_id?: string | null
+          notes?: string | null
+          recurrence?: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          item_id?: string | null
+          notes?: string | null
+          recurrence?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_tasks_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

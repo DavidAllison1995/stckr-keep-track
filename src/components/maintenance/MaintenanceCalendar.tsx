@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -157,20 +158,20 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-500';
+      case 'completed': return 'bg-blue-500';
       case 'overdue': return 'bg-red-500';
       case 'due_soon': return 'bg-yellow-500';
-      case 'up_to_date': return 'bg-blue-500';
+      case 'up_to_date': return 'bg-green-500';
       default: return 'bg-gray-500';
     }
   };
 
   const getStatusTextColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'text-green-800 bg-green-100';
+      case 'completed': return 'text-blue-800 bg-blue-100';
       case 'overdue': return 'text-red-800 bg-red-100';
       case 'due_soon': return 'text-yellow-800 bg-yellow-100';
-      case 'up_to_date': return 'text-blue-800 bg-blue-100';
+      case 'up_to_date': return 'text-green-800 bg-green-100';
       default: return 'text-gray-800 bg-gray-100';
     }
   };
@@ -591,12 +592,14 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
                           <Badge
                             variant="secondary"
                             className={`text-xs ${
+                              task.status === 'completed' ? 'bg-blue-100 text-blue-800' :
                               task.status === 'overdue' ? 'bg-red-100 text-red-800' :
                               task.status === 'due_soon' ? 'bg-yellow-100 text-yellow-800' : 
                               'bg-green-100 text-green-800'
                             }`}
                           >
-                            {task.status === 'overdue' ? 'Overdue' :
+                            {task.status === 'completed' ? 'Completed' :
+                             task.status === 'overdue' ? 'Overdue' :
                              task.status === 'due_soon' ? 'Due Soon' : 'Up to Date'}
                           </Badge>
                         </div>
@@ -631,7 +634,8 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
                       >
                         <div className="flex items-start gap-2">
                           <span className="text-lg">
-                            {task.status === 'overdue' ? '🔴' : 
+                            {task.status === 'completed' ? '🔵' :
+                             task.status === 'overdue' ? '🔴' : 
                              task.status === 'due_soon' ? '🟡' : '🟢'}
                           </span>
                           <div className="flex-1 min-w-0">
@@ -838,8 +842,8 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
               Delete Task
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        </AlertDialogFooter>
+        </AlertDialog>
     </div>
   );
 };
