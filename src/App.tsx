@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -20,6 +19,7 @@ import ProfilePage from '@/pages/ProfilePage';
 import SettingsPage from '@/pages/SettingsPage';
 import ScannerPage from '@/pages/ScannerPage';
 import NotFound from '@/pages/NotFound';
+import AdminQrPage from '@/pages/AdminQrPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -126,6 +126,14 @@ function App() {
                       <ProtectedRoute>
                         <>
                           <ScannerPage />
+                          <NavBar />
+                        </>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/admin/qr" element={
+                      <ProtectedRoute>
+                        <>
+                          <AdminQrPage />
                           <NavBar />
                         </>
                       </ProtectedRoute>

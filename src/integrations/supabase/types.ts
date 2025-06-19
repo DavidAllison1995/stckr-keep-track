@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      global_qr_codes: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          is_active?: boolean
+          token: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          token?: string
+        }
+        Relationships: []
+      }
       items: {
         Row: {
           category: string
@@ -119,6 +140,42 @@ export type Database = {
             columns: ["parent_task_id"]
             isOneToOne: false
             referencedRelation: "maintenance_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_qr_claims: {
+        Row: {
+          claimed_at: string
+          code_id: string
+          item_id: string
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string
+          code_id: string
+          item_id: string
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string
+          code_id?: string
+          item_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_qr_claims_code_id_fkey"
+            columns: ["code_id"]
+            isOneToOne: false
+            referencedRelation: "global_qr_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_qr_claims_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
             referencedColumns: ["id"]
           },
         ]
