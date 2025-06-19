@@ -1,92 +1,19 @@
+
 import { createContext, useContext, ReactNode } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from './useSupabaseAuth';
 import { useToast } from '@/hooks/use-toast';
-
-interface Document {
-  id: string;
-  name: string;
-  type: string;
-  url: string;
-  uploadDate: string;
-}
-
-export interface Item {
-  id: string;
-  user_id: string;
-  name: string;
-  category: string;
-  icon_id?: string;
-  room?: string;
-  description?: string;
-  photo_url?: string;
-  purchase_date?: string;
-  warranty_date?: string;
-  qr_code_id?: string;
-  notes?: string;
-  documents?: Document[];
-  created_at: string;
-  updated_at: string;
-}
-
-interface ItemsContextType {
-  items: Item[];
-  isLoading: boolean;
-  refetch: () => Promise<Item[]>;
-  addItem: (item: Omit<Item, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<Item>;
-  updateItem: (id: string, updates: Partial<Item>) => Promise<void>;
-  deleteItem: (id: string) => Promise<void>;
-  getItemById: (id: string) => Item | undefined;
-  uploadDocument: (itemId: string, file: File) => Promise<string>;
-  deleteDocument: (documentUrl: string) => Promise<void>;
-}
+import { Item, ItemsContextType } from '@/types/item';
+import { transformItemData } from '@/utils/itemTransform';
+import { useAddItemMutation, useUpdateItemMutation, useDeleteItemMutation } from '@/services/itemMutations';
+import { uploadDocument as uploadDocumentService, deleteDocument as deleteDocumentService } from '@/services/documentService';
 
 const ItemsContext = createContext<ItemsContextType | undefined>(undefined);
-
-// Helper function to transform raw item data from Supabase
-const transformItemData = (rawItem: any): Item => {
-  let documents: Document[] = [];
-  
-  if (rawItem.documents) {
-    try {
-      let parsedDocuments: unknown;
-      
-      // Parse the JSONB documents field
-      if (typeof rawItem.documents === 'string') {
-        parsedDocuments = JSON.parse(rawItem.documents);
-      } else {
-        parsedDocuments = rawItem.documents;
-      }
-      
-      // Type guard to ensure we have an array of valid documents
-      if (Array.isArray(parsedDocuments)) {
-        documents = parsedDocuments.filter((doc): doc is Document => {
-          return typeof doc === 'object' && 
-                 doc !== null && 
-                 typeof (doc as any).id === 'string' &&
-                 typeof (doc as any).name === 'string' &&
-                 typeof (doc as any).type === 'string' &&
-                 typeof (doc as any).url === 'string' &&
-                 typeof (doc as any).uploadDate === 'string';
-        });
-      }
-    } catch (error) {
-      console.error('Error parsing documents for item:', rawItem.id, error);
-      documents = [];
-    }
-  }
-  
-  return {
-    ...rawItem,
-    documents
-  };
-};
 
 export const ItemsProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   const { data: items = [], isLoading, refetch } = useQuery({
     queryKey: ['items', user?.id],
@@ -118,175 +45,9 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
     enabled: !!user,
   });
 
-  const addItemMutation = useMutation({
-    mutationFn: async (itemData: Omit<Item, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-      if (!user) throw new Error('User not authenticated');
-
-      const { documents, ...itemWithoutDocuments } = itemData;
-      
-      const { data, error } = await supabase
-        .from('items')
-        .insert([{
-          ...itemWithoutDocuments,
-          user_id: user.id,
-          documents: documents ? JSON.stringify(documents) : null,
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      // Transform the raw data before returning
-      return transformItemData(data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['items', user?.id] });
-      toast({
-        title: 'Success',
-        description: 'Item added successfully',
-      });
-    },
-    onError: (error) => {
-      console.error('Error adding item:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to add item',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  const updateItemMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Item> }) => {
-      console.log('Updating item:', id, 'with:', updates);
-      
-      const { documents, ...updatesWithoutDocuments } = updates;
-      
-      const updateData: any = { ...updatesWithoutDocuments };
-      if (documents !== undefined) {
-        updateData.documents = documents && documents.length > 0 ? JSON.stringify(documents) : null;
-        console.log('Storing documents as:', updateData.documents);
-      }
-      
-      const { data, error } = await supabase
-        .from('items')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Supabase update error:', error);
-        throw error;
-      }
-      
-      console.log('Updated item data:', data);
-      return data;
-    },
-    onSuccess: (data) => {
-      console.log('Update successful, invalidating queries');
-      queryClient.invalidateQueries({ queryKey: ['items', user?.id] });
-      toast({
-        title: 'Success',
-        description: 'Item updated successfully',
-      });
-    },
-    onError: (error) => {
-      console.error('Error updating item:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update item',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  const deleteItemMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('items')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['items', user?.id] });
-      toast({
-        title: 'Success',
-        description: 'Item deleted successfully',
-      });
-    },
-    onError: (error) => {
-      console.error('Error deleting item:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete item',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  const uploadDocument = async (itemId: string, file: File): Promise<string> => {
-    if (!user) throw new Error('User not authenticated');
-
-    console.log('Starting document upload for item:', itemId, 'File:', file.name, 'Size:', file.size);
-
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `${user.id}/${itemId}/${fileName}`;
-
-    console.log('Uploading file:', { filePath, fileSize: file.size, fileType: file.type });
-
-    const { error: uploadError } = await supabase.storage
-      .from('item-documents')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
-
-    if (uploadError) {
-      console.error('Error uploading file:', uploadError);
-      throw new Error(`Upload failed: ${uploadError.message}`);
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('item-documents')
-      .getPublicUrl(filePath);
-
-    console.log('File uploaded successfully:', publicUrl);
-    return publicUrl;
-  };
-
-  const deleteDocument = async (documentUrl: string): Promise<void> => {
-    if (!user) throw new Error('User not authenticated');
-
-    try {
-      // Extract file path from URL
-      const urlParts = documentUrl.split('/');
-      const bucketIndex = urlParts.findIndex(part => part === 'item-documents');
-      if (bucketIndex === -1) {
-        throw new Error('Invalid document URL');
-      }
-      
-      const filePath = urlParts.slice(bucketIndex + 1).join('/');
-      console.log('Deleting file:', filePath);
-
-      const { error } = await supabase.storage
-        .from('item-documents')
-        .remove([filePath]);
-
-      if (error) {
-        console.error('Error deleting file:', error);
-        throw new Error(`Delete failed: ${error.message}`);
-      }
-
-      console.log('File deleted successfully');
-    } catch (error) {
-      console.error('Error in deleteDocument:', error);
-      throw error;
-    }
-  };
+  const addItemMutation = useAddItemMutation(user?.id);
+  const updateItemMutation = useUpdateItemMutation(user?.id);
+  const deleteItemMutation = useDeleteItemMutation(user?.id);
 
   const addItem = async (itemData: Omit<Item, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Item> => {
     const result = await addItemMutation.mutateAsync(itemData);
@@ -305,6 +66,16 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
     const item = items.find(item => item.id === id);
     console.log('Getting item by ID:', id, 'found:', item);
     return item;
+  };
+
+  const uploadDocument = async (itemId: string, file: File): Promise<string> => {
+    if (!user) throw new Error('User not authenticated');
+    return uploadDocumentService(user.id, itemId, file);
+  };
+
+  const deleteDocument = async (documentUrl: string): Promise<void> => {
+    if (!user) throw new Error('User not authenticated');
+    return deleteDocumentService(documentUrl);
   };
 
   const refetchItems = async () => {
@@ -336,3 +107,5 @@ export const useSupabaseItems = () => {
   }
   return context;
 };
+
+export { Item } from '@/types/item';
