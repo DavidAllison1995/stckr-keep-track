@@ -108,4 +108,4 @@ export const useSupabaseItems = () => {
   return context;
 };
 
-export { Item } from '@/types/item';
+export type { Item } from '@/types/item';
