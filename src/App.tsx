@@ -11,6 +11,7 @@ import { MaintenanceProvider } from "@/hooks/useSupabaseMaintenance";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminProtectedRoute from "@/components/admin/AdminProtectedRoute";
+import NavBar from "@/components/navigation/NavBar";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import Dashboard from "./pages/Dashboard";
@@ -37,6 +38,14 @@ import "./App.css";
 
 const queryClient = new QueryClient();
 
+// Wrapper component for protected routes with navigation
+const ProtectedLayout = ({ children }: { children: React.ReactNode }) => (
+  <div className="min-h-screen">
+    {children}
+    <NavBar />
+  </div>
+);
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -60,7 +69,9 @@ function App() {
                       <ProtectedRoute>
                         <ItemsProvider>
                           <MaintenanceProvider>
-                            <Dashboard />
+                            <ProtectedLayout>
+                              <Dashboard />
+                            </ProtectedLayout>
                           </MaintenanceProvider>
                         </ItemsProvider>
                       </ProtectedRoute>
@@ -72,7 +83,9 @@ function App() {
                       <ProtectedRoute>
                         <ItemsProvider>
                           <MaintenanceProvider>
-                            <ItemsPage />
+                            <ProtectedLayout>
+                              <ItemsPage />
+                            </ProtectedLayout>
                           </MaintenanceProvider>
                         </ItemsProvider>
                       </ProtectedRoute>
@@ -84,7 +97,9 @@ function App() {
                       <ProtectedRoute>
                         <ItemsProvider>
                           <MaintenanceProvider>
-                            <ItemDetailPage />
+                            <ProtectedLayout>
+                              <ItemDetailPage />
+                            </ProtectedLayout>
                           </MaintenanceProvider>
                         </ItemsProvider>
                       </ProtectedRoute>
@@ -96,7 +111,9 @@ function App() {
                       <ProtectedRoute>
                         <ItemsProvider>
                           <MaintenanceProvider>
-                            <MaintenancePage />
+                            <ProtectedLayout>
+                              <MaintenancePage />
+                            </ProtectedLayout>
                           </MaintenanceProvider>
                         </ItemsProvider>
                       </ProtectedRoute>
@@ -108,7 +125,9 @@ function App() {
                       <ProtectedRoute>
                         <ItemsProvider>
                           <MaintenanceProvider>
-                            <TasksPage />
+                            <ProtectedLayout>
+                              <TasksPage />
+                            </ProtectedLayout>
                           </MaintenanceProvider>
                         </ItemsProvider>
                       </ProtectedRoute>
@@ -120,7 +139,9 @@ function App() {
                       <ProtectedRoute>
                         <ItemsProvider>
                           <MaintenanceProvider>
-                            <MaintenanceTasksPage />
+                            <ProtectedLayout>
+                              <MaintenanceTasksPage />
+                            </ProtectedLayout>
                           </MaintenanceProvider>
                         </ItemsProvider>
                       </ProtectedRoute>
@@ -132,7 +153,9 @@ function App() {
                       <ProtectedRoute>
                         <ItemsProvider>
                           <MaintenanceProvider>
-                            <ScannerPage />
+                            <ProtectedLayout>
+                              <ScannerPage />
+                            </ProtectedLayout>
                           </MaintenanceProvider>
                         </ItemsProvider>
                       </ProtectedRoute>
@@ -144,7 +167,9 @@ function App() {
                       <ProtectedRoute>
                         <ItemsProvider>
                           <MaintenanceProvider>
-                            <QRClaimPage />
+                            <ProtectedLayout>
+                              <QRClaimPage />
+                            </ProtectedLayout>
                           </MaintenanceProvider>
                         </ItemsProvider>
                       </ProtectedRoute>
@@ -154,7 +179,9 @@ function App() {
                     path="/profile"
                     element={
                       <ProtectedRoute>
-                        <ProfilePage />
+                        <ProtectedLayout>
+                          <ProfilePage />
+                        </ProtectedLayout>
                       </ProtectedRoute>
                     }
                   />
@@ -162,7 +189,9 @@ function App() {
                     path="/settings"
                     element={
                       <ProtectedRoute>
-                        <SettingsPage />
+                        <ProtectedLayout>
+                          <SettingsPage />
+                        </ProtectedLayout>
                       </ProtectedRoute>
                     }
                   />
