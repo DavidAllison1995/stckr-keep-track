@@ -9,13 +9,14 @@ import { Shield, Eye, EyeOff } from 'lucide-react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 const AdminLoginPage = () => {
-  const { isAuthenticated, isAdmin, login, isLoading, profile, user } = useAdminAuth();
+  const { isAuthenticated, isAdmin, login, isLoading, profile, user, logout } = useAdminAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [showAccessDenied, setShowAccessDenied] = useState(false);
 
   console.log('AdminLoginPage render:', {
     isAuthenticated,
@@ -31,18 +32,11 @@ const AdminLoginPage = () => {
     return <Navigate to="/admin" replace />;
   }
 
-  // Show access denied if authenticated but not admin
-  if (!isLoading && isAuthenticated && !isAdmin) {
-    console.log('Access denied - user is authenticated but not admin', {
-      profile,
-      isAdminCheck: profile?.is_admin
-    });
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError('');
+    setShowAccessDenied(false);
 
     console.log('Admin login attempt for:', email);
 
@@ -55,13 +49,28 @@ const AdminLoginPage = () => {
         setIsSubmitting(false);
       } else {
         console.log('Admin login successful, waiting for auth state to update...');
-        // The auth state change will trigger the redirect
+        // The auth state change will trigger the redirect or show access denied
+        setTimeout(() => {
+          // Check if user is authenticated but not admin after login
+          if (isAuthenticated && !isAdmin) {
+            setShowAccessDenied(true);
+          }
+          setIsSubmitting(false);
+        }, 1000);
       }
     } catch (error) {
       console.error('Unexpected login error:', error);
       setError('An unexpected error occurred during login');
       setIsSubmitting(false);
     }
+  };
+
+  const handleSwitchAccount = async () => {
+    await logout();
+    setShowAccessDenied(false);
+    setError('');
+    setEmail('');
+    setPassword('');
   };
 
   return (
@@ -124,11 +133,25 @@ const AdminLoginPage = () => {
               </div>
             )}
 
-            {!isLoading && isAuthenticated && !isAdmin && (
+            {showAccessDenied && (
               <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md">
-                Access denied. Admin privileges required. 
-                <br />
-                <small>Debug: User ID: {user?.id}, Profile admin status: {profile?.is_admin ? 'true' : 'false'}</small>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-medium">Access denied. Admin privileges required.</p>
+                    <p className="text-xs mt-1">
+                      Logged in as: {user?.email}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSwitchAccount}
+                    className="text-xs"
+                  >
+                    Switch Account
+                  </Button>
+                </div>
               </div>
             )}
 
