@@ -3,11 +3,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { qrService } from '@/services/qr';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import QRAssignmentModal from './QRAssignmentModal';
 import ItemForm from '@/components/items/ItemForm';
+import SimpleQRScanner from './SimpleQRScanner';
 
 interface QRScannerOverlayProps {
   isOpen: boolean;
@@ -21,20 +21,18 @@ const QRScannerOverlay = ({ isOpen, onClose, scannedCode }: QRScannerOverlayProp
   const { items } = useSupabaseItems();
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [showCreateItemModal, setShowCreateItemModal] = useState(false);
-  const [qrCodeData, setQrCodeData] = useState<any>(null);
+  const [currentQrCode, setCurrentQrCode] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (scannedCode && isOpen) {
-      handleScannedCode(scannedCode);
-    }
-  }, [scannedCode, isOpen]);
+  const handleScan = (code: string) => {
+    console.log('Processing scanned QR code:', code);
+    setCurrentQrCode(code);
+    processScannedCode(code);
+  };
 
-  const handleScannedCode = async (code: string) => {
+  const processScannedCode = async (code: string) => {
     setIsLoading(true);
     try {
-      console.log('Processing scanned QR code:', code);
-      
       // Check if this QR code is already assigned to an item
       const existingItem = items.find(item => item.qr_code_id === code);
       
@@ -53,7 +51,6 @@ const QRScannerOverlay = ({ isOpen, onClose, scannedCode }: QRScannerOverlayProp
 
       // QR code is not assigned, show assignment options
       console.log('QR code not assigned, showing assignment modal');
-      setQrCodeData({ code });
       setShowAssignmentModal(true);
       
     } catch (error) {
@@ -78,6 +75,11 @@ const QRScannerOverlay = ({ isOpen, onClose, scannedCode }: QRScannerOverlayProp
     onClose();
   };
 
+  const handleAssignmentClose = () => {
+    setShowAssignmentModal(false);
+    onClose();
+  };
+
   if (isLoading) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -93,16 +95,20 @@ const QRScannerOverlay = ({ isOpen, onClose, scannedCode }: QRScannerOverlayProp
 
   return (
     <>
+      {/* Main Scanner */}
+      {isOpen && !showAssignmentModal && !showCreateItemModal && (
+        <SimpleQRScanner onScan={handleScan} onClose={onClose} />
+      )}
+
+      {/* Assignment Modal */}
       <QRAssignmentModal
         isOpen={showAssignmentModal}
-        onClose={() => {
-          setShowAssignmentModal(false);
-          onClose();
-        }}
+        onClose={handleAssignmentClose}
         onCreateNewItem={handleCreateNewItem}
-        qrCode={qrCodeData?.code || ''}
+        qrCode={currentQrCode}
       />
 
+      {/* Add Item Modal */}
       <Dialog open={showCreateItemModal} onOpenChange={(open) => {
         if (!open) {
           setShowCreateItemModal(false);
@@ -114,7 +120,7 @@ const QRScannerOverlay = ({ isOpen, onClose, scannedCode }: QRScannerOverlayProp
             <DialogTitle>Create New Item</DialogTitle>
           </DialogHeader>
           <ItemForm 
-            initialQrCode={qrCodeData?.code}
+            initialQrCode={currentQrCode}
             onSuccess={handleCreateItemSuccess}
             onCancel={() => {
               setShowCreateItemModal(false);
