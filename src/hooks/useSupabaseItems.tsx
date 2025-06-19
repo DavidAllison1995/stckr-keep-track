@@ -33,6 +33,7 @@ export interface Item {
 interface ItemsContextType {
   items: Item[];
   isLoading: boolean;
+  refetch: () => Promise<Item[]>;
   addItem: (item: Omit<Item, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<Item>;
   updateItem: (id: string, updates: Partial<Item>) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
@@ -87,7 +88,7 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: items = [], isLoading } = useQuery({
+  const { data: items = [], isLoading, refetch } = useQuery({
     queryKey: ['items', user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -306,10 +307,16 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
     return item;
   };
 
+  const refetchItems = async () => {
+    const result = await refetch();
+    return result.data || [];
+  };
+
   return (
     <ItemsContext.Provider value={{
       items,
       isLoading,
+      refetch: refetchItems,
       addItem,
       updateItem,
       deleteItem,
