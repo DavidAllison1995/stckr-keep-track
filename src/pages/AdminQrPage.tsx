@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Download, QrCode, Plus, Trash2 } from 'lucide-react';
+import { QrCode, Plus, Trash2, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
@@ -15,11 +15,14 @@ interface QRCodeData {
   id: string;
   code: string;
   created_at: string;
-  assigned_user_id: string | null;
-  assigned_item_id: string | null;
-  items?: {
-    name: string;
-  };
+  user_qr_claims?: Array<{
+    id: string;
+    user_id: string;
+    claimed_at: string;
+    items?: {
+      name: string;
+    };
+  }>;
 }
 
 const AdminQrPage = () => {
@@ -143,7 +146,7 @@ const AdminQrPage = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plus className="w-5 h-5" />
-            Generate QR Code Batch
+            Generate Master QR Code Batch
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -165,12 +168,12 @@ const AdminQrPage = () => {
               disabled={isGenerating}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isGenerating ? `Generating ${quantity} Codes...` : `Generate ${quantity} QR Codes`}
+              {isGenerating ? `Generating ${quantity} Codes...` : `Generate ${quantity} Master QR Codes`}
             </Button>
           </div>
           
           <div className="text-sm text-gray-600">
-            Each QR code will link to: https://4823056e-21ba-4628-9925-ad01b2666856.lovableproject.com/qr/[code]
+            Each QR code can be claimed by multiple users independently. Deep link: https://4823056e-21ba-4628-9925-ad01b2666856.lovableproject.com/qr/[code]
           </div>
         </CardContent>
       </Card>
@@ -190,7 +193,7 @@ const AdminQrPage = () => {
       {/* QR Codes Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All QR Codes ({codes.length})</CardTitle>
+          <CardTitle>All Master QR Codes ({codes.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -206,8 +209,7 @@ const AdminQrPage = () => {
                   <tr className="border-b">
                     <th className="text-left py-2 px-4 font-medium">Code</th>
                     <th className="text-left py-2 px-4 font-medium">Created Date</th>
-                    <th className="text-left py-2 px-4 font-medium">Status</th>
-                    <th className="text-left py-2 px-4 font-medium">Assigned To</th>
+                    <th className="text-left py-2 px-4 font-medium">User Claims</th>
                     <th className="text-left py-2 px-4 font-medium">Actions</th>
                   </tr>
                 </thead>
@@ -219,12 +221,12 @@ const AdminQrPage = () => {
                         {new Date(code.created_at).toLocaleDateString()}
                       </td>
                       <td className="py-3 px-4">
-                        <Badge variant={code.assigned_user_id ? "default" : "secondary"}>
-                          {code.assigned_user_id ? 'Assigned' : 'Available'}
-                        </Badge>
-                      </td>
-                      <td className="py-3 px-4">
-                        {code.items?.name || '–'}
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4" />
+                          <Badge variant="secondary">
+                            {code.user_qr_claims?.length || 0} claims
+                          </Badge>
+                        </div>
                       </td>
                       <td className="py-3 px-4">
                         <Button

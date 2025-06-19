@@ -33,7 +33,7 @@ serve(async (req) => {
       return new Response('Code ID is required', { status: 400, headers: corsHeaders })
     }
 
-    // Delete the QR code
+    // Delete the master QR code (cascades to user_qr_claims)
     const { error } = await supabaseClient
       .from('qr_codes')
       .delete()

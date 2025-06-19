@@ -125,32 +125,57 @@ export type Database = {
       }
       qr_codes: {
         Row: {
-          assigned_item_id: string | null
-          assigned_user_id: string | null
           code: string
           created_at: string
           id: string
         }
         Insert: {
-          assigned_item_id?: string | null
-          assigned_user_id?: string | null
           code: string
           created_at?: string
           id?: string
         }
         Update: {
-          assigned_item_id?: string | null
-          assigned_user_id?: string | null
           code?: string
           created_at?: string
           id?: string
         }
+        Relationships: []
+      }
+      user_qr_claims: {
+        Row: {
+          claimed_at: string
+          id: string
+          item_id: string
+          qr_code_id: string
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string
+          id?: string
+          item_id: string
+          qr_code_id: string
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string
+          id?: string
+          item_id?: string
+          qr_code_id?: string
+          user_id?: string
+        }
         Relationships: [
           {
-            foreignKeyName: "qr_codes_assigned_item_id_fkey"
-            columns: ["assigned_item_id"]
+            foreignKeyName: "user_qr_claims_item_id_fkey"
+            columns: ["item_id"]
             isOneToOne: false
             referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_qr_claims_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "qr_codes"
             referencedColumns: ["id"]
           },
         ]

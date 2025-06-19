@@ -27,17 +27,20 @@ serve(async (req) => {
       return new Response('Unauthorized', { status: 401, headers: corsHeaders })
     }
 
-    // Get all QR codes with user and item details
+    // Get all master QR codes with claim count
     const { data, error } = await supabaseClient
       .from('qr_codes')
       .select(`
         id,
         code,
         created_at,
-        assigned_user_id,
-        assigned_item_id,
-        items (
-          name
+        user_qr_claims (
+          id,
+          user_id,
+          claimed_at,
+          items (
+            name
+          )
         )
       `)
       .order('created_at', { ascending: false })

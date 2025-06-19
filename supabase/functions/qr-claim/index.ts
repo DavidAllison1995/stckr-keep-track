@@ -14,10 +14,10 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url)
-    const codeId = url.pathname.split('/').pop()
+    const code = url.pathname.split('/').pop()
 
-    if (!codeId) {
-      return new Response('Code ID required', { status: 400, headers: corsHeaders })
+    if (!code) {
+      return new Response('Code required', { status: 400, headers: corsHeaders })
     }
 
     const supabaseClient = createClient(
@@ -35,20 +35,30 @@ serve(async (req) => {
     }
 
     if (req.method === 'GET') {
-      // Get user's claims for this code
+      // Get user's claim for this code
       const { data, error } = await supabaseClient
         .from('user_qr_claims')
-        .select('*, items(id, name)')
-        .eq('code_id', codeId)
+        .select(`
+          *,
+          qr_codes!inner (
+            code
+          ),
+          items (
+            id,
+            name
+          )
+        `)
+        .eq('qr_codes.code', code)
         .eq('user_id', user.id)
+        .single()
 
-      if (error) {
-        console.error('Error fetching claims:', error)
-        return new Response('Failed to fetch claims', { status: 500, headers: corsHeaders })
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching claim:', error)
+        return new Response('Failed to fetch claim', { status: 500, headers: corsHeaders })
       }
 
       return new Response(
-        JSON.stringify({ claims: data }),
+        JSON.stringify({ claim: data }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -60,50 +70,29 @@ serve(async (req) => {
         return new Response('Item ID required', { status: 400, headers: corsHeaders })
       }
 
-      // Verify code exists and is active
-      const { data: codeData, error: codeError } = await supabaseClient
-        .from('global_qr_codes')
-        .select('id, is_active')
-        .eq('id', codeId)
-        .single()
+      // Use the RPC function to claim the code
+      const { data, error } = await supabaseClient.rpc('claim_qr', {
+        p_code: code,
+        p_user_id: user.id,
+        p_item_id: itemId
+      })
 
-      if (codeError || !codeData || !codeData.is_active) {
-        return new Response('Invalid or inactive QR code', { status: 404, headers: corsHeaders })
+      if (error) {
+        console.error('Error claiming code:', error)
+        return new Response('Failed to claim code', { status: 500, headers: corsHeaders })
       }
 
-      // Verify user owns the item
-      const { data: itemData, error: itemError } = await supabaseClient
-        .from('items')
-        .select('id, user_id')
-        .eq('id', itemId)
-        .eq('user_id', user.id)
-        .single()
+      const result = data as { success: boolean; error?: string; message?: string }
 
-      if (itemError || !itemData) {
-        return new Response('Item not found or access denied', { status: 404, headers: corsHeaders })
-      }
-
-      // Create claim
-      const { data: claimData, error: claimError } = await supabaseClient
-        .from('user_qr_claims')
-        .insert({
-          user_id: user.id,
-          code_id: codeId,
-          item_id: itemId
-        })
-        .select()
-        .single()
-
-      if (claimError) {
-        if (claimError.code === '23505') { // Unique constraint violation
-          return new Response('QR code already claimed for this item', { status: 409, headers: corsHeaders })
-        }
-        console.error('Error creating claim:', claimError)
-        return new Response('Failed to claim QR code', { status: 500, headers: corsHeaders })
+      if (!result.success) {
+        return new Response(
+          JSON.stringify({ error: result.error }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
       }
 
       return new Response(
-        JSON.stringify({ claim: claimData }),
+        JSON.stringify({ success: true, message: result.message }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }

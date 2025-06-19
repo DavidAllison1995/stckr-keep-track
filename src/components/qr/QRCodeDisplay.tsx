@@ -9,8 +9,6 @@ interface QRCodeData {
   id: string;
   code: string;
   created_at: string;
-  assigned_user_id?: string | null;
-  assigned_item_id?: string | null;
 }
 
 interface QRCodeDisplayProps {
@@ -54,7 +52,6 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
 
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
     
     // Calculate grid layout (3x3)
     const margin = 20;
@@ -63,7 +60,7 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
     const startY = margin;
     
     pdf.setFontSize(16);
-    pdf.text('QR Code Batch', pageWidth / 2, 15, { align: 'center' });
+    pdf.text('Master QR Code Batch - Multi-User Sharing', pageWidth / 2, 15, { align: 'center' });
     
     for (let i = 0; i < Math.min(codes.length, 9); i++) {
       const code = codes[i];
@@ -88,7 +85,7 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
       }
     }
     
-    pdf.save('qr-codes-batch.pdf');
+    pdf.save('master-qr-codes-batch.pdf');
   };
 
   return (
@@ -119,6 +116,10 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
             <div className="text-sm font-mono font-semibold">{code.code}</div>
           </div>
         ))}
+      </div>
+      
+      <div className="text-center text-sm text-gray-600 mt-4">
+        Each QR code can be claimed by multiple users independently
       </div>
     </div>
   );

@@ -17,21 +17,43 @@ const QRClaimPage = () => {
   const { items } = useSupabaseItems();
   const { toast } = useToast();
   
-  const [qrData, setQrData] = useState<any>(null);
+  const [qrExists, setQrExists] = useState<boolean | null>(null);
+  const [userClaim, setUserClaim] = useState<any>(null);
   const [selectedItemId, setSelectedItemId] = useState<string>('');
   const [isClaiming, setIsClaiming] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (code) {
-      checkQRCode();
+      checkQRCodeAndClaim();
     }
   }, [code, user]);
 
-  const checkQRCode = async () => {
+  const checkQRCodeAndClaim = async () => {
     try {
-      const { data, error } = await supabase
+      // First check if the master QR code exists
+      const { data: qrData, error: qrError } = await supabase
         .from('qr_codes')
+        .select('id, code')
+        .eq('code', code)
+        .single();
+
+      if (qrError || !qrData) {
+        setQrExists(false);
+        setIsLoading(false);
+        return;
+      }
+
+      setQrExists(true);
+
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if current user has claimed this code
+      const { data: claimData, error: claimError } = await supabase
+        .from('user_qr_claims')
         .select(`
           *,
           items (
@@ -39,24 +61,17 @@ const QRClaimPage = () => {
             name
           )
         `)
-        .eq('code', code)
+        .eq('qr_code_id', qrData.id)
+        .eq('user_id', user.id)
         .single();
 
-      if (error) {
-        console.error('QR code not found:', error);
-        setQrData(null);
-        setIsLoading(false);
-        return;
-      }
-
-      setQrData(data);
-
-      // If assigned to current user, redirect to app
-      if (data.assigned_user_id === user?.id && data.assigned_item_id) {
-        window.location.href = `upkeep://item/${data.assigned_item_id}`;
+      if (claimData) {
+        setUserClaim(claimData);
+        // User has already claimed this code, redirect to their item
+        window.location.href = `upkeep://item/${claimData.item_id}`;
         // Fallback for web
         setTimeout(() => {
-          navigate(`/items/${data.assigned_item_id}`);
+          navigate(`/items/${claimData.item_id}`);
         }, 2000);
         return;
       }
@@ -64,7 +79,7 @@ const QRClaimPage = () => {
       setIsLoading(false);
     } catch (error) {
       console.error('Error checking QR code:', error);
-      setQrData(null);
+      setQrExists(false);
       setIsLoading(false);
     }
   };
@@ -125,7 +140,7 @@ const QRClaimPage = () => {
     );
   }
 
-  if (!qrData) {
+  if (qrExists === false) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Card className="max-w-md mx-auto">
@@ -167,26 +182,20 @@ const QRClaimPage = () => {
     );
   }
 
-  // If assigned to someone else
-  if (qrData.assigned_user_id && qrData.assigned_user_id !== user.id) {
+  // If user is redirecting to their claimed item
+  if (userClaim) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Card className="max-w-md mx-auto">
           <CardHeader>
-            <CardTitle className="text-center">QR Code Already Claimed</CardTitle>
+            <CardTitle className="text-center">Opening Your Item</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <Package className="w-16 h-16 mx-auto text-gray-500" />
+            <Package className="w-16 h-16 mx-auto text-green-500" />
             <p className="text-gray-600">
-              This QR code is owned by another user. Download the Upkeep app to manage your own items.
+              You have already claimed this QR code for "{userClaim.items?.name}". Opening in app...
             </p>
-            <Button 
-              onClick={() => window.open('https://upkeep.app', '_blank')}
-              className="w-full"
-            >
-              <ExternalLink className="w-4 h-4 mr-2" />
-              Download Upkeep App
-            </Button>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto"></div>
           </CardContent>
         </Card>
       </div>
@@ -206,6 +215,9 @@ const QRClaimPage = () => {
             <p className="text-gray-600">
               Assign this QR sticker to one of your items:
             </p>
+            <div className="text-sm text-gray-500 mt-2">
+              Code: <span className="font-mono font-semibold">{code}</span>
+            </div>
           </div>
 
           <div className="space-y-2">

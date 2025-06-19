@@ -27,21 +27,16 @@ serve(async (req) => {
       return new Response('Unauthorized', { status: 401, headers: corsHeaders })
     }
 
-    const { quantity } = await req.json()
-    
-    if (!quantity || quantity < 1 || quantity > 9) {
-      return new Response('Quantity must be between 1 and 9', { status: 400, headers: corsHeaders })
-    }
+    const { quantity = 9 } = await req.json()
 
-    // Generate QR codes
+    // Generate unique QR codes
     const codes = []
-    
     for (let i = 0; i < quantity; i++) {
-      const code = generateRandomCode()
+      const code = `QR-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
       codes.push({ code })
     }
 
-    // Insert codes into database
+    // Insert codes into master qr_codes table
     const { data, error } = await supabaseClient
       .from('qr_codes')
       .insert(codes)
@@ -62,12 +57,3 @@ serve(async (req) => {
     return new Response('Internal error', { status: 500, headers: corsHeaders })
   }
 })
-
-function generateRandomCode(): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
-  let result = ''
-  for (let i = 0; i < 24; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return result
-}
