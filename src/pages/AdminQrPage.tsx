@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Download, QrCode, Plus } from 'lucide-react';
+import { Download, QrCode, Plus, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
@@ -23,6 +23,7 @@ const AdminQrPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [latestBatch, setLatestBatch] = useState<GlobalQrCode[]>([]);
+  const [deletingCodes, setDeletingCodes] = useState<Set<string>>(new Set());
 
   const loadCodes = async () => {
     if (!user) return;
@@ -79,6 +80,44 @@ const AdminQrPage = () => {
       });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const deleteCode = async (codeId: string) => {
+    if (!user) return;
+    
+    setDeletingCodes(prev => new Set(prev).add(codeId));
+    try {
+      const { error } = await supabase.functions.invoke('admin-qr-delete', {
+        body: { codeId },
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+      
+      toast({
+        title: 'Success',
+        description: 'QR code deleted successfully',
+      });
+      
+      await loadCodes();
+      // Remove from latest batch if it's there
+      setLatestBatch(prev => prev.filter(code => code.id !== codeId));
+    } catch (error) {
+      console.error('Error deleting code:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete QR code',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeletingCodes(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(codeId);
+        return newSet;
+      });
     }
   };
 
@@ -178,6 +217,7 @@ const AdminQrPage = () => {
                     <th className="text-left py-2 px-4 font-medium">Created Date</th>
                     <th className="text-left py-2 px-4 font-medium">Status</th>
                     <th className="text-left py-2 px-4 font-medium">QR Image</th>
+                    <th className="text-left py-2 px-4 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -202,6 +242,18 @@ const AdminQrPage = () => {
                         ) : (
                           <span className="text-gray-400 text-sm">No image</span>
                         )}
+                      </td>
+                      <td className="py-3 px-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => deleteCode(code.id)}
+                          disabled={deletingCodes.has(code.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          {deletingCodes.has(code.id) ? 'Deleting...' : 'Delete'}
+                        </Button>
                       </td>
                     </tr>
                   ))}

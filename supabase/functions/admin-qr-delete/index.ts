@@ -27,19 +27,25 @@ serve(async (req) => {
       return new Response('Unauthorized', { status: 401, headers: corsHeaders })
     }
 
-    // Get all global QR codes including image_url
-    const { data, error } = await supabaseClient
+    const { codeId } = await req.json()
+    
+    if (!codeId) {
+      return new Response('Code ID is required', { status: 400, headers: corsHeaders })
+    }
+
+    // Delete the QR code
+    const { error } = await supabaseClient
       .from('global_qr_codes')
-      .select('id, created_at, is_active, image_url')
-      .order('created_at', { ascending: false })
+      .delete()
+      .eq('id', codeId)
 
     if (error) {
-      console.error('Error fetching QR codes:', error)
-      return new Response('Failed to fetch codes', { status: 500, headers: corsHeaders })
+      console.error('Error deleting QR code:', error)
+      return new Response('Failed to delete code', { status: 500, headers: corsHeaders })
     }
 
     return new Response(
-      JSON.stringify({ codes: data }),
+      JSON.stringify({ success: true }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 

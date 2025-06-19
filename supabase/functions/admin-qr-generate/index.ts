@@ -40,8 +40,8 @@ serve(async (req) => {
       // Generate QR code URL
       const qrUrl = `https://4823056e-21ba-4628-9925-ad01b2666856.lovableproject.com/qr/${codeId}`
       
-      // Generate QR code as data URL
-      const qrDataUrl = await generateQRCodeWithOverlay(qrUrl, codeId)
+      // Generate QR code as SVG using a different approach for Deno
+      const qrDataUrl = await generateQRCodeSVG(qrUrl, codeId)
       
       codes.push({ 
         id: codeId, 
@@ -81,26 +81,22 @@ function generateCodeId(): string {
   return result
 }
 
-async function generateQRCodeWithOverlay(url: string, codeId: string): Promise<string> {
+async function generateQRCodeSVG(url: string, codeId: string): Promise<string> {
   try {
-    // Import QRCode dynamically
-    const QRCode = await import('https://esm.sh/qrcode@1.5.3')
+    // Create a simple QR code using an external service for now
+    // This is a temporary solution that works in Deno
+    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}&format=png`
     
-    // Generate basic QR code as data URL
-    const qrDataUrl = await QRCode.default.toDataURL(url, {
-      width: 300,
-      margin: 1,
-      color: {
-        dark: '#000000',
-        light: '#FFFFFF'
-      }
-    })
-
-    // For now, we'll return the basic QR code
-    // In a real implementation, you'd use Canvas to overlay the text
-    // But Deno doesn't have native Canvas support, so we'll use a simpler approach
+    const response = await fetch(qrApiUrl)
+    if (!response.ok) {
+      throw new Error('Failed to generate QR code')
+    }
     
-    return qrDataUrl
+    const buffer = await response.arrayBuffer()
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)))
+    const dataUrl = `data:image/png;base64,${base64}`
+    
+    return dataUrl
   } catch (error) {
     console.error('Error generating QR code:', error)
     throw error
