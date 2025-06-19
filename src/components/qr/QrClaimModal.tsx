@@ -18,7 +18,7 @@ interface QrClaimModalProps {
 
 const QrClaimModal = ({ isOpen, onClose, codeId }: QrClaimModalProps) => {
   const navigate = useNavigate();
-  const { items } = useSupabaseItems();
+  const { items, refetch } = useSupabaseItems();
   const { toast } = useToast();
   const [selectedItemId, setSelectedItemId] = useState<string>('');
   const [isClaiming, setIsClaiming] = useState(false);
@@ -81,24 +81,33 @@ const QrClaimModal = ({ isOpen, onClose, codeId }: QrClaimModalProps) => {
     setShowCreateForm(true);
   };
 
-  const handleItemCreated = async (newItem: any) => {
-    try {
-      await globalQrService.claimCode(codeId, newItem.id);
+  const handleItemCreated = async () => {
+    // Refetch items to get the newly created item
+    await refetch();
+    const updatedItems = await refetch();
+    
+    // Get the most recently created item (assuming it's the last one)
+    if (updatedItems && updatedItems.length > 0) {
+      const newestItem = updatedItems[updatedItems.length - 1];
       
-      toast({
-        title: "Success",
-        description: "New item created and QR code assigned",
-      });
-      
-      navigate(`/items/${newItem.id}`);
-      onClose();
-    } catch (error) {
-      console.error('Failed to claim QR code for new item:', error);
-      toast({
-        title: "Error",
-        description: "Item created but failed to assign QR code",
-        variant: "destructive",
-      });
+      try {
+        await globalQrService.claimCode(codeId, newestItem.id);
+        
+        toast({
+          title: "Success",
+          description: "New item created and QR code assigned",
+        });
+        
+        navigate(`/items/${newestItem.id}`);
+        onClose();
+      } catch (error) {
+        console.error('Failed to claim QR code for new item:', error);
+        toast({
+          title: "Error",
+          description: "Item created but failed to assign QR code",
+          variant: "destructive",
+        });
+      }
     }
   };
 

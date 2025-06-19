@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import QRScanner from '@/components/qr/QRScanner';
+import { useQrScanner } from '@/hooks/useQrScanner';
 import GlobalQRScannerOverlay from '@/components/qr/GlobalQRScannerOverlay';
 import { ArrowLeft, QrCode } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +17,10 @@ const ScannerPage = () => {
     setScannedCode(result);
     setShowOverlay(true);
   };
+
+  const { videoRef, isScanning, hasPermission, startScanning, stopScanning, retryPermission } = useQrScanner({
+    onScan: handleScan,
+  });
 
   const handleCloseOverlay = () => {
     setShowOverlay(false);
@@ -53,7 +57,30 @@ const ScannerPage = () => {
             </p>
             
             <div className="relative aspect-square max-w-sm mx-auto bg-gray-100 rounded-lg overflow-hidden">
-              <QRScanner onScan={handleScan} />
+              <video 
+                ref={videoRef} 
+                className="w-full h-full object-cover"
+                autoPlay 
+                playsInline 
+                muted
+              />
+              {hasPermission === false && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+                  <div className="text-center">
+                    <p className="text-gray-600 mb-2">Camera access required</p>
+                    <Button onClick={retryPermission} size="sm">
+                      Enable Camera
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {hasPermission === true && !isScanning && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Button onClick={startScanning}>
+                    Start Scanning
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
