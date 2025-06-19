@@ -1,153 +1,114 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { qrService } from '@/services/qr';
 import { useToast } from '@/hooks/use-toast';
-import { getIconComponent } from '@/components/icons';
-import { Plus, Search } from 'lucide-react';
+import { Package, Plus, Link2 } from 'lucide-react';
 
 interface QRAssignmentModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onCreateNewItem: () => void;
   qrCode: string;
 }
 
-const QRAssignmentModal = ({ isOpen, onClose, qrCode }: QRAssignmentModalProps) => {
-  const navigate = useNavigate();
+const QRAssignmentModal = ({ isOpen, onClose, onCreateNewItem, qrCode }: QRAssignmentModalProps) => {
+  const { items, updateItem } = useSupabaseItems();
   const { toast } = useToast();
-  const { items } = useSupabaseItems();
   const [selectedItemId, setSelectedItemId] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState('');
   const [isAssigning, setIsAssigning] = useState(false);
 
-  const filteredItems = items.filter(item =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleAssign = async () => {
+  const handleAssignToExisting = async () => {
     if (!selectedItemId) return;
 
     setIsAssigning(true);
     try {
-      await qrService.assignToItem(qrCode, selectedItemId);
+      // Update the item with the QR code
+      await updateItem(selectedItemId, { qr_code_id: qrCode });
+      
       toast({
-        title: 'QR Code Assigned',
-        description: 'Successfully assigned QR code to item.',
+        title: "Success",
+        description: "QR code assigned to item successfully",
       });
+      
       onClose();
-      navigate(`/items/${selectedItemId}?tab=maintenance`);
     } catch (error) {
+      console.error('Failed to assign QR code:', error);
       toast({
-        title: 'Assignment Failed',
-        description: 'Unable to assign QR code. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to assign QR code to item",
+        variant: "destructive",
       });
     } finally {
       setIsAssigning(false);
     }
   };
 
-  const handleCreateNew = () => {
-    onClose();
-    navigate('/items?create=true');
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Unassigned QR Code</DialogTitle>
+          <DialogTitle>Assign QR Code</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600">
-            Choose an item to assign this code to, or create a new one.
-          </p>
+        <div className="space-y-6">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Package className="w-8 h-8 text-orange-600" />
+            </div>
+            <h3 className="font-semibold text-lg mb-2">Unlinked QR Code</h3>
+            <p className="text-gray-600 text-sm">
+              This QR code isn't linked to any item yet. What would you like to do?
+            </p>
+          </div>
 
-          {items.length === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-sm text-gray-500 mb-4">
-                No items found—create one below
-              </p>
-              <Button onClick={handleCreateNew} className="w-full">
-                <Plus className="w-4 h-4 mr-2" />
-                Create New Item
+          <div className="space-y-4">
+            {/* Create New Item Option */}
+            <Button
+              onClick={onCreateNewItem}
+              className="w-full h-12 bg-primary hover:bg-primary/90"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Create New Item
+            </Button>
+
+            {/* Assign to Existing Item */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <Link2 className="w-4 h-4" />
+                Or assign to existing item:
+              </div>
+              
+              <Select value={selectedItemId} onValueChange={setSelectedItemId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select an item..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {items
+                    .filter(item => !item.qr_code_id) // Only show items without QR codes
+                    .map(item => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+
+              <Button
+                onClick={handleAssignToExisting}
+                disabled={!selectedItemId || isAssigning}
+                variant="outline"
+                className="w-full"
+              >
+                {isAssigning ? 'Assigning...' : 'Assign to Selected Item'}
               </Button>
             </div>
-          ) : (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="search">Search Items</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input
-                    id="search"
-                    placeholder="Search by name or category..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
+          </div>
 
-              <div className="space-y-2">
-                <Label>Select Item</Label>
-                <Select value={selectedItemId} onValueChange={setSelectedItemId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose an item..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filteredItems.map((item) => {
-                      const IconComponent = getIconComponent(item.icon_id || 'box');
-                      return (
-                        <SelectItem key={item.id} value={item.id}>
-                          <div className="flex items-center gap-2">
-                            <IconComponent className="w-4 h-4" />
-                            <span>{item.name}</span>
-                            <span className="text-xs text-gray-500">({item.category})</span>
-                          </div>
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleAssign}
-                  disabled={!selectedItemId || isAssigning}
-                  className="flex-1"
-                >
-                  {isAssigning ? 'Assigning...' : 'Assign Code'}
-                </Button>
-                <Button variant="outline" onClick={handleCreateNew}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Item
-                </Button>
-              </div>
-            </>
-          )}
-
-          <Button variant="ghost" onClick={onClose} className="w-full">
+          <Button variant="outline" onClick={onClose} className="w-full">
             Cancel
           </Button>
         </div>

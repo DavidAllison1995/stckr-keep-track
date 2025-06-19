@@ -9,6 +9,8 @@ import { qrService } from '@/services/qr';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { useToast } from '@/hooks/use-toast';
 import QRAssignmentModal from './QRAssignmentModal';
+import ItemForm from '@/components/items/ItemForm';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const QRScanner = () => {
   const navigate = useNavigate();
@@ -16,6 +18,7 @@ const QRScanner = () => {
   const { getItemById } = useSupabaseItems();
   const [showScanner, setShowScanner] = useState(false);
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+  const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [currentQrCode, setCurrentQrCode] = useState<string>('');
 
   const handleScan = async (code: string) => {
@@ -52,8 +55,27 @@ const QRScanner = () => {
     }
   };
 
+  const handleCreateNewItem = () => {
+    setShowAssignmentModal(false);
+    setShowAddItemModal(true);
+  };
+
   const handleAssignmentClose = () => {
     setShowAssignmentModal(false);
+    setCurrentQrCode('');
+  };
+
+  const handleAddItemSuccess = () => {
+    setShowAddItemModal(false);
+    setCurrentQrCode('');
+    toast({
+      title: "Success",
+      description: "Item created and QR code assigned!",
+    });
+  };
+
+  const handleAddItemClose = () => {
+    setShowAddItemModal(false);
     setCurrentQrCode('');
   };
 
@@ -170,8 +192,23 @@ const QRScanner = () => {
       <QRAssignmentModal
         isOpen={showAssignmentModal}
         onClose={handleAssignmentClose}
+        onCreateNewItem={handleCreateNewItem}
         qrCode={currentQrCode}
       />
+
+      {/* Add Item Modal */}
+      <Dialog open={showAddItemModal} onOpenChange={setShowAddItemModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Create New Item</DialogTitle>
+          </DialogHeader>
+          <ItemForm
+            initialQrCode={currentQrCode}
+            onSuccess={handleAddItemSuccess}
+            onCancel={handleAddItemClose}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

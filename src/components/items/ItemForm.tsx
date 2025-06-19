@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,10 +11,13 @@ import IconPicker from '@/components/IconPicker';
 
 interface ItemFormProps {
   item?: Item;
+  initialQrCode?: string;
   onSuccess: () => void;
+  onCancel?: () => void;
 }
 
-const ItemForm = ({ item, onSuccess }: ItemFormProps) => {
+const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) => {
+  const navigate = useNavigate();
   const { addItem, updateItem } = useSupabaseItems();
   const [formData, setFormData] = useState({
     name: '',
@@ -23,6 +27,7 @@ const ItemForm = ({ item, onSuccess }: ItemFormProps) => {
     description: '',
     purchase_date: '',
     warranty_date: '',
+    qr_code_id: initialQrCode || '',
   });
 
   const categories = ['Appliance', 'Electronics', 'Furniture', 'Vehicle', 'Tool', 'Other'];
@@ -39,46 +44,67 @@ const ItemForm = ({ item, onSuccess }: ItemFormProps) => {
         description: item.description || '',
         purchase_date: item.purchase_date || '',
         warranty_date: item.warranty_date || '',
+        qr_code_id: item.qr_code_id || '',
       });
+    } else if (initialQrCode) {
+      setFormData(prev => ({
+        ...prev,
+        qr_code_id: initialQrCode,
+      }));
     }
-  }, [item]);
+  }, [item, initialQrCode]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name.trim()) {
       return;
     }
 
-    if (item) {
-      // Update existing item
-      updateItem(item.id, {
-        name: formData.name.trim(),
-        category: formData.category || 'Other',
-        icon_id: formData.icon_id,
-        room: formData.room || undefined,
-        description: formData.description || undefined,
-        purchase_date: formData.purchase_date || undefined,
-        warranty_date: formData.warranty_date || undefined,
-      });
-    } else {
-      // Add new item
-      addItem({
-        name: formData.name.trim(),
-        category: formData.category || 'Other',
-        icon_id: formData.icon_id,
-        room: formData.room || undefined,
-        description: formData.description || undefined,
-        purchase_date: formData.purchase_date || undefined,
-        warranty_date: formData.warranty_date || undefined,
-        photo_url: undefined,
-        qr_code_id: undefined,
-        notes: undefined,
-        documents: [],
-      });
-    }
+    try {
+      let newItem;
+      
+      if (item) {
+        // Update existing item
+        await updateItem(item.id, {
+          name: formData.name.trim(),
+          category: formData.category || 'Other',
+          icon_id: formData.icon_id,
+          room: formData.room || undefined,
+          description: formData.description || undefined,
+          purchase_date: formData.purchase_date || undefined,
+          warranty_date: formData.warranty_date || undefined,
+          qr_code_id: formData.qr_code_id || undefined,
+        });
+        newItem = item;
+      } else {
+        // Add new item
+        newItem = await addItem({
+          name: formData.name.trim(),
+          category: formData.category || 'Other',
+          icon_id: formData.icon_id,
+          room: formData.room || undefined,
+          description: formData.description || undefined,
+          purchase_date: formData.purchase_date || undefined,
+          warranty_date: formData.warranty_date || undefined,
+          photo_url: undefined,
+          qr_code_id: formData.qr_code_id || undefined,
+          notes: undefined,
+          documents: [],
+        });
+      }
 
-    onSuccess();
+      onSuccess();
+
+      // If this was a new item created with a QR code, navigate to its detail page
+      if (!item && initialQrCode && newItem) {
+        setTimeout(() => {
+          navigate(`/items/${newItem.id}`);
+        }, 100);
+      }
+    } catch (error) {
+      console.error('Error saving item:', error);
+    }
   };
 
   return (
@@ -162,11 +188,26 @@ const ItemForm = ({ item, onSuccess }: ItemFormProps) => {
           </div>
         </div>
 
+        {/* Hidden QR Code field - shows if there's a QR code */}
+        {formData.qr_code_id && (
+          <div>
+            <Label htmlFor="qrCode">QR Code</Label>
+            <Input
+              id="qrCode"
+              type="text"
+              value={formData.qr_code_id}
+              readOnly
+              className="bg-gray-50"
+              placeholder="QR Code will be assigned"
+            />
+          </div>
+        )}
+
         <div className="flex gap-3 pt-4">
           <Button type="submit" className="flex-1">
-            {item ? 'Update Item' : 'Add Item'}
+            {item ? 'Update Item' : 'Create Item'}
           </Button>
-          <Button type="button" variant="outline" onClick={onSuccess}>
+          <Button type="button" variant="outline" onClick={onCancel || onSuccess}>
             Cancel
           </Button>
         </div>

@@ -287,7 +287,8 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addItem = async (itemData: Omit<Item, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-    await addItemMutation.mutateAsync(itemData);
+    const result = await addItemMutation.mutateAsync(itemData);
+    return result;
   };
 
   const updateItem = async (id: string, updates: Partial<Item>) => {
