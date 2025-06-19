@@ -33,7 +33,7 @@ export interface Item {
 interface ItemsContextType {
   items: Item[];
   isLoading: boolean;
-  addItem: (item: Omit<Item, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  addItem: (item: Omit<Item, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<Item>;
   updateItem: (id: string, updates: Partial<Item>) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
   getItemById: (id: string) => Item | undefined;
@@ -284,7 +284,7 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const addItem = async (itemData: Omit<Item, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+  const addItem = async (itemData: Omit<Item, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Item> => {
     const result = await addItemMutation.mutateAsync(itemData);
     return result;
   };
