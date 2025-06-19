@@ -19,6 +19,13 @@ const AdminLoginPage = () => {
   const [showAccessDenied, setShowAccessDenied] = useState(false);
   const [attemptedLogin, setAttemptedLogin] = useState(false);
 
+  // Move all hooks to the top before any conditional returns
+  React.useEffect(() => {
+    if (attemptedLogin && !isLoading && isAuthenticated && !isAdmin) {
+      setShowAccessDenied(true);
+    }
+  }, [attemptedLogin, isLoading, isAuthenticated, isAdmin]);
+
   console.log('AdminLoginPage render:', {
     isAuthenticated,
     isAdmin,
@@ -27,7 +34,7 @@ const AdminLoginPage = () => {
     userEmail: user?.email
   });
 
-  // Redirect if already authenticated as admin
+  // Now we can safely do conditional returns after all hooks are called
   if (!isLoading && isAuthenticated && isAdmin) {
     console.log('Redirecting to admin dashboard - user is authenticated admin');
     return <Navigate to="/admin" replace />;
@@ -62,13 +69,6 @@ const AdminLoginPage = () => {
       setIsSubmitting(false);
     }
   };
-
-  // Check if we should show access denied after login attempt
-  React.useEffect(() => {
-    if (attemptedLogin && !isLoading && isAuthenticated && !isAdmin) {
-      setShowAccessDenied(true);
-    }
-  }, [attemptedLogin, isLoading, isAuthenticated, isAdmin]);
 
   const handleSwitchAccount = async () => {
     await logout();
