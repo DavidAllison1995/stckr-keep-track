@@ -17,6 +17,7 @@ const AdminLoginPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [showAccessDenied, setShowAccessDenied] = useState(false);
+  const [attemptedLogin, setAttemptedLogin] = useState(false);
 
   console.log('AdminLoginPage render:', {
     isAuthenticated,
@@ -37,6 +38,7 @@ const AdminLoginPage = () => {
     setIsSubmitting(true);
     setError('');
     setShowAccessDenied(false);
+    setAttemptedLogin(true);
 
     console.log('Admin login attempt for:', email);
 
@@ -49,12 +51,8 @@ const AdminLoginPage = () => {
         setIsSubmitting(false);
       } else {
         console.log('Admin login successful, waiting for auth state to update...');
-        // The auth state change will trigger the redirect or show access denied
+        // Wait a moment for auth state to update, then check admin status
         setTimeout(() => {
-          // Check if user is authenticated but not admin after login
-          if (isAuthenticated && !isAdmin) {
-            setShowAccessDenied(true);
-          }
           setIsSubmitting(false);
         }, 1000);
       }
@@ -65,12 +63,20 @@ const AdminLoginPage = () => {
     }
   };
 
+  // Check if we should show access denied after login attempt
+  React.useEffect(() => {
+    if (attemptedLogin && !isLoading && isAuthenticated && !isAdmin) {
+      setShowAccessDenied(true);
+    }
+  }, [attemptedLogin, isLoading, isAuthenticated, isAdmin]);
+
   const handleSwitchAccount = async () => {
     await logout();
     setShowAccessDenied(false);
     setError('');
     setEmail('');
     setPassword('');
+    setAttemptedLogin(false);
   };
 
   return (
