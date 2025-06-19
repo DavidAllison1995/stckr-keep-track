@@ -43,6 +43,45 @@ interface ItemsContextType {
 
 const ItemsContext = createContext<ItemsContextType | undefined>(undefined);
 
+// Helper function to transform raw item data from Supabase
+const transformItemData = (rawItem: any): Item => {
+  let documents: Document[] = [];
+  
+  if (rawItem.documents) {
+    try {
+      let parsedDocuments: unknown;
+      
+      // Parse the JSONB documents field
+      if (typeof rawItem.documents === 'string') {
+        parsedDocuments = JSON.parse(rawItem.documents);
+      } else {
+        parsedDocuments = rawItem.documents;
+      }
+      
+      // Type guard to ensure we have an array of valid documents
+      if (Array.isArray(parsedDocuments)) {
+        documents = parsedDocuments.filter((doc): doc is Document => {
+          return typeof doc === 'object' && 
+                 doc !== null && 
+                 typeof (doc as any).id === 'string' &&
+                 typeof (doc as any).name === 'string' &&
+                 typeof (doc as any).type === 'string' &&
+                 typeof (doc as any).url === 'string' &&
+                 typeof (doc as any).uploadDate === 'string';
+        });
+      }
+    } catch (error) {
+      console.error('Error parsing documents for item:', rawItem.id, error);
+      documents = [];
+    }
+  }
+  
+  return {
+    ...rawItem,
+    documents
+  };
+};
+
 export const ItemsProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
@@ -73,45 +112,7 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
 
       console.log('Raw items data:', data);
 
-      return (data || []).map(item => {
-        let documents: Document[] = [];
-        
-        if (item.documents) {
-          try {
-            let parsedDocuments: unknown;
-            
-            // Parse the JSONB documents field
-            if (typeof item.documents === 'string') {
-              parsedDocuments = JSON.parse(item.documents);
-            } else {
-              parsedDocuments = item.documents;
-            }
-            
-            // Type guard to ensure we have an array of valid documents
-            if (Array.isArray(parsedDocuments)) {
-              documents = parsedDocuments.filter((doc): doc is Document => {
-                return typeof doc === 'object' && 
-                       doc !== null && 
-                       typeof (doc as any).id === 'string' &&
-                       typeof (doc as any).name === 'string' &&
-                       typeof (doc as any).type === 'string' &&
-                       typeof (doc as any).url === 'string' &&
-                       typeof (doc as any).uploadDate === 'string';
-              });
-            }
-          } catch (error) {
-            console.error('Error parsing documents for item:', item.id, error);
-            documents = [];
-          }
-        }
-        
-        console.log(`Item ${item.id} documents:`, documents);
-        
-        return {
-          ...item,
-          documents
-        };
-      });
+      return (data || []).map(transformItemData);
     },
     enabled: !!user,
   });
@@ -133,7 +134,9 @@ export const ItemsProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (error) throw error;
-      return data;
+      
+      // Transform the raw data before returning
+      return transformItemData(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['items', user?.id] });
