@@ -133,13 +133,13 @@ const AdminAnalyticsPage = () => {
       .from('user_qr_claims')
       .select('qr_code_id', { count: 'exact', head: true });
 
-    // Get unique claimed codes
-    const { data: uniqueClaimed } = await supabase
+    // Get unique claimed codes by fetching all claims and counting unique qr_code_ids
+    const { data: claims } = await supabase
       .from('user_qr_claims')
-      .select('qr_code_id')
-      .distinct();
+      .select('qr_code_id');
 
-    const claimed = uniqueClaimed?.length || 0;
+    const uniqueClaimedCodes = new Set(claims?.map(claim => claim.qr_code_id) || []);
+    const claimed = uniqueClaimedCodes.size;
     const unclaimed = (totalCodes || 0) - claimed;
 
     return { claimed, unclaimed };
