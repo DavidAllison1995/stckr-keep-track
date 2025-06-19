@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,30 +9,49 @@ import { Shield, Eye, EyeOff } from 'lucide-react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 const AdminLoginPage = () => {
-  const { isAuthenticated, isAdmin, login } = useAdminAuth();
+  const { isAuthenticated, isAdmin, login, isLoading } = useAdminAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   // Redirect if already authenticated as admin
-  if (isAuthenticated && isAdmin) {
+  if (!isLoading && isAuthenticated && isAdmin) {
     return <Navigate to="/admin" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsSubmitting(true);
     setError('');
 
-    const result = await login(email, password);
-    
-    if (result.error) {
-      setError(result.error);
+    console.log('Admin login attempt for:', email);
+
+    try {
+      const result = await login(email, password);
+      
+      if (result.error) {
+        console.error('Admin login error:', result.error);
+        setError(result.error);
+        setIsSubmitting(false);
+      } else {
+        console.log('Admin login successful, waiting for redirect...');
+        // Don't set isSubmitting to false here - let the redirect happen
+        // The useAdminAuth hook will handle the state change and redirect
+        setTimeout(() => {
+          if (!isAdmin) {
+            setError('Access denied. Admin privileges required.');
+            setIsSubmitting(false);
+          }
+        }, 3000); // Give 3 seconds for the admin check to complete
+      }
+    } catch (error) {
+      console.error('Unexpected login error:', error);
+      setError('An unexpected error occurred during login');
+      setIsSubmitting(false);
     }
-    
-    setIsLoading(false);
   };
 
   return (
@@ -56,6 +75,7 @@ const AdminLoginPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@example.com"
                 required
+                disabled={isSubmitting}
               />
             </div>
             
@@ -69,6 +89,7 @@ const AdminLoginPage = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   required
+                  disabled={isSubmitting}
                 />
                 <Button
                   type="button"
@@ -76,6 +97,7 @@ const AdminLoginPage = () => {
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
+                  disabled={isSubmitting}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -95,9 +117,9 @@ const AdminLoginPage = () => {
             <Button
               type="submit"
               className="w-full"
-              disabled={isLoading}
+              disabled={isSubmitting || isLoading}
             >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isSubmitting ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
           

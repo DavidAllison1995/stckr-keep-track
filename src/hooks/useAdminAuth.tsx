@@ -39,22 +39,28 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          // Use setTimeout to avoid blocking the auth state change
+          setTimeout(() => {
+            fetchProfile(session.user.id);
+          }, 0);
         } else {
           setProfile(null);
+          setIsLoading(false);
         }
-        setIsLoading(false);
       }
     );
 
+    // Get initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log('Initial admin session check:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
         await fetchProfile(session.user.id);
+      } else {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -62,6 +68,7 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('Fetching admin profile for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, is_admin')
@@ -69,24 +76,32 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (error) {
-        console.error('Error fetching profile:', error);
+        console.error('Error fetching admin profile:', error);
+        setProfile(null);
+        setIsLoading(false);
         return;
       }
 
+      console.log('Admin profile fetched:', data);
       setProfile(data);
+      setIsLoading(false);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('Error fetching admin profile:', error);
+      setProfile(null);
+      setIsLoading(false);
     }
   };
 
   const login = async (email: string, password: string) => {
     try {
+      console.log('Admin login attempt for:', email);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('Admin login error:', error);
         toast({
           title: 'Login Failed',
           description: error.message,
@@ -95,9 +110,11 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
         return { error: error.message };
       }
 
+      console.log('Admin login successful');
       return {};
     } catch (error) {
       const message = 'An unexpected error occurred during login';
+      console.error('Unexpected admin login error:', error);
       toast({
         title: 'Login Failed',
         description: message,
