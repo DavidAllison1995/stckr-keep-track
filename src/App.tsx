@@ -19,7 +19,6 @@ import TasksPage from '@/pages/TasksPage';
 import ProfilePage from '@/pages/ProfilePage';
 import SettingsPage from '@/pages/SettingsPage';
 import ScannerPage from '@/pages/ScannerPage';
-import DeepLinksPage from '@/pages/DeepLinksPage';
 import NotFound from '@/pages/NotFound';
 
 // Create a client
@@ -103,14 +102,6 @@ function App() {
                       <ProtectedRoute>
                         <>
                           <TasksPage />
-                          <NavBar />
-                        </>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/deeplinks" element={
-                      <ProtectedRoute>
-                        <>
-                          <DeepLinksPage />
                           <NavBar />
                         </>
                       </ProtectedRoute>
