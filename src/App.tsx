@@ -133,6 +133,49 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
+                  {/* Add the missing task status routes */}
+                  <Route
+                    path="/tasks/up-to-date"
+                    element={
+                      <ProtectedRoute>
+                        <ItemsProvider>
+                          <MaintenanceProvider>
+                            <ProtectedLayout>
+                              <MaintenanceTasksPage />
+                            </ProtectedLayout>
+                          </MaintenanceProvider>
+                        </ItemsProvider>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/tasks/due-soon"
+                    element={
+                      <ProtectedRoute>
+                        <ItemsProvider>
+                          <MaintenanceProvider>
+                            <ProtectedLayout>
+                              <MaintenanceTasksPage />
+                            </ProtectedLayout>
+                          </MaintenanceProvider>
+                        </ItemsProvider>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/tasks/overdue"
+                    element={
+                      <ProtectedRoute>
+                        <ItemsProvider>
+                          <MaintenanceProvider>
+                            <ProtectedLayout>
+                              <MaintenanceTasksPage />
+                            </ProtectedLayout>
+                          </MaintenanceProvider>
+                        </ItemsProvider>
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route
                     path="/maintenance-tasks"
                     element={
