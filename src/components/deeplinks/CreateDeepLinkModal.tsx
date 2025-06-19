@@ -97,7 +97,7 @@ const CreateDeepLinkModal = ({ isOpen, onClose }: CreateDeepLinkModalProps) => {
               </SelectTrigger>
               <SelectContent>
                 {availableItems.length === 0 ? (
-                  <SelectItem value="" disabled>No items without QR codes</SelectItem>
+                  <SelectItem value="no-items" disabled>No items without QR codes</SelectItem>
                 ) : (
                   availableItems.map((item) => (
                     <SelectItem key={item.id} value={item.id}>
@@ -143,7 +143,7 @@ const CreateDeepLinkModal = ({ isOpen, onClose }: CreateDeepLinkModalProps) => {
             {!qrPreview && (
               <Button 
                 onClick={generateDeepLink} 
-                disabled={!selectedItemId || generating}
+                disabled={!selectedItemId || generating || selectedItemId === 'no-items'}
               >
                 {generating ? 'Generating...' : 'Generate'}
               </Button>
