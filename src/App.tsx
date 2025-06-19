@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +18,9 @@ import ItemsPage from "./pages/ItemsPage";
 import ItemDetailPage from "./pages/ItemDetailPage";
 import MaintenancePage from "./pages/MaintenancePage";
 import TasksPage from "./pages/TasksPage";
+import UpToDateTasksPage from "./pages/UpToDateTasksPage";
+import DueSoonTasksPage from "./pages/DueSoonTasksPage";
+import OverdueTasksPage from "./pages/OverdueTasksPage";
 import MaintenanceTasksPage from "./pages/MaintenanceTasksPage";
 import ScannerPage from "./pages/ScannerPage";
 import QRClaimPage from "./pages/QRClaimPage";
@@ -133,7 +135,7 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-                  {/* Add the missing task status routes */}
+                  {/* Refactored task status routes with focused components */}
                   <Route
                     path="/tasks/up-to-date"
                     element={
@@ -141,7 +143,7 @@ function App() {
                         <ItemsProvider>
                           <MaintenanceProvider>
                             <ProtectedLayout>
-                              <MaintenanceTasksPage />
+                              <UpToDateTasksPage />
                             </ProtectedLayout>
                           </MaintenanceProvider>
                         </ItemsProvider>
@@ -155,7 +157,7 @@ function App() {
                         <ItemsProvider>
                           <MaintenanceProvider>
                             <ProtectedLayout>
-                              <MaintenanceTasksPage />
+                              <DueSoonTasksPage />
                             </ProtectedLayout>
                           </MaintenanceProvider>
                         </ItemsProvider>
@@ -169,7 +171,7 @@ function App() {
                         <ItemsProvider>
                           <MaintenanceProvider>
                             <ProtectedLayout>
-                              <MaintenanceTasksPage />
+                              <OverdueTasksPage />
                             </ProtectedLayout>
                           </MaintenanceProvider>
                         </ItemsProvider>
