@@ -379,16 +379,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      can_access_profile: {
-        Args: { profile_id: string }
-        Returns: boolean
-      }
       claim_qr: {
         Args: { p_code: string; p_user_id: string; p_item_id: string }
         Returns: Json
       }
       is_admin: {
         Args: { user_id?: string }
+        Returns: boolean
+      }
+      is_user_admin: {
+        Args: { user_id: string }
         Returns: boolean
       }
     }
