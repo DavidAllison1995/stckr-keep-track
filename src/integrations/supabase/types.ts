@@ -9,27 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      global_qr_codes: {
-        Row: {
-          created_at: string
-          id: string
-          is_active: boolean
-          token: string
-        }
-        Insert: {
-          created_at?: string
-          id: string
-          is_active?: boolean
-          token: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          token?: string
-        }
-        Relationships: []
-      }
       items: {
         Row: {
           category: string
@@ -144,36 +123,32 @@ export type Database = {
           },
         ]
       }
-      user_qr_claims: {
+      qr_codes: {
         Row: {
-          claimed_at: string
-          code_id: string
-          item_id: string
-          user_id: string
+          assigned_item_id: string | null
+          assigned_user_id: string | null
+          code: string
+          created_at: string
+          id: string
         }
         Insert: {
-          claimed_at?: string
-          code_id: string
-          item_id: string
-          user_id: string
+          assigned_item_id?: string | null
+          assigned_user_id?: string | null
+          code: string
+          created_at?: string
+          id?: string
         }
         Update: {
-          claimed_at?: string
-          code_id?: string
-          item_id?: string
-          user_id?: string
+          assigned_item_id?: string | null
+          assigned_user_id?: string | null
+          code?: string
+          created_at?: string
+          id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "user_qr_claims_code_id_fkey"
-            columns: ["code_id"]
-            isOneToOne: false
-            referencedRelation: "global_qr_codes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_qr_claims_item_id_fkey"
-            columns: ["item_id"]
+            foreignKeyName: "qr_codes_assigned_item_id_fkey"
+            columns: ["assigned_item_id"]
             isOneToOne: false
             referencedRelation: "items"
             referencedColumns: ["id"]
@@ -185,7 +160,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      claim_qr: {
+        Args: { p_code: string; p_user_id: string; p_item_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

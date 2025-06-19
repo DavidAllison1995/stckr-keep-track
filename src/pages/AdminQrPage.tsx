@@ -3,26 +3,33 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Download, QrCode, Plus, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
-import QRCodeGrid from '@/components/qr/QRCodeGrid';
+import QRCodeDisplay from '@/components/qr/QRCodeDisplay';
 
-interface GlobalQrCode {
+interface QRCodeData {
   id: string;
+  code: string;
   created_at: string;
-  is_active: boolean;
-  image_url?: string;
+  assigned_user_id: string | null;
+  assigned_item_id: string | null;
+  items?: {
+    name: string;
+  };
 }
 
 const AdminQrPage = () => {
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
-  const [codes, setCodes] = useState<GlobalQrCode[]>([]);
+  const [codes, setCodes] = useState<QRCodeData[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [latestBatch, setLatestBatch] = useState<GlobalQrCode[]>([]);
+  const [quantity, setQuantity] = useState(9);
+  const [latestBatch, setLatestBatch] = useState<QRCodeData[]>([]);
   const [deletingCodes, setDeletingCodes] = useState<Set<string>>(new Set());
 
   const loadCodes = async () => {
@@ -30,7 +37,7 @@ const AdminQrPage = () => {
     
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('admin-qr-list', {
+      const { data, error } = await supabase.functions.invoke('qr-list', {
         headers: {
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
         },
@@ -55,8 +62,8 @@ const AdminQrPage = () => {
     
     setIsGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('admin-qr-generate', {
-        body: { quantity: 9 }, // Always generate 9
+      const { data, error } = await supabase.functions.invoke('qr-generate', {
+        body: { quantity },
         headers: {
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
         },
@@ -66,7 +73,7 @@ const AdminQrPage = () => {
       
       toast({
         title: 'Success',
-        description: 'Generated 9 QR codes with images',
+        description: `Generated ${quantity} QR codes`,
       });
       
       setLatestBatch(data.codes || []);
@@ -88,7 +95,7 @@ const AdminQrPage = () => {
     
     setDeletingCodes(prev => new Set(prev).add(codeId));
     try {
-      const { error } = await supabase.functions.invoke('admin-qr-delete', {
+      const { error } = await supabase.functions.invoke('qr-delete', {
         body: { codeId },
         headers: {
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
@@ -103,7 +110,6 @@ const AdminQrPage = () => {
       });
       
       await loadCodes();
-      // Remove from latest batch if it's there
       setLatestBatch(prev => prev.filter(code => code.id !== codeId));
     } catch (error) {
       console.error('Error deleting code:', error);
@@ -121,22 +127,6 @@ const AdminQrPage = () => {
     }
   };
 
-  const downloadCSV = () => {
-    const csvContent = [
-      'Code ID,Created Date,Status,QR URL',
-      ...codes.map(code => `${code.id},${new Date(code.created_at).toLocaleDateString()},${code.is_active ? 'Active' : 'Inactive'},${code.image_url || 'N/A'}`)
-    ].join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'qr-codes.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // Load codes on mount
   useEffect(() => {
     loadCodes();
   }, [user]);
@@ -145,7 +135,7 @@ const AdminQrPage = () => {
     <div className="p-6 space-y-6 max-w-6xl mx-auto">
       <div className="flex items-center gap-3">
         <QrCode className="w-8 h-8" />
-        <h1 className="text-3xl font-bold">QR Code Admin Portal</h1>
+        <h1 className="text-3xl font-bold">QR Code Management Portal</h1>
       </div>
 
       {/* Generate QR Codes Panel */}
@@ -157,29 +147,30 @@ const AdminQrPage = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-4 items-center">
-            <div className="text-sm text-gray-600">
-              Each batch generates 9 QR codes with images in a 3×3 grid format
+          <div className="flex gap-4 items-end">
+            <div className="space-y-2">
+              <Label htmlFor="quantity">Quantity</Label>
+              <Input
+                id="quantity"
+                type="number"
+                min="1"
+                max="9"
+                value={quantity}
+                onChange={(e) => setQuantity(Math.min(9, Math.max(1, parseInt(e.target.value) || 1)))}
+                className="w-24"
+              />
             </div>
             <Button 
               onClick={generateCodes}
               disabled={isGenerating}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isGenerating ? 'Generating 9 Codes...' : 'Generate 9 QR Codes'}
+              {isGenerating ? `Generating ${quantity} Codes...` : `Generate ${quantity} QR Codes`}
             </Button>
           </div>
           
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={downloadCSV}
-              disabled={codes.length === 0}
-              className="flex items-center gap-2"
-            >
-              <Download className="w-4 h-4" />
-              Download CSV
-            </Button>
+          <div className="text-sm text-gray-600">
+            Each QR code will link to: https://4823056e-21ba-4628-9925-ad01b2666856.lovableproject.com/qr/[code]
           </div>
         </CardContent>
       </Card>
@@ -188,10 +179,10 @@ const AdminQrPage = () => {
       {latestBatch.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Latest Generated Batch</CardTitle>
+            <CardTitle>Latest Generated Batch ({latestBatch.length} codes)</CardTitle>
           </CardHeader>
           <CardContent>
-            <QRCodeGrid codes={latestBatch} showDownloadPDF={true} />
+            <QRCodeDisplay codes={latestBatch} />
           </CardContent>
         </Card>
       )}
@@ -213,35 +204,27 @@ const AdminQrPage = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-2 px-4 font-medium">Code ID</th>
+                    <th className="text-left py-2 px-4 font-medium">Code</th>
                     <th className="text-left py-2 px-4 font-medium">Created Date</th>
                     <th className="text-left py-2 px-4 font-medium">Status</th>
-                    <th className="text-left py-2 px-4 font-medium">QR Image</th>
+                    <th className="text-left py-2 px-4 font-medium">Assigned To</th>
                     <th className="text-left py-2 px-4 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {codes.map((code) => (
                     <tr key={code.id} className="border-b hover:bg-gray-50">
-                      <td className="py-3 px-4 font-mono text-sm">{code.id}</td>
+                      <td className="py-3 px-4 font-mono text-sm">{code.code}</td>
                       <td className="py-3 px-4">
                         {new Date(code.created_at).toLocaleDateString()}
                       </td>
                       <td className="py-3 px-4">
-                        <Badge variant={code.is_active ? "default" : "secondary"}>
-                          {code.is_active ? 'Active' : 'Inactive'}
+                        <Badge variant={code.assigned_user_id ? "default" : "secondary"}>
+                          {code.assigned_user_id ? 'Assigned' : 'Available'}
                         </Badge>
                       </td>
                       <td className="py-3 px-4">
-                        {code.image_url ? (
-                          <img 
-                            src={code.image_url} 
-                            alt={`QR Code ${code.id}`}
-                            className="w-12 h-12 object-contain"
-                          />
-                        ) : (
-                          <span className="text-gray-400 text-sm">No image</span>
-                        )}
+                        {code.items?.name || '–'}
                       </td>
                       <td className="py-3 px-4">
                         <Button

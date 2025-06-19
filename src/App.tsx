@@ -20,7 +20,7 @@ import SettingsPage from '@/pages/SettingsPage';
 import ScannerPage from '@/pages/ScannerPage';
 import NotFound from '@/pages/NotFound';
 import AdminQrPage from '@/pages/AdminQrPage';
-import QRRedirectPage from '@/pages/QRRedirectPage';
+import QRClaimPage from '@/pages/QRClaimPage';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -43,7 +43,7 @@ function App() {
                 <div className="App">
                   <Routes>
                     <Route path="/auth" element={<AuthPage />} />
-                    <Route path="/qr/:codeId" element={<QRRedirectPage />} />
+                    <Route path="/qr/:code" element={<QRClaimPage />} />
                     <Route path="/" element={
                       <ProtectedRoute>
                         <>
