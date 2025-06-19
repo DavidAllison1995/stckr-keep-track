@@ -16,6 +16,7 @@ const NavBar = () => {
     { path: '/', label: 'Home', icon: '🏠' },
     { path: '/items', label: 'Items', icon: '📦' },
     { path: '/calendar', label: 'Calendar', icon: '📅' },
+    { path: '/deeplinks', label: 'QR Links', icon: '🔗' },
     { path: '/scanner', label: 'Scan', icon: '📱' },
     { path: '/profile', label: 'Profile', icon: '👤' },
   ];
