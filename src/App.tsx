@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useSupabaseAuth";
 import { AdminAuthProvider } from "@/hooks/useAdminAuth";
 import { ItemsProvider } from "@/hooks/useSupabaseItems";
+import { MaintenanceProvider } from "@/hooks/useSupabaseMaintenance";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminProtectedRoute from "@/components/admin/AdminProtectedRoute";
@@ -52,13 +53,15 @@ function App() {
                   <Route path="/auth" element={<AuthPage />} />
                   <Route path="/qr/:code" element={<QRRedirectPage />} />
                   
-                  {/* Protected user routes - wrapped with ItemsProvider */}
+                  {/* Protected user routes - wrapped with ItemsProvider and MaintenanceProvider */}
                   <Route
                     path="/dashboard"
                     element={
                       <ProtectedRoute>
                         <ItemsProvider>
-                          <Dashboard />
+                          <MaintenanceProvider>
+                            <Dashboard />
+                          </MaintenanceProvider>
                         </ItemsProvider>
                       </ProtectedRoute>
                     }
@@ -68,7 +71,9 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <ItemsProvider>
-                          <ItemsPage />
+                          <MaintenanceProvider>
+                            <ItemsPage />
+                          </MaintenanceProvider>
                         </ItemsProvider>
                       </ProtectedRoute>
                     }
@@ -78,7 +83,9 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <ItemsProvider>
-                          <ItemDetailPage />
+                          <MaintenanceProvider>
+                            <ItemDetailPage />
+                          </MaintenanceProvider>
                         </ItemsProvider>
                       </ProtectedRoute>
                     }
@@ -88,7 +95,9 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <ItemsProvider>
-                          <MaintenancePage />
+                          <MaintenanceProvider>
+                            <MaintenancePage />
+                          </MaintenanceProvider>
                         </ItemsProvider>
                       </ProtectedRoute>
                     }
@@ -98,7 +107,9 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <ItemsProvider>
-                          <TasksPage />
+                          <MaintenanceProvider>
+                            <TasksPage />
+                          </MaintenanceProvider>
                         </ItemsProvider>
                       </ProtectedRoute>
                     }
@@ -108,7 +119,9 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <ItemsProvider>
-                          <MaintenanceTasksPage />
+                          <MaintenanceProvider>
+                            <MaintenanceTasksPage />
+                          </MaintenanceProvider>
                         </ItemsProvider>
                       </ProtectedRoute>
                     }
@@ -118,7 +131,9 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <ItemsProvider>
-                          <ScannerPage />
+                          <MaintenanceProvider>
+                            <ScannerPage />
+                          </MaintenanceProvider>
                         </ItemsProvider>
                       </ProtectedRoute>
                     }
@@ -128,7 +143,9 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <ItemsProvider>
-                          <QRClaimPage />
+                          <MaintenanceProvider>
+                            <QRClaimPage />
+                          </MaintenanceProvider>
                         </ItemsProvider>
                       </ProtectedRoute>
                     }
