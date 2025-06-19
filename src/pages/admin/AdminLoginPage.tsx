@@ -9,7 +9,7 @@ import { Shield, Eye, EyeOff } from 'lucide-react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 const AdminLoginPage = () => {
-  const { isAuthenticated, isAdmin, login, isLoading } = useAdminAuth();
+  const { isAuthenticated, isAdmin, login, isLoading, profile, user } = useAdminAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,9 +17,26 @@ const AdminLoginPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  console.log('AdminLoginPage render:', {
+    isAuthenticated,
+    isAdmin,
+    isLoading,
+    profileAdmin: profile?.is_admin,
+    userEmail: user?.email
+  });
+
   // Redirect if already authenticated as admin
   if (!isLoading && isAuthenticated && isAdmin) {
+    console.log('Redirecting to admin dashboard - user is authenticated admin');
     return <Navigate to="/admin" replace />;
+  }
+
+  // Show access denied if authenticated but not admin
+  if (!isLoading && isAuthenticated && !isAdmin) {
+    console.log('Access denied - user is authenticated but not admin', {
+      profile,
+      isAdminCheck: profile?.is_admin
+    });
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,15 +54,8 @@ const AdminLoginPage = () => {
         setError(result.error);
         setIsSubmitting(false);
       } else {
-        console.log('Admin login successful, waiting for redirect...');
-        // Don't set isSubmitting to false here - let the redirect happen
-        // The useAdminAuth hook will handle the state change and redirect
-        setTimeout(() => {
-          if (!isAdmin) {
-            setError('Access denied. Admin privileges required.');
-            setIsSubmitting(false);
-          }
-        }, 3000); // Give 3 seconds for the admin check to complete
+        console.log('Admin login successful, waiting for auth state to update...');
+        // The auth state change will trigger the redirect
       }
     } catch (error) {
       console.error('Unexpected login error:', error);
@@ -111,6 +121,14 @@ const AdminLoginPage = () => {
             {error && (
               <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md">
                 {error}
+              </div>
+            )}
+
+            {!isLoading && isAuthenticated && !isAdmin && (
+              <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md">
+                Access denied. Admin privileges required. 
+                <br />
+                <small>Debug: User ID: {user?.id}, Profile admin status: {profile?.is_admin ? 'true' : 'false'}</small>
               </div>
             )}
 

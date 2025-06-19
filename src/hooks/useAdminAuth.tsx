@@ -77,12 +77,31 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) {
         console.error('Error fetching admin profile:', error);
-        setProfile(null);
+        // If profile doesn't exist, create it
+        if (error.code === 'PGRST116') {
+          console.log('Profile not found, creating new profile...');
+          const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .insert([{ id: userId, is_admin: false }])
+            .select('id, first_name, last_name, is_admin')
+            .single();
+          
+          if (insertError) {
+            console.error('Error creating profile:', insertError);
+            setProfile(null);
+          } else {
+            console.log('Created new profile:', newProfile);
+            setProfile(newProfile);
+          }
+        } else {
+          setProfile(null);
+        }
         setIsLoading(false);
         return;
       }
 
       console.log('Admin profile fetched:', data);
+      console.log('User is_admin status:', data.is_admin);
       setProfile(data);
       setIsLoading(false);
     } catch (error) {
@@ -160,6 +179,14 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
     login,
     logout,
   };
+
+  console.log('Admin auth context value:', {
+    isAuthenticated: value.isAuthenticated,
+    isAdmin: value.isAdmin,
+    profileAdmin: profile?.is_admin,
+    isLoading: value.isLoading,
+    userEmail: user?.email
+  });
 
   return (
     <AdminAuthContext.Provider value={value}>
