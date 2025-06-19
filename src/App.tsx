@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useSupabaseAuth";
 import { AdminAuthProvider } from "@/hooks/useAdminAuth";
+import { ItemsProvider } from "@/hooks/useSupabaseItems";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminProtectedRoute from "@/components/admin/AdminProtectedRoute";
@@ -51,12 +52,14 @@ function App() {
                   <Route path="/auth" element={<AuthPage />} />
                   <Route path="/qr/:code" element={<QRRedirectPage />} />
                   
-                  {/* Protected user routes */}
+                  {/* Protected user routes - wrapped with ItemsProvider */}
                   <Route
                     path="/dashboard"
                     element={
                       <ProtectedRoute>
-                        <Dashboard />
+                        <ItemsProvider>
+                          <Dashboard />
+                        </ItemsProvider>
                       </ProtectedRoute>
                     }
                   />
@@ -64,7 +67,9 @@ function App() {
                     path="/items"
                     element={
                       <ProtectedRoute>
-                        <ItemsPage />
+                        <ItemsProvider>
+                          <ItemsPage />
+                        </ItemsProvider>
                       </ProtectedRoute>
                     }
                   />
@@ -72,7 +77,9 @@ function App() {
                     path="/items/:id"
                     element={
                       <ProtectedRoute>
-                        <ItemDetailPage />
+                        <ItemsProvider>
+                          <ItemDetailPage />
+                        </ItemsProvider>
                       </ProtectedRoute>
                     }
                   />
@@ -80,7 +87,9 @@ function App() {
                     path="/maintenance"
                     element={
                       <ProtectedRoute>
-                        <MaintenancePage />
+                        <ItemsProvider>
+                          <MaintenancePage />
+                        </ItemsProvider>
                       </ProtectedRoute>
                     }
                   />
@@ -88,7 +97,9 @@ function App() {
                     path="/tasks"
                     element={
                       <ProtectedRoute>
-                        <TasksPage />
+                        <ItemsProvider>
+                          <TasksPage />
+                        </ItemsProvider>
                       </ProtectedRoute>
                     }
                   />
@@ -96,7 +107,9 @@ function App() {
                     path="/maintenance-tasks"
                     element={
                       <ProtectedRoute>
-                        <MaintenanceTasksPage />
+                        <ItemsProvider>
+                          <MaintenanceTasksPage />
+                        </ItemsProvider>
                       </ProtectedRoute>
                     }
                   />
@@ -104,7 +117,9 @@ function App() {
                     path="/scanner"
                     element={
                       <ProtectedRoute>
-                        <ScannerPage />
+                        <ItemsProvider>
+                          <ScannerPage />
+                        </ItemsProvider>
                       </ProtectedRoute>
                     }
                   />
@@ -112,7 +127,9 @@ function App() {
                     path="/claim/:code"
                     element={
                       <ProtectedRoute>
-                        <QRClaimPage />
+                        <ItemsProvider>
+                          <QRClaimPage />
+                        </ItemsProvider>
                       </ProtectedRoute>
                     }
                   />
