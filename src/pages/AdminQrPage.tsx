@@ -1,27 +1,28 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Download, QrCode, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import QRCodeGrid from '@/components/qr/QRCodeGrid';
 
 interface GlobalQrCode {
   id: string;
   created_at: string;
   is_active: boolean;
+  image_url?: string;
 }
 
 const AdminQrPage = () => {
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
-  const [quantity, setQuantity] = useState(12);
   const [codes, setCodes] = useState<GlobalQrCode[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [latestBatch, setLatestBatch] = useState<GlobalQrCode[]>([]);
 
   const loadCodes = async () => {
     if (!user) return;
@@ -54,7 +55,7 @@ const AdminQrPage = () => {
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke('admin-qr-generate', {
-        body: { quantity },
+        body: { quantity: 9 }, // Always generate 9
         headers: {
           Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
         },
@@ -64,9 +65,10 @@ const AdminQrPage = () => {
       
       toast({
         title: 'Success',
-        description: `Generated ${quantity} QR codes`,
+        description: 'Generated 9 QR codes with images',
       });
       
+      setLatestBatch(data.codes || []);
       await loadCodes();
     } catch (error) {
       console.error('Error generating codes:', error);
@@ -82,8 +84,8 @@ const AdminQrPage = () => {
 
   const downloadCSV = () => {
     const csvContent = [
-      'Code ID,Created Date,Status',
-      ...codes.map(code => `${code.id},${new Date(code.created_at).toLocaleDateString()},${code.is_active ? 'Active' : 'Inactive'}`)
+      'Code ID,Created Date,Status,QR URL',
+      ...codes.map(code => `${code.id},${new Date(code.created_at).toLocaleDateString()},${code.is_active ? 'Active' : 'Inactive'},${code.image_url || 'N/A'}`)
     ].join('\n');
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -112,31 +114,20 @@ const AdminQrPage = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plus className="w-5 h-5" />
-            Generate QR Codes
+            Generate QR Code Batch
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-4 items-end">
-            <div className="flex-1 max-w-xs">
-              <label htmlFor="quantity" className="block text-sm font-medium mb-2">
-                Quantity
-              </label>
-              <Input
-                id="quantity"
-                type="number"
-                min="1"
-                max="1000"
-                value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-                placeholder="12"
-              />
+          <div className="flex gap-4 items-center">
+            <div className="text-sm text-gray-600">
+              Each batch generates 9 QR codes with images in a 3×3 grid format
             </div>
             <Button 
               onClick={generateCodes}
-              disabled={isGenerating || quantity < 1}
+              disabled={isGenerating}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isGenerating ? 'Generating...' : 'Generate'}
+              {isGenerating ? 'Generating 9 Codes...' : 'Generate 9 QR Codes'}
             </Button>
           </div>
           
@@ -154,10 +145,22 @@ const AdminQrPage = () => {
         </CardContent>
       </Card>
 
+      {/* Latest Batch Display */}
+      {latestBatch.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Latest Generated Batch</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <QRCodeGrid codes={latestBatch} showDownloadPDF={true} />
+          </CardContent>
+        </Card>
+      )}
+
       {/* QR Codes Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Global QR Codes ({codes.length})</CardTitle>
+          <CardTitle>All QR Codes ({codes.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -174,6 +177,7 @@ const AdminQrPage = () => {
                     <th className="text-left py-2 px-4 font-medium">Code ID</th>
                     <th className="text-left py-2 px-4 font-medium">Created Date</th>
                     <th className="text-left py-2 px-4 font-medium">Status</th>
+                    <th className="text-left py-2 px-4 font-medium">QR Image</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -187,6 +191,17 @@ const AdminQrPage = () => {
                         <Badge variant={code.is_active ? "default" : "secondary"}>
                           {code.is_active ? 'Active' : 'Inactive'}
                         </Badge>
+                      </td>
+                      <td className="py-3 px-4">
+                        {code.image_url ? (
+                          <img 
+                            src={code.image_url} 
+                            alt={`QR Code ${code.id}`}
+                            className="w-12 h-12 object-contain"
+                          />
+                        ) : (
+                          <span className="text-gray-400 text-sm">No image</span>
+                        )}
                       </td>
                     </tr>
                   ))}

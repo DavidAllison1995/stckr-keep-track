@@ -27,18 +27,27 @@ serve(async (req) => {
       return new Response('Unauthorized', { status: 401, headers: corsHeaders })
     }
 
-    const { quantity = 12 } = await req.json()
+    // Always generate 9 QR codes per batch
+    const quantity = 9
 
-    if (quantity < 1 || quantity > 1000) {
-      return new Response('Invalid quantity', { status: 400, headers: corsHeaders })
-    }
-
-    // Generate unique codes
+    // Generate unique codes with QR images
     const codes = []
+    
     for (let i = 0; i < quantity; i++) {
       const codeId = generateCodeId()
       const token = crypto.randomUUID()
-      codes.push({ id: codeId, token })
+      
+      // Generate QR code URL
+      const qrUrl = `https://4823056e-21ba-4628-9925-ad01b2666856.lovableproject.com/qr/${codeId}`
+      
+      // Generate QR code as data URL
+      const qrDataUrl = await generateQRCodeWithOverlay(qrUrl, codeId)
+      
+      codes.push({ 
+        id: codeId, 
+        token,
+        image_url: qrDataUrl
+      })
     }
 
     // Insert codes using service role
@@ -70,4 +79,30 @@ function generateCodeId(): string {
     result += chars.charAt(Math.floor(Math.random() * chars.length))
   }
   return result
+}
+
+async function generateQRCodeWithOverlay(url: string, codeId: string): Promise<string> {
+  try {
+    // Import QRCode dynamically
+    const QRCode = await import('https://esm.sh/qrcode@1.5.3')
+    
+    // Generate basic QR code as data URL
+    const qrDataUrl = await QRCode.default.toDataURL(url, {
+      width: 300,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    })
+
+    // For now, we'll return the basic QR code
+    // In a real implementation, you'd use Canvas to overlay the text
+    // But Deno doesn't have native Canvas support, so we'll use a simpler approach
+    
+    return qrDataUrl
+  } catch (error) {
+    console.error('Error generating QR code:', error)
+    throw error
+  }
 }
