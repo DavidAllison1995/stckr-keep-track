@@ -1,12 +1,14 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Item } from '@/hooks/useSupabaseItems';
 import { getIconComponent } from '@/components/icons';
+import { QrCode, Download } from 'lucide-react';
 import ItemDetail from './ItemDetail';
 import ItemForm from './ItemForm';
+import QRCode from 'qrcode';
 
 interface ItemCardProps {
   item: Item;
@@ -16,12 +18,56 @@ interface ItemCardProps {
 const ItemCard = ({ item, onClick }: ItemCardProps) => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
   const IconComponent = getIconComponent(item.icon_id || 'box');
+  
+  // Generate short code from QR code ID
+  const shortCode = item.qr_code_id ? `B${item.qr_code_id.slice(-4).toUpperCase()}` : null;
+
+  // Generate QR code thumbnail on mount
+  useEffect(() => {
+    if (item.qr_code_id) {
+      const generateQrCode = async () => {
+        try {
+          const dataUrl = await QRCode.toDataURL(`https://stckr.io/qr/${item.qr_code_id}`, { 
+            width: 128, 
+            margin: 0 
+          });
+          setQrDataUrl(dataUrl);
+        } catch (error) {
+          console.error('Error generating QR code:', error);
+        }
+      };
+      generateQrCode();
+    }
+  }, [item.qr_code_id]);
 
   const handleCardClick = () => {
     if (onClick) {
       onClick();
+    }
+  };
+
+  const downloadQrCode = async () => {
+    if (!item.qr_code_id || !shortCode) return;
+    
+    try {
+      // Generate a larger QR code for download
+      const downloadDataUrl = await QRCode.toDataURL(`https://stckr.io/qr/${item.qr_code_id}`, { 
+        width: 512, 
+        margin: 1 
+      });
+      
+      const a = document.createElement('a');
+      a.href = downloadDataUrl;
+      a.download = `qr-${shortCode}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading QR code:', error);
     }
   };
 
@@ -64,6 +110,42 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                 <p className="text-sm text-gray-600 line-clamp-2">{item.description}</p>
               )}
 
+              {/* QR Code Section */}
+              {item.qr_code_id ? (
+                <div className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
+                  {qrDataUrl ? (
+                    <img 
+                      src={qrDataUrl} 
+                      alt="QR code thumbnail" 
+                      className="w-12 h-12 rounded border"
+                    />
+                  ) : (
+                    <QrCode className="w-12 h-12 text-gray-400" />
+                  )}
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">Sticker {shortCode}</div>
+                    <Button 
+                      variant="link" 
+                      size="sm" 
+                      className="p-0 h-auto text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsQrModalOpen(true);
+                      }}
+                    >
+                      View full code
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
+                  <QrCode className="w-12 h-12 text-gray-400" />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-500">No QR assigned</div>
+                  </div>
+                </div>
+              )}
+
               {(item.purchase_date || item.warranty_date) && (
                 <div className="text-xs text-gray-500 space-y-1">
                   {item.purchase_date && (
@@ -103,6 +185,37 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* QR Code Modal */}
+      <Dialog open={isQrModalOpen} onOpenChange={setIsQrModalOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>QR Code for {item.name}</DialogTitle>
+          </DialogHeader>
+          <div className="p-4 flex flex-col items-center space-y-4">
+            {qrDataUrl && (
+              <>
+                <img 
+                  src={qrDataUrl} 
+                  alt="Full QR code" 
+                  className="w-64 h-64 border rounded-lg"
+                />
+                <div className="text-center">
+                  <div className="font-medium">Sticker {shortCode}</div>
+                  <div className="text-sm text-gray-500">Scan to view item details</div>
+                </div>
+                <Button 
+                  onClick={downloadQrCode}
+                  className="w-full"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download QR Code
+                </Button>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Detail Modal */}
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
