@@ -1,153 +1,180 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from '@/contexts/ThemeContext';
-import { AuthProvider } from '@/hooks/useSupabaseAuth';
-import { ItemsProvider } from '@/hooks/useSupabaseItems';
-import { MaintenanceProvider } from '@/hooks/useSupabaseMaintenance';
-import { Toaster } from '@/components/ui/toaster';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import NavBar from '@/components/navigation/NavBar';
-import AuthPage from '@/pages/AuthPage';
-import Index from '@/pages/Index';
-import Dashboard from '@/pages/Dashboard';
-import ItemsPage from '@/pages/ItemsPage';
-import ItemDetailPage from '@/pages/ItemDetailPage';
-import MaintenancePage from '@/pages/MaintenancePage';
-import MaintenanceTasksPage from '@/pages/MaintenanceTasksPage';
-import TasksPage from '@/pages/TasksPage';
-import ProfilePage from '@/pages/ProfilePage';
-import SettingsPage from '@/pages/SettingsPage';
-import ScannerPage from '@/pages/ScannerPage';
-import NotFound from '@/pages/NotFound';
-import AdminQrPage from '@/pages/AdminQrPage';
-import QRClaimPage from '@/pages/QRClaimPage';
 
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-    },
-  },
-});
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useSupabaseAuth";
+import { AdminAuthProvider } from "@/hooks/useAdminAuth";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import AdminProtectedRoute from "@/components/admin/AdminProtectedRoute";
+import Index from "./pages/Index";
+import AuthPage from "./pages/AuthPage";
+import Dashboard from "./pages/Dashboard";
+import ItemsPage from "./pages/ItemsPage";
+import ItemDetailPage from "./pages/ItemDetailPage";
+import MaintenancePage from "./pages/MaintenancePage";
+import TasksPage from "./pages/TasksPage";
+import MaintenanceTasksPage from "./pages/MaintenanceTasksPage";
+import ScannerPage from "./pages/ScannerPage";
+import QRClaimPage from "./pages/QRClaimPage";
+import QRRedirectPage from "./pages/QRRedirectPage";
+import ProfilePage from "./pages/ProfilePage";
+import SettingsPage from "./pages/SettingsPage";
+import NotFound from "./pages/NotFound";
+
+// Admin pages
+import AdminLoginPage from "./pages/admin/AdminLoginPage";
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import AdminQrPage from "./pages/admin/AdminQrPage";
+import AdminShopPage from "./pages/admin/AdminShopPage";
+import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
+
+import "./App.css";
+
+const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <AuthProvider>
-          <ItemsProvider>
-            <MaintenanceProvider>
-              <Router>
-                <div className="App">
-                  <Routes>
-                    <Route path="/auth" element={<AuthPage />} />
-                    <Route path="/qr/:code" element={<QRClaimPage />} />
-                    <Route path="/" element={
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthProvider>
+              <AdminAuthProvider>
+                <Routes>
+                  {/* Public routes */}
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<AuthPage />} />
+                  <Route path="/qr/:code" element={<QRRedirectPage />} />
+                  
+                  {/* Protected user routes */}
+                  <Route
+                    path="/dashboard"
+                    element={
                       <ProtectedRoute>
-                        <>
-                          <Index />
-                          <NavBar />
-                        </>
+                        <Dashboard />
                       </ProtectedRoute>
-                    } />
-                    <Route path="/dashboard" element={
+                    }
+                  />
+                  <Route
+                    path="/items"
+                    element={
                       <ProtectedRoute>
-                        <>
-                          <Dashboard />
-                          <NavBar />
-                        </>
+                        <ItemsPage />
                       </ProtectedRoute>
-                    } />
-                    <Route path="/items" element={
+                    }
+                  />
+                  <Route
+                    path="/items/:id"
+                    element={
                       <ProtectedRoute>
-                        <>
-                          <ItemsPage />
-                          <NavBar />
-                        </>
+                        <ItemDetailPage />
                       </ProtectedRoute>
-                    } />
-                    <Route path="/items/:id" element={
+                    }
+                  />
+                  <Route
+                    path="/maintenance"
+                    element={
                       <ProtectedRoute>
-                        <>
-                          <ItemDetailPage />
-                          <NavBar />
-                        </>
+                        <MaintenancePage />
                       </ProtectedRoute>
-                    } />
-                    <Route path="/calendar" element={
+                    }
+                  />
+                  <Route
+                    path="/tasks"
+                    element={
                       <ProtectedRoute>
-                        <>
-                          <MaintenancePage />
-                          <NavBar />
-                        </>
+                        <TasksPage />
                       </ProtectedRoute>
-                    } />
-                    <Route path="/maintenance-tasks" element={
+                    }
+                  />
+                  <Route
+                    path="/maintenance-tasks"
+                    element={
                       <ProtectedRoute>
-                        <>
-                          <MaintenanceTasksPage />
-                          <NavBar />
-                        </>
+                        <MaintenanceTasksPage />
                       </ProtectedRoute>
-                    } />
-                    <Route path="/tasks/:status" element={
+                    }
+                  />
+                  <Route
+                    path="/scanner"
+                    element={
                       <ProtectedRoute>
-                        <>
-                          <TasksPage />
-                          <NavBar />
-                        </>
+                        <ScannerPage />
                       </ProtectedRoute>
-                    } />
-                    <Route path="/tasks" element={
+                    }
+                  />
+                  <Route
+                    path="/claim/:code"
+                    element={
                       <ProtectedRoute>
-                        <>
-                          <TasksPage />
-                          <NavBar />
-                        </>
+                        <QRClaimPage />
                       </ProtectedRoute>
-                    } />
-                    <Route path="/profile" element={
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
                       <ProtectedRoute>
-                        <>
-                          <ProfilePage />
-                          <NavBar />
-                        </>
+                        <ProfilePage />
                       </ProtectedRoute>
-                    } />
-                    <Route path="/settings" element={
+                    }
+                  />
+                  <Route
+                    path="/settings"
+                    element={
                       <ProtectedRoute>
-                        <>
-                          <SettingsPage />
-                          <NavBar />
-                        </>
+                        <SettingsPage />
                       </ProtectedRoute>
-                    } />
-                    <Route path="/scanner" element={
-                      <ProtectedRoute>
-                        <>
-                          <ScannerPage />
-                          <NavBar />
-                        </>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/admin/qr" element={
-                      <ProtectedRoute>
-                        <>
-                          <AdminQrPage />
-                          <NavBar />
-                        </>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </div>
-                <Toaster />
-              </Router>
-            </MaintenanceProvider>
-          </ItemsProvider>
-        </AuthProvider>
+                    }
+                  />
+
+                  {/* Admin routes */}
+                  <Route path="/admin/login" element={<AdminLoginPage />} />
+                  <Route
+                    path="/admin"
+                    element={
+                      <AdminProtectedRoute>
+                        <AdminDashboardPage />
+                      </AdminProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/qr"
+                    element={
+                      <AdminProtectedRoute>
+                        <AdminQrPage />
+                      </AdminProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/shop"
+                    element={
+                      <AdminProtectedRoute>
+                        <AdminShopPage />
+                      </AdminProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/analytics"
+                    element={
+                      <AdminProtectedRoute>
+                        <AdminAnalyticsPage />
+                      </AdminProtectedRoute>
+                    }
+                  />
+
+                  {/* 404 */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </AdminAuthProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
