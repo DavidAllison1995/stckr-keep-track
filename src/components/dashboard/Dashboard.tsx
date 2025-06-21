@@ -1,3 +1,4 @@
+
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,6 +39,10 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
   };
 
   const handleMaintenanceClick = () => {
+    navigate('/maintenance');
+  };
+
+  const handleCalendarClick = () => {
     navigate('/maintenance');
   };
 
@@ -137,7 +142,10 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
           {/* Maintenance Calendar */}
           <Card className="shadow-xl border-0">
             <CardHeader>
-              <CardTitle className="flex items-center text-lg">
+              <CardTitle 
+                className="flex items-center text-lg cursor-pointer hover:text-blue-600 transition-colors"
+                onClick={handleCalendarClick}
+              >
                 <Calendar className="mr-2 h-5 w-5 text-blue-600" />
                 This Week
               </CardTitle>
