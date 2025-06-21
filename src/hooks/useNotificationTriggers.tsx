@@ -6,11 +6,14 @@ export const useNotificationTriggers = () => {
   const { user } = useSupabaseAuth();
 
   const triggerTaskCreatedNotification = async (taskId: string, taskTitle: string, itemId?: string) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.error('No user ID available for task created notification');
+      return;
+    }
 
     try {
-      console.log('Creating task created notification:', { taskId, taskTitle, itemId });
-      await supabase
+      console.log('Creating task created notification:', { taskId, taskTitle, itemId, userId: user.id });
+      const { data, error } = await supabase
         .from('notifications')
         .insert({
           user_id: user.id,
@@ -19,19 +22,29 @@ export const useNotificationTriggers = () => {
           message: 'A new maintenance task has been added',
           task_id: taskId,
           item_id: itemId
-        });
-      console.log('Task created notification created successfully');
+        })
+        .select();
+
+      if (error) {
+        console.error('Supabase error creating task notification:', error);
+        throw error;
+      }
+      
+      console.log('Task created notification created successfully:', data);
     } catch (error) {
       console.error('Error creating task notification:', error);
     }
   };
 
   const triggerTaskCompletedNotification = async (taskId: string, taskTitle: string, itemId?: string) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.error('No user ID available for task completed notification');
+      return;
+    }
 
     try {
-      console.log('Creating task completed notification:', { taskId, taskTitle, itemId });
-      await supabase
+      console.log('Creating task completed notification:', { taskId, taskTitle, itemId, userId: user.id });
+      const { data, error } = await supabase
         .from('notifications')
         .insert({
           user_id: user.id,
@@ -40,19 +53,29 @@ export const useNotificationTriggers = () => {
           message: 'A maintenance task has been completed',
           task_id: taskId,
           item_id: itemId
-        });
-      console.log('Task completed notification created successfully');
+        })
+        .select();
+
+      if (error) {
+        console.error('Supabase error creating completion notification:', error);
+        throw error;
+      }
+      
+      console.log('Task completed notification created successfully:', data);
     } catch (error) {
       console.error('Error creating completion notification:', error);
     }
   };
 
   const triggerItemCreatedNotification = async (itemId: string, itemName: string) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.error('No user ID available for item created notification');
+      return;
+    }
 
     try {
       console.log('Creating item created notification:', { itemId, itemName, userId: user.id });
-      await supabase
+      const { data, error } = await supabase
         .from('notifications')
         .insert({
           user_id: user.id,
@@ -60,10 +83,19 @@ export const useNotificationTriggers = () => {
           title: `New Item Added: ${itemName}`,
           message: 'A new item has been added to your inventory',
           item_id: itemId
-        });
-      console.log('Item created notification created successfully');
+        })
+        .select();
+
+      if (error) {
+        console.error('Supabase error creating item notification:', error);
+        throw error;
+      }
+      
+      console.log('Item created notification created successfully:', data);
+      return data;
     } catch (error) {
       console.error('Error creating item notification:', error);
+      throw error;
     }
   };
 

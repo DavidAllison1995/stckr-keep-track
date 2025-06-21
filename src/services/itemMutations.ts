@@ -40,17 +40,23 @@ export const useAddItemMutation = (userId: string | undefined) => {
     onSuccess: async (newItem) => {
       console.log('Item mutation successful, triggering notification for:', newItem);
       
+      // Invalidate queries first
       queryClient.invalidateQueries({ queryKey: ['items', userId] });
+      
+      // Show success toast
       toast({
         title: 'Success',
         description: 'Item added successfully',
       });
       
-      // Trigger notification for the new item
+      // Trigger notification - await this to ensure it completes
       try {
+        console.log('About to trigger item notification for:', { id: newItem.id, name: newItem.name });
         await triggerItemCreatedNotification(newItem.id, newItem.name);
-      } catch (error) {
-        console.error('Failed to create notification for new item:', error);
+        console.log('Item notification triggered successfully');
+      } catch (notificationError) {
+        console.error('Failed to create notification for new item:', notificationError);
+        // Don't fail the whole operation if notification fails
       }
     },
     onError: (error) => {

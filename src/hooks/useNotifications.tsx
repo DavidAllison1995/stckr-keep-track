@@ -20,7 +20,7 @@ export const useNotifications = () => {
   const { user } = useSupabaseAuth();
   const queryClient = useQueryClient();
 
-  const { data: notifications = [], isLoading } = useQuery({
+  const { data: notifications = [], isLoading, error } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
       if (!user?.id) {
@@ -47,14 +47,25 @@ export const useNotifications = () => {
     enabled: !!user?.id,
   });
 
+  // Log any query errors
+  useEffect(() => {
+    if (error) {
+      console.error('Notifications query error:', error);
+    }
+  }, [error]);
+
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {
+      console.log('Marking notification as read:', notificationId);
       const { error } = await supabase
         .from('notifications')
         .update({ read: true })
         .eq('id', notificationId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error marking notification as read:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -65,13 +76,17 @@ export const useNotifications = () => {
     mutationFn: async () => {
       if (!user?.id) return;
       
+      console.log('Marking all notifications as read for user:', user.id);
       const { error } = await supabase
         .from('notifications')
         .update({ read: true })
         .eq('user_id', user.id)
         .eq('read', false);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error marking all notifications as read:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -80,12 +95,16 @@ export const useNotifications = () => {
 
   const deleteNotificationMutation = useMutation({
     mutationFn: async (notificationId: string) => {
+      console.log('Deleting notification:', notificationId);
       const { error } = await supabase
         .from('notifications')
         .delete()
         .eq('id', notificationId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting notification:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -129,7 +148,9 @@ export const useNotifications = () => {
           queryClient.invalidateQueries({ queryKey: ['notifications'] });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+      });
 
     return () => {
       console.log('Cleaning up realtime subscription');
@@ -144,6 +165,7 @@ export const useNotifications = () => {
     notifications,
     unreadCount,
     isLoading,
+    error,
     markAsRead: markAsReadMutation.mutate,
     markAllAsRead: markAllAsReadMutation.mutate,
     deleteNotification: deleteNotificationMutation.mutate,
