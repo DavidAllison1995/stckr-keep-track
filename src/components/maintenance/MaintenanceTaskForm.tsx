@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,7 +38,7 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
       recurrence: formData.recurrence,
       recurrence_rule: null,
       parent_task_id: null,
-      status: 'pending',
+      status: 'up_to_date',
     });
 
     onSuccess();
