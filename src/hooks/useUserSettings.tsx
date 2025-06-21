@@ -8,7 +8,6 @@ export interface UserSettings {
   notifications: {
     taskDueSoon: boolean;
     taskOverdue: boolean;
-    taskUpcoming: boolean;
     warrantyExpiring: boolean;
     taskCompleted: boolean;
     taskCreated: boolean;
@@ -25,7 +24,6 @@ const defaultSettings: UserSettings = {
   notifications: {
     taskDueSoon: true,
     taskOverdue: true,
-    taskUpcoming: false,
     warrantyExpiring: true,
     taskCompleted: false,
     taskCreated: false,
@@ -77,7 +75,6 @@ export const useUserSettings = () => {
         notifications: {
           taskDueSoon: data.notification_task_due_soon ?? true,
           taskOverdue: data.notification_task_overdue ?? true,
-          taskUpcoming: data.notification_task_upcoming ?? false,
           warrantyExpiring: data.notification_warranty_expiring ?? true,
           taskCompleted: data.notification_task_completed ?? false,
           taskCreated: data.notification_task_created ?? false,
@@ -105,7 +102,6 @@ export const useUserSettings = () => {
         theme: newSettings.theme,
         notification_task_due_soon: newSettings.notifications.taskDueSoon,
         notification_task_overdue: newSettings.notifications.taskOverdue,
-        notification_task_upcoming: newSettings.notifications.taskUpcoming,
         notification_warranty_expiring: newSettings.notifications.warrantyExpiring,
         notification_task_completed: newSettings.notifications.taskCompleted,
         notification_task_created: newSettings.notifications.taskCreated,

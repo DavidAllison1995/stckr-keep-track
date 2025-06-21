@@ -63,6 +63,10 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
     deleteNotification(notificationId);
   };
 
+  const handleMarkAllAsRead = () => {
+    markAllAsRead();
+  };
+
   if (isLoading) {
     return (
       <div className="p-4">
@@ -83,7 +87,7 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={markAllAsRead}
+              onClick={handleMarkAllAsRead}
               className="text-xs"
             >
               Mark all read
