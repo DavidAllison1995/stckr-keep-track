@@ -169,7 +169,7 @@ const ItemDetailsTab = ({ item }: ItemDetailsTabProps) => {
                 disabled={!nextTask}
                 className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 text-left ${
                   nextTask
-                    ? 'bg-green-50 text-green-800 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-300 cursor-pointer'
+                    ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-300 cursor-pointer'
                     : 'bg-gray-50 text-gray-500 cursor-not-allowed'
                 }`}
               >
@@ -187,7 +187,7 @@ const ItemDetailsTab = ({ item }: ItemDetailsTabProps) => {
                 </div>
                 {nextTask && (
                   <div className="ml-2">
-                    <Badge className="bg-green-100 text-green-800 border-green-200">
+                    <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
                       Upcoming
                     </Badge>
                   </div>
@@ -200,7 +200,7 @@ const ItemDetailsTab = ({ item }: ItemDetailsTabProps) => {
                 disabled={!recentCompleted}
                 className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 text-left ${
                   recentCompleted
-                    ? 'bg-gray-50 text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 cursor-pointer'
+                    ? 'bg-green-100 text-green-800 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-300 cursor-pointer'
                     : 'bg-gray-50 text-gray-500 cursor-not-allowed'
                 }`}
               >
@@ -218,7 +218,7 @@ const ItemDetailsTab = ({ item }: ItemDetailsTabProps) => {
                 </div>
                 {recentCompleted && (
                   <div className="ml-2">
-                    <Badge variant="secondary" className="bg-gray-100 text-gray-600">
+                    <Badge className="bg-green-100 text-green-800 border-green-200">
                       Completed
                     </Badge>
                   </div>

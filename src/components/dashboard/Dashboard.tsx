@@ -18,6 +18,12 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
 
   const overdueTasks = getTasksByStatus('overdue');
   const dueSoonTasks = getTasksByStatus('due_soon');
+  const inProgressTasks = getTasksByStatus('in_progress');
+  const pendingTasks = getTasksByStatus('pending');
+  
+  // Calculate upcoming (non-completed) tasks
+  const upcomingTasks = [...overdueTasks, ...dueSoonTasks, ...inProgressTasks, ...pendingTasks];
+  
   // For up-to-date tasks, we need to filter pending tasks that are due more than 14 days from now
   const upToDateTasks = getTasksByStatus('pending').filter(task => {
     const taskDate = new Date(task.date);
@@ -77,8 +83,8 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
           onClick={handleMaintenanceClick}
         >
           <CardContent className="p-4">
-            <div className="text-2xl font-bold">{tasks.length}</div>
-            <div className="text-sm opacity-90">Maintenance Tasks</div>
+            <div className="text-2xl font-bold">{upcomingTasks.length}</div>
+            <div className="text-sm opacity-90">Upcoming Tasks</div>
           </CardContent>
         </Card>
       </div>
