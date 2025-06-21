@@ -8,6 +8,7 @@ import TasksPage from "@/pages/TasksPage";
 import UpToDateTasksPage from "@/pages/UpToDateTasksPage";
 import DueSoonTasksPage from "@/pages/DueSoonTasksPage";
 import OverdueTasksPage from "@/pages/OverdueTasksPage";
+import CompletedTasksPage from "@/pages/CompletedTasksPage";
 
 const TasksRoutes = () => (
   <Routes>
@@ -61,6 +62,20 @@ const TasksRoutes = () => (
             <MaintenanceProvider>
               <ProtectedLayout>
                 <OverdueTasksPage />
+              </ProtectedLayout>
+            </MaintenanceProvider>
+          </ItemsProvider>
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/completed"
+      element={
+        <ProtectedRoute>
+          <ItemsProvider>
+            <MaintenanceProvider>
+              <ProtectedLayout>
+                <CompletedTasksPage />
               </ProtectedLayout>
             </MaintenanceProvider>
           </ItemsProvider>
