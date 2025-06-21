@@ -1,12 +1,13 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Item } from '@/hooks/useSupabaseItems';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { getIconComponent } from '@/components/icons';
-import { Calendar, FileText, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calendar, FileText, ChevronDown, ChevronUp, Clock, CheckCircle2 } from 'lucide-react';
 
 interface ItemDetailsTabProps {
   item: Item;
@@ -14,6 +15,7 @@ interface ItemDetailsTabProps {
 
 const ItemDetailsTab = ({ item }: ItemDetailsTabProps) => {
   const [showMore, setShowMore] = useState(false);
+  const navigate = useNavigate();
   const { getTasksByItem } = useSupabaseMaintenance();
   const IconComponent = getIconComponent(item.icon_id || 'box');
 
@@ -29,6 +31,18 @@ const ItemDetailsTab = ({ item }: ItemDetailsTabProps) => {
   
   const recentCompleted = completedTasks
     .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())[0];
+
+  const handleNextTaskClick = () => {
+    if (nextTask) {
+      navigate(`/items/${item.id}`, { state: { highlightTaskId: nextTask.id, activeTab: 'maintenance' } });
+    }
+  };
+
+  const handleRecentCompletedClick = () => {
+    if (recentCompleted) {
+      navigate(`/items/${item.id}`, { state: { highlightTaskId: recentCompleted.id, activeTab: 'maintenance' } });
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -139,32 +153,77 @@ const ItemDetailsTab = ({ item }: ItemDetailsTabProps) => {
 
       {/* Right Column */}
       <div className="space-y-6">
-        {/* Maintenance Summary */}
-        <Card>
+        {/* Enhanced Maintenance Summary */}
+        <Card className="shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
+              <Calendar className="w-5 h-5 text-gray-700" />
               Maintenance Summary
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div>
-              <span className="text-sm font-medium text-gray-600">Next Task: </span>
-              <span className="text-sm text-gray-900">
-                {nextTask 
-                  ? `${new Date(nextTask.date).toLocaleDateString()} – ${nextTask.title}`
-                  : 'None'
-                }
-              </span>
-            </div>
-            <div>
-              <span className="text-sm font-medium text-gray-600">Recently Completed: </span>
-              <span className="text-sm text-gray-900">
-                {recentCompleted 
-                  ? `${new Date(recentCompleted.updated_at).toLocaleDateString()} – ${recentCompleted.title}`
-                  : 'None'
-                }
-              </span>
+            <div className="flex flex-col space-y-3">
+              {/* Next Task Button */}
+              <button
+                onClick={handleNextTaskClick}
+                disabled={!nextTask}
+                className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 text-left ${
+                  nextTask
+                    ? 'bg-green-50 text-green-800 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-300 cursor-pointer'
+                    : 'bg-gray-50 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <Clock className="w-4 h-4 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-medium opacity-80">Next Task</div>
+                    <div className="text-sm font-medium truncate">
+                      {nextTask 
+                        ? `${new Date(nextTask.date).toLocaleDateString()} – ${nextTask.title}`
+                        : 'None scheduled'
+                      }
+                    </div>
+                  </div>
+                </div>
+                {nextTask && (
+                  <div className="ml-2">
+                    <Badge className="bg-green-100 text-green-800 border-green-200">
+                      Upcoming
+                    </Badge>
+                  </div>
+                )}
+              </button>
+
+              {/* Recently Completed Button */}
+              <button
+                onClick={handleRecentCompletedClick}
+                disabled={!recentCompleted}
+                className={`flex items-center justify-between p-3 rounded-lg transition-all duration-200 text-left ${
+                  recentCompleted
+                    ? 'bg-gray-50 text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 cursor-pointer'
+                    : 'bg-gray-50 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-medium opacity-80">Recently Completed</div>
+                    <div className="text-sm font-medium truncate">
+                      {recentCompleted 
+                        ? `${new Date(recentCompleted.updated_at).toLocaleDateString()} – ${recentCompleted.title}`
+                        : 'None completed'
+                      }
+                    </div>
+                  </div>
+                </div>
+                {recentCompleted && (
+                  <div className="ml-2">
+                    <Badge variant="secondary" className="bg-gray-100 text-gray-600">
+                      Completed
+                    </Badge>
+                  </div>
+                )}
+              </button>
             </div>
           </CardContent>
         </Card>
