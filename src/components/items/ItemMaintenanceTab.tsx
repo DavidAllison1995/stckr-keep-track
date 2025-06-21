@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
-import { Plus, Calendar, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
+import { Plus, Calendar, CheckCircle2, Clock, AlertTriangle, Trash2 } from 'lucide-react';
 
 interface ItemMaintenanceTabProps {
   itemId: string;
@@ -14,7 +15,7 @@ interface ItemMaintenanceTabProps {
 }
 
 const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps) => {
-  const { tasks, updateTask } = useSupabaseMaintenance();
+  const { tasks, updateTask, deleteTask } = useSupabaseMaintenance();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
 
@@ -46,6 +47,10 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
 
   const handleTaskComplete = (taskId: string) => {
     updateTask(taskId, { status: 'completed' });
+  };
+
+  const handleTaskDelete = (taskId: string) => {
+    deleteTask(taskId);
   };
 
   const getTaskIcon = (status: string) => {
@@ -148,14 +153,40 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
                         )}
                       </div>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleTaskComplete(task.id)}
-                    >
-                      <CheckCircle2 className="w-4 h-4 mr-1" />
-                      Complete
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleTaskComplete(task.id)}
+                      >
+                        <CheckCircle2 className="w-4 h-4 mr-1" />
+                        Complete
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Task</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this maintenance task? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => handleTaskDelete(task.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Delete Task
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -190,7 +221,33 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
                           </span>
                         </div>
                       </div>
-                      <Badge variant="secondary">Completed</Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary">Completed</Badge>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Completed Task</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete this completed maintenance task? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => handleTaskDelete(task.id)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Delete Task
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
