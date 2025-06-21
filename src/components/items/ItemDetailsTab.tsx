@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Item } from '@/hooks/useSupabaseItems';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +15,7 @@ interface ItemDetailsTabProps {
 const ItemDetailsTab = ({ item }: ItemDetailsTabProps) => {
   const [showMore, setShowMore] = useState(false);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { getTasksByItem } = useSupabaseMaintenance();
   const IconComponent = getIconComponent(item.icon_id || 'box');
 
@@ -34,21 +34,27 @@ const ItemDetailsTab = ({ item }: ItemDetailsTabProps) => {
 
   const handleNextTaskClick = () => {
     if (nextTask) {
-      // Navigate to the maintenance tab by changing the URL path
-      window.location.href = `/items/${item.id}?tab=maintenance`;
+      // Update the URL params to switch to maintenance tab
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.set('tab', 'maintenance');
+      setSearchParams(newSearchParams);
     }
   };
 
   const handleRecentCompletedClick = () => {
     if (recentCompleted) {
-      // Navigate to the maintenance tab by changing the URL path
-      window.location.href = `/items/${item.id}?tab=maintenance`;
+      // Update the URL params to switch to maintenance tab
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.set('tab', 'maintenance');
+      setSearchParams(newSearchParams);
     }
   };
 
   const handleViewAllDocuments = () => {
-    // Navigate to the documents tab
-    window.location.href = `/items/${item.id}?tab=documents`;
+    // Update the URL params to switch to documents tab
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set('tab', 'documents');
+    setSearchParams(newSearchParams);
   };
 
   return (
