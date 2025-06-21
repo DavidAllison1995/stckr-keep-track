@@ -140,12 +140,12 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Maintenance Calendar */}
-          <Card className="shadow-xl border-0">
+          <Card 
+            className="shadow-xl border-0 cursor-pointer hover:shadow-2xl transition-all duration-300 hover:scale-105"
+            onClick={handleCalendarClick}
+          >
             <CardHeader>
-              <CardTitle 
-                className="flex items-center text-lg cursor-pointer hover:text-blue-600 transition-colors"
-                onClick={handleCalendarClick}
-              >
+              <CardTitle className="flex items-center text-lg">
                 <Calendar className="mr-2 h-5 w-5 text-blue-600" />
                 This Week
               </CardTitle>
