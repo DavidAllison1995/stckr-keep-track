@@ -95,11 +95,13 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
 
   const calculateTaskStatus = (dueDate: string): MaintenanceTaskStatus => {
     const now = new Date();
-    now.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+    now.setHours(0, 0, 0, 0);
     const due = new Date(dueDate);
-    due.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+    due.setHours(0, 0, 0, 0);
     
-    const diffInDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const diffInDays = Math.floor((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    
+    console.log(`Status calculation for ${dueDate}: diffInDays=${diffInDays}`);
     
     if (diffInDays < 0) {
       return 'overdue';
