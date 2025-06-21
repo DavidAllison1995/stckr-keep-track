@@ -1,10 +1,12 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useNavigate } from 'react-router-dom';
+import { Package, Calendar, Wrench } from 'lucide-react';
 
 interface DashboardProps {
   onTabChange?: (tab: string) => void;
@@ -32,12 +34,6 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
     return taskDate > fourteenDaysFromNow;
   });
 
-  const handleStatsClick = (tab: string) => {
-    if (onTabChange) {
-      onTabChange(tab);
-    }
-  };
-
   const handleItemsClick = () => {
     navigate('/items');
   };
@@ -58,131 +54,152 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
   const userName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'User';
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900">
+    <div className="max-w-6xl mx-auto">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
           Welcome back, {userName}!
         </h1>
-        <p className="text-gray-600 mt-1">Here's what's happening with your items</p>
+        <p className="text-xl text-gray-600">Your Command Center</p>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card 
-          className="bg-gradient-to-br from-blue-500 to-blue-600 text-white cursor-pointer hover:from-blue-600 hover:to-blue-700 transition-colors"
-          onClick={handleItemsClick}
-        >
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">{items.length}</div>
-            <div className="text-sm opacity-90">Total Items</div>
-          </CardContent>
-        </Card>
-        
-        <Card 
-          className="bg-gradient-to-br from-green-500 to-green-600 text-white cursor-pointer hover:from-green-600 hover:to-green-700 transition-colors"
-          onClick={handleMaintenanceClick}
-        >
-          <CardContent className="p-4">
-            <div className="text-2xl font-bold">{upcomingTasks.length}</div>
-            <div className="text-sm opacity-90">Upcoming Tasks</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Maintenance Status */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <span>🔧</span>
-            Maintenance Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div 
-            className="flex items-center justify-between p-3 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
-            onClick={() => handleTaskStatusClick('up-to-date')}
-          >
-            <div>
-              <div className="font-semibold text-green-800">Up to Date</div>
-              <div className="text-sm text-green-600">Looking good!</div>
-            </div>
-            <div className="text-2xl font-bold text-green-600">{upToDateTasks.length}</div>
-          </div>
-          
-          <div 
-            className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg cursor-pointer hover:bg-yellow-100 transition-colors"
-            onClick={() => handleTaskStatusClick('due-soon')}
-          >
-            <div>
-              <div className="font-semibold text-yellow-800">Due Soon</div>
-              <div className="text-sm text-yellow-600">Next 14 days</div>
-            </div>
-            <div className="text-2xl font-bold text-yellow-600">{dueSoonTasks.length}</div>
-          </div>
-          
-          <div 
-            className="flex items-center justify-between p-3 bg-red-50 rounded-lg cursor-pointer hover:bg-red-100 transition-colors"
-            onClick={() => handleTaskStatusClick('overdue')}
-          >
-            <div>
-              <div className="font-semibold text-red-800">Overdue Tasks</div>
-              <div className="text-sm text-red-600">{overdueTasks.length} items need attention</div>
-            </div>
-            <div className="text-2xl font-bold text-red-600">{overdueTasks.length}</div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Recent Items */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <span>📦</span>
-              Recent Items
-            </span>
-            <Button variant="ghost" size="sm" onClick={handleItemsClick}>
-              View All
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {items.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="text-4xl mb-2">📦</div>
-              <p className="text-gray-600 mb-4">No items yet</p>
-              <Button onClick={handleItemsClick}>Add Your First Item</Button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {items.slice(0, 3).map((item) => (
-                <div 
-                  key={item.id} 
-                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
-                  onClick={() => handleItemClick(item.id)}
-                >
-                  <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                    {item.photo_url ? (
-                      <img src={item.photo_url} alt={item.name} className="w-full h-full object-cover rounded-lg" />
-                    ) : (
-                      <span className="text-xl">📦</span>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium">{item.name}</div>
-                    <div className="text-sm text-gray-600">{item.category}</div>
-                  </div>
-                  {item.room && (
-                    <div className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                      {item.room}
-                    </div>
-                  )}
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Main Content - Items List */}
+        <div className="lg:col-span-2">
+          <Card className="shadow-xl border-0">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Package className="w-5 h-5 text-blue-600" />
+                  <span>Recent Items</span>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                <Button variant="ghost" size="sm" onClick={handleItemsClick}>
+                  View All
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {items.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-2">📦</div>
+                  <p className="text-gray-600 mb-4">No items yet</p>
+                  <Button onClick={handleItemsClick}>Add Your First Item</Button>
+                </div>
+              ) : (
+                items.slice(0, 3).map((item) => {
+                  const itemTasks = tasks.filter(task => task.item_id === item.id && task.status !== 'completed');
+                  const hasOverdue = itemTasks.some(task => new Date(task.date) < new Date() && task.status !== 'completed');
+                  const hasDueSoon = itemTasks.some(task => {
+                    const taskDate = new Date(task.date);
+                    const now = new Date();
+                    const fourteenDaysFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+                    return taskDate >= now && taskDate <= fourteenDaysFromNow;
+                  });
+                  
+                  const maintenanceStatus = hasOverdue ? 'Overdue' : hasDueSoon ? 'Due soon' : 'Up to date';
+                  
+                  return (
+                    <div 
+                      key={item.id} 
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => handleItemClick(item.id)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center">
+                          {item.photo_url ? (
+                            <img src={item.photo_url} alt={item.name} className="w-full h-full object-cover rounded-lg" />
+                          ) : (
+                            <span className="text-lg">📦</span>
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-medium">{item.name}</div>
+                          <div className="text-sm text-gray-500">Status: Good</div>
+                        </div>
+                      </div>
+                      <Badge 
+                        variant={
+                          maintenanceStatus === "Overdue" ? "destructive" : 
+                          maintenanceStatus === "Due soon" ? "secondary" : 
+                          "outline"
+                        }
+                      >
+                        {maintenanceStatus}
+                      </Badge>
+                    </div>
+                  );
+                })
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Maintenance Calendar */}
+          <Card className="shadow-xl border-0">
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <Calendar className="mr-2 h-5 w-5 text-blue-600" />
+                This Week
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Mon</span>
+                <div className="w-6 h-6 bg-blue-500 rounded text-white text-xs flex items-center justify-center">
+                  {dueSoonTasks.length}
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Wed</span>
+                <div className="w-6 h-6 bg-purple-500 rounded text-white text-xs flex items-center justify-center">
+                  {inProgressTasks.length}
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Fri</span>
+                <div className="w-6 h-6 bg-green-500 rounded text-white text-xs flex items-center justify-center">
+                  {upToDateTasks.length}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick Stats */}
+          <Card className="shadow-xl border-0">
+            <CardHeader>
+              <CardTitle className="flex items-center text-lg">
+                <Wrench className="mr-2 h-5 w-5 text-blue-600" />
+                Quick Stats
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div 
+                className="flex justify-between cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+                onClick={handleItemsClick}
+              >
+                <span className="text-sm text-gray-600">Total Items</span>
+                <span className="font-medium">{items.length}</span>
+              </div>
+              <div 
+                className="flex justify-between cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+                onClick={() => handleTaskStatusClick('due-soon')}
+              >
+                <span className="text-sm text-gray-600">Due Soon</span>
+                <span className="font-medium text-yellow-600">{dueSoonTasks.length}</span>
+              </div>
+              <div 
+                className="flex justify-between cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+                onClick={() => handleTaskStatusClick('overdue')}
+              >
+                <span className="text-sm text-gray-600">Overdue</span>
+                <span className="font-medium text-red-600">{overdueTasks.length}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };
