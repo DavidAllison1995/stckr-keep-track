@@ -1,6 +1,6 @@
 
 import { Card, CardContent } from '@/components/ui/card';
-import { FileText, Wrench, Users } from 'lucide-react';
+import { FileText, Wrench, Bell } from 'lucide-react';
 
 const FeaturePillars = () => {
   const features = [
@@ -17,10 +17,10 @@ const FeaturePillars = () => {
       gradient: "from-purple-500 to-purple-600"
     },
     {
-      icon: Users,
-      title: "Shared Access",
-      description: "Let everyone in the house manage things together.",
-      gradient: "from-indigo-500 to-indigo-600"
+      icon: Bell,
+      title: "Smart Notifications",
+      description: "Get alerts for warranty expirations and upcoming maintenance.",
+      gradient: "from-green-500 to-green-600"
     }
   ];
 
