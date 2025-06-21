@@ -21,6 +21,9 @@ import MaintenancePage from "@/pages/MaintenancePage";
 import ScannerPage from "@/pages/ScannerPage";
 import ProfilePage from "@/pages/ProfilePage";
 import SettingsPage from "@/pages/SettingsPage";
+import TasksPage from "@/pages/TasksPage";
+import OverdueTasksPage from "@/pages/OverdueTasksPage";
+import DueSoonTasksPage from "@/pages/DueSoonTasksPage";
 import NavBar from "@/components/navigation/NavBar";
 import NotFound from "./pages/NotFound";
 import "./App.css";
@@ -153,6 +156,53 @@ function App() {
                           <MaintenanceProvider>
                             <ProtectedLayout>
                               <SettingsPage />
+                            </ProtectedLayout>
+                            <NavBar />
+                          </MaintenanceProvider>
+                        </ItemsProvider>
+                      </ProtectedRoute>
+                    }
+                  />
+                  
+                  {/* Task status routes */}
+                  <Route
+                    path="/tasks/:status"
+                    element={
+                      <ProtectedRoute>
+                        <ItemsProvider>
+                          <MaintenanceProvider>
+                            <ProtectedLayout>
+                              <TasksPage />
+                            </ProtectedLayout>
+                            <NavBar />
+                          </MaintenanceProvider>
+                        </ItemsProvider>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/tasks/overdue"
+                    element={
+                      <ProtectedRoute>
+                        <ItemsProvider>
+                          <MaintenanceProvider>
+                            <ProtectedLayout>
+                              <OverdueTasksPage />
+                            </ProtectedLayout>
+                            <NavBar />
+                          </MaintenanceProvider>
+                        </ItemsProvider>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/tasks/due-soon"
+                    element={
+                      <ProtectedRoute>
+                        <ItemsProvider>
+                          <MaintenanceProvider>
+                            <ProtectedLayout>
+                              <DueSoonTasksPage />
                             </ProtectedLayout>
                             <NavBar />
                           </MaintenanceProvider>
