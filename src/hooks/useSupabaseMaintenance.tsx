@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from './useSupabaseAuth';
 import { useToast } from '@/hooks/use-toast';
-import { addDays, addWeeks, addMonths, addYears } from 'date-fns';
 
 export type MaintenanceTaskStatus = 'pending' | 'in_progress' | 'completed' | 'overdue' | 'due_soon';
 export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
@@ -22,7 +21,6 @@ export interface MaintenanceTask {
   parent_task_id: string | null;
   created_at: string;
   updated_at: string;
-  virtual?: boolean; // For calendar virtual tasks
 }
 
 interface MaintenanceContextType {
@@ -37,41 +35,9 @@ interface MaintenanceContextType {
   getTasksByStatus: (status: MaintenanceTaskStatus) => MaintenanceTask[];
   getUpcomingTasks: (days?: number) => MaintenanceTask[];
   getOverdueTasks: () => MaintenanceTask[];
-  generateVirtualTasks: (rangeStart: Date, rangeEnd: Date) => MaintenanceTask[];
 }
 
 const MaintenanceContext = createContext<MaintenanceContextType | undefined>(undefined);
-
-const calculateNextDate = (currentDate: string, recurrence: RecurrenceType): string => {
-  const date = new Date(currentDate);
-  
-  switch (recurrence) {
-    case 'daily':
-      return addDays(date, 1).toISOString().split('T')[0];
-    case 'weekly':
-      return addWeeks(date, 1).toISOString().split('T')[0];
-    case 'monthly':
-      return addMonths(date, 1).toISOString().split('T')[0];
-    case 'yearly':
-      return addYears(date, 1).toISOString().split('T')[0];
-    default:
-      return currentDate;
-  }
-};
-
-const calculateTaskStatus = (dueDate: string): MaintenanceTaskStatus => {
-  const now = new Date();
-  const due = new Date(dueDate);
-  const diffInDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  
-  if (diffInDays < 0) {
-    return 'overdue';
-  } else if (diffInDays <= 7) {
-    return 'due_soon';
-  } else {
-    return 'pending';
-  }
-};
 
 export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useSupabaseAuth();
@@ -99,6 +65,7 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
         throw error;
       }
 
+      // Transform the data to ensure proper types
       return (data || []).map(task => ({
         ...task,
         status: task.status as MaintenanceTaskStatus,
@@ -169,9 +136,11 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
   const deleteTaskMutation = useMutation({
     mutationFn: async ({ id, scope }: { id: string; scope?: 'single' | 'all' }) => {
       if (scope === 'all') {
+        // Find the parent task
         const task = tasks.find(t => t.id === id);
         const parentId = task?.parent_task_id || id;
         
+        // Delete parent and all children
         const { error } = await supabase
           .from('maintenance_tasks')
           .delete()
@@ -179,6 +148,7 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
 
         if (error) throw error;
       } else {
+        // Delete only this task
         const { error } = await supabase
           .from('maintenance_tasks')
           .delete()
@@ -206,10 +176,6 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
 
   const markTaskCompleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const task = tasks.find(t => t.id === id);
-      if (!task) throw new Error('Task not found');
-
-      // Mark current task as completed
       const { data, error } = await supabase
         .from('maintenance_tasks')
         .update({ status: 'completed' })
@@ -218,36 +184,6 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (error) throw error;
-
-      // If it's a recurring task, create the next occurrence
-      if (task.recurrence !== 'none') {
-        const nextDate = calculateNextDate(task.date, task.recurrence);
-        const nextStatus = calculateTaskStatus(nextDate);
-        
-        const { error: insertError } = await supabase
-          .from('maintenance_tasks')
-          .insert([{
-            user_id: task.user_id,
-            item_id: task.item_id,
-            title: task.title,
-            notes: task.notes,
-            date: nextDate,
-            status: nextStatus,
-            recurrence: task.recurrence,
-            recurrence_rule: task.recurrence_rule,
-            parent_task_id: task.parent_task_id || task.id,
-          }]);
-
-        if (insertError) {
-          console.error('Error creating next recurring task:', insertError);
-          toast({
-            title: 'Warning',
-            description: 'Task completed but failed to create next occurrence',
-            variant: 'destructive',
-          });
-        }
-      }
-
       return data;
     },
     onSuccess: () => {
@@ -266,40 +202,6 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
       });
     },
   });
-
-  const generateVirtualTasks = (rangeStart: Date, rangeEnd: Date): MaintenanceTask[] => {
-    const virtualTasks: MaintenanceTask[] = [];
-    
-    // Get all recurring tasks that are not completed
-    const recurringTasks = tasks.filter(task => 
-      task.recurrence !== 'none' && 
-      task.status !== 'completed'
-    );
-
-    recurringTasks.forEach(task => {
-      const taskDate = new Date(task.date);
-      let currentDate = new Date(taskDate);
-      
-      // Generate virtual occurrences within the range
-      while (currentDate <= rangeEnd) {
-        if (currentDate >= rangeStart && currentDate.getTime() !== taskDate.getTime()) {
-          virtualTasks.push({
-            ...task,
-            id: `${task.id}-virtual-${currentDate.toISOString().split('T')[0]}`,
-            date: currentDate.toISOString().split('T')[0],
-            status: calculateTaskStatus(currentDate.toISOString().split('T')[0]),
-            virtual: true,
-          });
-        }
-        
-        // Calculate next occurrence
-        const nextDateStr = calculateNextDate(currentDate.toISOString().split('T')[0], task.recurrence);
-        currentDate = new Date(nextDateStr);
-      }
-    });
-
-    return virtualTasks;
-  };
 
   const addTask = async (taskData: Omit<MaintenanceTask, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     await addTaskMutation.mutateAsync(taskData);
@@ -322,34 +224,10 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const getTasksByItem = (itemId: string, includeCompleted = false) => {
-    // Only show the most recent active task for each recurring series
-    const itemTasks = tasks.filter(task => 
+    return tasks.filter(task => 
       task.item_id === itemId && 
       (includeCompleted || task.status !== 'completed')
     );
-
-    // Group by parent_task_id or id for recurring tasks
-    const taskGroups = new Map<string, MaintenanceTask[]>();
-    
-    itemTasks.forEach(task => {
-      const groupKey = task.parent_task_id || task.id;
-      if (!taskGroups.has(groupKey)) {
-        taskGroups.set(groupKey, []);
-      }
-      taskGroups.get(groupKey)!.push(task);
-    });
-
-    // Return only the most recent task from each group
-    const result: MaintenanceTask[] = [];
-    taskGroups.forEach(group => {
-      const sortedGroup = group.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      const mostRecent = sortedGroup.find(task => task.status !== 'completed') || sortedGroup[0];
-      if (mostRecent) {
-        result.push(mostRecent);
-      }
-    });
-
-    return result;
   };
 
   const getTasksByStatus = (status: MaintenanceTaskStatus) => {
@@ -387,7 +265,6 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
       getTasksByStatus,
       getUpcomingTasks,
       getOverdueTasks,
-      generateVirtualTasks,
     }}>
       {children}
     </MaintenanceContext.Provider>
