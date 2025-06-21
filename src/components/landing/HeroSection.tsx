@@ -1,5 +1,6 @@
+
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Play } from 'lucide-react';
+import { ArrowRight, Play, LogIn } from 'lucide-react';
 
 interface HeroSectionProps {
   onGetStarted: () => void;
@@ -7,8 +8,24 @@ interface HeroSectionProps {
 }
 
 const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
+  const handleLogin = () => {
+    window.location.href = '/auth';
+  };
+
   return (
     <section className="relative min-h-screen flex items-center justify-center px-4 pt-16 pb-20 bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100">
+      {/* Login button in top right */}
+      <div className="absolute top-6 right-6 z-10">
+        <Button 
+          variant="outline" 
+          onClick={handleLogin}
+          className="bg-white/80 backdrop-blur-sm border-white/20 hover:bg-white/90"
+        >
+          <LogIn className="mr-2 h-4 w-4" />
+          Log In
+        </Button>
+      </div>
+
       <div className="container mx-auto max-w-7xl">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Content */}
