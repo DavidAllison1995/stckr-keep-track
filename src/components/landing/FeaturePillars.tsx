@@ -1,13 +1,13 @@
 
 import { Card, CardContent } from '@/components/ui/card';
-import { QrCode, Wrench, Users } from 'lucide-react';
+import { FileText, Wrench, Users } from 'lucide-react';
 
 const FeaturePillars = () => {
   const features = [
     {
-      icon: QrCode,
-      title: "Smart Inventory",
-      description: "Stick and scan your way to a smarter home.",
+      icon: FileText,
+      title: "Document Storage",
+      description: "Store manuals, warranties, and receipts all in one place.",
       gradient: "from-blue-500 to-blue-600"
     },
     {
