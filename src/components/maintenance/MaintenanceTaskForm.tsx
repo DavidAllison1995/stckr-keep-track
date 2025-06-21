@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +30,20 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
       return;
     }
 
+    // Calculate the appropriate status based on the due date
+    const today = new Date();
+    const dueDate = new Date(formData.date);
+    const diffInDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    let status: 'pending' | 'in_progress' | 'completed' | 'overdue' | 'due_soon';
+    if (diffInDays < 0) {
+      status = 'overdue';
+    } else if (diffInDays <= 7) {
+      status = 'due_soon';
+    } else {
+      status = 'pending';
+    }
+
     addTask({
       item_id: formData.selectedItemId === 'unassigned' ? null : formData.selectedItemId || null,
       title: formData.title.trim(),
@@ -39,7 +52,7 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
       recurrence: formData.recurrence,
       recurrence_rule: null,
       parent_task_id: null,
-      status: 'pending',
+      status: status,
     });
 
     onSuccess();
