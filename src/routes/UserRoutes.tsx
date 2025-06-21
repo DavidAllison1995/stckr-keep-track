@@ -21,7 +21,7 @@ const UserRoutes = () => (
   <Routes>
     {/* Dashboard route */}
     <Route
-      path="/dashboard"
+      path="/"
       element={
         <ProtectedRoute>
           <ItemsProvider>
@@ -37,7 +37,7 @@ const UserRoutes = () => (
     
     {/* Items routes */}
     <Route
-      path="/items"
+      path="/"
       element={
         <ProtectedRoute>
           <ItemsProvider>
@@ -51,7 +51,7 @@ const UserRoutes = () => (
       }
     />
     <Route
-      path="/items/:id"
+      path="/:id"
       element={
         <ProtectedRoute>
           <ItemsProvider>
@@ -67,7 +67,7 @@ const UserRoutes = () => (
     
     {/* Maintenance route */}
     <Route
-      path="/maintenance"
+      path="/"
       element={
         <ProtectedRoute>
           <ItemsProvider>
@@ -83,7 +83,7 @@ const UserRoutes = () => (
     
     {/* Task routes */}
     <Route
-      path="/tasks"
+      path="/"
       element={
         <ProtectedRoute>
           <ItemsProvider>
@@ -97,7 +97,7 @@ const UserRoutes = () => (
       }
     />
     <Route
-      path="/tasks/up-to-date"
+      path="/up-to-date"
       element={
         <ProtectedRoute>
           <ItemsProvider>
@@ -111,7 +111,7 @@ const UserRoutes = () => (
       }
     />
     <Route
-      path="/tasks/due-soon"
+      path="/due-soon"
       element={
         <ProtectedRoute>
           <ItemsProvider>
@@ -125,7 +125,7 @@ const UserRoutes = () => (
       }
     />
     <Route
-      path="/tasks/overdue"
+      path="/overdue"
       element={
         <ProtectedRoute>
           <ItemsProvider>
@@ -141,7 +141,7 @@ const UserRoutes = () => (
     
     {/* Other routes */}
     <Route
-      path="/maintenance-tasks"
+      path="/"
       element={
         <ProtectedRoute>
           <ItemsProvider>
@@ -155,7 +155,7 @@ const UserRoutes = () => (
       }
     />
     <Route
-      path="/scanner"
+      path="/"
       element={
         <ProtectedRoute>
           <ItemsProvider>
@@ -169,7 +169,7 @@ const UserRoutes = () => (
       }
     />
     <Route
-      path="/claim/:code"
+      path="/:code"
       element={
         <ProtectedRoute>
           <ItemsProvider>
@@ -183,7 +183,7 @@ const UserRoutes = () => (
       }
     />
     <Route
-      path="/profile"
+      path="/"
       element={
         <ProtectedRoute>
           <ProtectedLayout>
@@ -193,7 +193,7 @@ const UserRoutes = () => (
       }
     />
     <Route
-      path="/settings"
+      path="/"
       element={
         <ProtectedRoute>
           <ProtectedLayout>

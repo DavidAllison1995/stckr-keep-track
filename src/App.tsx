@@ -29,15 +29,15 @@ function App() {
                   <Route path="/admin/*" element={<AdminRoutes />} />
                   
                   {/* User protected routes */}
-                  <Route path="/dashboard" element={<UserRoutes />} />
+                  <Route path="/dashboard/*" element={<UserRoutes />} />
                   <Route path="/items/*" element={<UserRoutes />} />
-                  <Route path="/maintenance" element={<UserRoutes />} />
+                  <Route path="/maintenance/*" element={<UserRoutes />} />
                   <Route path="/tasks/*" element={<UserRoutes />} />
-                  <Route path="/maintenance-tasks" element={<UserRoutes />} />
-                  <Route path="/scanner" element={<UserRoutes />} />
+                  <Route path="/maintenance-tasks/*" element={<UserRoutes />} />
+                  <Route path="/scanner/*" element={<UserRoutes />} />
                   <Route path="/claim/*" element={<UserRoutes />} />
-                  <Route path="/profile" element={<UserRoutes />} />
-                  <Route path="/settings" element={<UserRoutes />} />
+                  <Route path="/profile/*" element={<UserRoutes />} />
+                  <Route path="/settings/*" element={<UserRoutes />} />
                   
                   {/* Public routes */}
                   <Route path="/" element={<PublicRoutes />} />
