@@ -48,9 +48,7 @@ function App() {
                   <Route path="/settings/*" element={<SettingsRoutes />} />
                   
                   {/* Public routes */}
-                  <Route path="/" element={<PublicRoutes />} />
-                  <Route path="/auth" element={<PublicRoutes />} />
-                  <Route path="/qr/*" element={<PublicRoutes />} />
+                  <Route path="/*" element={<PublicRoutes />} />
 
                   {/* 404 */}
                   <Route path="*" element={<NotFound />} />
