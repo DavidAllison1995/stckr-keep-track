@@ -14,6 +14,11 @@ const SettingsPage = () => {
   const [localSettings, setLocalSettings] = useState(settings);
   const { toast } = useToast();
 
+  // Update local settings when settings change
+  useState(() => {
+    setLocalSettings(settings);
+  });
+
   const handleSave = async () => {
     const result = await updateSettings(localSettings);
     
@@ -68,7 +73,10 @@ const SettingsPage = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="task-due-soon">Tasks Due Soon</Label>
+                  <div>
+                    <Label htmlFor="task-due-soon">Tasks Due Soon</Label>
+                    <p className="text-sm text-muted-foreground">Notify 3 days before tasks are due</p>
+                  </div>
                   <Switch
                     id="task-due-soon"
                     checked={localSettings.notifications.taskDueSoon}
@@ -77,7 +85,10 @@ const SettingsPage = () => {
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="task-overdue">Overdue Tasks</Label>
+                  <div>
+                    <Label htmlFor="task-overdue">Overdue Tasks</Label>
+                    <p className="text-sm text-muted-foreground">Notify when tasks become overdue</p>
+                  </div>
                   <Switch
                     id="task-overdue"
                     checked={localSettings.notifications.taskOverdue}
@@ -86,11 +97,38 @@ const SettingsPage = () => {
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="task-upcoming">Upcoming Tasks</Label>
+                  <div>
+                    <Label htmlFor="warranty-expiring">Warranty Expiring</Label>
+                    <p className="text-sm text-muted-foreground">Notify 7 days before warranties expire</p>
+                  </div>
                   <Switch
-                    id="task-upcoming"
-                    checked={localSettings.notifications.taskUpcoming}
-                    onCheckedChange={(checked) => handleNotificationChange('taskUpcoming', checked)}
+                    id="warranty-expiring"
+                    checked={localSettings.notifications.warrantyExpiring}
+                    onCheckedChange={(checked) => handleNotificationChange('warrantyExpiring', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="task-completed">Task Completed</Label>
+                    <p className="text-sm text-muted-foreground">Notify when shared tasks are completed</p>
+                  </div>
+                  <Switch
+                    id="task-completed"
+                    checked={localSettings.notifications.taskCompleted}
+                    onCheckedChange={(checked) => handleNotificationChange('taskCompleted', checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="task-created">New Tasks Created</Label>
+                    <p className="text-sm text-muted-foreground">Notify when new tasks are added to shared items</p>
+                  </div>
+                  <Switch
+                    id="task-created"
+                    checked={localSettings.notifications.taskCreated}
+                    onCheckedChange={(checked) => handleNotificationChange('taskCreated', checked)}
                   />
                 </div>
               </CardContent>

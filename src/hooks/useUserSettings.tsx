@@ -1,12 +1,34 @@
 
 import { useState, useEffect } from 'react';
-import { UserSettings } from '@/types/settings';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseAuth } from './useSupabaseAuth';
+
+export interface UserSettings {
+  notifications: {
+    taskDueSoon: boolean;
+    taskOverdue: boolean;
+    taskUpcoming: boolean;
+    warrantyExpiring: boolean;
+    taskCompleted: boolean;
+    taskCreated: boolean;
+  };
+  calendar: {
+    defaultView: 'week' | 'month';
+    dateFormat: 'MM/dd/yyyy' | 'dd/MM/yyyy';
+  };
+  pushNotifications: boolean;
+  theme: 'light' | 'dark' | 'system';
+}
 
 const defaultSettings: UserSettings = {
   notifications: {
     taskDueSoon: true,
     taskOverdue: true,
     taskUpcoming: false,
+    warrantyExpiring: true,
+    taskCompleted: false,
+    taskCreated: false,
   },
   calendar: {
     defaultView: 'month',
@@ -17,8 +39,8 @@ const defaultSettings: UserSettings = {
 };
 
 export const useUserSettings = () => {
-  const [settings, setSettings] = useState<UserSettings>(defaultSettings);
-  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useSupabaseAuth();
+  const queryClient = useQueryClient();
 
   // Apply theme to document
   const applyTheme = (theme: 'light' | 'dark' | 'system') => {
@@ -32,20 +54,80 @@ export const useUserSettings = () => {
     }
   };
 
-  useEffect(() => {
-    const savedSettings = localStorage.getItem('userSettings');
-    if (savedSettings) {
-      try {
-        const parsedSettings = JSON.parse(savedSettings);
-        setSettings(parsedSettings);
-        applyTheme(parsedSettings.theme || 'system');
-      } catch (error) {
-        console.error('Failed to parse user settings:', error);
-        applyTheme(defaultSettings.theme);
+  const { data: settings = defaultSettings, isLoading } = useQuery({
+    queryKey: ['userSettings', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return defaultSettings;
+
+      const { data, error } = await supabase
+        .from('user_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching user settings:', error);
+        return defaultSettings;
       }
-    } else {
-      applyTheme(defaultSettings.theme);
-    }
+
+      if (!data) return defaultSettings;
+
+      // Map database fields to frontend structure
+      const mappedSettings: UserSettings = {
+        notifications: {
+          taskDueSoon: data.notification_task_due_soon ?? true,
+          taskOverdue: data.notification_task_overdue ?? true,
+          taskUpcoming: data.notification_task_upcoming ?? false,
+          warrantyExpiring: data.notification_warranty_expiring ?? true,
+          taskCompleted: data.notification_task_completed ?? false,
+          taskCreated: data.notification_task_created ?? false,
+        },
+        calendar: {
+          defaultView: 'month',
+          dateFormat: 'MM/dd/yyyy',
+        },
+        pushNotifications: false,
+        theme: (data.theme as 'light' | 'dark' | 'system') || 'system',
+      };
+
+      return mappedSettings;
+    },
+    enabled: !!user?.id,
+  });
+
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (newSettings: UserSettings) => {
+      if (!user?.id) throw new Error('User not authenticated');
+
+      // Map frontend structure to database fields
+      const dbSettings = {
+        user_id: user.id,
+        theme: newSettings.theme,
+        notification_task_due_soon: newSettings.notifications.taskDueSoon,
+        notification_task_overdue: newSettings.notifications.taskOverdue,
+        notification_task_upcoming: newSettings.notifications.taskUpcoming,
+        notification_warranty_expiring: newSettings.notifications.warrantyExpiring,
+        notification_task_completed: newSettings.notifications.taskCompleted,
+        notification_task_created: newSettings.notifications.taskCreated,
+      };
+
+      const { error } = await supabase
+        .from('user_settings')
+        .upsert(dbSettings, { 
+          onConflict: 'user_id'
+        });
+
+      if (error) throw error;
+      return newSettings;
+    },
+    onSuccess: (newSettings) => {
+      applyTheme(newSettings.theme);
+      queryClient.invalidateQueries({ queryKey: ['userSettings'] });
+    },
+  });
+
+  useEffect(() => {
+    applyTheme(settings.theme);
 
     // Listen for system theme changes
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -60,25 +142,18 @@ export const useUserSettings = () => {
   }, [settings.theme]);
 
   const updateSettings = async (newSettings: UserSettings) => {
-    setIsLoading(true);
     try {
-      localStorage.setItem('userSettings', JSON.stringify(newSettings));
-      setSettings(newSettings);
-      applyTheme(newSettings.theme);
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await updateSettingsMutation.mutateAsync(newSettings);
       return { success: true };
     } catch (error) {
       console.error('Failed to save settings:', error);
       return { success: false, error: 'Failed to save settings' };
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return {
     settings,
     updateSettings,
-    isLoading,
+    isLoading: isLoading || updateSettingsMutation.isPending,
   };
 };

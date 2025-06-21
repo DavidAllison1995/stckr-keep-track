@@ -123,6 +123,60 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string | null
+          message: string | null
+          read: boolean
+          task_id: string | null
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          message?: string | null
+          read?: boolean
+          task_id?: string | null
+          title: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          message?: string | null
+          read?: boolean
+          task_id?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           id: string
@@ -354,6 +408,11 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          notification_task_completed: boolean | null
+          notification_task_created: boolean | null
+          notification_task_due_soon: boolean | null
+          notification_task_overdue: boolean | null
+          notification_warranty_expiring: boolean | null
           theme: string | null
           updated_at: string | null
           user_id: string
@@ -361,6 +420,11 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          notification_task_completed?: boolean | null
+          notification_task_created?: boolean | null
+          notification_task_due_soon?: boolean | null
+          notification_task_overdue?: boolean | null
+          notification_warranty_expiring?: boolean | null
           theme?: string | null
           updated_at?: string | null
           user_id: string
@@ -368,6 +432,11 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          notification_task_completed?: boolean | null
+          notification_task_created?: boolean | null
+          notification_task_due_soon?: boolean | null
+          notification_task_overdue?: boolean | null
+          notification_warranty_expiring?: boolean | null
           theme?: string | null
           updated_at?: string | null
           user_id?: string
