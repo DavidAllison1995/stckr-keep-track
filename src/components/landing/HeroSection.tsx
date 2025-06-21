@@ -20,7 +20,7 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600"> Everything You Need.</span>
               </h1>
               <p className="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto lg:mx-0">
-                Scan your belongings with a QR code. Track, maintain, and never lose a receipt again.
+                The simplest way to keep track of everything you own. Stckr stores the details so you don't have to.
               </p>
             </div>
             
