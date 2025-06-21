@@ -39,7 +39,7 @@ function App() {
                   {/* Admin routes - most specific first */}
                   <Route path="/admin/*" element={<AdminRoutes />} />
                   
-                  {/* User protected routes */}
+                  {/* User protected routes - wrapped with providers */}
                   <Route
                     path="/dashboard"
                     element={
@@ -134,10 +134,14 @@ function App() {
                     path="/profile"
                     element={
                       <ProtectedRoute>
-                        <ProtectedLayout>
-                          <ProfilePage />
-                        </ProtectedLayout>
-                        <NavBar />
+                        <ItemsProvider>
+                          <MaintenanceProvider>
+                            <ProtectedLayout>
+                              <ProfilePage />
+                            </ProtectedLayout>
+                            <NavBar />
+                          </MaintenanceProvider>
+                        </ItemsProvider>
                       </ProtectedRoute>
                     }
                   />
@@ -145,10 +149,14 @@ function App() {
                     path="/settings"
                     element={
                       <ProtectedRoute>
-                        <ProtectedLayout>
-                          <SettingsPage />
-                        </ProtectedLayout>
-                        <NavBar />
+                        <ItemsProvider>
+                          <MaintenanceProvider>
+                            <ProtectedLayout>
+                              <SettingsPage />
+                            </ProtectedLayout>
+                            <NavBar />
+                          </MaintenanceProvider>
+                        </ItemsProvider>
                       </ProtectedRoute>
                     }
                   />
