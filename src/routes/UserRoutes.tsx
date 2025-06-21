@@ -1,4 +1,3 @@
-
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { ItemsProvider } from "@/hooks/useSupabaseItems";
@@ -20,7 +19,7 @@ import SettingsPage from "@/pages/SettingsPage";
 
 const UserRoutes = () => (
   <Routes>
-    {/* Protected user routes - wrapped with ItemsProvider and MaintenanceProvider */}
+    {/* Dashboard route */}
     <Route
       path="/dashboard"
       element={
@@ -35,6 +34,8 @@ const UserRoutes = () => (
         </ProtectedRoute>
       }
     />
+    
+    {/* Items routes */}
     <Route
       path="/items"
       element={
@@ -63,6 +64,8 @@ const UserRoutes = () => (
         </ProtectedRoute>
       }
     />
+    
+    {/* Maintenance route */}
     <Route
       path="/maintenance"
       element={
@@ -77,6 +80,8 @@ const UserRoutes = () => (
         </ProtectedRoute>
       }
     />
+    
+    {/* Task routes */}
     <Route
       path="/tasks"
       element={
@@ -133,6 +138,8 @@ const UserRoutes = () => (
         </ProtectedRoute>
       }
     />
+    
+    {/* Other routes */}
     <Route
       path="/maintenance-tasks"
       element={

@@ -8,7 +8,7 @@ const PublicRoutes = () => (
   <Routes>
     <Route path="/" element={<Index />} />
     <Route path="/auth" element={<AuthPage />} />
-    <Route path="/qr/:code" element={<QRRedirectPage />} />
+    <Route path="/:code" element={<QRRedirectPage />} />
   </Routes>
 );
 

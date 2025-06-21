@@ -9,9 +9,9 @@ import AdminAnalyticsPage from "@/pages/admin/AdminAnalyticsPage";
 
 const AdminRoutes = () => (
   <Routes>
-    <Route path="/admin/login" element={<AdminLoginPage />} />
+    <Route path="/login" element={<AdminLoginPage />} />
     <Route
-      path="/admin"
+      path="/"
       element={
         <AdminProtectedRoute>
           <AdminDashboardPage />
@@ -19,7 +19,7 @@ const AdminRoutes = () => (
       }
     />
     <Route
-      path="/admin/qr"
+      path="/qr"
       element={
         <AdminProtectedRoute>
           <AdminQrPage />
@@ -27,7 +27,7 @@ const AdminRoutes = () => (
       }
     />
     <Route
-      path="/admin/shop"
+      path="/shop"
       element={
         <AdminProtectedRoute>
           <AdminShopPage />
@@ -35,7 +35,7 @@ const AdminRoutes = () => (
       }
     />
     <Route
-      path="/admin/analytics"
+      path="/analytics"
       element={
         <AdminProtectedRoute>
           <AdminAnalyticsPage />
