@@ -38,7 +38,7 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
       recurrence: formData.recurrence,
       recurrence_rule: null,
       parent_task_id: null,
-      status: 'up_to_date',
+      status: 'up_to_date' as const,
     });
 
     onSuccess();
