@@ -9,7 +9,9 @@ import NotificationsList from './NotificationsList';
 
 const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { unreadCount } = useNotifications();
+  const { unreadCount, isLoading } = useNotifications();
+
+  console.log('NotificationBell render - unreadCount:', unreadCount, 'isLoading:', isLoading);
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>

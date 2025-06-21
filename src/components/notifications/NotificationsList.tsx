@@ -24,6 +24,8 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
     isLoading 
   } = useNotifications();
 
+  console.log('NotificationsList render - notifications:', notifications, 'unreadCount:', unreadCount);
+
   const getNotificationIcon = (type: Notification['type']) => {
     switch (type) {
       case 'task_due_soon':
@@ -44,6 +46,8 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
   };
 
   const handleNotificationClick = (notification: Notification) => {
+    console.log('Notification clicked:', notification);
+    
     if (!notification.read) {
       markAsRead(notification.id);
     }
@@ -62,10 +66,12 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
 
   const handleDeleteNotification = (e: React.MouseEvent, notificationId: string) => {
     e.stopPropagation();
+    console.log('Deleting notification:', notificationId);
     deleteNotification(notificationId);
   };
 
   const handleMarkAllAsRead = () => {
+    console.log('Marking all notifications as read');
     markAllAsRead();
   };
 
@@ -111,7 +117,7 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
             {notifications.map((notification, index) => (
               <div key={notification.id}>
                 <div
-                  className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${
+                  className={`group flex items-start gap-3 p-3 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${
                     !notification.read ? 'bg-blue-50 border-l-2 border-blue-500' : ''
                   }`}
                   onClick={() => handleNotificationClick(notification)}

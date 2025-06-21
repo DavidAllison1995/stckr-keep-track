@@ -17,6 +17,8 @@ export const useAddItemMutation = (userId: string | undefined) => {
 
       const { documents, ...itemWithoutDocuments } = itemData;
       
+      console.log('Creating new item:', itemWithoutDocuments);
+      
       const { data, error } = await supabase
         .from('items')
         .insert([{
@@ -27,11 +29,17 @@ export const useAddItemMutation = (userId: string | undefined) => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error inserting item:', error);
+        throw error;
+      }
       
+      console.log('Item created successfully:', data);
       return transformItemData(data);
     },
     onSuccess: async (newItem) => {
+      console.log('Item mutation successful, triggering notification for:', newItem);
+      
       queryClient.invalidateQueries({ queryKey: ['items', userId] });
       toast({
         title: 'Success',
@@ -39,7 +47,11 @@ export const useAddItemMutation = (userId: string | undefined) => {
       });
       
       // Trigger notification for the new item
-      await triggerItemCreatedNotification(newItem.id, newItem.name);
+      try {
+        await triggerItemCreatedNotification(newItem.id, newItem.name);
+      } catch (error) {
+        console.error('Failed to create notification for new item:', error);
+      }
     },
     onError: (error) => {
       console.error('Error adding item:', error);

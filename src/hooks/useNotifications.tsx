@@ -23,7 +23,12 @@ export const useNotifications = () => {
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!user?.id) {
+        console.log('No user ID, returning empty notifications');
+        return [];
+      }
+      
+      console.log('Fetching notifications for user:', user.id);
       
       const { data, error } = await supabase
         .from('notifications')
@@ -31,7 +36,12 @@ export const useNotifications = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching notifications:', error);
+        throw error;
+      }
+      
+      console.log('Fetched notifications:', data);
       return data as Notification[];
     },
     enabled: !!user?.id,
@@ -86,6 +96,8 @@ export const useNotifications = () => {
   useEffect(() => {
     if (!user?.id) return;
 
+    console.log('Setting up realtime subscription for notifications');
+    
     // Create a unique channel name to avoid conflicts
     const channelName = `notifications_${user.id}_${Date.now()}`;
     
@@ -99,18 +111,34 @@ export const useNotifications = () => {
           table: 'notifications',
           filter: `user_id=eq.${user.id}`
         },
-        () => {
+        (payload) => {
+          console.log('New notification received via realtime:', payload);
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Notification updated via realtime:', payload);
           queryClient.invalidateQueries({ queryKey: ['notifications'] });
         }
       )
       .subscribe();
 
     return () => {
+      console.log('Cleaning up realtime subscription');
       supabase.removeChannel(channel);
     };
   }, [user?.id, queryClient]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
+  console.log('useNotifications - total notifications:', notifications.length, 'unread:', unreadCount);
 
   return {
     notifications,

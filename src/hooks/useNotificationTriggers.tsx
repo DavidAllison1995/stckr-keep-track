@@ -9,6 +9,7 @@ export const useNotificationTriggers = () => {
     if (!user?.id) return;
 
     try {
+      console.log('Creating task created notification:', { taskId, taskTitle, itemId });
       await supabase
         .from('notifications')
         .insert({
@@ -19,6 +20,7 @@ export const useNotificationTriggers = () => {
           task_id: taskId,
           item_id: itemId
         });
+      console.log('Task created notification created successfully');
     } catch (error) {
       console.error('Error creating task notification:', error);
     }
@@ -28,6 +30,7 @@ export const useNotificationTriggers = () => {
     if (!user?.id) return;
 
     try {
+      console.log('Creating task completed notification:', { taskId, taskTitle, itemId });
       await supabase
         .from('notifications')
         .insert({
@@ -38,6 +41,7 @@ export const useNotificationTriggers = () => {
           task_id: taskId,
           item_id: itemId
         });
+      console.log('Task completed notification created successfully');
     } catch (error) {
       console.error('Error creating completion notification:', error);
     }
@@ -47,6 +51,7 @@ export const useNotificationTriggers = () => {
     if (!user?.id) return;
 
     try {
+      console.log('Creating item created notification:', { itemId, itemName, userId: user.id });
       await supabase
         .from('notifications')
         .insert({
@@ -56,6 +61,7 @@ export const useNotificationTriggers = () => {
           message: 'A new item has been added to your inventory',
           item_id: itemId
         });
+      console.log('Item created notification created successfully');
     } catch (error) {
       console.error('Error creating item notification:', error);
     }
