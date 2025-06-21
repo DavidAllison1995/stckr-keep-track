@@ -75,10 +75,7 @@ const ItemDetailsTab = ({ item, onTabChange }: ItemDetailsTabProps) => {
 
         {/* Redesigned Basic Information */}
         <Card className="shadow-sm border border-gray-200 bg-white">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg text-gray-900 font-semibold">Basic Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 p-6">
             {/* Header Row: Icon + Name */}
             <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
               <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
