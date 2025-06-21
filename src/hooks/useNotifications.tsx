@@ -86,8 +86,11 @@ export const useNotifications = () => {
   useEffect(() => {
     if (!user?.id) return;
 
+    // Create a unique channel name to avoid conflicts
+    const channelName = `notifications_${user.id}_${Date.now()}`;
+    
     const channel = supabase
-      .channel('notifications')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
