@@ -43,6 +43,10 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
     window.location.reload(); // Simple approach - could be optimized with proper state management
   };
 
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+  };
+
   if (isEditing) {
     return (
       <Card className="max-w-4xl mx-auto rounded-2xl shadow-lg">
@@ -109,7 +113,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
           </TabsList>
 
           <TabsContent value="details" className="mt-6">
-            <ItemDetailsTab item={item} />
+            <ItemDetailsTab item={item} onTabChange={handleTabChange} />
           </TabsContent>
 
           <TabsContent value="maintenance" className="mt-6">
