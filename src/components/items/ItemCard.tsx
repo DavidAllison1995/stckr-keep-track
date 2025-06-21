@@ -4,8 +4,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Item } from '@/hooks/useSupabaseItems';
+import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { getIconComponent } from '@/components/icons';
-import { QrCode, Download } from 'lucide-react';
+import { QrCode, Download, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import ItemDetail from './ItemDetail';
 import ItemForm from './ItemForm';
 import QRCode from 'qrcode';
@@ -20,6 +21,12 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  
+  const { getTasksByItem } = useSupabaseMaintenance();
+  const itemTasks = getTasksByItem(item.id, false); // Don't include completed tasks
+  const pendingTasks = itemTasks.filter(task => task.status === 'pending');
+  const dueSoonTasks = itemTasks.filter(task => task.status === 'due_soon');
+  const overdueTasks = itemTasks.filter(task => task.status === 'overdue');
 
   const IconComponent = getIconComponent(item.icon_id || 'box');
   
@@ -71,6 +78,21 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
     }
   };
 
+  const getTaskIcon = (count: number, type: 'overdue' | 'due_soon' | 'pending') => {
+    if (count === 0) return null;
+    
+    switch (type) {
+      case 'overdue':
+        return <AlertTriangle className="w-4 h-4 text-red-500" />;
+      case 'due_soon':
+        return <Clock className="w-4 h-4 text-yellow-500" />;
+      case 'pending':
+        return <CheckCircle2 className="w-4 h-4 text-blue-500" />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <>
       <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={handleCardClick}>
@@ -108,6 +130,33 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
 
               {item.description && (
                 <p className="text-sm text-gray-600 line-clamp-2">{item.description}</p>
+              )}
+
+              {/* Maintenance Tasks Summary */}
+              {itemTasks.length > 0 && (
+                <div className="bg-gray-50 rounded-lg p-2 space-y-1">
+                  <div className="text-xs font-medium text-gray-700 mb-1">Maintenance Tasks</div>
+                  <div className="flex items-center gap-3 text-xs">
+                    {overdueTasks.length > 0 && (
+                      <div className="flex items-center gap-1">
+                        {getTaskIcon(overdueTasks.length, 'overdue')}
+                        <span className="text-red-600">{overdueTasks.length} overdue</span>
+                      </div>
+                    )}
+                    {dueSoonTasks.length > 0 && (
+                      <div className="flex items-center gap-1">
+                        {getTaskIcon(dueSoonTasks.length, 'due_soon')}
+                        <span className="text-yellow-600">{dueSoonTasks.length} due soon</span>
+                      </div>
+                    )}
+                    {pendingTasks.length > 0 && (
+                      <div className="flex items-center gap-1">
+                        {getTaskIcon(pendingTasks.length, 'pending')}
+                        <span className="text-blue-600">{pendingTasks.length} pending</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
 
               {/* QR Code Section */}
