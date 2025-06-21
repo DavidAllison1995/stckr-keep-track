@@ -1,4 +1,3 @@
-
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -60,7 +59,6 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
           Welcome back, {userName}!
         </h1>
-        <p className="text-xl text-gray-600">Your Command Center</p>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
