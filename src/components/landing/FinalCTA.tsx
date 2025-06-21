@@ -9,7 +9,6 @@ interface FinalCTAProps {
 const FinalCTA = ({ onGetStarted }: FinalCTAProps) => {
   const features = [
     "Works on mobile",
-    "QR stickers included", 
     "Free to start",
     "No credit card required"
   ];
