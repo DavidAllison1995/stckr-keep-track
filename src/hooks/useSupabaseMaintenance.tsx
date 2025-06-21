@@ -105,7 +105,7 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
     
     if (diffInDays < 0) {
       return 'overdue';
-    } else if (diffInDays <= 7) {
+    } else if (diffInDays <= 14) {
       return 'due_soon';
     } else {
       return 'pending';
