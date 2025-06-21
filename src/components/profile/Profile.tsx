@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,6 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import ChangePasswordDialog from './ChangePasswordDialog';
 import ConnectedAccountsDialog from './ConnectedAccountsDialog';
 import DeleteAccountDialog from './DeleteAccountDialog';
@@ -60,12 +60,9 @@ const Profile = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="text-center flex-1">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Profile</h1>
-          <p className="text-gray-600 dark:text-gray-300">Manage your account and preferences</p>
-        </div>
-        <ThemeToggle />
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Profile</h1>
+        <p className="text-gray-600 dark:text-gray-300">Manage your account and preferences</p>
       </div>
 
       {/* Quick Actions */}
