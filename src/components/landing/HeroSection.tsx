@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Play } from 'lucide-react';
 
@@ -84,15 +83,6 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              {/* QR Sticker */}
-              <div className="absolute -right-4 top-20 w-16 h-16 bg-white rounded-lg shadow-lg border-4 border-yellow-300 flex items-center justify-center animate-pulse">
-                <div className="w-8 h-8 bg-black opacity-20 grid grid-cols-3 gap-px">
-                  {Array.from({ length: 9 }).map((_, i) => (
-                    <div key={i} className="bg-black"></div>
-                  ))}
                 </div>
               </div>
             </div>
