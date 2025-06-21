@@ -34,33 +34,15 @@ const ItemDetailsTab = ({ item }: ItemDetailsTabProps) => {
 
   const handleNextTaskClick = () => {
     if (nextTask) {
-      navigate(`/items/${item.id}`, { 
-        state: { 
-          highlightTaskId: nextTask.id, 
-          activeTab: 'maintenance' 
-        },
-        replace: true
-      });
-      // Force page reload to ensure tab change is processed
-      setTimeout(() => {
-        window.location.hash = `#task-${nextTask.id}`;
-      }, 100);
+      // Navigate to the maintenance tab by changing the URL path
+      window.location.href = `/items/${item.id}?tab=maintenance`;
     }
   };
 
   const handleRecentCompletedClick = () => {
     if (recentCompleted) {
-      navigate(`/items/${item.id}`, { 
-        state: { 
-          highlightTaskId: recentCompleted.id, 
-          activeTab: 'maintenance' 
-        },
-        replace: true
-      });
-      // Force page reload to ensure tab change is processed
-      setTimeout(() => {
-        window.location.hash = `#task-${recentCompleted.id}`;
-      }, 100);
+      // Navigate to the maintenance tab by changing the URL path
+      window.location.href = `/items/${item.id}?tab=maintenance`;
     }
   };
 
