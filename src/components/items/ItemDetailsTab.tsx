@@ -46,6 +46,11 @@ const ItemDetailsTab = ({ item }: ItemDetailsTabProps) => {
     }
   };
 
+  const handleViewAllDocuments = () => {
+    // Navigate to the documents tab
+    window.location.href = `/items/${item.id}?tab=documents`;
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Left Column */}
@@ -255,7 +260,12 @@ const ItemDetailsTab = ({ item }: ItemDetailsTabProps) => {
                   </div>
                 ))}
               </div>
-              <Button variant="link" size="sm" className="p-0 h-auto text-blue-600">
+              <Button 
+                variant="link" 
+                size="sm" 
+                className="p-0 h-auto text-blue-600"
+                onClick={handleViewAllDocuments}
+              >
                 View All ({item.documents.length})
               </Button>
             </CardContent>
