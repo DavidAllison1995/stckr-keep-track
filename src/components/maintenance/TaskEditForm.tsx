@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useMaintenance, MaintenanceTask } from '@/hooks/useMaintenance';
 
@@ -20,7 +19,6 @@ const TaskEditForm = ({ task, onSuccess, onCancel }: TaskEditFormProps) => {
     title: task.title,
     notes: task.notes || '',
     date: task.date,
-    recurrence: task.recurrence,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -34,7 +32,6 @@ const TaskEditForm = ({ task, onSuccess, onCancel }: TaskEditFormProps) => {
       title: formData.title.trim(),
       notes: formData.notes || undefined,
       date: formData.date,
-      recurrence: formData.recurrence,
     });
 
     onSuccess();
@@ -68,22 +65,6 @@ const TaskEditForm = ({ task, onSuccess, onCancel }: TaskEditFormProps) => {
           onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
           required
         />
-      </div>
-
-      <div>
-        <Label htmlFor="recurrence">Repeat</Label>
-        <Select value={formData.recurrence} onValueChange={(value: any) => setFormData(prev => ({ ...prev, recurrence: value }))}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select recurrence" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">No repeat</SelectItem>
-            <SelectItem value="daily">Daily</SelectItem>
-            <SelectItem value="weekly">Weekly</SelectItem>
-            <SelectItem value="monthly">Monthly</SelectItem>
-            <SelectItem value="yearly">Yearly</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <div>

@@ -146,11 +146,6 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
                         <span className="text-sm text-gray-500">
                           Due: {new Date(task.date).toLocaleDateString()}
                         </span>
-                        {task.recurrence !== 'none' && (
-                          <Badge variant="outline" className="text-xs">
-                            {task.recurrence}
-                          </Badge>
-                        )}
                       </div>
                     </div>
                     <div className="flex gap-2">

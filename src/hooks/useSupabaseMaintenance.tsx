@@ -4,10 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from './useSupabaseAuth';
 import { useToast } from '@/hooks/use-toast';
-import { addDays, addWeeks, addMonths, addYears } from 'date-fns';
 
 export type MaintenanceTaskStatus = 'pending' | 'in_progress' | 'completed' | 'overdue' | 'due_soon';
-export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 export interface MaintenanceTask {
   id: string;
@@ -17,9 +15,6 @@ export interface MaintenanceTask {
   notes: string | null;
   date: string;
   status: MaintenanceTaskStatus;
-  recurrence: RecurrenceType;
-  recurrence_rule: string | null;
-  parent_task_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -29,7 +24,7 @@ interface MaintenanceContextType {
   isLoading: boolean;
   addTask: (task: Omit<MaintenanceTask, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
   updateTask: (id: string, updates: Partial<MaintenanceTask>) => Promise<void>;
-  deleteTask: (id: string, scope?: 'single' | 'all') => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
   markTaskComplete: (id: string) => Promise<void>;
   getTaskById: (id: string) => MaintenanceTask | undefined;
   getTasksByItem: (itemId: string, includeCompleted?: boolean) => MaintenanceTask[];
@@ -66,32 +61,21 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
         throw error;
       }
 
-      // Transform the data to ensure proper types
+      // Transform the data to ensure proper types and calculate status
       return (data || []).map(task => ({
-        ...task,
-        status: task.status as MaintenanceTaskStatus,
-        recurrence: task.recurrence as RecurrenceType,
+        id: task.id,
+        user_id: task.user_id,
+        item_id: task.item_id,
+        title: task.title,
+        notes: task.notes,
+        date: task.date,
+        status: calculateTaskStatus(task.date) as MaintenanceTaskStatus,
+        created_at: task.created_at,
+        updated_at: task.updated_at,
       }));
     },
     enabled: !!user,
   });
-
-  const calculateNextDate = (currentDate: string, recurrence: RecurrenceType): string => {
-    const date = new Date(currentDate);
-    
-    switch (recurrence) {
-      case 'daily':
-        return addDays(date, 1).toISOString().split('T')[0];
-      case 'weekly':
-        return addWeeks(date, 1).toISOString().split('T')[0];
-      case 'monthly':
-        return addMonths(date, 1).toISOString().split('T')[0];
-      case 'yearly':
-        return addYears(date, 1).toISOString().split('T')[0];
-      default:
-        return currentDate;
-    }
-  };
 
   const calculateTaskStatus = (dueDate: string): MaintenanceTaskStatus => {
     const now = new Date();
@@ -119,8 +103,12 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
       const { data, error } = await supabase
         .from('maintenance_tasks')
         .insert([{
-          ...taskData,
           user_id: user.id,
+          item_id: taskData.item_id,
+          title: taskData.title,
+          notes: taskData.notes,
+          date: taskData.date,
+          status: taskData.status,
         }])
         .select()
         .single();
@@ -171,28 +159,13 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const deleteTaskMutation = useMutation({
-    mutationFn: async ({ id, scope }: { id: string; scope?: 'single' | 'all' }) => {
-      if (scope === 'all') {
-        // Find the parent task
-        const task = tasks.find(t => t.id === id);
-        const parentId = task?.parent_task_id || id;
-        
-        // Delete parent and all children
-        const { error } = await supabase
-          .from('maintenance_tasks')
-          .delete()
-          .or(`id.eq.${parentId},parent_task_id.eq.${parentId}`);
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('maintenance_tasks')
+        .delete()
+        .eq('id', id);
 
-        if (error) throw error;
-      } else {
-        // Delete only this task
-        const { error } = await supabase
-          .from('maintenance_tasks')
-          .delete()
-          .eq('id', id);
-
-        if (error) throw error;
-      }
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['maintenance-tasks', user?.id] });
@@ -213,10 +186,6 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
 
   const markTaskCompleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const task = tasks.find(t => t.id === id);
-      if (!task) throw new Error('Task not found');
-
-      // Mark the current task as completed
       const { data: completedTask, error: updateError } = await supabase
         .from('maintenance_tasks')
         .update({ status: 'completed' })
@@ -225,34 +194,6 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (updateError) throw updateError;
-
-      // If this is a recurring task, create the next instance
-      if (task.recurrence !== 'none') {
-        const nextDate = calculateNextDate(task.date, task.recurrence);
-        const nextStatus = calculateTaskStatus(nextDate);
-
-        console.log(`Creating next recurring task: date=${nextDate}, calculated status=${nextStatus}`);
-
-        const { error: insertError } = await supabase
-          .from('maintenance_tasks')
-          .insert([{
-            user_id: task.user_id,
-            item_id: task.item_id,
-            title: task.title,
-            notes: task.notes,
-            date: nextDate,
-            status: nextStatus,
-            recurrence: task.recurrence,
-            recurrence_rule: task.recurrence_rule,
-            parent_task_id: task.parent_task_id || task.id,
-          }]);
-
-        if (insertError) {
-          console.error('Error creating next recurring task:', insertError);
-          // Don't throw here - we don't want to fail the completion if next task creation fails
-        }
-      }
-
       return completedTask;
     },
     onSuccess: () => {
@@ -280,8 +221,8 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
     await updateTaskMutation.mutateAsync({ id, updates });
   };
 
-  const deleteTask = async (id: string, scope: 'single' | 'all' = 'single') => {
-    await deleteTaskMutation.mutateAsync({ id, scope });
+  const deleteTask = async (id: string) => {
+    await deleteTaskMutation.mutateAsync(id);
   };
 
   const markTaskComplete = async (id: string) => {

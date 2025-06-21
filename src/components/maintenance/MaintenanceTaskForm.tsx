@@ -20,7 +20,6 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
     title: '',
     notes: '',
     date: '',
-    recurrence: 'none' as 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly',
     selectedItemId: itemId || '',
   });
 
@@ -39,7 +38,7 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
     let status: 'pending' | 'in_progress' | 'completed' | 'overdue' | 'due_soon';
     if (diffInDays < 0) {
       status = 'overdue';
-    } else if (diffInDays <= 7) {
+    } else if (diffInDays <= 14) {
       status = 'due_soon';
     } else {
       status = 'pending';
@@ -57,9 +56,6 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
         title: formData.title.trim(),
         notes: formData.notes || null,
         date: formData.date,
-        recurrence: formData.recurrence,
-        recurrence_rule: null,
-        parent_task_id: null,
         status: status,
       });
 
@@ -112,22 +108,6 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
           onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
           required
         />
-      </div>
-
-      <div>
-        <Label htmlFor="recurrence">Repeat</Label>
-        <Select value={formData.recurrence} onValueChange={(value: any) => setFormData(prev => ({ ...prev, recurrence: value }))}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select recurrence" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">No repeat</SelectItem>
-            <SelectItem value="daily">Daily</SelectItem>
-            <SelectItem value="weekly">Weekly</SelectItem>
-            <SelectItem value="monthly">Monthly</SelectItem>
-            <SelectItem value="yearly">Yearly</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <div>
