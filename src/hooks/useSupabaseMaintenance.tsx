@@ -6,6 +6,7 @@ import { useSupabaseAuth } from './useSupabaseAuth';
 import { useToast } from '@/hooks/use-toast';
 
 export type MaintenanceTaskStatus = 'pending' | 'in_progress' | 'completed' | 'overdue' | 'due_soon';
+export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 export interface MaintenanceTask {
   id: string;
@@ -15,6 +16,9 @@ export interface MaintenanceTask {
   notes: string | null;
   date: string;
   status: MaintenanceTaskStatus;
+  recurrence: RecurrenceType;
+  recurrence_rule: string | null;
+  parent_task_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -24,7 +28,7 @@ interface MaintenanceContextType {
   isLoading: boolean;
   addTask: (task: Omit<MaintenanceTask, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<void>;
   updateTask: (id: string, updates: Partial<MaintenanceTask>) => Promise<void>;
-  deleteTask: (id: string) => Promise<void>;
+  deleteTask: (id: string, scope?: 'single' | 'all') => Promise<void>;
   markTaskComplete: (id: string) => Promise<void>;
   getTaskById: (id: string) => MaintenanceTask | undefined;
   getTasksByItem: (itemId: string, includeCompleted?: boolean) => MaintenanceTask[];
@@ -61,40 +65,15 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
         throw error;
       }
 
-      // Transform the data to ensure proper types and calculate status
+      // Transform the data to ensure proper types
       return (data || []).map(task => ({
-        id: task.id,
-        user_id: task.user_id,
-        item_id: task.item_id,
-        title: task.title,
-        notes: task.notes,
-        date: task.date,
-        status: calculateTaskStatus(task.date) as MaintenanceTaskStatus,
-        created_at: task.created_at,
-        updated_at: task.updated_at,
+        ...task,
+        status: task.status as MaintenanceTaskStatus,
+        recurrence: task.recurrence as RecurrenceType,
       }));
     },
     enabled: !!user,
   });
-
-  const calculateTaskStatus = (dueDate: string): MaintenanceTaskStatus => {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const due = new Date(dueDate);
-    due.setHours(0, 0, 0, 0);
-    
-    const diffInDays = Math.floor((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    
-    console.log(`Status calculation for ${dueDate}: diffInDays=${diffInDays}`);
-    
-    if (diffInDays < 0) {
-      return 'overdue';
-    } else if (diffInDays <= 14) {
-      return 'due_soon';
-    } else {
-      return 'pending';
-    }
-  };
 
   const addTaskMutation = useMutation({
     mutationFn: async (taskData: Omit<MaintenanceTask, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
@@ -103,12 +82,8 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
       const { data, error } = await supabase
         .from('maintenance_tasks')
         .insert([{
+          ...taskData,
           user_id: user.id,
-          item_id: taskData.item_id,
-          title: taskData.title,
-          notes: taskData.notes,
-          date: taskData.date,
-          status: taskData.status,
         }])
         .select()
         .single();
@@ -159,13 +134,28 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const deleteTaskMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('maintenance_tasks')
-        .delete()
-        .eq('id', id);
+    mutationFn: async ({ id, scope }: { id: string; scope?: 'single' | 'all' }) => {
+      if (scope === 'all') {
+        // Find the parent task
+        const task = tasks.find(t => t.id === id);
+        const parentId = task?.parent_task_id || id;
+        
+        // Delete parent and all children
+        const { error } = await supabase
+          .from('maintenance_tasks')
+          .delete()
+          .or(`id.eq.${parentId},parent_task_id.eq.${parentId}`);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Delete only this task
+        const { error } = await supabase
+          .from('maintenance_tasks')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['maintenance-tasks', user?.id] });
@@ -186,15 +176,15 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
 
   const markTaskCompleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { data: completedTask, error: updateError } = await supabase
+      const { data, error } = await supabase
         .from('maintenance_tasks')
         .update({ status: 'completed' })
         .eq('id', id)
         .select()
         .single();
 
-      if (updateError) throw updateError;
-      return completedTask;
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['maintenance-tasks', user?.id] });
@@ -221,8 +211,8 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
     await updateTaskMutation.mutateAsync({ id, updates });
   };
 
-  const deleteTask = async (id: string) => {
-    await deleteTaskMutation.mutateAsync(id);
+  const deleteTask = async (id: string, scope: 'single' | 'all' = 'single') => {
+    await deleteTaskMutation.mutateAsync({ id, scope });
   };
 
   const markTaskComplete = async (id: string) => {

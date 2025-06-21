@@ -1,77 +1,87 @@
 
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
-import { CheckCircle, Clock, AlertTriangle, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const StatusBar = () => {
   const { tasks } = useSupabaseMaintenance();
 
-  // Filter tasks by status (excluding completed tasks from active counts)
-  const activeTasks = tasks.filter(task => task.status !== 'completed');
-  const pendingTasks = activeTasks.filter(task => task.status === 'pending');
-  const dueSoonTasks = activeTasks.filter(task => task.status === 'due_soon');
-  const overdueTasks = activeTasks.filter(task => task.status === 'overdue');
-  const completedTasks = tasks.filter(task => task.status === 'completed');
+  // Calculate task statuses based on dates
+  const now = new Date();
+  const fourteenDaysFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
 
-  const statusItems = [
-    {
-      label: 'Up to Date',
-      count: pendingTasks.length,
-      icon: CheckCircle,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-      link: '/tasks/up-to-date'
-    },
-    {
-      label: 'Due Soon',
-      count: dueSoonTasks.length,
-      icon: Clock,
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-50',
-      link: '/tasks/due-soon'
-    },
-    {
-      label: 'Overdue',
-      count: overdueTasks.length,
-      icon: AlertTriangle,
-      color: 'text-red-600',
-      bgColor: 'bg-red-50',
-      link: '/tasks/overdue'
-    }
-  ];
+  const upToDateTasks = tasks.filter(task => {
+    if (task.status === 'completed') return false;
+    const taskDate = new Date(task.date);
+    return taskDate > fourteenDaysFromNow;
+  });
+
+  const dueSoonTasks = tasks.filter(task => {
+    if (task.status === 'completed') return false;
+    const taskDate = new Date(task.date);
+    return taskDate >= now && taskDate <= fourteenDaysFromNow;
+  });
+
+  const overdueTasks = tasks.filter(task => {
+    if (task.status === 'completed') return false;
+    const taskDate = new Date(task.date);
+    return taskDate < now;
+  });
+
+  const statusCards = [{
+    title: 'Up-to-Date',
+    count: upToDateTasks.length,
+    icon: CheckCircle,
+    color: 'text-green-600 bg-green-100',
+    route: '/tasks/up-to-date',
+    description: 'Tasks due in 14+ days'
+  }, {
+    title: 'Due Soon',
+    count: dueSoonTasks.length,
+    icon: Clock,
+    color: 'text-yellow-600 bg-yellow-100',
+    route: '/tasks/due-soon',
+    description: 'Tasks due within 14 days'
+  }, {
+    title: 'Overdue',
+    count: overdueTasks.length,
+    icon: AlertTriangle,
+    color: 'text-red-600 bg-red-100',
+    route: '/tasks/overdue',
+    description: 'Tasks past due date'
+  }];
 
   return (
-    <Card className="mb-6">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex space-x-6">
-            {statusItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link key={item.label} to={item.link}>
-                  <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${item.bgColor} hover:opacity-80 transition-opacity cursor-pointer`}>
-                    <Icon className={`w-4 h-4 ${item.color}`} />
-                    <span className="text-sm font-medium text-gray-700">{item.label}</span>
-                    <span className={`text-sm font-bold ${item.color}`}>{item.count}</span>
+    <div className="w-full mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {statusCards.map(card => {
+          const IconComponent = card.icon;
+          return (
+            <Link key={card.title} to={card.route}>
+              <Card className="cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-full ${card.color}`}>
+                        <IconComponent className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-sm text-gray-700">{card.title}</h3>
+                        <p className="text-xs text-gray-500">{card.description}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-gray-900">{card.count}</div>
+                    </div>
                   </div>
-                </Link>
-              );
-            })}
-          </div>
-          
-          {completedTasks.length > 0 && (
-            <Link to="/tasks/completed">
-              <Button variant="outline" size="sm" className="text-gray-600">
-                <Eye className="w-4 h-4 mr-2" />
-                View Completed ({completedTasks.length})
-              </Button>
+                </CardContent>
+              </Card>
             </Link>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+          );
+        })}
+      </div>
+    </div>
   );
 };
 
