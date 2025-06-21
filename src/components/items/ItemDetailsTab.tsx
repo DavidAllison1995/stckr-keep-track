@@ -4,6 +4,7 @@ import { Item } from '@/hooks/useSupabaseItems';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { getIconComponent } from '@/components/icons';
 import { Calendar, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -13,7 +14,21 @@ interface ItemDetailsTabProps {
 
 const ItemDetailsTab = ({ item }: ItemDetailsTabProps) => {
   const [showMore, setShowMore] = useState(false);
+  const { getTasksByItem } = useSupabaseMaintenance();
   const IconComponent = getIconComponent(item.icon_id || 'box');
+
+  // Get active and completed tasks for this item
+  const activeTasks = getTasksByItem(item.id, false); // Don't include completed
+  const allTasks = getTasksByItem(item.id, true); // Include completed
+  const completedTasks = allTasks.filter(task => task.status === 'completed');
+
+  // Calculate next task and recently completed
+  const nextTask = activeTasks
+    .filter(task => task.status !== 'completed')
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
+  
+  const recentCompleted = completedTasks
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())[0];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -124,29 +139,32 @@ const ItemDetailsTab = ({ item }: ItemDetailsTabProps) => {
 
       {/* Right Column */}
       <div className="space-y-6">
-        {/* Maintenance Tasks */}
+        {/* Maintenance Summary */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
               <Calendar className="w-5 h-5" />
-              Maintenance Tasks
+              Maintenance Summary
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
-              <span className="text-sm text-gray-600">Next task: </span>
-              <span className="text-sm font-medium">No upcoming maintenance</span>
+            <div>
+              <span className="text-sm font-medium text-gray-600">Next Task: </span>
+              <span className="text-sm text-gray-900">
+                {nextTask 
+                  ? `${new Date(nextTask.date).toLocaleDateString()} – ${nextTask.title}`
+                  : 'None'
+                }
+              </span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span className="text-sm text-gray-600">Last completed: </span>
-              <span className="text-sm font-medium">N/A</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-              <span className="text-sm text-gray-600">Frequency: </span>
-              <span className="text-sm font-medium">Not set</span>
+            <div>
+              <span className="text-sm font-medium text-gray-600">Recently Completed: </span>
+              <span className="text-sm text-gray-900">
+                {recentCompleted 
+                  ? `${new Date(recentCompleted.updated_at).toLocaleDateString()} – ${recentCompleted.title}`
+                  : 'None'
+                }
+              </span>
             </div>
           </CardContent>
         </Card>

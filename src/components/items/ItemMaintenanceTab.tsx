@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
 import { Plus, Calendar, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
@@ -15,6 +16,7 @@ interface ItemMaintenanceTabProps {
 const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps) => {
   const { tasks, updateTask } = useSupabaseMaintenance();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const itemTasks = tasks.filter(task => task.item_id === itemId);
   
@@ -97,6 +99,19 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
         </Button>
       </div>
 
+      {/* Show Completed Tasks Toggle */}
+      {completedTasks.length > 0 && (
+        <div className="flex justify-end">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowCompleted(!showCompleted)}
+          >
+            {showCompleted ? 'Hide Completed Tasks' : 'Show Completed Tasks'}
+          </Button>
+        </div>
+      )}
+
       {/* Active Tasks */}
       {activeTasks.length > 0 && (
         <div>
@@ -149,37 +164,40 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
         </div>
       )}
 
-      {/* Completed Tasks */}
-      {completedTasks.length > 0 && (
-        <div>
-          <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-green-600" />
-            Completed Tasks ({completedTasks.length})
-          </h4>
-          <div className="space-y-3">
-            {completedTasks.slice(0, 5).map((task) => (
-              <Card key={task.id} className="opacity-75">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h5 className="font-medium text-gray-900">{task.title}</h5>
-                      {task.notes && (
-                        <p className="text-sm text-gray-600 mt-1">{task.notes}</p>
-                      )}
-                      <div className="flex items-center gap-2 mt-2">
-                        <Calendar className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-gray-500">
-                          Completed: {new Date(task.date).toLocaleDateString()}
-                        </span>
+      {/* Completed Tasks (conditionally shown) */}
+      {showCompleted && completedTasks.length > 0 && (
+        <>
+          <Separator />
+          <div>
+            <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-green-600" />
+              Completed Tasks ({completedTasks.length})
+            </h4>
+            <div className="space-y-3">
+              {completedTasks.map((task) => (
+                <Card key={task.id} className="opacity-75">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h5 className="font-medium text-gray-900">{task.title}</h5>
+                        {task.notes && (
+                          <p className="text-sm text-gray-600 mt-1">{task.notes}</p>
+                        )}
+                        <div className="flex items-center gap-2 mt-2">
+                          <Calendar className="w-4 h-4 text-gray-400" />
+                          <span className="text-sm text-gray-500">
+                            Completed: {new Date(task.updated_at).toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
+                      <Badge variant="secondary">Completed</Badge>
                     </div>
-                    <Badge variant="secondary">Completed</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {itemTasks.length === 0 && (
