@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,11 +21,19 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   
-  const { getTasksByItem } = useSupabaseMaintenance();
+  const { getTasksByItem, tasks } = useSupabaseMaintenance();
   const itemTasks = getTasksByItem(item.id, false); // Don't include completed tasks
   const pendingTasks = itemTasks.filter(task => task.status === 'pending');
   const dueSoonTasks = itemTasks.filter(task => task.status === 'due_soon');
   const overdueTasks = itemTasks.filter(task => task.status === 'overdue');
+
+  // Debug logging
+  useEffect(() => {
+    console.log(`ItemCard ${item.name} - All tasks:`, tasks.length);
+    console.log(`ItemCard ${item.name} - Item tasks:`, itemTasks.length);
+    console.log(`ItemCard ${item.name} - Tasks for item ${item.id}:`, itemTasks);
+    console.log(`ItemCard ${item.name} - Pending: ${pendingTasks.length}, Due Soon: ${dueSoonTasks.length}, Overdue: ${overdueTasks.length}`);
+  }, [tasks, itemTasks, item.name, item.id, pendingTasks.length, dueSoonTasks.length, overdueTasks.length]);
 
   const IconComponent = getIconComponent(item.icon_id || 'box');
   

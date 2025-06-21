@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +24,7 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
     selectedItemId: itemId || '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.title.trim() || !formData.date) {
@@ -44,18 +45,29 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
       status = 'pending';
     }
 
-    addTask({
+    console.log('Adding maintenance task:', {
       item_id: formData.selectedItemId === 'unassigned' ? null : formData.selectedItemId || null,
       title: formData.title.trim(),
-      notes: formData.notes || null,
-      date: formData.date,
-      recurrence: formData.recurrence,
-      recurrence_rule: null,
-      parent_task_id: null,
       status: status,
     });
 
-    onSuccess();
+    try {
+      await addTask({
+        item_id: formData.selectedItemId === 'unassigned' ? null : formData.selectedItemId || null,
+        title: formData.title.trim(),
+        notes: formData.notes || null,
+        date: formData.date,
+        recurrence: formData.recurrence,
+        recurrence_rule: null,
+        parent_task_id: null,
+        status: status,
+      });
+
+      console.log('Task added successfully, calling onSuccess');
+      onSuccess();
+    } catch (error) {
+      console.error('Error adding task:', error);
+    }
   };
 
   return (

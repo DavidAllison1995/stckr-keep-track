@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,13 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
   const itemTasks = tasks.filter(task => task.item_id === itemId);
   const pendingTasks = itemTasks.filter(task => task.status === 'pending');
   const completedTasks = itemTasks.filter(task => task.status === 'completed');
+
+  // Debug logging
+  useEffect(() => {
+    console.log(`ItemMaintenanceTab - All tasks:`, tasks.length);
+    console.log(`ItemMaintenanceTab - Tasks for item ${itemId}:`, itemTasks.length);
+    console.log(`ItemMaintenanceTab - Item tasks:`, itemTasks);
+  }, [tasks, itemTasks, itemId]);
 
   const handleTaskComplete = (taskId: string) => {
     updateTask(taskId, { status: 'completed' });
