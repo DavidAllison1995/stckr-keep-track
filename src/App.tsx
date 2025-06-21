@@ -8,17 +8,20 @@ import { AuthProvider } from "@/hooks/useSupabaseAuth";
 import { AdminAuthProvider } from "@/hooks/useAdminAuth";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { queryClient } from "@/config/queryClient";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import ProtectedLayout from "@/components/layouts/ProtectedLayout";
+import { ItemsProvider } from "@/hooks/useSupabaseItems";
+import { MaintenanceProvider } from "@/hooks/useSupabaseMaintenance";
 import PublicRoutes from "@/routes/PublicRoutes";
-import DashboardRoutes from "@/routes/DashboardRoutes";
-import ItemsRoutes from "@/routes/ItemsRoutes";
-import MaintenanceRoutes from "@/routes/MaintenanceRoutes";
-import TasksRoutes from "@/routes/TasksRoutes";
-import MaintenanceTasksRoutes from "@/routes/MaintenanceTasksRoutes";
-import ScannerRoutes from "@/routes/ScannerRoutes";
-import ClaimRoutes from "@/routes/ClaimRoutes";
-import ProfileRoutes from "@/routes/ProfileRoutes";
-import SettingsRoutes from "@/routes/SettingsRoutes";
 import AdminRoutes from "@/routes/AdminRoutes";
+import Dashboard from "@/pages/Dashboard";
+import ItemsPage from "@/pages/ItemsPage";
+import ItemDetailPage from "@/pages/ItemDetailPage";
+import MaintenancePage from "@/pages/MaintenancePage";
+import ScannerPage from "@/pages/ScannerPage";
+import ProfilePage from "@/pages/ProfilePage";
+import SettingsPage from "@/pages/SettingsPage";
+import NavBar from "@/components/navigation/NavBar";
 import NotFound from "./pages/NotFound";
 import "./App.css";
 
@@ -37,15 +40,118 @@ function App() {
                   <Route path="/admin/*" element={<AdminRoutes />} />
                   
                   {/* User protected routes */}
-                  <Route path="/dashboard/*" element={<DashboardRoutes />} />
-                  <Route path="/items/*" element={<ItemsRoutes />} />
-                  <Route path="/maintenance/*" element={<MaintenanceRoutes />} />
-                  <Route path="/tasks/*" element={<TasksRoutes />} />
-                  <Route path="/maintenance-tasks/*" element={<MaintenanceTasksRoutes />} />
-                  <Route path="/scanner/*" element={<ScannerRoutes />} />
-                  <Route path="/claim/*" element={<ClaimRoutes />} />
-                  <Route path="/profile/*" element={<ProfileRoutes />} />
-                  <Route path="/settings/*" element={<SettingsRoutes />} />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <ItemsProvider>
+                          <MaintenanceProvider>
+                            <ProtectedLayout>
+                              <Dashboard />
+                            </ProtectedLayout>
+                            <NavBar />
+                          </MaintenanceProvider>
+                        </ItemsProvider>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/"
+                    element={
+                      <ProtectedRoute>
+                        <ItemsProvider>
+                          <MaintenanceProvider>
+                            <ProtectedLayout>
+                              <Dashboard />
+                            </ProtectedLayout>
+                            <NavBar />
+                          </MaintenanceProvider>
+                        </ItemsProvider>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/items"
+                    element={
+                      <ProtectedRoute>
+                        <ItemsProvider>
+                          <MaintenanceProvider>
+                            <ProtectedLayout>
+                              <ItemsPage />
+                            </ProtectedLayout>
+                            <NavBar />
+                          </MaintenanceProvider>
+                        </ItemsProvider>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/items/:id"
+                    element={
+                      <ProtectedRoute>
+                        <ItemsProvider>
+                          <MaintenanceProvider>
+                            <ProtectedLayout>
+                              <ItemDetailPage />
+                            </ProtectedLayout>
+                            <NavBar />
+                          </MaintenanceProvider>
+                        </ItemsProvider>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/maintenance"
+                    element={
+                      <ProtectedRoute>
+                        <ItemsProvider>
+                          <MaintenanceProvider>
+                            <ProtectedLayout>
+                              <MaintenancePage />
+                            </ProtectedLayout>
+                            <NavBar />
+                          </MaintenanceProvider>
+                        </ItemsProvider>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/scanner"
+                    element={
+                      <ProtectedRoute>
+                        <ItemsProvider>
+                          <MaintenanceProvider>
+                            <ProtectedLayout>
+                              <ScannerPage />
+                            </ProtectedLayout>
+                            <NavBar />
+                          </MaintenanceProvider>
+                        </ItemsProvider>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <ProtectedLayout>
+                          <ProfilePage />
+                        </ProtectedLayout>
+                        <NavBar />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/settings"
+                    element={
+                      <ProtectedRoute>
+                        <ProtectedLayout>
+                          <SettingsPage />
+                        </ProtectedLayout>
+                        <NavBar />
+                      </ProtectedRoute>
+                    }
+                  />
                   
                   {/* Public routes */}
                   <Route path="/*" element={<PublicRoutes />} />

@@ -1,16 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
-  Home, 
-  Package, 
-  Calendar, 
-  QrCode, 
   User, 
   Menu, 
   X,
-  Settings,
-  Wrench
+  QrCode
 } from 'lucide-react';
 import { useGlobalQRScanner } from '@/hooks/useGlobalQRScanner';
 import GlobalQRScannerOverlay from '@/components/qr/GlobalQRScannerOverlay';
@@ -24,7 +20,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { isScanning, handleGlobalScan, stopGlobalScan, handleScanResult } = useGlobalQRScanner();
+  const { isScanning, handleGlobalScan, stopGlobalScan } = useGlobalQRScanner();
 
   useEffect(() => {
     if (!isSidebarOpen) return;
@@ -72,14 +68,6 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
         <div className="bg-white dark:bg-gray-800 rounded-t-3xl shadow-lg">
           <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
             <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="lg:hidden"
-              >
-                <Menu className="w-5 h-5" />
-              </Button>
               <div>
                 <h1 className="text-xl font-bold text-gray-900 dark:text-white">
                   {getPageTitle()}
@@ -111,79 +99,12 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
             </div>
           </div>
           
-          {/* Desktop Sidebar & Content */}
-          <div className="lg:flex">
-            {/* Desktop Sidebar */}
-            <aside className="hidden lg:block w-64 p-4 border-r dark:border-gray-700">
-              <nav className="space-y-2">
-                <Button variant="ghost" className="w-full justify-start" onClick={() => navigate('/')}>
-                  <Home className="w-4 h-4 mr-2" />
-                  Dashboard
-                </Button>
-                <Button variant="ghost" className="w-full justify-start" onClick={() => navigate('/items')}>
-                  <Package className="w-4 h-4 mr-2" />
-                  Items
-                </Button>
-                <Button variant="ghost" className="w-full justify-start" onClick={() => navigate('/maintenance')}>
-                  <Wrench className="w-4 h-4 mr-2" />
-                  Maintenance
-                </Button>
-                <Button variant="ghost" className="w-full justify-start" onClick={() => navigate('/calendar')}>
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Calendar
-                </Button>
-                <Button variant="ghost" className="w-full justify-start" onClick={() => navigate('/settings')}>
-                  <Settings className="w-4 h-4 mr-2" />
-                  Settings
-                </Button>
-              </nav>
-            </aside>
-
-            {/* Content */}
-            <main className="flex-1 p-6">
-              {children}
-            </main>
-          </div>
+          {/* Content */}
+          <main className="p-6">
+            {children}
+          </main>
         </div>
       </div>
-      
-      {/* Mobile Navigation */}
-      {isSidebarOpen && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-50 flex lg:hidden">
-          <aside className="bg-white dark:bg-gray-800 w-64 h-full flex-shrink-0 transform translate-x-0 transition-transform duration-300 ease-in-out">
-            <div className="p-4 border-b dark:border-gray-700">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Menu</h2>
-                <Button variant="ghost" size="sm" onClick={() => setIsSidebarOpen(false)}>
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-            </div>
-            <nav className="p-4 space-y-2">
-              <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate('/'); setIsSidebarOpen(false); }}>
-                <Home className="w-4 h-4 mr-2" />
-                Dashboard
-              </Button>
-              <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate('/items'); setIsSidebarOpen(false); }}>
-                <Package className="w-4 h-4 mr-2" />
-                Items
-              </Button>
-              <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate('/maintenance'); setIsSidebarOpen(false); }}>
-                <Wrench className="w-4 h-4 mr-2" />
-                Maintenance
-              </Button>
-              <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate('/calendar'); setIsSidebarOpen(false); }}>
-                <Calendar className="w-4 h-4 mr-2" />
-                Calendar
-              </Button>
-              <Button variant="ghost" className="w-full justify-start" onClick={() => { navigate('/settings'); setIsSidebarOpen(false); }}>
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </Button>
-            </nav>
-          </aside>
-        </div>
-      )}
 
       {/* Scanner Overlay */}
       <GlobalQRScannerOverlay
