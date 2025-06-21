@@ -1,3 +1,4 @@
+
 import { createContext, useContext, ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -94,7 +95,10 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
 
   const calculateTaskStatus = (dueDate: string): MaintenanceTaskStatus => {
     const now = new Date();
+    now.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
     const due = new Date(dueDate);
+    due.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+    
     const diffInDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     
     if (diffInDays < 0) {
@@ -224,6 +228,8 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
       if (task.recurrence !== 'none') {
         const nextDate = calculateNextDate(task.date, task.recurrence);
         const nextStatus = calculateTaskStatus(nextDate);
+
+        console.log(`Creating next recurring task: date=${nextDate}, calculated status=${nextStatus}`);
 
         const { error: insertError } = await supabase
           .from('maintenance_tasks')
