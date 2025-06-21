@@ -16,8 +16,8 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
           <div className="text-center lg:text-left space-y-8 animate-fade-in">
             <div className="space-y-4">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                Know Everything 
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600"> You Own</span>
+                One Scan. 
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600"> Everything You Need.</span>
               </h1>
               <p className="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto lg:mx-0">
                 Scan your belongings with a QR code. Track, maintain, and never lose a receipt again.
