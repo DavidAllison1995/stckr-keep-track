@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Item } from '@/hooks/useSupabaseItems';
@@ -10,9 +11,10 @@ import { Calendar, FileText, ChevronDown, ChevronUp, Clock, CheckCircle2 } from 
 
 interface ItemDetailsTabProps {
   item: Item;
+  onTabChange?: (tab: string) => void;
 }
 
-const ItemDetailsTab = ({ item }: ItemDetailsTabProps) => {
+const ItemDetailsTab = ({ item, onTabChange }: ItemDetailsTabProps) => {
   const [showMore, setShowMore] = useState(false);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -33,28 +35,21 @@ const ItemDetailsTab = ({ item }: ItemDetailsTabProps) => {
     .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())[0];
 
   const handleNextTaskClick = () => {
-    if (nextTask) {
-      // Update the URL params to switch to maintenance tab
-      const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.set('tab', 'maintenance');
-      setSearchParams(newSearchParams);
+    if (nextTask && onTabChange) {
+      onTabChange('maintenance');
     }
   };
 
   const handleRecentCompletedClick = () => {
-    if (recentCompleted) {
-      // Update the URL params to switch to maintenance tab
-      const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.set('tab', 'maintenance');
-      setSearchParams(newSearchParams);
+    if (recentCompleted && onTabChange) {
+      onTabChange('maintenance');
     }
   };
 
   const handleViewAllDocuments = () => {
-    // Update the URL params to switch to documents tab
-    const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.set('tab', 'documents');
-    setSearchParams(newSearchParams);
+    if (onTabChange) {
+      onTabChange('documents');
+    }
   };
 
   return (
