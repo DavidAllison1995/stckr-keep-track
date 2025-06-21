@@ -1,111 +1,186 @@
 
+import { useState } from 'react';
 import { Item } from '@/hooks/useSupabaseItems';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { getIconComponent } from '@/components/icons';
+import { Calendar, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface ItemDetailsTabProps {
   item: Item;
 }
 
 const ItemDetailsTab = ({ item }: ItemDetailsTabProps) => {
+  const [showMore, setShowMore] = useState(false);
   const IconComponent = getIconComponent(item.icon_id || 'box');
 
   return (
-    <div className="space-y-6">
-      {/* Item Photo/Icon */}
-      <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center">
-        {item.photo_url ? (
-          <img 
-            src={item.photo_url} 
-            alt={item.name} 
-            className="w-full h-full object-cover rounded-lg" 
-          />
-        ) : (
-          <IconComponent className="w-16 h-16 text-gray-600" />
-        )}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Left Column */}
+      <div className="space-y-6">
+        {/* Item Photo/Icon */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center">
+              {item.photo_url ? (
+                <img 
+                  src={item.photo_url} 
+                  alt={item.name} 
+                  className="w-full h-full object-cover rounded-lg" 
+                />
+              ) : (
+                <IconComponent className="w-16 h-16 text-gray-600" />
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Basic Information */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Basic Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-600">Name</label>
+              <p className="text-gray-900 leading-relaxed">{item.name}</p>
+            </div>
+            
+            <div className="flex gap-2">
+              <div>
+                <label className="text-sm font-medium text-gray-600">Category</label>
+                <div className="mt-1">
+                  <Badge variant="secondary">{item.category}</Badge>
+                </div>
+              </div>
+              {item.room && (
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Room</label>
+                  <div className="mt-1">
+                    <Badge variant="outline">{item.room}</Badge>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Description */}
+            {item.description && (
+              <div>
+                <label className="text-sm font-medium text-gray-600">Description</label>
+                <p className="text-gray-900 mt-1 leading-relaxed">{item.description}</p>
+              </div>
+            )}
+
+            {/* Show More Section */}
+            {(item.notes || item.purchase_date || item.warranty_date) && (
+              <div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowMore(!showMore)}
+                  className="p-0 h-auto font-medium text-blue-600"
+                >
+                  {showMore ? (
+                    <>
+                      <ChevronUp className="w-4 h-4 mr-1" />
+                      Show less
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-4 h-4 mr-1" />
+                      Show more
+                    </>
+                  )}
+                </Button>
+
+                {showMore && (
+                  <div className="mt-4 space-y-4">
+                    {item.notes && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Notes</label>
+                        <p className="text-gray-900 mt-1 leading-relaxed">{item.notes}</p>
+                      </div>
+                    )}
+                    {item.purchase_date && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Purchase Date</label>
+                        <p className="text-gray-900 mt-1">{new Date(item.purchase_date).toLocaleDateString()}</p>
+                      </div>
+                    )}
+                    {item.warranty_date && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Warranty Until</label>
+                        <p className="text-gray-900 mt-1">{new Date(item.warranty_date).toLocaleDateString()}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Basic Info */}
-      <div className="space-y-4">
-        <div>
-          <h3 className="font-semibold text-lg mb-2">Basic Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-gray-500">Name</label>
-              <p className="text-gray-900">{item.name}</p>
+      {/* Right Column */}
+      <div className="space-y-6">
+        {/* Maintenance Tasks */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              Maintenance Tasks
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+              <span className="text-sm text-gray-600">Next task: </span>
+              <span className="text-sm font-medium">No upcoming maintenance</span>
             </div>
-            <div>
-              <label className="text-sm font-medium text-gray-500">Category</label>
-              <Badge variant="secondary">{item.category}</Badge>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+              <span className="text-sm text-gray-600">Last completed: </span>
+              <span className="text-sm font-medium">N/A</span>
             </div>
-            {item.room && (
-              <div>
-                <label className="text-sm font-medium text-gray-500">Room</label>
-                <Badge variant="outline">{item.room}</Badge>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Description */}
-        {item.description && (
-          <div>
-            <label className="text-sm font-medium text-gray-500">Description</label>
-            <p className="text-gray-900 mt-1">{item.description}</p>
-          </div>
-        )}
-
-        {/* Notes */}
-        {item.notes && (
-          <div>
-            <label className="text-sm font-medium text-gray-500">Notes</label>
-            <p className="text-gray-900 mt-1">{item.notes}</p>
-          </div>
-        )}
-
-        {/* Dates */}
-        <div>
-          <h3 className="font-semibold text-lg mb-2">Important Dates</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {item.purchase_date && (
-              <div>
-                <label className="text-sm font-medium text-gray-500">Purchase Date</label>
-                <p className="text-gray-900">{new Date(item.purchase_date).toLocaleDateString()}</p>
-              </div>
-            )}
-            {item.warranty_date && (
-              <div>
-                <label className="text-sm font-medium text-gray-500">Warranty Until</label>
-                <p className="text-gray-900">{new Date(item.warranty_date).toLocaleDateString()}</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* QR Code */}
-        {item.qr_code_id && (
-          <div>
-            <h3 className="font-semibold text-lg mb-2">QR Code</h3>
-            <div>
-              <label className="text-sm font-medium text-gray-500">Code ID</label>
-              <p className="text-gray-900 font-mono">{item.qr_code_id}</p>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+              <span className="text-sm text-gray-600">Frequency: </span>
+              <span className="text-sm font-medium">Not set</span>
             </div>
-          </div>
-        )}
+          </CardContent>
+        </Card>
 
         {/* Documents */}
         {item.documents && item.documents.length > 0 && (
-          <div>
-            <h3 className="font-semibold text-lg mb-2">Documents</h3>
-            <div className="space-y-2">
-              {item.documents.map((doc) => (
-                <div key={doc.id} className="flex items-center gap-2">
-                  <Badge variant="outline">{doc.type}</Badge>
-                  <span className="text-gray-900">{doc.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Documents
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex space-x-3 mb-4">
+                {item.documents.slice(0, 3).map((doc) => (
+                  <div key={doc.id} className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex items-center justify-center">
+                    {doc.type === 'image' ? (
+                      <img 
+                        src={doc.url} 
+                        alt={doc.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <FileText className="w-6 h-6 text-gray-500" />
+                    )}
+                  </div>
+                ))}
+              </div>
+              <Button variant="link" size="sm" className="p-0 h-auto text-blue-600">
+                View All ({item.documents.length})
+              </Button>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

@@ -3,6 +3,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Item } from '@/hooks/useSupabaseItems';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import ItemDetailsTab from './ItemDetailsTab';
 import ItemMaintenanceTab from './ItemMaintenanceTab';
 import ItemDocumentsTab from './ItemDocumentsTab';
@@ -42,66 +45,91 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
 
   if (isEditing) {
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">Edit {item.name}</h2>
-          <button 
-            onClick={() => setIsEditing(false)} 
-            className="px-4 py-2 text-gray-600 hover:text-gray-800"
-          >
-            Cancel
-          </button>
+      <Card className="max-w-4xl mx-auto rounded-2xl shadow-lg">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold">Edit {item.name}</h2>
+            <Button 
+              variant="outline"
+              onClick={() => setIsEditing(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+          <ItemForm item={item} onSuccess={handleEditSuccess} />
         </div>
-        <ItemForm item={item} onSuccess={handleEditSuccess} />
-      </div>
+      </Card>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">{item.name}</h2>
-          <p className="text-gray-500">{item.category} {item.room ? ` - ${item.room}` : ''}</p>
-        </div>
-        <div>
-          <button onClick={handleEdit} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+    <Card className="max-w-4xl mx-auto rounded-2xl shadow-lg">
+      <div className="p-6">
+        {/* Header */}
+        <div className="flex justify-between items-start pb-4 border-b">
+          <div>
+            <h2 className="text-2xl font-semibold">{item.name}</h2>
+            <div className="flex space-x-2 mt-1">
+              <Badge variant="outline">{item.category}</Badge>
+              {item.room && <Badge variant="outline">{item.room}</Badge>}
+            </div>
+          </div>
+          <Button onClick={handleEdit} className="bg-blue-600 hover:bg-blue-700">
             Edit
-          </button>
+          </Button>
         </div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-6">
+          <TabsList className="grid w-full grid-cols-4 gap-4 bg-gray-50 p-1 rounded-lg">
+            <TabsTrigger 
+              value="details" 
+              className="py-2 px-4 data-[state=active]:bg-blue-50 data-[state=active]:font-semibold"
+            >
+              Details
+            </TabsTrigger>
+            <TabsTrigger 
+              value="maintenance" 
+              className="py-2 px-4 data-[state=active]:bg-blue-50 data-[state=active]:font-semibold"
+            >
+              Tasks
+            </TabsTrigger>
+            <TabsTrigger 
+              value="documents" 
+              className="py-2 px-4 data-[state=active]:bg-blue-50 data-[state=active]:font-semibold"
+            >
+              Documents
+            </TabsTrigger>
+            <TabsTrigger 
+              value="qr" 
+              className="py-2 px-4 data-[state=active]:bg-blue-50 data-[state=active]:font-semibold"
+            >
+              QR Code
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="details" className="mt-6">
+            <ItemDetailsTab item={item} />
+          </TabsContent>
+
+          <TabsContent value="maintenance" className="mt-6">
+            <ItemMaintenanceTab itemId={item.id} highlightTaskId={highlightTaskId} />
+          </TabsContent>
+
+          <TabsContent value="documents" className="mt-6">
+            <ItemDocumentsTab itemId={item.id} />
+          </TabsContent>
+
+          <TabsContent value="qr" className="mt-6">
+            <QRSection
+              itemId={item.id}
+              qrCodeId={item.qr_code_id}
+              onUpdate={handleItemUpdate}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
-
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="maintenance">Tasks</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="qr">QR Code</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="details" className="space-y-4">
-          <ItemDetailsTab item={item} />
-        </TabsContent>
-
-        <TabsContent value="maintenance" className="space-y-4">
-          <ItemMaintenanceTab itemId={item.id} highlightTaskId={highlightTaskId} />
-        </TabsContent>
-
-        <TabsContent value="documents" className="space-y-4">
-          <ItemDocumentsTab itemId={item.id} />
-        </TabsContent>
-
-        <TabsContent value="qr" className="space-y-4">
-          <QRSection
-            itemId={item.id}
-            qrCodeId={item.qr_code_id}
-            onUpdate={handleItemUpdate}
-          />
-        </TabsContent>
-      </Tabs>
-    </div>
+    </Card>
   );
 };
 
