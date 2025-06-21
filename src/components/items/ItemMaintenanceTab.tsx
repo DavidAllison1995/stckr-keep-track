@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
-import { Plus, Calendar, CheckCircle2, Clock } from 'lucide-react';
+import { Plus, Calendar, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
 
 interface ItemMaintenanceTabProps {
   itemId: string;
@@ -17,18 +17,63 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
   const [showAddForm, setShowAddForm] = useState(false);
 
   const itemTasks = tasks.filter(task => task.item_id === itemId);
+  
+  // Properly categorize tasks
   const pendingTasks = itemTasks.filter(task => task.status === 'pending');
+  const dueSoonTasks = itemTasks.filter(task => task.status === 'due_soon');
+  const overdueTasks = itemTasks.filter(task => task.status === 'overdue');
+  const inProgressTasks = itemTasks.filter(task => task.status === 'in_progress');
   const completedTasks = itemTasks.filter(task => task.status === 'completed');
+
+  // All non-completed tasks for display
+  const activeTasks = [...overdueTasks, ...dueSoonTasks, ...inProgressTasks, ...pendingTasks];
 
   // Debug logging
   useEffect(() => {
     console.log(`ItemMaintenanceTab - All tasks:`, tasks.length);
     console.log(`ItemMaintenanceTab - Tasks for item ${itemId}:`, itemTasks.length);
     console.log(`ItemMaintenanceTab - Item tasks:`, itemTasks);
-  }, [tasks, itemTasks, itemId]);
+    console.log(`ItemMaintenanceTab - Active tasks breakdown:`, {
+      overdue: overdueTasks.length,
+      dueSoon: dueSoonTasks.length,
+      inProgress: inProgressTasks.length,
+      pending: pendingTasks.length,
+      completed: completedTasks.length
+    });
+  }, [tasks, itemTasks, itemId, overdueTasks.length, dueSoonTasks.length, inProgressTasks.length, pendingTasks.length, completedTasks.length]);
 
   const handleTaskComplete = (taskId: string) => {
     updateTask(taskId, { status: 'completed' });
+  };
+
+  const getTaskIcon = (status: string) => {
+    switch (status) {
+      case 'overdue':
+        return <AlertTriangle className="w-4 h-4 text-red-500" />;
+      case 'due_soon':
+        return <Clock className="w-4 h-4 text-yellow-500" />;
+      case 'in_progress':
+        return <Clock className="w-4 h-4 text-blue-500" />;
+      case 'pending':
+        return <CheckCircle2 className="w-4 h-4 text-gray-500" />;
+      default:
+        return <CheckCircle2 className="w-4 h-4 text-gray-500" />;
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'overdue':
+        return <Badge variant="destructive">Overdue</Badge>;
+      case 'due_soon':
+        return <Badge className="bg-yellow-500 text-white">Due Soon</Badge>;
+      case 'in_progress':
+        return <Badge className="bg-blue-500 text-white">In Progress</Badge>;
+      case 'pending':
+        return <Badge variant="outline">Pending</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
   };
 
   if (showAddForm) {
@@ -52,15 +97,15 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
         </Button>
       </div>
 
-      {/* Pending Tasks */}
-      {pendingTasks.length > 0 && (
+      {/* Active Tasks */}
+      {activeTasks.length > 0 && (
         <div>
           <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
             <Clock className="w-4 h-4" />
-            Pending Tasks ({pendingTasks.length})
+            Active Tasks ({activeTasks.length})
           </h4>
           <div className="space-y-3">
-            {pendingTasks.map((task) => (
+            {activeTasks.map((task) => (
               <Card 
                 key={task.id} 
                 className={`${highlightTaskId === task.id ? 'ring-2 ring-blue-500' : ''}`}
@@ -68,7 +113,11 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h5 className="font-medium text-gray-900">{task.title}</h5>
+                      <div className="flex items-center gap-2 mb-2">
+                        {getTaskIcon(task.status)}
+                        <h5 className="font-medium text-gray-900">{task.title}</h5>
+                        {getStatusBadge(task.status)}
+                      </div>
                       {task.notes && (
                         <p className="text-sm text-gray-600 mt-1">{task.notes}</p>
                       )}

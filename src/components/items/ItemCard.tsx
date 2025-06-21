@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,17 +24,25 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
   
   const { getTasksByItem, tasks } = useSupabaseMaintenance();
   const itemTasks = getTasksByItem(item.id, false); // Don't include completed tasks
+  
+  // Properly categorize tasks
   const pendingTasks = itemTasks.filter(task => task.status === 'pending');
   const dueSoonTasks = itemTasks.filter(task => task.status === 'due_soon');
   const overdueTasks = itemTasks.filter(task => task.status === 'overdue');
+  const inProgressTasks = itemTasks.filter(task => task.status === 'in_progress');
 
   // Debug logging
   useEffect(() => {
     console.log(`ItemCard ${item.name} - All tasks:`, tasks.length);
     console.log(`ItemCard ${item.name} - Item tasks:`, itemTasks.length);
     console.log(`ItemCard ${item.name} - Tasks for item ${item.id}:`, itemTasks);
-    console.log(`ItemCard ${item.name} - Pending: ${pendingTasks.length}, Due Soon: ${dueSoonTasks.length}, Overdue: ${overdueTasks.length}`);
-  }, [tasks, itemTasks, item.name, item.id, pendingTasks.length, dueSoonTasks.length, overdueTasks.length]);
+    console.log(`ItemCard ${item.name} - Task breakdown:`, {
+      pending: pendingTasks.length,
+      dueSoon: dueSoonTasks.length, 
+      overdue: overdueTasks.length,
+      inProgress: inProgressTasks.length
+    });
+  }, [tasks, itemTasks, item.name, item.id, pendingTasks.length, dueSoonTasks.length, overdueTasks.length, inProgressTasks.length]);
 
   const IconComponent = getIconComponent(item.icon_id || 'box');
   
@@ -85,7 +94,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
     }
   };
 
-  const getTaskIcon = (count: number, type: 'overdue' | 'due_soon' | 'pending') => {
+  const getTaskIcon = (count: number, type: 'overdue' | 'due_soon' | 'pending' | 'in_progress') => {
     if (count === 0) return null;
     
     switch (type) {
@@ -93,12 +102,32 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
         return <AlertTriangle className="w-4 h-4 text-red-500" />;
       case 'due_soon':
         return <Clock className="w-4 h-4 text-yellow-500" />;
+      case 'in_progress':
+        return <Clock className="w-4 h-4 text-blue-500" />;
       case 'pending':
-        return <CheckCircle2 className="w-4 h-4 text-blue-500" />;
+        return <CheckCircle2 className="w-4 h-4 text-gray-500" />;
       default:
         return null;
     }
   };
+
+  // Generate QR code thumbnail on mount
+  useEffect(() => {
+    if (item.qr_code_id) {
+      const generateQrCode = async () => {
+        try {
+          const dataUrl = await QRCode.toDataURL(`https://stckr.io/qr/${item.qr_code_id}`, { 
+            width: 128, 
+            margin: 0 
+          });
+          setQrDataUrl(dataUrl);
+        } catch (error) {
+          console.error('Error generating QR code:', error);
+        }
+      };
+      generateQrCode();
+    }
+  }, [item.qr_code_id]);
 
   return (
     <>
@@ -156,10 +185,16 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                         <span className="text-yellow-600">{dueSoonTasks.length} due soon</span>
                       </div>
                     )}
+                    {inProgressTasks.length > 0 && (
+                      <div className="flex items-center gap-1">
+                        {getTaskIcon(inProgressTasks.length, 'in_progress')}
+                        <span className="text-blue-600">{inProgressTasks.length} in progress</span>
+                      </div>
+                    )}
                     {pendingTasks.length > 0 && (
                       <div className="flex items-center gap-1">
                         {getTaskIcon(pendingTasks.length, 'pending')}
-                        <span className="text-blue-600">{pendingTasks.length} pending</span>
+                        <span className="text-gray-600">{pendingTasks.length} pending</span>
                       </div>
                     )}
                   </div>
