@@ -5,11 +5,8 @@ import { Button } from '@/components/ui/button';
 import { 
   User, 
   Menu, 
-  X,
-  QrCode
+  X
 } from 'lucide-react';
-import { useGlobalQRScanner } from '@/hooks/useGlobalQRScanner';
-import GlobalQRScannerOverlay from '@/components/qr/GlobalQRScannerOverlay';
 import NotificationBell from '@/components/notifications/NotificationBell';
 
 interface ProtectedLayoutProps {
@@ -20,7 +17,6 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { isScanning, handleGlobalScan, stopGlobalScan } = useGlobalQRScanner();
 
   useEffect(() => {
     if (!isSidebarOpen) return;
@@ -83,14 +79,6 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleGlobalScan}
-                className="p-2"
-              >
-                <QrCode className="w-5 h-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
                 onClick={() => navigate('/profile')}
                 className="p-2"
               >
@@ -105,13 +93,6 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
           </main>
         </div>
       </div>
-
-      {/* Scanner Overlay */}
-      <GlobalQRScannerOverlay
-        isOpen={isScanning}
-        onClose={stopGlobalScan}
-        scannedCode={null}
-      />
     </div>
   );
 };
