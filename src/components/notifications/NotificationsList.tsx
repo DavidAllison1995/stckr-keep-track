@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
-import { Calendar, Package, Clock, AlertTriangle, CheckCircle, X } from 'lucide-react';
+import { Calendar, Package, Clock, AlertTriangle, CheckCircle, Plus, X } from 'lucide-react';
 
 interface NotificationsListProps {
   onNotificationClick?: () => void;
@@ -36,6 +36,8 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
         return <CheckCircle className="w-4 h-4 text-green-600" />;
       case 'task_created':
         return <Calendar className="w-4 h-4 text-blue-600" />;
+      case 'item_created':
+        return <Plus className="w-4 h-4 text-purple-600" />;
       default:
         return <Calendar className="w-4 h-4 text-gray-600" />;
     }

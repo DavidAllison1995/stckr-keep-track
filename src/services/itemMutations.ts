@@ -4,10 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Item } from '@/types/item';
 import { transformItemData } from '@/utils/itemTransform';
+import { useNotificationTriggers } from '@/hooks/useNotificationTriggers';
 
 export const useAddItemMutation = (userId: string | undefined) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { triggerItemCreatedNotification } = useNotificationTriggers();
 
   return useMutation({
     mutationFn: async (itemData: Omit<Item, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
@@ -29,12 +31,15 @@ export const useAddItemMutation = (userId: string | undefined) => {
       
       return transformItemData(data);
     },
-    onSuccess: () => {
+    onSuccess: async (newItem) => {
       queryClient.invalidateQueries({ queryKey: ['items', userId] });
       toast({
         title: 'Success',
         description: 'Item added successfully',
       });
+      
+      // Trigger notification for the new item
+      await triggerItemCreatedNotification(newItem.id, newItem.name);
     },
     onError: (error) => {
       console.error('Error adding item:', error);

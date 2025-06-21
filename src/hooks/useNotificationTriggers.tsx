@@ -43,12 +43,30 @@ export const useNotificationTriggers = () => {
     }
   };
 
+  const triggerItemCreatedNotification = async (itemId: string, itemName: string) => {
+    if (!user?.id) return;
+
+    try {
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: user.id,
+          type: 'item_created',
+          title: `New Item Added: ${itemName}`,
+          message: 'A new item has been added to your inventory',
+          item_id: itemId
+        });
+    } catch (error) {
+      console.error('Error creating item notification:', error);
+    }
+  };
+
   const generateNotificationsManually = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-notifications`, {
+      const response = await fetch(`https://cudftlquaydissmvqjmv.supabase.co/functions/v1/generate-notifications`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1ZGZ0bHF1YXlkaXNzbXZxam12Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNzkwNTksImV4cCI6MjA2NTg1NTA1OX0.f6_TmpyKF6VtQJL65deTrEdNnag6sSQw-eYWYUtQgaQ`,
           'Content-Type': 'application/json',
         },
       });
@@ -67,6 +85,7 @@ export const useNotificationTriggers = () => {
   return {
     triggerTaskCreatedNotification,
     triggerTaskCompletedNotification,
+    triggerItemCreatedNotification,
     generateNotificationsManually,
   };
 };

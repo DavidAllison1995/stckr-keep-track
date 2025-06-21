@@ -7,7 +7,7 @@ import { useSupabaseAuth } from './useSupabaseAuth';
 export interface Notification {
   id: string;
   user_id: string;
-  type: 'task_due_soon' | 'task_overdue' | 'warranty_expiring' | 'task_completed' | 'task_created';
+  type: 'task_due_soon' | 'task_overdue' | 'warranty_expiring' | 'task_completed' | 'task_created' | 'item_created';
   title: string;
   message?: string;
   task_id?: string;
