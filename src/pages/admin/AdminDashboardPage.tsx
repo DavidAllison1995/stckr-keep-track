@@ -3,16 +3,20 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Users, 
   ShoppingCart, 
   QrCode, 
   Target,
   ArrowRight,
-  TrendingUp
+  TrendingUp,
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 interface DashboardStats {
   totalUsers: number;
@@ -22,6 +26,7 @@ interface DashboardStats {
 }
 
 const AdminDashboardPage = () => {
+  const { isAdmin, isLoading: authLoading } = useAdminAuth();
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalOrders: 0,
@@ -29,45 +34,84 @@ const AdminDashboardPage = () => {
     totalClaims: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadDashboardStats();
-  }, []);
+    if (!authLoading && isAdmin) {
+      loadDashboardStats();
+    }
+  }, [authLoading, isAdmin]);
 
   const loadDashboardStats = async () => {
     try {
-      // Get total users count
-      const { count: usersCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
+      setIsLoading(true);
+      setError(null);
+      console.log('Loading dashboard stats...');
 
-      // Get total orders count
-      const { count: ordersCount } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true });
+      // Use Promise.allSettled to handle partial failures gracefully
+      const [usersResult, ordersResult, qrCodesResult, claimsResult] = await Promise.allSettled([
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('orders').select('*', { count: 'exact', head: true }),
+        supabase.from('qr_codes').select('*', { count: 'exact', head: true }),
+        supabase.from('user_qr_claims').select('*', { count: 'exact', head: true })
+      ]);
 
-      // Get active QR codes count
-      const { count: qrCodesCount } = await supabase
-        .from('qr_codes')
-        .select('*', { count: 'exact', head: true });
+      const newStats = {
+        totalUsers: usersResult.status === 'fulfilled' ? (usersResult.value.count || 0) : 0,
+        totalOrders: ordersResult.status === 'fulfilled' ? (ordersResult.value.count || 0) : 0,
+        activeQrCodes: qrCodesResult.status === 'fulfilled' ? (qrCodesResult.value.count || 0) : 0,
+        totalClaims: claimsResult.status === 'fulfilled' ? (claimsResult.value.count || 0) : 0,
+      };
 
-      // Get total claims count
-      const { count: claimsCount } = await supabase
-        .from('user_qr_claims')
-        .select('*', { count: 'exact', head: true });
+      setStats(newStats);
+      console.log('Dashboard stats loaded:', newStats);
 
-      setStats({
-        totalUsers: usersCount || 0,
-        totalOrders: ordersCount || 0,
-        activeQrCodes: qrCodesCount || 0,
-        totalClaims: claimsCount || 0,
+      // Log any errors but don't fail completely
+      [usersResult, ordersResult, qrCodesResult, claimsResult].forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.error(`Stat query ${index} failed:`, result.reason);
+        }
       });
+
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
+      setError('Failed to load dashboard statistics. Please try refreshing the page.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleRefresh = () => {
+    loadDashboardStats();
+  };
+
+  // Show loading while checking admin status
+  if (authLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p>Loading dashboard...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  // Show error if not admin (should be handled by AdminProtectedRoute, but extra safety)
+  if (!isAdmin) {
+    return (
+      <AdminLayout>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            You don't have permission to view this page.
+          </AlertDescription>
+        </Alert>
+      </AdminLayout>
+    );
+  }
 
   const statCards = [
     {
@@ -85,7 +129,7 @@ const AdminDashboardPage = () => {
       bgColor: 'bg-green-50',
     },
     {
-      title: 'Active QR Codes',
+      title: 'QR Codes',
       value: stats.activeQrCodes,
       icon: QrCode,
       color: 'text-purple-600',
@@ -127,10 +171,29 @@ const AdminDashboardPage = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-gray-600">Overview of your platform's performance</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <p className="text-gray-600">Overview of your platform's performance</p>
+          </div>
+          <Button 
+            onClick={handleRefresh} 
+            variant="outline" 
+            size="sm"
+            disabled={isLoading}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         </div>
+
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -143,7 +206,11 @@ const AdminDashboardPage = () => {
                     <div>
                       <p className="text-sm font-medium text-gray-600">{stat.title}</p>
                       <p className="text-2xl font-bold">
-                        {isLoading ? '...' : stat.value.toLocaleString()}
+                        {isLoading ? (
+                          <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                        ) : (
+                          stat.value.toLocaleString()
+                        )}
                       </p>
                     </div>
                     <div className={`p-3 rounded-full ${stat.bgColor}`}>
