@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from './useSupabaseAuth';
@@ -31,8 +30,6 @@ export interface Order {
   id: string;
   user_id: string;
   user_email: string;
-  stripe_session_id: string | null;
-  printful_order_id: string | null;
   status: string;
   total_amount: number;
   created_at: string;
