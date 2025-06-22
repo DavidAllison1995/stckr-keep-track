@@ -108,9 +108,9 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
   };
 
   const renderMonthView = () => (
-    <div className="bg-white rounded-lg border">
+    <div className="bg-white rounded-lg border overflow-hidden">
       {/* Calendar Header */}
-      <div className="flex items-center justify-between p-4 border-b">
+      <div className="flex items-center justify-between p-4 border-b bg-gray-50">
         <Button
           variant="outline"
           size="sm"
@@ -131,9 +131,9 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
       </div>
 
       {/* Days of Week Header */}
-      <div className="grid grid-cols-7 border-b">
+      <div className="grid grid-cols-7 border-b bg-gray-50">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} className="p-3 text-center text-sm font-medium text-gray-500 border-r last:border-r-0">
+          <div key={day} className="p-3 text-center text-sm font-medium text-gray-700 border-r last:border-r-0">
             {day}
           </div>
         ))}
@@ -152,9 +152,9 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
             <div
               key={index}
               className={`
-                min-h-[120px] p-2 border-r border-b last:border-r-0 cursor-pointer hover:bg-gray-50 transition-colors
+                min-h-[100px] p-2 border-r border-b last:border-r-0 cursor-pointer hover:bg-gray-50 transition-colors
                 ${isSelected ? 'bg-blue-50 border-blue-300' : ''}
-                ${!isCurrentMonth ? 'text-gray-300 bg-gray-50' : ''}
+                ${!isCurrentMonth ? 'text-gray-300 bg-gray-25' : ''}
               `}
               onClick={() => handleDateClick(day)}
             >
@@ -204,29 +204,42 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
   );
 
   return (
-    <div className="h-full space-y-6">
+    <div className="h-full space-y-6 max-w-full overflow-hidden">
       {/* Header Controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h2 className="text-2xl font-bold">Maintenance Calendar</h2>
-          
-          {/* View Toggle */}
-          <div className="flex bg-gray-100 rounded-lg p-1">
-            {(['month', 'week', 'day'] as ViewMode[]).map((mode) => (
-              <Button
-                key={mode}
-                variant={viewMode === mode ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode(mode)}
-                className={`capitalize ${viewMode === mode ? 'bg-blue-500 text-white' : ''}`}
-              >
-                {mode}
-              </Button>
-            ))}
-          </div>
         </div>
 
         <div className="flex items-center gap-3">
+          {/* View Toggle */}
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <Button
+              variant={viewMode === 'month' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('month')}
+              className={`${viewMode === 'month' ? 'bg-blue-500 text-white' : ''}`}
+            >
+              Month
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled
+              className="opacity-50 cursor-not-allowed"
+            >
+              Week
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled
+              className="opacity-50 cursor-not-allowed"
+            >
+              Day
+            </Button>
+          </div>
+
           <Button
             variant="outline"
             size="sm"
@@ -251,15 +264,15 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
       )}
 
       {/* Main Calendar Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-280px)]">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 max-w-full">
         {/* Calendar View */}
-        <div className="lg:col-span-3">
-          {viewMode === 'month' && renderMonthView()}
+        <div className="lg:col-span-3 w-full max-w-full overflow-hidden">
+          {renderMonthView()}
         </div>
 
         {/* Task Sidebar */}
         <div className="lg:col-span-1">
-          <Card className="h-full">
+          <Card className="h-fit max-h-[600px]">
             <CardContent className="p-6">
               <div className="space-y-4">
                 <div>
@@ -269,7 +282,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                 </div>
 
                 {tasksForSelectedDate.length > 0 ? (
-                  <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                  <div className="space-y-3 max-h-[500px] overflow-y-auto">
                     {tasksForSelectedDate.map(task => (
                       <div
                         key={task.id}
