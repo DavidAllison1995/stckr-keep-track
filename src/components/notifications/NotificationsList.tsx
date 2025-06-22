@@ -67,30 +67,45 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
     onNotificationClick?.();
   };
 
-  // Fixed delete handler that properly deletes from Supabase
+  // Step-by-step diagnostic delete handler
   const handleDeleteNotification = async (e: React.MouseEvent<HTMLButtonElement>, notificationId: string) => {
     e.stopPropagation();
     e.preventDefault();
     
+    // Step 1: Confirm the function runs
     console.log('Delete button clicked for notification ID:', notificationId);
     
+    // Step 2: Check if ID is valid
+    if (!notificationId) {
+      console.error('No notification ID found');
+      alert('Error: No notification ID found');
+      return;
+    }
+    
     try {
+      // Step 3: Log the Supabase response
+      console.log('Attempting to delete notification from Supabase...');
+      
       const { error } = await supabase
         .from('notifications')
         .delete()
         .eq('id', notificationId);
 
       if (error) {
-        console.error('Supabase deletion error:', error);
+        console.error('Supabase delete failed:', error.message, error);
+        alert('Could not delete notification: ' + error.message);
         return;
       }
       
-      console.log('Delete operation completed successfully');
+      console.log('Deleted successfully from Supabase');
       
       // Refetch notifications to update the UI
+      console.log('Refetching notifications to update UI...');
       refetchNotifications();
+      
     } catch (error) {
-      console.error('Delete operation failed:', error);
+      console.error('Delete operation failed with exception:', error);
+      alert('An unexpected error occurred while deleting.');
     }
   };
 
@@ -160,12 +175,12 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
                         {!notification.read && (
                           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                         )}
-                        {/* Fixed delete button with proper functionality */}
+                        {/* Diagnostic delete button with proper functionality */}
                         <button
                           onClick={(e) => handleDeleteNotification(e, notification.id)}
                           disabled={isDeletingNotification}
-                          className="text-gray-400 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                          title="Delete"
+                          className="text-gray-400 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                          title="Delete notification"
                           aria-label="Delete notification"
                         >
                           ✕
