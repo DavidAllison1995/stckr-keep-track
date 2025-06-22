@@ -84,30 +84,16 @@ export const useShop = () => {
     }
   };
 
-  // Load cart items
-  const loadCartItems = async () => {
+  // Load cart items with optimistic updates
+  const loadCartItems = async (skipLogging = false) => {
     if (!user) {
-      console.log('No user, skipping cart load');
+      if (!skipLogging) console.log('No user, skipping cart load');
       return;
     }
 
     try {
-      console.log('Loading cart items for user:', user.id);
+      if (!skipLogging) console.log('Loading cart items for user:', user.id);
       
-      // First check if there are any cart items for this user
-      const { data: cartData, error: cartError } = await supabase
-        .from('cart_items')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (cartError) {
-        console.error('Error loading basic cart items:', cartError);
-        throw cartError;
-      }
-
-      console.log('Basic cart items:', cartData);
-
-      // Now load with product details
       const { data, error } = await supabase
         .from('cart_items')
         .select(`
@@ -117,11 +103,11 @@ export const useShop = () => {
         .eq('user_id', user.id);
 
       if (error) {
-        console.error('Error loading cart with products:', error);
+        console.error('Error loading cart items:', error);
         throw error;
       }
       
-      console.log('Cart items with products loaded:', data);
+      if (!skipLogging) console.log('Cart items loaded:', data);
       setCartItems(data || []);
     } catch (error) {
       console.error('Error loading cart:', error);
@@ -133,7 +119,7 @@ export const useShop = () => {
     }
   };
 
-  // Add to cart
+  // Add to cart with optimistic updates
   const addToCart = async (productId: string, quantity: number = 1) => {
     if (!user) {
       toast({
@@ -147,42 +133,87 @@ export const useShop = () => {
     try {
       console.log('Adding to cart:', { productId, quantity, userId: user.id });
       
+      // Find the product for optimistic update
+      const product = products.find(p => p.id === productId);
+      if (!product) {
+        throw new Error('Product not found');
+      }
+
       // Check if item already exists in cart
-      const existingItem = cartItems.find(item => item.product_id === productId);
+      const existingItemIndex = cartItems.findIndex(item => item.product_id === productId);
       
-      if (existingItem) {
-        console.log('Updating existing cart item:', existingItem.id);
-        // Update quantity
+      if (existingItemIndex >= 0) {
+        console.log('Updating existing cart item');
+        const existingItem = cartItems[existingItemIndex];
+        const newQuantity = existingItem.quantity + quantity;
+        
+        // Optimistic update
+        const optimisticCartItems = [...cartItems];
+        optimisticCartItems[existingItemIndex] = {
+          ...existingItem,
+          quantity: newQuantity
+        };
+        setCartItems(optimisticCartItems);
+
+        // Update in database
         const { error } = await supabase
           .from('cart_items')
           .update({ 
-            quantity: existingItem.quantity + quantity,
+            quantity: newQuantity,
             updated_at: new Date().toISOString()
           })
           .eq('id', existingItem.id);
 
         if (error) {
           console.error('Error updating cart item:', error);
+          // Revert optimistic update on error
+          setCartItems(cartItems);
           throw error;
         }
       } else {
         console.log('Inserting new cart item');
+        
+        // Create optimistic item
+        const optimisticItem: CartItem = {
+          id: 'temp-' + Date.now(),
+          user_id: user.id,
+          product_id: productId,
+          quantity,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          product
+        };
+
+        // Optimistic update
+        setCartItems([...cartItems, optimisticItem]);
+
         // Insert new item
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('cart_items')
           .insert({
             user_id: user.id,
             product_id: productId,
             quantity,
-          });
+          })
+          .select(`
+            *,
+            product:products (*)
+          `)
+          .single();
 
         if (error) {
           console.error('Error inserting cart item:', error);
+          // Revert optimistic update on error
+          setCartItems(cartItems);
           throw error;
         }
+
+        // Replace optimistic item with real data
+        setCartItems(prev => prev.map(item => 
+          item.id === optimisticItem.id ? data : item
+        ));
       }
 
-      await loadCartItems();
       toast({
         title: 'Added to Cart',
         description: 'Item added successfully',
@@ -197,7 +228,7 @@ export const useShop = () => {
     }
   };
 
-  // Update cart quantity
+  // Update cart quantity with optimistic updates
   const updateCartQuantity = async (cartItemId: string, quantity: number) => {
     if (quantity <= 0) {
       await removeFromCart(cartItemId);
@@ -206,6 +237,13 @@ export const useShop = () => {
 
     try {
       console.log('Updating cart quantity:', { cartItemId, quantity });
+      
+      // Optimistic update
+      const optimisticCartItems = cartItems.map(item =>
+        item.id === cartItemId ? { ...item, quantity } : item
+      );
+      setCartItems(optimisticCartItems);
+
       const { error } = await supabase
         .from('cart_items')
         .update({ 
@@ -216,9 +254,10 @@ export const useShop = () => {
 
       if (error) {
         console.error('Error updating cart quantity:', error);
+        // Revert optimistic update on error
+        setCartItems(cartItems);
         throw error;
       }
-      await loadCartItems();
     } catch (error) {
       console.error('Error updating cart:', error);
       toast({
@@ -229,10 +268,15 @@ export const useShop = () => {
     }
   };
 
-  // Remove from cart
+  // Remove from cart with optimistic updates
   const removeFromCart = async (cartItemId: string) => {
     try {
       console.log('Removing from cart:', cartItemId);
+      
+      // Optimistic update
+      const optimisticCartItems = cartItems.filter(item => item.id !== cartItemId);
+      setCartItems(optimisticCartItems);
+
       const { error } = await supabase
         .from('cart_items')
         .delete()
@@ -240,9 +284,11 @@ export const useShop = () => {
 
       if (error) {
         console.error('Error removing from cart:', error);
+        // Revert optimistic update on error
+        setCartItems(cartItems);
         throw error;
       }
-      await loadCartItems();
+      
       toast({
         title: 'Removed',
         description: 'Item removed from cart',
