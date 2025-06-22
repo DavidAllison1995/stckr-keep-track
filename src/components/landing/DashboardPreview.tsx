@@ -1,19 +1,14 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Package, Wrench } from 'lucide-react';
-
 const DashboardPreview = () => {
-  return (
-    <section className="py-20 px-4 bg-white">
+  return <section className="py-20 px-4 bg-white">
       <div className="container mx-auto max-w-7xl">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Your Command Center
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            See everything at a glance with our intuitive dashboard
-          </p>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">See everything at a glance with our easy to use dashboard</p>
         </div>
 
         <div className="max-w-5xl mx-auto">
@@ -42,12 +37,22 @@ const DashboardPreview = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {[
-                      { name: "Kitchen Toaster", status: "Good", icon: "🍞", maintenance: "Due soon" },
-                      { name: "Garage Drill", status: "Excellent", icon: "🔧", maintenance: "Up to date" },
-                      { name: "Living Room TV", status: "Good", icon: "📺", maintenance: "Overdue" }
-                    ].map((item, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    {[{
+                    name: "Kitchen Toaster",
+                    status: "Good",
+                    icon: "🍞",
+                    maintenance: "Due soon"
+                  }, {
+                    name: "Garage Drill",
+                    status: "Excellent",
+                    icon: "🔧",
+                    maintenance: "Up to date"
+                  }, {
+                    name: "Living Room TV",
+                    status: "Good",
+                    icon: "📺",
+                    maintenance: "Overdue"
+                  }].map((item, index) => <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center">
                             <span className="text-lg">{item.icon}</span>
@@ -60,8 +65,7 @@ const DashboardPreview = () => {
                         <Badge variant={item.maintenance === "Overdue" ? "destructive" : item.maintenance === "Due soon" ? "secondary" : "outline"}>
                           {item.maintenance}
                         </Badge>
-                      </div>
-                    ))}
+                      </div>)}
                   </CardContent>
                 </Card>
               </div>
@@ -120,8 +124,6 @@ const DashboardPreview = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default DashboardPreview;
