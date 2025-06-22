@@ -44,8 +44,8 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
                 className="hover:opacity-80 transition-opacity"
               >
                 <img 
-                  src="/lovable-uploads/b040bcf1-975f-4316-8744-a19b2453d26e.png" 
-                  alt="STCKR Logo" 
+                  src="/lovable-uploads/1593d98b-ef6a-4e85-abb0-468737d7717b.png" 
+                  alt="STCKR Icon" 
                   className="h-16 cursor-pointer"
                 />
               </button>
