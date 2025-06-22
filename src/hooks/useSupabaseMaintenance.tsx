@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, createContext, useContext } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from './useSupabaseAuth';
@@ -20,7 +20,31 @@ export interface MaintenanceTask {
   updated_at: string;
 }
 
+interface MaintenanceContextType {
+  tasks: MaintenanceTask[];
+  isLoading: boolean;
+  error: Error | null;
+  addTask: (taskData: Omit<MaintenanceTask, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => void;
+  updateTask: (id: string, updates: Partial<MaintenanceTask>) => void;
+  deleteTask: (id: string) => void;
+  isAddingTask: boolean;
+  isUpdatingTask: boolean;
+  isDeletingTask: boolean;
+  getTasksByStatus: (status: string) => MaintenanceTask[];
+  getTasksByItem: (itemId: string, includeCompleted?: boolean) => MaintenanceTask[];
+}
+
+const MaintenanceContext = createContext<MaintenanceContextType | undefined>(undefined);
+
 export const useSupabaseMaintenance = () => {
+  const context = useContext(MaintenanceContext);
+  if (context === undefined) {
+    throw new Error('useSupabaseMaintenance must be used within a MaintenanceProvider');
+  }
+  return context;
+};
+
+export const MaintenanceProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useSupabaseAuth();
   const queryClient = useQueryClient();
   const { triggerTaskCreatedNotification, triggerTaskCompletedNotification } = useNotificationTriggers();
@@ -49,9 +73,21 @@ export const useSupabaseMaintenance = () => {
     enabled: !!user?.id,
   });
 
+  // Helper functions
+  const getTasksByStatus = (status: string) => {
+    return tasks.filter(task => task.status === status);
+  };
+
+  const getTasksByItem = (itemId: string, includeCompleted: boolean = false) => {
+    return tasks.filter(task => 
+      task.item_id === itemId && 
+      (includeCompleted || task.status !== 'completed')
+    );
+  };
+
   // Add task mutation
   const addTaskMutation = useMutation({
-    mutationFn: async (taskData: Omit<MaintenanceTask, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'status'>) => {
+    mutationFn: async (taskData: Omit<MaintenanceTask, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       if (!user?.id) throw new Error('User not authenticated');
 
       console.log('=== CREATING NEW TASK ===');
@@ -62,7 +98,6 @@ export const useSupabaseMaintenance = () => {
         .insert([{
           ...taskData,
           user_id: user.id,
-          status: 'pending'
         }])
         .select()
         .single();
@@ -172,7 +207,7 @@ export const useSupabaseMaintenance = () => {
   });
 
   // Convenience functions
-  const addTask = (taskData: Omit<MaintenanceTask, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'status'>) => {
+  const addTask = (taskData: Omit<MaintenanceTask, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
     addTaskMutation.mutate(taskData);
   };
 
@@ -184,7 +219,7 @@ export const useSupabaseMaintenance = () => {
     deleteTaskMutation.mutate(id);
   };
 
-  return {
+  const value: MaintenanceContextType = {
     tasks,
     isLoading,
     error,
@@ -194,5 +229,13 @@ export const useSupabaseMaintenance = () => {
     isAddingTask: addTaskMutation.isPending,
     isUpdatingTask: updateTaskMutation.isPending,
     isDeletingTask: deleteTaskMutation.isPending,
+    getTasksByStatus,
+    getTasksByItem,
   };
+
+  return (
+    <MaintenanceContext.Provider value={value}>
+      {children}
+    </MaintenanceContext.Provider>
+  );
 };

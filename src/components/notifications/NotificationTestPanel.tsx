@@ -37,6 +37,15 @@ const NotificationTestPanel = () => {
     }
   };
 
+  const testGenerateAll = async () => {
+    try {
+      await generateNotificationsManually();
+    } catch (error) {
+      console.error('Generate all failed:', error);
+      throw error;
+    }
+  };
+
   if (!user) {
     return (
       <Card>
@@ -97,7 +106,7 @@ const NotificationTestPanel = () => {
 
           <Button
             variant="outline"
-            onClick={() => testFunction('Generate All', generateNotificationsManually)}
+            onClick={() => testFunction('Generate All', testGenerateAll)}
             disabled={isLoading === 'Generate All'}
             className="flex items-center gap-2"
           >
