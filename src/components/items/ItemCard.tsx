@@ -18,7 +18,7 @@ import { Item } from '@/hooks/useSupabaseItems';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { getIconComponent } from '@/components/icons';
-import { QrCode, Download, Clock, AlertTriangle, CheckCircle2, Trash2 } from 'lucide-react';
+import { QrCode, Download, Clock, AlertTriangle, CheckCircle2, Trash2, ChevronRight } from 'lucide-react';
 import ItemDetail from './ItemDetail';
 import ItemForm from './ItemForm';
 import QRCode from 'qrcode';
@@ -84,6 +84,11 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
     if (onClick) {
       onClick();
     }
+  };
+
+  const handleTasksClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDetailModalOpen(true);
   };
 
   const handleDeleteItem = async () => {
@@ -173,8 +178,17 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
 
               {/* Maintenance Tasks Summary */}
               {itemTasks.length > 0 && (
-                <div className="bg-gray-50 rounded-lg p-2 space-y-1">
-                  <div className="text-xs font-medium text-gray-700 mb-1">Maintenance Tasks</div>
+                <div 
+                  className="bg-gray-50 rounded-lg p-2 space-y-1 cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={handleTasksClick}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-medium text-gray-700">Maintenance Tasks</div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-blue-600">View all</span>
+                      <ChevronRight className="w-3 h-3 text-blue-600" />
+                    </div>
+                  </div>
                   <div className="flex items-center gap-3 text-xs">
                     {overdueTasks.length > 0 && (
                       <div className="flex items-center gap-1">
@@ -351,7 +365,8 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
           </DialogHeader>
           <ItemDetail 
             item={item} 
-            onClose={() => setIsDetailModalOpen(false)} 
+            onClose={() => setIsDetailModalOpen(false)}
+            defaultTab="tasks"
           />
         </DialogContent>
       </Dialog>
