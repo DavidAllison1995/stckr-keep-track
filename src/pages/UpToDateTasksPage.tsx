@@ -7,14 +7,24 @@ const UpToDateTasksPage = () => {
     const now = new Date();
     const fourteenDaysFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
     
-    return tasks.filter(task => {
+    console.log('UpToDateTasksPage - Filtering tasks. Total tasks:', tasks.length);
+    console.log('UpToDateTasksPage - Cutoff date:', fourteenDaysFromNow.toDateString());
+    
+    const filtered = tasks.filter(task => {
       // Skip completed tasks
       if (task.status === 'completed') return false;
       
       const taskDate = new Date(task.date);
       // Task is up-to-date if it's due more than 14 days from now
-      return taskDate > fourteenDaysFromNow;
+      const isUpToDate = taskDate > fourteenDaysFromNow;
+      
+      console.log(`Task "${task.title}" - Due: ${task.date}, Is up to date: ${isUpToDate}`);
+      
+      return isUpToDate;
     });
+    
+    console.log('UpToDateTasksPage - Filtered result:', filtered.length);
+    return filtered;
   };
 
   return (

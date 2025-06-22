@@ -21,7 +21,11 @@ const TaskStatusPage = ({ title, description, icon: Icon, color, filterTasks }: 
   const { tasks, isLoading } = useSupabaseMaintenance();
   const { getItemById } = useSupabaseItems();
 
-  const filteredTasks = filterTasks(tasks);
+  console.log('TaskStatusPage - Raw tasks:', tasks?.length || 0);
+  console.log('TaskStatusPage - Is loading:', isLoading);
+
+  const filteredTasks = tasks ? filterTasks(tasks) : [];
+  console.log('TaskStatusPage - Filtered tasks:', filteredTasks.length);
 
   const getStatusColor = (task: any) => {
     if (task.status === 'completed') {
