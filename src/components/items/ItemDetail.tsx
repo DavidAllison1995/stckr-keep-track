@@ -1,6 +1,6 @@
 
-import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -32,9 +32,27 @@ interface ItemDetailProps {
 
 const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: ItemDetailProps) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [searchParams] = useSearchParams();
   const { deleteItem } = useSupabaseItems();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Update active tab when URL parameters change
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && tabParam !== activeTab) {
+      console.log('URL tab parameter changed to:', tabParam);
+      setActiveTab(tabParam);
+    }
+  }, [searchParams, activeTab]);
+
+  // Also update when defaultTab prop changes
+  useEffect(() => {
+    if (defaultTab !== activeTab) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
 
   const handleDeleteItem = async () => {
     try {
@@ -56,6 +74,11 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
     } catch (error) {
       console.error('Error deleting item:', error);
     }
+  };
+
+  const handleTabChange = (value: string) => {
+    console.log('Tab changed to:', value);
+    setActiveTab(value);
   };
 
   return (
@@ -114,7 +137,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue={defaultTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="tasks">Tasks</TabsTrigger>
