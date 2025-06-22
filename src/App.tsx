@@ -1,232 +1,192 @@
 
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useSupabaseAuth";
-import { AdminAuthProvider } from "@/hooks/useAdminAuth";
+import "./App.css";
+
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { UserSettingsProvider } from "@/contexts/UserSettingsContext";
-import { queryClient } from "@/config/queryClient";
+
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import AdminProtectedRoute from "@/components/admin/AdminProtectedRoute";
 import ProtectedLayout from "@/components/layouts/ProtectedLayout";
 import { ItemsProvider } from "@/hooks/useSupabaseItems";
 import { MaintenanceProvider } from "@/hooks/useSupabaseMaintenance";
-import PublicRoutes from "@/routes/PublicRoutes";
-import AdminRoutes from "@/routes/AdminRoutes";
-import Index from "@/pages/Index";
-import AuthPage from "@/pages/AuthPage";
-import QRRedirectPage from "@/pages/QRRedirectPage";
-import Dashboard from "@/pages/Dashboard";
-import ItemsPage from "@/pages/ItemsPage";
-import ItemDetailPage from "@/pages/ItemDetailPage";
-import MaintenancePage from "@/pages/MaintenancePage";
-import ScannerPage from "@/pages/ScannerPage";
-import ProfilePage from "@/pages/ProfilePage";
-import SettingsPage from "@/pages/SettingsPage";
-import TasksPage from "@/pages/TasksPage";
-import OverdueTasksPage from "@/pages/OverdueTasksPage";
-import DueSoonTasksPage from "@/pages/DueSoonTasksPage";
-import NavBar from "@/components/navigation/NavBar";
-import NotFound from "./pages/NotFound";
-import "./App.css";
+
+// Lazy load route components
+const PublicRoutes = lazy(() => import("@/routes/PublicRoutes"));
+const ClaimRoutes = lazy(() => import("@/routes/ClaimRoutes"));
+const AdminRoutes = lazy(() => import("@/routes/AdminRoutes"));
+const MaintenanceRoutes = lazy(() => import("@/routes/MaintenanceRoutes"));
+const MaintenanceTasksRoutes = lazy(() => import("@/routes/MaintenanceTasksRoutes"));
+const ShopRoutes = lazy(() => import("@/routes/ShopRoutes"));
+
+// Lazy load pages
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const ItemsPage = lazy(() => import("@/pages/ItemsPage"));
+const ItemDetailPage = lazy(() => import("@/pages/ItemDetailPage"));
+const ScannerPage = lazy(() => import("@/pages/ScannerPage"));
+const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
+const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
+
+const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AuthProvider>
-              <AdminAuthProvider>
-                <Routes>
-                  {/* Admin routes - most specific first */}
-                  <Route path="/admin/*" element={<AdminRoutes />} />
-                  
-                  {/* Public routes - these should be accessible without authentication */}
-                  <Route path="/" element={<Index />} />
-                  <Route path="/auth" element={<AuthPage />} />
-                  <Route 
-                    path="/:code" 
-                    element={
+        <UserSettingsProvider>
+          <TooltipProvider>
+            <BrowserRouter>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/*" element={
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <PublicRoutes />
+                  </Suspense>
+                } />
+                
+                {/* QR Claim routes */}
+                <Route path="/claim/*" element={
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <ClaimRoutes />
+                  </Suspense>
+                } />
+
+                {/* Protected routes */}
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <ProtectedLayout>
                       <ItemsProvider>
                         <MaintenanceProvider>
-                          <QRRedirectPage />
+                          <Suspense fallback={<div>Loading...</div>}>
+                            <Dashboard />
+                          </Suspense>
                         </MaintenanceProvider>
                       </ItemsProvider>
-                    } 
-                  />
-                  
-                  {/* User protected routes - wrapped with providers */}
-                  <Route
-                    path="/dashboard"
-                    element={
-                      <ProtectedRoute>
-                        <ItemsProvider>
-                          <MaintenanceProvider>
-                            <ProtectedLayout>
-                              <Dashboard />
-                            </ProtectedLayout>
-                            <NavBar />
-                          </MaintenanceProvider>
-                        </ItemsProvider>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/items"
-                    element={
-                      <ProtectedRoute>
-                        <ItemsProvider>
-                          <MaintenanceProvider>
-                            <ProtectedLayout>
-                              <ItemsPage />
-                            </ProtectedLayout>
-                            <NavBar />
-                          </MaintenanceProvider>
-                        </ItemsProvider>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/items/:id"
-                    element={
-                      <ProtectedRoute>
-                        <ItemsProvider>
-                          <MaintenanceProvider>
-                            <ProtectedLayout>
-                              <ItemDetailPage />
-                            </ProtectedLayout>
-                            <NavBar />
-                          </MaintenanceProvider>
-                        </ItemsProvider>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/maintenance"
-                    element={
-                      <ProtectedRoute>
-                        <ItemsProvider>
-                          <MaintenanceProvider>
-                            <UserSettingsProvider>
-                              <ProtectedLayout>
-                                <MaintenancePage />
-                              </ProtectedLayout>
-                              <NavBar />
-                            </UserSettingsProvider>
-                          </MaintenanceProvider>
-                        </ItemsProvider>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/scanner"
-                    element={
-                      <ProtectedRoute>
-                        <ItemsProvider>
-                          <MaintenanceProvider>
-                            <ProtectedLayout>
-                              <ScannerPage />
-                            </ProtectedLayout>
-                            <NavBar />
-                          </MaintenanceProvider>
-                        </ItemsProvider>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/profile"
-                    element={
-                      <ProtectedRoute>
-                        <ItemsProvider>
-                          <MaintenanceProvider>
-                            <UserSettingsProvider>
-                              <ProtectedLayout>
-                                <ProfilePage />
-                              </ProtectedLayout>
-                              <NavBar />
-                            </UserSettingsProvider>
-                          </MaintenanceProvider>
-                        </ItemsProvider>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/settings"
-                    element={
-                      <ProtectedRoute>
-                        <ItemsProvider>
-                          <MaintenanceProvider>
-                            <UserSettingsProvider>
-                              <ProtectedLayout>
-                                <SettingsPage />
-                              </ProtectedLayout>
-                              <NavBar />
-                            </UserSettingsProvider>
-                          </MaintenanceProvider>
-                        </ItemsProvider>
-                      </ProtectedRoute>
-                    }
-                  />
-                  
-                  {/* Task status routes */}
-                  <Route
-                    path="/tasks/:status"
-                    element={
-                      <ProtectedRoute>
-                        <ItemsProvider>
-                          <MaintenanceProvider>
-                            <ProtectedLayout>
-                              <TasksPage />
-                            </ProtectedLayout>
-                            <NavBar />
-                          </MaintenanceProvider>
-                        </ItemsProvider>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/tasks/overdue"
-                    element={
-                      <ProtectedRoute>
-                        <ItemsProvider>
-                          <MaintenanceProvider>
-                            <ProtectedLayout>
-                              <OverdueTasksPage />
-                            </ProtectedLayout>
-                            <NavBar />
-                          </MaintenanceProvider>
-                        </ItemsProvider>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/tasks/due-soon"
-                    element={
-                      <ProtectedRoute>
-                        <ItemsProvider>
-                          <MaintenanceProvider>
-                            <ProtectedLayout>
-                              <DueSoonTasksPage />
-                            </ProtectedLayout>
-                            <NavBar />
-                          </MaintenanceProvider>
-                        </ItemsProvider>
-                      </ProtectedRoute>
-                    }
-                  />
+                    </ProtectedLayout>
+                  </ProtectedRoute>
+                } />
 
-                  {/* 404 */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </AdminAuthProvider>
-            </AuthProvider>
-          </BrowserRouter>
-        </TooltipProvider>
+                <Route path="/items" element={
+                  <ProtectedRoute>
+                    <ProtectedLayout>
+                      <ItemsProvider>
+                        <Suspense fallback={<div>Loading...</div>}>
+                          <ItemsPage />
+                        </Suspense>
+                      </ItemsProvider>
+                    </ProtectedLayout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/items/:id" element={
+                  <ProtectedRoute>
+                    <ProtectedLayout>
+                      <ItemsProvider>
+                        <MaintenanceProvider>
+                          <Suspense fallback={<div>Loading...</div>}>
+                            <ItemDetailPage />
+                          </Suspense>
+                        </MaintenanceProvider>
+                      </ItemsProvider>
+                    </ProtectedLayout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/maintenance/*" element={
+                  <ProtectedRoute>
+                    <ProtectedLayout>
+                      <ItemsProvider>
+                        <MaintenanceProvider>
+                          <Suspense fallback={<div>Loading...</div>}>
+                            <MaintenanceRoutes />
+                          </Suspense>
+                        </MaintenanceProvider>
+                      </ItemsProvider>
+                    </ProtectedLayout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/tasks/*" element={
+                  <ProtectedRoute>
+                    <ProtectedLayout>
+                      <ItemsProvider>
+                        <MaintenanceProvider>
+                          <Suspense fallback={<div>Loading...</div>}>
+                            <MaintenanceTasksRoutes />
+                          </Suspense>
+                        </MaintenanceProvider>
+                      </ItemsProvider>
+                    </ProtectedLayout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/scanner" element={
+                  <ProtectedRoute>
+                    <ProtectedLayout>
+                      <ItemsProvider>
+                        <Suspense fallback={<div>Loading...</div>}>
+                          <ScannerPage />
+                        </Suspense>
+                      </ItemsProvider>
+                    </ProtectedLayout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/shop/*" element={
+                  <ProtectedRoute>
+                    <ProtectedLayout>
+                      <Suspense fallback={<div>Loading...</div>}>
+                        <ShopRoutes />
+                      </Suspense>
+                    </ProtectedLayout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <ProtectedLayout>
+                      <Suspense fallback={<div>Loading...</div>}>
+                        <ProfilePage />
+                      </Suspense>
+                    </ProtectedLayout>
+                  </ProtectedRoute>
+                } />
+
+                <Route path="/settings" element={
+                  <ProtectedRoute>
+                    <ProtectedLayout>
+                      <Suspense fallback={<div>Loading...</div>}>
+                        <SettingsPage />
+                      </Suspense>
+                    </ProtectedLayout>
+                  </ProtectedRoute>
+                } />
+
+                {/* Admin routes */}
+                <Route path="/admin/*" element={
+                  <AdminProtectedRoute>
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <AdminRoutes />
+                    </Suspense>
+                  </AdminProtectedRoute>
+                } />
+
+                {/* 404 page */}
+                <Route path="*" element={
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <NotFound />
+                  </Suspense>
+                } />
+              </Routes>
+              <Toaster />
+            </BrowserRouter>
+          </TooltipProvider>
+        </UserSettingsProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

@@ -238,11 +238,14 @@ const AdminShopPage = () => {
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'completed':
+      case 'paid':
+      case 'shipped':
         return 'default';
       case 'pending':
+      case 'processing':
         return 'secondary';
       case 'cancelled':
+      case 'failed':
         return 'destructive';
       default:
         return 'outline';

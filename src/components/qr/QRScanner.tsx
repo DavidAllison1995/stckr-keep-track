@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Camera, Scan, Zap } from 'lucide-react';
+import { Camera, Scan, Zap, ShoppingCart } from 'lucide-react';
 import SimpleQRScanner from './SimpleQRScanner';
 import { qrService } from '@/services/qr';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
@@ -85,6 +85,24 @@ const QRScanner = () => {
         <h1 className="text-2xl font-bold text-gray-900">QR Scanner</h1>
         <p className="text-gray-600">Scan QR codes to quickly access your items</p>
       </div>
+
+      {/* Buy Stickers CTA */}
+      <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <CardContent className="p-6 text-center">
+          <ShoppingCart className="w-12 h-12 mx-auto text-blue-600 mb-3" />
+          <h3 className="text-lg font-semibold text-blue-900 mb-2">Need QR Stickers?</h3>
+          <p className="text-blue-700 mb-4 text-sm">
+            Get high-quality, durable QR code stickers delivered to your door
+          </p>
+          <Button 
+            onClick={() => navigate('/shop')}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            Shop QR Stickers
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Main Scanner Card */}
       <Card className="overflow-hidden">
