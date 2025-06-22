@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -17,7 +16,8 @@ export const useAddItemMutation = (userId: string | undefined) => {
 
       const { documents, ...itemWithoutDocuments } = itemData;
       
-      console.log('Creating new item:', itemWithoutDocuments);
+      console.log('=== CREATING NEW ITEM ===');
+      console.log('Item data:', itemWithoutDocuments);
       
       const { data, error } = await supabase
         .from('items')
@@ -30,37 +30,47 @@ export const useAddItemMutation = (userId: string | undefined) => {
         .single();
 
       if (error) {
-        console.error('Error inserting item:', error);
+        console.error('❌ Error inserting item:', error);
         throw error;
       }
       
-      console.log('Item created successfully:', data);
+      console.log('✅ Item created successfully:', data);
       return transformItemData(data);
     },
     onSuccess: async (newItem) => {
-      console.log('Item mutation successful, triggering notification for:', newItem);
+      console.log('=== ITEM MUTATION SUCCESS ===');
+      console.log('New item created:', newItem);
       
-      // Invalidate queries first
-      queryClient.invalidateQueries({ queryKey: ['items', userId] });
-      
-      // Show success toast
-      toast({
-        title: 'Success',
-        description: 'Item added successfully',
-      });
-      
-      // Trigger notification - await this to ensure it completes
       try {
-        console.log('About to trigger item notification for:', { id: newItem.id, name: newItem.name });
+        // Invalidate queries first
+        queryClient.invalidateQueries({ queryKey: ['items', userId] });
+        
+        // Show success toast
+        toast({
+          title: 'Success',
+          description: 'Item added successfully',
+        });
+        
+        // Trigger notification - with detailed logging
+        console.log('🔔 About to trigger item notification...');
+        console.log('Item details for notification:', { id: newItem.id, name: newItem.name });
+        
         await triggerItemCreatedNotification(newItem.id, newItem.name);
-        console.log('Item notification triggered successfully');
+        
+        console.log('🔔 Item notification trigger completed');
+        console.log('=== ITEM MUTATION SUCCESS COMPLETE ===');
       } catch (notificationError) {
-        console.error('Failed to create notification for new item:', notificationError);
+        console.error('❌ Failed to create notification for new item:', notificationError);
         // Don't fail the whole operation if notification fails
+        toast({
+          title: 'Item created',
+          description: 'Item added successfully (notification may have failed)',
+          variant: 'default',
+        });
       }
     },
     onError: (error) => {
-      console.error('Error adding item:', error);
+      console.error('❌ Error adding item:', error);
       toast({
         title: 'Error',
         description: 'Failed to add item',
