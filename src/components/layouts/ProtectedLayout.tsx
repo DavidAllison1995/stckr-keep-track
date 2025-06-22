@@ -39,11 +39,16 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
         <div className="bg-white dark:bg-gray-800 rounded-t-3xl shadow-lg">
           <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
             <div className="flex items-center gap-3">
-              <img 
-                src="/lovable-uploads/76adf774-322e-49f8-b8e3-6cccb8115efd.png" 
-                alt="STCKR Logo" 
-                className="h-8"
-              />
+              <button 
+                onClick={() => navigate('/')}
+                className="hover:opacity-80 transition-opacity"
+              >
+                <img 
+                  src="/lovable-uploads/76adf774-322e-49f8-b8e3-6cccb8115efd.png" 
+                  alt="STCKR Logo" 
+                  className="h-12 cursor-pointer"
+                />
+              </button>
             </div>
             
             <div className="flex items-center gap-2">
