@@ -138,7 +138,6 @@ export const useNotificationTriggers = () => {
       }
       
       console.log('✅ Item created notification created successfully:', data);
-      return data;
     } catch (error) {
       console.error('Error creating item notification:', error);
       throw error;
