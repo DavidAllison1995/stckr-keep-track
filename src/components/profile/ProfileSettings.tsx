@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -129,6 +130,7 @@ const ProfileSettings = () => {
           taskCompleted: notifications.taskCompleted,
           taskCreated: notifications.taskCreated,
         },
+        showCompletedTasks: settings.showCompletedTasks, // Include the missing property
       };
 
       const result = await updateSettings(newSettings);
