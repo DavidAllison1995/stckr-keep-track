@@ -69,17 +69,9 @@ const ShopPage = () => {
             {products.map((product) => (
               <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="aspect-square bg-gray-100 flex items-center justify-center">
-                  {product.image_url ? (
-                    <img
-                      src={product.image_url}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center">
-                      <ShoppingCart className="w-8 h-8 text-gray-400" />
-                    </div>
-                  )}
+                  <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center">
+                    <ShoppingCart className="w-8 h-8 text-gray-400" />
+                  </div>
                 </div>
                 
                 <CardHeader className="pb-2">

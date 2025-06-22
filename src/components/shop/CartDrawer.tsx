@@ -70,15 +70,7 @@ const CartDrawer = ({ open, onClose }: CartDrawerProps) => {
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
                         <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          {item.product?.image_url ? (
-                            <img
-                              src={item.product.image_url}
-                              alt={item.product.name}
-                              className="w-full h-full object-cover rounded-lg"
-                            />
-                          ) : (
-                            <ShoppingCart className="w-6 h-6 text-gray-400" />
-                          )}
+                          <ShoppingCart className="w-6 h-6 text-gray-400" />
                         </div>
                         
                         <div className="flex-1 min-w-0">
