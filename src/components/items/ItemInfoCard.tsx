@@ -1,127 +1,100 @@
 
-import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Calendar, MapPin, DollarSign, Package, StickyNote } from 'lucide-react';
 import { Item } from '@/hooks/useSupabaseItems';
-import { getIconComponent } from '@/components/icons';
-import { ChevronDown, ChevronUp, Tag, Home, ShoppingCart, Shield, StickyNote } from 'lucide-react';
 
 interface ItemInfoCardProps {
   item: Item;
 }
 
 const ItemInfoCard = ({ item }: ItemInfoCardProps) => {
-  const [showMore, setShowMore] = useState(false);
-  const IconComponent = getIconComponent(item.icon_id || 'box');
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
 
   return (
-    <Card className="shadow-sm border border-gray-200 bg-white">
-      <CardContent className="space-y-4 p-6">
-        {/* Header Row: Icon + Name */}
-        <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
-          <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
-            <IconComponent className="w-5 h-5 text-blue-600" />
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 flex-1">{item.name}</h3>
-        </div>
+    <Card className="shadow-sm border border-gray-200">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex items-center gap-2 text-gray-900">
+          <Package className="w-5 h-5 text-blue-600" />
+          Item Information
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Basic Info */}
+        <div className="grid grid-cols-2 gap-4">
+          {item.location && (
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                <MapPin className="w-4 h-4 text-gray-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-medium text-gray-500 mb-1">Location</div>
+                <div className="text-sm font-semibold text-gray-900">{item.location}</div>
+              </div>
+            </div>
+          )}
 
-        {/* Tag Row: Category & Room */}
-        <div className="flex flex-wrap gap-2">
-          <div className="flex items-center gap-1.5 bg-blue-50 text-blue-800 px-3 py-1.5 rounded-full text-sm font-medium">
-            <Tag className="w-3.5 h-3.5" />
-            {item.category}
-          </div>
-          {item.room && (
-            <div className="flex items-center gap-1.5 bg-gray-50 text-gray-700 px-3 py-1.5 rounded-full text-sm font-medium">
-              <Home className="w-3.5 h-3.5" />
-              {item.room}
+          {item.purchase_price && (
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                <DollarSign className="w-4 h-4 text-green-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-medium text-gray-500 mb-1">Purchase Price</div>
+                <div className="text-sm font-semibold text-gray-900">{formatCurrency(item.purchase_price)}</div>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Description Preview */}
-        {item.description && (
-          <div className="bg-gray-50 rounded-lg p-3">
-            <div className="text-sm text-gray-600 font-medium mb-1">Description</div>
-            <p className="text-gray-800 text-sm leading-relaxed">
-              {showMore ? item.description : `${item.description.slice(0, 100)}${item.description.length > 100 ? '...' : ''}`}
-            </p>
-          </div>
-        )}
+        {/* Dates */}
+        <div className="grid grid-cols-1 gap-4">
+          {item.purchase_date && (
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                <Calendar className="w-4 h-4 text-blue-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-medium text-gray-500 mb-1">Purchase Date</div>
+                <div className="text-sm font-semibold text-gray-900">{formatDate(item.purchase_date)}</div>
+              </div>
+            </div>
+          )}
 
-        {/* Expandable Section */}
-        {(item.notes || item.purchase_date || item.warranty_date) && (
-          <div className="border-t border-gray-100 pt-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowMore(!showMore)}
-              className="p-0 h-auto font-medium text-blue-600 hover:text-blue-700 transition-colors duration-150 ease-in-out"
-            >
-              <span className="mr-2">
-                {showMore ? 'Show less details' : 'Show more details'}
-              </span>
-              {showMore ? (
-                <ChevronUp className="w-4 h-4 transition-transform duration-150 ease-in-out" />
-              ) : (
-                <ChevronDown className="w-4 h-4 transition-transform duration-150 ease-in-out" />
-              )}
-            </Button>
+          {item.warranty_expiry && (
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                <Calendar className="w-4 h-4 text-purple-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-medium text-gray-500 mb-1">Warranty Until</div>
+                <div className="text-sm font-semibold text-gray-900">{formatDate(item.warranty_expiry)}</div>
+              </div>
+            </div>
+          )}
+        </div>
 
-            <div className={`transition-all duration-150 ease-in-out overflow-hidden ${
-              showMore ? 'max-h-96 opacity-100 mt-4' : 'max-h-0 opacity-0'
-            }`}>
-              <div className="grid grid-cols-1 gap-4">
-                {/* Notes Section */}
-                {item.notes && (
-                  <div className="bg-amber-50 rounded-lg p-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <StickyNote className="w-4 h-4 text-amber-600" />
-                      <span className="text-sm font-medium text-amber-800">Notes</span>
-                    </div>
-                    <p className="text-sm text-amber-700 italic leading-relaxed">{item.notes}</p>
-                  </div>
-                )}
-
-                {/* Dates Grid */}
-                {(item.purchase_date || item.warranty_date) && (
-                  <div className="grid grid-cols-1 gap-3">
-                    {item.purchase_date && (
-                      <div className="flex items-center gap-3 bg-green-50 rounded-lg p-3">
-                        <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                          <ShoppingCart className="w-4 h-4 text-green-600" />
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-green-800">Purchased</div>
-                          <div className="text-sm text-green-700">
-                            {new Date(item.purchase_date).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {item.warranty_date && (
-                      <div className="flex items-center gap-3 bg-purple-50 rounded-lg p-3">
-                        <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                          <Shield className="w-4 h-4 text-purple-600" />
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-purple-800">Warranty Until</div>
-                          <div className="text-sm text-purple-700">
-                            {new Date(item.warranty_date).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+        {/* Notes */}
+        {item.notes && (
+          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                <StickyNote className="w-4 h-4 text-blue-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-medium text-blue-600 mb-2">Notes</div>
+                <p className="text-sm text-blue-800 whitespace-pre-wrap break-words leading-relaxed">
+                  {item.notes}
+                </p>
               </div>
             </div>
           </div>
