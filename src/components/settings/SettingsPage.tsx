@@ -1,218 +1,233 @@
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { 
+  Settings, 
+  Bell, 
+  Shield, 
+  Download, 
+  Trash2,
+  FileText,
+  Database
+} from 'lucide-react';
+import { useUserSettingsContext } from '@/contexts/UserSettingsContext';
 import { useToast } from '@/hooks/use-toast';
-import { useUserSettings } from '@/hooks/useUserSettings';
 import DataManagement from './DataManagement';
 
 const SettingsPage = () => {
-  const { settings, updateSettings, isLoading } = useUserSettings();
-  const [localSettings, setLocalSettings] = useState(settings);
+  const { settings, updateSettings, isLoading } = useUserSettingsContext();
   const { toast } = useToast();
 
-  // Update local settings when settings change
-  useState(() => {
-    setLocalSettings(settings);
-  });
+  const handleNotificationToggle = async (type: keyof typeof settings.notifications, value: boolean) => {
+    const newSettings = {
+      ...settings,
+      notifications: {
+        ...settings.notifications,
+        [type]: value
+      }
+    };
 
-  const handleSave = async () => {
-    const result = await updateSettings(localSettings);
+    const result = await updateSettings(newSettings);
     
     if (result.success) {
       toast({
-        title: 'Success',
-        description: 'Settings saved successfully',
+        title: 'Settings Updated',
+        description: 'Notification preferences have been saved.',
       });
     } else {
       toast({
         title: 'Error',
-        description: result.error || 'Failed to save settings',
+        description: result.error || 'Failed to update settings',
         variant: 'destructive',
       });
     }
   };
 
-  const handleNotificationChange = (key: keyof typeof settings.notifications, value: boolean) => {
-    setLocalSettings(prev => ({
-      ...prev,
-      notifications: {
-        ...prev.notifications,
-        [key]: value,
-      },
-    }));
-  };
-
-  const handleCalendarChange = (key: keyof typeof settings.calendar, value: any) => {
-    setLocalSettings(prev => ({
-      ...prev,
-      calendar: {
-        ...prev.calendar,
-        [key]: value,
-      },
-    }));
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
-      <div className="px-4 pt-4 pb-20">
-        <div className="bg-white dark:bg-gray-800 rounded-t-3xl shadow-lg min-h-screen">
-          <div className="p-6 pb-8 space-y-6">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
-              <p className="text-gray-600 dark:text-gray-300">Customize your app preferences</p>
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
+        <p className="text-gray-600 mt-2">Manage your app preferences and account settings</p>
+      </div>
+
+      <div className="space-y-8">
+        {/* General Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="w-5 h-5" />
+              General Settings
+            </CardTitle>
+            <CardDescription>
+              Configure your basic app preferences
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Calendar View */}
+            <div className="space-y-2">
+              <Label>Default Calendar View</Label>
+              <div className="flex gap-2">
+                <Button
+                  variant={settings.calendar.defaultView === 'week' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => updateSettings({
+                    ...settings,
+                    calendar: { ...settings.calendar, defaultView: 'week' }
+                  })}
+                >
+                  Week
+                </Button>
+                <Button
+                  variant={settings.calendar.defaultView === 'month' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => updateSettings({
+                    ...settings,
+                    calendar: { ...settings.calendar, defaultView: 'month' }
+                  })}
+                >
+                  Month
+                </Button>
+              </div>
             </div>
 
-            {/* Notifications Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Notifications</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="task-due-soon">Tasks Due Soon</Label>
-                    <p className="text-sm text-muted-foreground">Notify 3 days before tasks are due</p>
-                  </div>
-                  <Switch
-                    id="task-due-soon"
-                    checked={localSettings.notifications.taskDueSoon}
-                    onCheckedChange={(checked) => handleNotificationChange('taskDueSoon', checked)}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="task-overdue">Overdue Tasks</Label>
-                    <p className="text-sm text-muted-foreground">Notify when tasks become overdue</p>
-                  </div>
-                  <Switch
-                    id="task-overdue"
-                    checked={localSettings.notifications.taskOverdue}
-                    onCheckedChange={(checked) => handleNotificationChange('taskOverdue', checked)}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="warranty-expiring">Warranty Expiring</Label>
-                    <p className="text-sm text-muted-foreground">Notify 7 days before warranties expire</p>
-                  </div>
-                  <Switch
-                    id="warranty-expiring"
-                    checked={localSettings.notifications.warrantyExpiring}
-                    onCheckedChange={(checked) => handleNotificationChange('warrantyExpiring', checked)}
-                  />
-                </div>
+            {/* Date Format */}
+            <div className="space-y-2">
+              <Label>Date Format</Label>
+              <div className="flex gap-2">
+                <Button
+                  variant={settings.calendar.dateFormat === 'MM/dd/yyyy' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => updateSettings({
+                    ...settings,
+                    calendar: { ...settings.calendar, dateFormat: 'MM/dd/yyyy' }
+                  })}
+                >
+                  US (MM/DD/YYYY)
+                </Button>
+                <Button
+                  variant={settings.calendar.dateFormat === 'dd/MM/yyyy' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => updateSettings({
+                    ...settings,
+                    calendar: { ...settings.calendar, dateFormat: 'dd/MM/yyyy' }
+                  })}
+                >
+                  International (DD/MM/YYYY)
+                </Button>
+              </div>
+            </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="task-completed">Task Completed</Label>
-                    <p className="text-sm text-muted-foreground">Notify when shared tasks are completed</p>
-                  </div>
-                  <Switch
-                    id="task-completed"
-                    checked={localSettings.notifications.taskCompleted}
-                    onCheckedChange={(checked) => handleNotificationChange('taskCompleted', checked)}
-                  />
-                </div>
+            {/* QR Scan Sound */}
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>QR Scan Sound</Label>
+                <p className="text-sm text-gray-500">
+                  Play a sound when successfully scanning QR codes
+                </p>
+              </div>
+              <Switch
+                checked={settings.qrScanSound}
+                onCheckedChange={(checked) => updateSettings({
+                  ...settings,
+                  qrScanSound: checked
+                })}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="task-created">New Tasks Created</Label>
-                    <p className="text-sm text-muted-foreground">Notify when new tasks are added to shared items</p>
-                  </div>
-                  <Switch
-                    id="task-created"
-                    checked={localSettings.notifications.taskCreated}
-                    onCheckedChange={(checked) => handleNotificationChange('taskCreated', checked)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+        {/* Notification Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="w-5 h-5" />
+              Notification Preferences
+            </CardTitle>
+            <CardDescription>
+              Choose which notifications you want to receive
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Task Due Soon</Label>
+                <p className="text-sm text-gray-500">
+                  Get notified when maintenance tasks are due within 3 days
+                </p>
+              </div>
+              <Switch
+                checked={settings.notifications.taskDueSoon}
+                onCheckedChange={(checked) => handleNotificationToggle('taskDueSoon', checked)}
+              />
+            </div>
 
-            {/* Calendar Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Calendar Preferences</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-3">
-                  <Label>Default View</Label>
-                  <RadioGroup
-                    value={localSettings.calendar.defaultView}
-                    onValueChange={(value) => handleCalendarChange('defaultView', value)}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="week" id="week" />
-                      <Label htmlFor="week">Week View</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="month" id="month" />
-                      <Label htmlFor="month">Month View</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-                
-                <div className="space-y-3">
-                  <Label>Date Format</Label>
-                  <RadioGroup
-                    value={localSettings.calendar.dateFormat}
-                    onValueChange={(value) => handleCalendarChange('dateFormat', value)}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="MM/dd/yyyy" id="us-format" />
-                      <Label htmlFor="us-format">MM/dd/yyyy (US)</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="dd/MM/yyyy" id="intl-format" />
-                      <Label htmlFor="intl-format">dd/MM/yyyy (International)</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Task Overdue</Label>
+                <p className="text-sm text-gray-500">
+                  Get notified when maintenance tasks are past their due date
+                </p>
+              </div>
+              <Switch
+                checked={settings.notifications.taskOverdue}
+                onCheckedChange={(checked) => handleNotificationToggle('taskOverdue', checked)}
+              />
+            </div>
 
-            {/* Push Notifications */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Push Notifications</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="push-notifications">Enable Push Notifications</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive notifications even when the app is closed
-                    </p>
-                  </div>
-                  <Switch
-                    id="push-notifications"
-                    checked={localSettings.pushNotifications}
-                    onCheckedChange={(checked) => 
-                      setLocalSettings(prev => ({ ...prev, pushNotifications: checked }))
-                    }
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Warranty Expiring</Label>
+                <p className="text-sm text-gray-500">
+                  Get notified when item warranties are about to expire
+                </p>
+              </div>
+              <Switch
+                checked={settings.notifications.warrantyExpiring}
+                onCheckedChange={(checked) => handleNotificationToggle('warrantyExpiring', checked)}
+              />
+            </div>
 
-            {/* Data Management */}
-            <DataManagement />
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Task Completed</Label>
+                <p className="text-sm text-gray-500">
+                  Get notified when tasks are marked as completed
+                </p>
+              </div>
+              <Switch
+                checked={settings.notifications.taskCompleted}
+                onCheckedChange={(checked) => handleNotificationToggle('taskCompleted', checked)}
+              />
+            </div>
 
-            {/* Save Button */}
-            <Button
-              onClick={handleSave}
-              disabled={isLoading}
-              className="w-full"
-            >
-              {isLoading ? 'Saving...' : 'Save Settings'}
-            </Button>
-          </div>
-        </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Task Created</Label>
+                <p className="text-sm text-gray-500">
+                  Get notified when new maintenance tasks are created
+                </p>
+              </div>
+              <Switch
+                checked={settings.notifications.taskCreated}
+                onCheckedChange={(checked) => handleNotificationToggle('taskCreated', checked)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Data Management */}
+        <DataManagement />
       </div>
     </div>
   );

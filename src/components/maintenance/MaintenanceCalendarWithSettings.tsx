@@ -36,20 +36,16 @@ const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalend
     setFilteredTasks(tasks);
   }, [tasks]);
 
-  const handleSearch = (query: string, status: string | null) => {
-    let filtered = tasks;
-    
-    if (query) {
-      filtered = filtered.filter(task => 
-        task.title.toLowerCase().includes(query.toLowerCase()) ||
-        task.notes?.toLowerCase().includes(query.toLowerCase())
-      );
+  const handleSearch = (searchTerm: string) => {
+    if (!searchTerm) {
+      setFilteredTasks(tasks);
+      return;
     }
     
-    if (status) {
-      filtered = filtered.filter(task => task.status === status);
-    }
-    
+    const filtered = tasks.filter(task => 
+      task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.notes?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
     setFilteredTasks(filtered);
   };
 
@@ -116,7 +112,6 @@ const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalend
 
       <Card className="p-4">
         <MaintenanceCalendar
-          tasks={filteredTasks}
           view={view}
           onTaskClick={handleTaskClick}
           onDateSelect={handleDateSelect}
@@ -124,13 +119,11 @@ const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalend
         />
       </Card>
 
-      {showForm && (
-        <MaintenanceTaskForm
-          open={showForm}
-          onOpenChange={setShowForm}
-          defaultDate={selectedDate}
-        />
-      )}
+      <MaintenanceTaskForm
+        isOpen={showForm}
+        onClose={() => setShowForm(false)}
+        defaultDate={selectedDate}
+      />
 
       {selectedTask && (
         <TaskEditDialog

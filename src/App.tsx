@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useSupabaseAuth";
 import { AdminAuthProvider } from "@/hooks/useAdminAuth";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { UserSettingsProvider } from "@/contexts/UserSettingsContext";
 import { queryClient } from "@/config/queryClient";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import ProtectedLayout from "@/components/layouts/ProtectedLayout";
@@ -111,10 +112,12 @@ function App() {
                       <ProtectedRoute>
                         <ItemsProvider>
                           <MaintenanceProvider>
-                            <ProtectedLayout>
-                              <MaintenancePage />
-                            </ProtectedLayout>
-                            <NavBar />
+                            <UserSettingsProvider>
+                              <ProtectedLayout>
+                                <MaintenancePage />
+                              </ProtectedLayout>
+                              <NavBar />
+                            </UserSettingsProvider>
                           </MaintenanceProvider>
                         </ItemsProvider>
                       </ProtectedRoute>
@@ -141,10 +144,12 @@ function App() {
                       <ProtectedRoute>
                         <ItemsProvider>
                           <MaintenanceProvider>
-                            <ProtectedLayout>
-                              <ProfilePage />
-                            </ProtectedLayout>
-                            <NavBar />
+                            <UserSettingsProvider>
+                              <ProtectedLayout>
+                                <ProfilePage />
+                              </ProtectedLayout>
+                              <NavBar />
+                            </UserSettingsProvider>
                           </MaintenanceProvider>
                         </ItemsProvider>
                       </ProtectedRoute>
@@ -156,10 +161,12 @@ function App() {
                       <ProtectedRoute>
                         <ItemsProvider>
                           <MaintenanceProvider>
-                            <ProtectedLayout>
-                              <SettingsPage />
-                            </ProtectedLayout>
-                            <NavBar />
+                            <UserSettingsProvider>
+                              <ProtectedLayout>
+                                <SettingsPage />
+                              </ProtectedLayout>
+                              <NavBar />
+                            </UserSettingsProvider>
                           </MaintenanceProvider>
                         </ItemsProvider>
                       </ProtectedRoute>
