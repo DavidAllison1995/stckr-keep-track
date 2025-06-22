@@ -4,12 +4,12 @@ import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotificationContext } from '@/contexts/NotificationContext';
 import NotificationsList from './NotificationsList';
 
 const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { unreadCount, isLoading } = useNotifications();
+  const { unreadCount, isLoading } = useNotificationContext();
 
   console.log('NotificationBell render - unreadCount:', unreadCount, 'isLoading:', isLoading);
 
@@ -22,7 +22,6 @@ const NotificationBell = () => {
           className="relative p-2"
         >
           <Bell className="w-5 h-5" />
-          {/* FIXED: Badge shows immediately when unreadCount > 0 and updates in real-time */}
           {unreadCount > 0 && (
             <Badge
               variant="destructive"

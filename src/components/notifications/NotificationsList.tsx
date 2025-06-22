@@ -3,10 +3,9 @@ import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { useNotifications, Notification } from '@/hooks/useNotifications';
+import { useNotificationContext, Notification } from '@/contexts/NotificationContext';
 import { Calendar, Package, Clock, AlertTriangle, CheckCircle, Plus, X } from 'lucide-react';
 
 interface NotificationsListProps {
@@ -21,9 +20,8 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
     markAsRead, 
     markAllAsRead, 
     deleteNotification,
-    isLoading,
-    isDeletingNotification
-  } = useNotifications();
+    isLoading
+  } = useNotificationContext();
 
   console.log('NotificationsList render - notifications:', notifications, 'unreadCount:', unreadCount);
 
@@ -65,10 +63,9 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
     onNotificationClick?.();
   };
 
-  // FIXED: Proper delete handler with comprehensive logging
   const handleDeleteNotification = async (e: React.MouseEvent, notificationId: string) => {
-    e.stopPropagation();
     e.preventDefault();
+    e.stopPropagation();
     
     console.log('Delete button clicked for notification ID:', notificationId);
     
@@ -146,13 +143,11 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
                         {!notification.read && (
                           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                         )}
-                        {/* FIXED: Delete button with enhanced event handling and logging */}
                         <Button
                           variant="ghost"
                           size="sm"
                           className="p-1 h-6 w-6 opacity-0 group-hover:opacity-100 hover:bg-red-100 transition-opacity"
                           onClick={(e) => handleDeleteNotification(e, notification.id)}
-                          disabled={isDeletingNotification}
                           type="button"
                           title="Delete notification"
                         >
