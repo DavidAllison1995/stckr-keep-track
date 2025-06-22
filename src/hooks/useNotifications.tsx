@@ -45,7 +45,7 @@ export const useNotifications = () => {
       return data as Notification[];
     },
     enabled: !!user?.id,
-    refetchInterval: 30000, // Refetch every 30 seconds as backup
+    refetchInterval: 30000, // Backup polling every 30 seconds
   });
 
   // Log any query errors
@@ -96,7 +96,8 @@ export const useNotifications = () => {
 
   const deleteNotificationMutation = useMutation({
     mutationFn: async (notificationId: string) => {
-      console.log('Deleting notification:', notificationId);
+      console.log('Attempting to delete notification:', notificationId);
+      
       const { error } = await supabase
         .from('notifications')
         .delete()
@@ -107,65 +108,37 @@ export const useNotifications = () => {
         throw error;
       }
       
-      console.log('Notification deleted successfully');
+      console.log('Notification deleted successfully:', notificationId);
     },
-    onSuccess: () => {
-      console.log('Notification deleted successfully, invalidating queries');
+    onSuccess: (_, notificationId) => {
+      console.log('Delete mutation successful, invalidating queries for:', notificationId);
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
     onError: (error) => {
-      console.error('Failed to delete notification:', error);
+      console.error('Delete mutation failed:', error);
     },
   });
 
-  // Set up realtime subscription for new notifications - FIXED: Only subscribe once
+  // Set up realtime subscription - FIXED: Proper subscription management
   useEffect(() => {
     if (!user?.id) return;
 
-    console.log('Setting up realtime subscription for notifications');
-    
-    // Create a unique channel name to avoid conflicts
-    const channelName = `notifications_${user.id}`;
+    console.log('Setting up realtime subscription for user:', user.id);
     
     const channel = supabase
-      .channel(channelName)
+      .channel(`user-notifications-${user.id}`)
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'notifications',
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('New notification received via realtime:', payload);
-          // Immediately invalidate and refetch to show new notification
-          queryClient.invalidateQueries({ queryKey: ['notifications'] });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('Notification updated via realtime:', payload);
-          queryClient.invalidateQueries({ queryKey: ['notifications'] });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('Notification deleted via realtime:', payload);
+          console.log('Realtime notification event:', payload.eventType, payload);
+          
+          // Immediately invalidate and refetch notifications
           queryClient.invalidateQueries({ queryKey: ['notifications'] });
         }
       )
@@ -177,7 +150,7 @@ export const useNotifications = () => {
       console.log('Cleaning up realtime subscription');
       supabase.removeChannel(channel);
     };
-  }, [user?.id, queryClient]); // Fixed: Only depend on user.id and queryClient
+  }, [user?.id, queryClient]);
 
   // Calculate unread count from current notifications
   const unreadCount = notifications.filter(n => !n.read).length;
