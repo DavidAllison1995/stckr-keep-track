@@ -18,8 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { QrCode, Trash2, Scan, Plus } from 'lucide-react';
 import { Item } from '@/hooks/useSupabaseItems';
-import QRScanner from '@/components/qr/QRScanner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import SimpleQRScanner from '@/components/qr/SimpleQRScanner';
 import { globalQrService } from '@/services/globalQr';
 
 interface ItemQRTabProps {
@@ -111,23 +110,12 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
         </Card>
 
         {/* QR Scanner Modal */}
-        <Dialog open={showScanner} onOpenChange={setShowScanner}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Scan QR Code</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <p className="text-sm text-gray-600">
-                Scan a QR sticker to assign it to this item.
-              </p>
-              <QRScanner
-                onCodeScanned={handleQRCodeScanned}
-                isActive={showScanner}
-                isLoading={isAssigning}
-              />
-            </div>
-          </DialogContent>
-        </Dialog>
+        {showScanner && (
+          <SimpleQRScanner
+            onScan={handleQRCodeScanned}
+            onClose={() => setShowScanner(false)}
+          />
+        )}
       </div>
     );
   }
@@ -219,23 +207,12 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
       </Card>
 
       {/* QR Scanner Modal for Reassignment */}
-      <Dialog open={showScanner} onOpenChange={setShowScanner}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Assign New QR Code</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-gray-600">
-              Scan a new QR sticker to replace the current one. The old QR code will be removed automatically.
-            </p>
-            <QRScanner
-              onCodeScanned={handleQRCodeScanned}
-              isActive={showScanner}
-              isLoading={isAssigning}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+      {showScanner && (
+        <SimpleQRScanner
+          onScan={handleQRCodeScanned}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
     </div>
   );
 };
