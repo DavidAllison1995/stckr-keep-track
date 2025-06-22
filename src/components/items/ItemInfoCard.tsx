@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, DollarSign, Package, StickyNote } from 'lucide-react';
+import { Calendar, MapPin, DollarSign, Package } from 'lucide-react';
 import { Item } from '@/hooks/useSupabaseItems';
 
 interface ItemInfoCardProps {
@@ -63,23 +63,6 @@ const ItemInfoCard = ({ item }: ItemInfoCardProps) => {
             </div>
           )}
         </div>
-
-        {/* Notes */}
-        {item.notes && (
-          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                <StickyNote className="w-4 h-4 text-blue-600" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-xs font-medium text-blue-600 mb-2">Notes</div>
-                <p className="text-sm text-blue-800 whitespace-pre-wrap break-words leading-relaxed">
-                  {item.notes}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
