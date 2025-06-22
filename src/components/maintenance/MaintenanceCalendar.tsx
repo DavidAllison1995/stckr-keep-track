@@ -1,22 +1,26 @@
 
 import { useState, useMemo } from 'react';
-import { format, isSameDay, startOfDay, endOfDay } from 'date-fns';
-import { Calendar } from '@/components/ui/calendar';
+import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, addDays, subDays } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search, Plus } from 'lucide-react';
 import { useSupabaseMaintenance, MaintenanceTask } from '@/hooks/useSupabaseMaintenance';
 import { useUserSettingsContext } from '@/contexts/UserSettingsContext';
 import TaskSearch from './TaskSearch';
 
 interface MaintenanceCalendarProps {
   onNavigateToItem?: (itemId: string, taskId?: string) => void;
+  onAddTask?: () => void;
 }
 
-const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => {
+type ViewMode = 'month' | 'week' | 'day';
+
+const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalendarProps) => {
   const { tasks } = useSupabaseMaintenance();
   const { settings } = useUserSettingsContext();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [showSearch, setShowSearch] = useState(false);
 
   // Filter tasks based on settings
@@ -30,23 +34,50 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
   const tasksForSelectedDate = useMemo(() => {
     if (!selectedDate) return [];
     
-    const startDate = startOfDay(selectedDate);
-    const endDate = endOfDay(selectedDate);
-    
     return filteredTasks.filter(task => {
       const taskDate = new Date(task.date);
-      return taskDate >= startDate && taskDate <= endDate;
+      return isSameDay(taskDate, selectedDate);
     });
   }, [filteredTasks, selectedDate]);
 
-  // Get dates that have tasks for calendar highlighting
-  const datesWithTasks = useMemo(() => {
-    return filteredTasks.map(task => new Date(task.date));
+  // Get calendar days for month view
+  const calendarDays = useMemo(() => {
+    const start = startOfWeek(startOfMonth(currentDate));
+    const end = endOfWeek(endOfMonth(currentDate));
+    return eachDayOfInterval({ start, end });
+  }, [currentDate]);
+
+  // Get tasks count per day for indicators
+  const tasksPerDay = useMemo(() => {
+    const taskMap = new Map<string, number>();
+    filteredTasks.forEach(task => {
+      const dateKey = format(new Date(task.date), 'yyyy-MM-dd');
+      taskMap.set(dateKey, (taskMap.get(dateKey) || 0) + 1);
+    });
+    return taskMap;
   }, [filteredTasks]);
 
-  const handleDateSelect = (date: Date | undefined) => {
-    if (date) {
-      setSelectedDate(date);
+  const handleDateClick = (date: Date) => {
+    setSelectedDate(date);
+  };
+
+  const handlePrevious = () => {
+    if (viewMode === 'month') {
+      setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+    } else if (viewMode === 'week') {
+      setCurrentDate(prev => subDays(prev, 7));
+    } else {
+      setCurrentDate(prev => subDays(prev, 1));
+    }
+  };
+
+  const handleNext = () => {
+    if (viewMode === 'month') {
+      setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+    } else if (viewMode === 'week') {
+      setCurrentDate(prev => addDays(prev, 7));
+    } else {
+      setCurrentDate(prev => addDays(prev, 1));
     }
   };
 
@@ -57,7 +88,6 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
   };
 
   const handleTaskSearchSelect = (task: any) => {
-    // Convert TaskSuggestion to proper navigation
     const maintenanceTask = tasks.find(t => t.id === task.id);
     if (onNavigateToItem && maintenanceTask?.item_id) {
       onNavigateToItem(maintenanceTask.item_id, maintenanceTask.id);
@@ -77,104 +107,211 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
     }
   };
 
-  return (
-    <div className="space-y-4">
-      {/* Search Bar */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold">Calendar View</h2>
-        </div>
+  const renderMonthView = () => (
+    <div className="bg-white rounded-lg border">
+      {/* Calendar Header */}
+      <div className="flex items-center justify-between p-4 border-b">
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setShowSearch(!showSearch)}
+          onClick={handlePrevious}
         >
-          <Search className="w-4 h-4 mr-2" />
-          Search Tasks
+          <ChevronLeft className="w-4 h-4" />
+        </Button>
+        <h3 className="text-lg font-semibold">
+          {format(currentDate, 'MMMM yyyy')}
+        </h3>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleNext}
+        >
+          <ChevronRight className="w-4 h-4" />
         </Button>
       </div>
 
+      {/* Days of Week Header */}
+      <div className="grid grid-cols-7 border-b">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+          <div key={day} className="p-3 text-center text-sm font-medium text-gray-500 border-r last:border-r-0">
+            {day}
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-7">
+        {calendarDays.map((day, index) => {
+          const dateKey = format(day, 'yyyy-MM-dd');
+          const taskCount = tasksPerDay.get(dateKey) || 0;
+          const isSelected = isSameDay(day, selectedDate);
+          const isCurrentMonth = isSameMonth(day, currentDate);
+          const isToday = isSameDay(day, new Date());
+
+          return (
+            <div
+              key={index}
+              className={`
+                min-h-[120px] p-2 border-r border-b last:border-r-0 cursor-pointer hover:bg-gray-50 transition-colors
+                ${isSelected ? 'bg-blue-50 border-blue-300' : ''}
+                ${!isCurrentMonth ? 'text-gray-300 bg-gray-50' : ''}
+              `}
+              onClick={() => handleDateClick(day)}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span
+                  className={`
+                    text-sm font-medium
+                    ${isToday ? 'bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center' : ''}
+                    ${isSelected && !isToday ? 'text-blue-600' : ''}
+                  `}
+                >
+                  {format(day, 'd')}
+                </span>
+                {taskCount > 0 && (
+                  <span className="bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {taskCount}
+                  </span>
+                )}
+              </div>
+              
+              {/* Task preview for current month days */}
+              {isCurrentMonth && taskCount > 0 && (
+                <div className="space-y-1">
+                  {filteredTasks
+                    .filter(task => isSameDay(new Date(task.date), day))
+                    .slice(0, 2)
+                    .map(task => (
+                      <div
+                        key={task.id}
+                        className="text-xs p-1 bg-blue-100 text-blue-800 rounded truncate"
+                      >
+                        {task.title}
+                      </div>
+                    ))}
+                  {taskCount > 2 && (
+                    <div className="text-xs text-gray-500">
+                      +{taskCount - 2} more
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="h-full space-y-6">
+      {/* Header Controls */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <h2 className="text-2xl font-bold">Maintenance Calendar</h2>
+          
+          {/* View Toggle */}
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            {(['month', 'week', 'day'] as ViewMode[]).map((mode) => (
+              <Button
+                key={mode}
+                variant={viewMode === mode ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode(mode)}
+                className={`capitalize ${viewMode === mode ? 'bg-blue-500 text-white' : ''}`}
+              >
+                {mode}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowSearch(!showSearch)}
+          >
+            <Search className="w-4 h-4 mr-2" />
+            Search Tasks
+          </Button>
+          
+          {onAddTask && (
+            <Button onClick={onAddTask} size="sm">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Task
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Search Bar */}
       {showSearch && (
         <TaskSearch onTaskSelect={handleTaskSearchSelect} />
       )}
 
-      {/* Calendar and Task Panel Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendar Section */}
-        <Card className="lg:col-span-2">
-          <CardContent className="p-6">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={handleDateSelect}
-              modifiers={{
-                hasTask: datesWithTasks,
-              }}
-              modifiersStyles={{
-                hasTask: { 
-                  backgroundColor: '#3b82f6', 
-                  color: 'white',
-                  fontWeight: 'bold'
-                },
-              }}
-              className="rounded-md border-0"
-            />
-          </CardContent>
-        </Card>
+      {/* Main Calendar Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-280px)]">
+        {/* Calendar View */}
+        <div className="lg:col-span-3">
+          {viewMode === 'month' && renderMonthView()}
+        </div>
 
-        {/* Task Detail Side Panel */}
-        <Card className="lg:col-span-1">
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold mb-2">
-                  {format(selectedDate, 'EEEE, MMMM do, yyyy')}
-                </h3>
-              </div>
+        {/* Task Sidebar */}
+        <div className="lg:col-span-1">
+          <Card className="h-full">
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">
+                    {format(selectedDate, 'EEEE, MMMM do, yyyy')}
+                  </h3>
+                </div>
 
-              {tasksForSelectedDate.length > 0 ? (
-                <div className="space-y-3">
-                  {tasksForSelectedDate.map(task => (
-                    <div
-                      key={task.id}
-                      className={`p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors ${
-                        task.status === 'completed' ? 'opacity-60' : ''
-                      }`}
-                      onClick={() => handleTaskClick(task)}
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-medium text-sm">{task.title}</h4>
-                        <span className={`text-xs px-2 py-1 rounded-full ${getTaskStatusColor(task.status)}`}>
-                          {task.status === 'due_soon' ? 'Due Soon' : 
-                           task.status === 'overdue' ? 'Overdue' : 
-                           task.status === 'completed' ? 'Completed' : 'Up to Date'}
-                        </span>
-                      </div>
-                      
-                      {task.notes && (
-                        <p className="text-xs text-gray-600 mb-2">{task.notes}</p>
-                      )}
-                      
-                      <div className="text-xs text-gray-500">
-                        {task.recurrence !== 'none' && (
-                          <span className="capitalize">Repeats {task.recurrence}</span>
+                {tasksForSelectedDate.length > 0 ? (
+                  <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                    {tasksForSelectedDate.map(task => (
+                      <div
+                        key={task.id}
+                        className={`p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors ${
+                          task.status === 'completed' ? 'opacity-60' : ''
+                        }`}
+                        onClick={() => handleTaskClick(task)}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <h4 className="font-medium text-sm">{task.title}</h4>
+                          <span className={`text-xs px-2 py-1 rounded-full ${getTaskStatusColor(task.status)}`}>
+                            {task.status === 'due_soon' ? 'Due Soon' : 
+                             task.status === 'overdue' ? 'Overdue' : 
+                             task.status === 'completed' ? 'Completed' : 'Up to Date'}
+                          </span>
+                        </div>
+                        
+                        {task.notes && (
+                          <p className="text-xs text-gray-600 mb-2">{task.notes}</p>
                         )}
+                        
+                        <div className="text-xs text-gray-500">
+                          {task.recurrence !== 'none' && (
+                            <span className="capitalize">Repeats {task.recurrence}</span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-gray-500">
-                  <CalendarIcon className="w-12 h-12 mb-3 opacity-50" />
-                  <p className="text-sm">No tasks on this date</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Click a highlighted date to see tasks
-                  </p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                    <CalendarIcon className="w-12 h-12 mb-3 opacity-50" />
+                    <p className="text-sm">No tasks on this date</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Click a day with tasks to see them here
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
