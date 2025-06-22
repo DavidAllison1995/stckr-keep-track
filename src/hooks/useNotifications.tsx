@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from './useSupabaseAuth';
@@ -19,6 +19,7 @@ export interface Notification {
 export const useNotifications = () => {
   const { user } = useSupabaseAuth();
   const queryClient = useQueryClient();
+  const channelRef = useRef<any>(null);
 
   const { data: notifications = [], isLoading, error } = useQuery({
     queryKey: ['notifications', user?.id],
@@ -119,9 +120,16 @@ export const useNotifications = () => {
     },
   });
 
-  // Set up realtime subscription - FIXED: Proper subscription management
+  // Set up realtime subscription - FIXED: Prevent multiple subscriptions
   useEffect(() => {
     if (!user?.id) return;
+
+    // Clean up existing channel if it exists
+    if (channelRef.current) {
+      console.log('Cleaning up existing channel before creating new one');
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
 
     console.log('Setting up realtime subscription for user:', user.id);
     
@@ -146,11 +154,17 @@ export const useNotifications = () => {
         console.log('Realtime subscription status:', status);
       });
 
+    // Store the channel reference
+    channelRef.current = channel;
+
     return () => {
       console.log('Cleaning up realtime subscription');
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
-  }, [user?.id, queryClient]);
+  }, [user?.id]); // Only depend on user.id, not queryClient
 
   // Calculate unread count from current notifications
   const unreadCount = notifications.filter(n => !n.read).length;
