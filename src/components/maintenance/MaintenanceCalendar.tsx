@@ -3,10 +3,10 @@ import { useState, useMemo } from 'react';
 import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, addDays, subDays } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search, Plus } from 'lucide-react';
 import { useSupabaseMaintenance, MaintenanceTask } from '@/hooks/useSupabaseMaintenance';
 import { useUserSettingsContext } from '@/contexts/UserSettingsContext';
-import TaskSearch from './TaskSearch';
 
 interface MaintenanceCalendarProps {
   onNavigateToItem?: (itemId: string, taskId?: string) => void;
@@ -21,14 +21,25 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
-  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Filter tasks based on settings
+  // Filter tasks based on settings and search
   const filteredTasks = useMemo(() => {
-    return tasks.filter(task => 
+    let filtered = tasks.filter(task => 
       task.status !== 'completed' || settings.showCompletedTasks
     );
-  }, [tasks, settings.showCompletedTasks]);
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(task => 
+        task.title.toLowerCase().includes(query) ||
+        (task.notes && task.notes.toLowerCase().includes(query))
+      );
+    }
+
+    return filtered;
+  }, [tasks, settings.showCompletedTasks, searchQuery]);
 
   // Get tasks for selected date
   const tasksForSelectedDate = useMemo(() => {
@@ -84,13 +95,6 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
   const handleTaskClick = (task: MaintenanceTask) => {
     if (onNavigateToItem && task.item_id) {
       onNavigateToItem(task.item_id, task.id);
-    }
-  };
-
-  const handleTaskSearchSelect = (task: any) => {
-    const maintenanceTask = tasks.find(t => t.id === task.id);
-    if (onNavigateToItem && maintenanceTask?.item_id) {
-      onNavigateToItem(maintenanceTask.item_id, maintenanceTask.id);
     }
   };
 
@@ -203,6 +207,24 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
     </div>
   );
 
+  const renderWeekView = () => (
+    <div className="bg-white rounded-lg border p-4">
+      <div className="text-center text-gray-500 py-8">
+        <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
+        <p>Week view coming soon</p>
+      </div>
+    </div>
+  );
+
+  const renderDayView = () => (
+    <div className="bg-white rounded-lg border p-4">
+      <div className="text-center text-gray-500 py-8">
+        <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
+        <p>Day view coming soon</p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="h-full space-y-6 max-w-full overflow-hidden">
       {/* Header Controls */}
@@ -212,6 +234,18 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search tasks..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-64"
+            />
+          </div>
+
           {/* View Toggle */}
           <div className="flex bg-gray-100 rounded-lg p-1">
             <Button
@@ -223,31 +257,22 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
               Month
             </Button>
             <Button
-              variant="ghost"
+              variant={viewMode === 'week' ? 'default' : 'ghost'}
               size="sm"
-              disabled
-              className="opacity-50 cursor-not-allowed"
+              onClick={() => setViewMode('week')}
+              className={`${viewMode === 'week' ? 'bg-blue-500 text-white' : ''}`}
             >
               Week
             </Button>
             <Button
-              variant="ghost"
+              variant={viewMode === 'day' ? 'default' : 'ghost'}
               size="sm"
-              disabled
-              className="opacity-50 cursor-not-allowed"
+              onClick={() => setViewMode('day')}
+              className={`${viewMode === 'day' ? 'bg-blue-500 text-white' : ''}`}
             >
               Day
             </Button>
           </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowSearch(!showSearch)}
-          >
-            <Search className="w-4 h-4 mr-2" />
-            Search Tasks
-          </Button>
           
           {onAddTask && (
             <Button onClick={onAddTask} size="sm">
@@ -258,16 +283,13 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
         </div>
       </div>
 
-      {/* Search Bar */}
-      {showSearch && (
-        <TaskSearch onTaskSelect={handleTaskSearchSelect} />
-      )}
-
       {/* Main Calendar Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 max-w-full">
         {/* Calendar View */}
         <div className="lg:col-span-3 w-full max-w-full overflow-hidden">
-          {renderMonthView()}
+          {viewMode === 'month' && renderMonthView()}
+          {viewMode === 'week' && renderWeekView()}
+          {viewMode === 'day' && renderDayView()}
         </div>
 
         {/* Task Sidebar */}
