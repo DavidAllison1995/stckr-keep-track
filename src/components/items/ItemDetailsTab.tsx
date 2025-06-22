@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Item } from '@/hooks/useSupabaseItems';
@@ -35,14 +34,14 @@ const ItemDetailsTab = ({ item, onTabChange }: ItemDetailsTabProps) => {
     .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())[0];
 
   const handleNextTaskClick = () => {
-    if (nextTask && onTabChange) {
-      onTabChange('maintenance');
+    if (onTabChange) {
+      onTabChange('tasks');
     }
   };
 
   const handleRecentCompletedClick = () => {
-    if (recentCompleted && onTabChange) {
-      onTabChange('maintenance');
+    if (onTabChange) {
+      onTabChange('tasks');
     }
   };
 
