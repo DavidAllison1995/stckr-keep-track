@@ -1,11 +1,10 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { SupabaseAuthProvider } from "./hooks/useSupabaseAuth";
+import { AuthProvider } from "./hooks/useSupabaseAuth";
 import { UserSettingsProvider } from "./contexts/UserSettingsContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { GlobalQRScannerProvider } from "./hooks/useGlobalQRScanner";
+import { GlobalQRScannerProvider } from "./contexts/GlobalQRScannerContext";
 
 // Page imports
 import Index from "./pages/Index";
@@ -34,7 +33,7 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <SupabaseAuthProvider>
+      <AuthProvider>
         <UserSettingsProvider>
           <ThemeProvider>
             <GlobalQRScannerProvider>
@@ -74,7 +73,7 @@ function App() {
             </GlobalQRScannerProvider>
           </ThemeProvider>
         </UserSettingsProvider>
-      </SupabaseAuthProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
