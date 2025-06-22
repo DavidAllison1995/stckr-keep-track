@@ -262,6 +262,7 @@ export type Database = {
           created_at: string | null
           id: string
           status: string
+          stripe_session_id: string | null
           total_amount: number
           updated_at: string | null
           user_email: string
@@ -271,6 +272,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           status?: string
+          stripe_session_id?: string | null
           total_amount: number
           updated_at?: string | null
           user_email: string
@@ -280,6 +282,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           status?: string
+          stripe_session_id?: string | null
           total_amount?: number
           updated_at?: string | null
           user_email?: string
