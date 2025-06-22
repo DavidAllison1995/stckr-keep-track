@@ -9,13 +9,6 @@ interface ItemInfoCardProps {
 }
 
 const ItemInfoCard = ({ item }: ItemInfoCardProps) => {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
@@ -30,27 +23,15 @@ const ItemInfoCard = ({ item }: ItemInfoCardProps) => {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Basic Info */}
-        <div className="grid grid-cols-2 gap-4">
-          {item.location && (
+        <div className="grid grid-cols-1 gap-4">
+          {item.room && (
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
                 <MapPin className="w-4 h-4 text-gray-600" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-xs font-medium text-gray-500 mb-1">Location</div>
-                <div className="text-sm font-semibold text-gray-900">{item.location}</div>
-              </div>
-            </div>
-          )}
-
-          {item.purchase_price && (
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                <DollarSign className="w-4 h-4 text-green-600" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-xs font-medium text-gray-500 mb-1">Purchase Price</div>
-                <div className="text-sm font-semibold text-gray-900">{formatCurrency(item.purchase_price)}</div>
+                <div className="text-xs font-medium text-gray-500 mb-1">Room</div>
+                <div className="text-sm font-semibold text-gray-900">{item.room}</div>
               </div>
             </div>
           )}
@@ -70,14 +51,14 @@ const ItemInfoCard = ({ item }: ItemInfoCardProps) => {
             </div>
           )}
 
-          {item.warranty_expiry && (
+          {item.warranty_date && (
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
                 <Calendar className="w-4 h-4 text-purple-600" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-xs font-medium text-gray-500 mb-1">Warranty Until</div>
-                <div className="text-sm font-semibold text-gray-900">{formatDate(item.warranty_expiry)}</div>
+                <div className="text-sm font-semibold text-gray-900">{formatDate(item.warranty_date)}</div>
               </div>
             </div>
           )}
