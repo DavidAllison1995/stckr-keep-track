@@ -7,7 +7,8 @@ import { Separator } from '@/components/ui/separator';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
-import { Plus, Calendar, CheckCircle2, Clock, AlertTriangle, Trash2 } from 'lucide-react';
+import TaskEditDialog from '@/components/maintenance/TaskEditDialog';
+import { Plus, Calendar, CheckCircle2, Clock, AlertTriangle, Trash2, Edit } from 'lucide-react';
 
 interface ItemMaintenanceTabProps {
   itemId: string;
@@ -18,6 +19,8 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
   const { tasks, updateTask, deleteTask } = useSupabaseMaintenance();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [editingTask, setEditingTask] = useState<any>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const itemTasks = tasks.filter(task => task.item_id === itemId);
   
@@ -51,6 +54,16 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
 
   const handleTaskDelete = (taskId: string) => {
     deleteTask(taskId);
+  };
+
+  const handleEditTask = (task: any) => {
+    setEditingTask(task);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    setEditingTask(null);
+    setIsEditDialogOpen(false);
   };
 
   const getTaskIcon = (status: string) => {
@@ -154,6 +167,14 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
                       </div>
                     </div>
                     <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditTask(task)}
+                      >
+                        <Edit className="w-4 h-4 mr-1" />
+                        Edit
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -270,6 +291,14 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
           </Button>
         </div>
       )}
+
+      {/* Edit Task Dialog */}
+      <TaskEditDialog
+        task={editingTask}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   );
 };
