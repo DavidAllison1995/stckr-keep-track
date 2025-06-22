@@ -16,10 +16,13 @@ export interface Notification {
   read: boolean;
 }
 
+// Global state to track subscription status
+let globalChannelRef: any = null;
+let isSubscriptionActive = false;
+
 export const useNotifications = () => {
   const { user } = useSupabaseAuth();
   const queryClient = useQueryClient();
-  const channelRef = useRef<any>(null);
 
   const { data: notifications = [], isLoading, error } = useQuery({
     queryKey: ['notifications', user?.id],
@@ -120,51 +123,58 @@ export const useNotifications = () => {
     },
   });
 
-  // Set up realtime subscription - FIXED: Prevent multiple subscriptions
+  // Set up realtime subscription - FIXED: Global subscription management
   useEffect(() => {
     if (!user?.id) return;
 
-    // Clean up existing channel if it exists
-    if (channelRef.current) {
-      console.log('Cleaning up existing channel before creating new one');
-      supabase.removeChannel(channelRef.current);
-      channelRef.current = null;
+    // Only create subscription if one doesn't exist
+    if (!isSubscriptionActive) {
+      console.log('Setting up realtime subscription for user:', user.id);
+      
+      const channel = supabase
+        .channel(`user-notifications-${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('Realtime notification event:', payload.eventType, payload);
+            
+            // Immediately invalidate and refetch notifications
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
+          }
+        )
+        .subscribe((status) => {
+          console.log('Realtime subscription status:', status);
+        });
+
+      // Store the channel reference globally
+      globalChannelRef = channel;
+      isSubscriptionActive = true;
     }
 
-    console.log('Setting up realtime subscription for user:', user.id);
-    
-    const channel = supabase
-      .channel(`user-notifications-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('Realtime notification event:', payload.eventType, payload);
-          
-          // Immediately invalidate and refetch notifications
-          queryClient.invalidateQueries({ queryKey: ['notifications'] });
-        }
-      )
-      .subscribe((status) => {
-        console.log('Realtime subscription status:', status);
-      });
-
-    // Store the channel reference
-    channelRef.current = channel;
-
     return () => {
-      console.log('Cleaning up realtime subscription');
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
+      // Only cleanup when the last component unmounts
+      // In practice, this will happen when the user logs out or app unmounts
+      console.log('Component cleanup - subscription remains active');
+    };
+  }, [user?.id]);
+
+  // Global cleanup when user changes or app unmounts
+  useEffect(() => {
+    return () => {
+      if (globalChannelRef && isSubscriptionActive) {
+        console.log('Cleaning up global realtime subscription');
+        supabase.removeChannel(globalChannelRef);
+        globalChannelRef = null;
+        isSubscriptionActive = false;
       }
     };
-  }, [user?.id]); // Only depend on user.id, not queryClient
+  }, [user?.id]);
 
   // Calculate unread count from current notifications
   const unreadCount = notifications.filter(n => !n.read).length;
