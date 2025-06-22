@@ -119,7 +119,7 @@ export const useShop = () => {
     }
   };
 
-  // Add to cart with optimistic updates
+  // Add to cart with immediate optimistic updates
   const addToCart = async (productId: string, quantity: number = 1) => {
     if (!user) {
       toast({
@@ -147,13 +147,13 @@ export const useShop = () => {
         const existingItem = cartItems[existingItemIndex];
         const newQuantity = existingItem.quantity + quantity;
         
-        // Optimistic update
-        const optimisticCartItems = [...cartItems];
-        optimisticCartItems[existingItemIndex] = {
+        // Immediate optimistic update
+        const updatedCartItems = [...cartItems];
+        updatedCartItems[existingItemIndex] = {
           ...existingItem,
           quantity: newQuantity
         };
-        setCartItems(optimisticCartItems);
+        setCartItems(updatedCartItems);
 
         // Update in database
         const { error } = await supabase
@@ -173,7 +173,7 @@ export const useShop = () => {
       } else {
         console.log('Inserting new cart item');
         
-        // Create optimistic item
+        // Create optimistic item with a temporary ID
         const optimisticItem: CartItem = {
           id: 'temp-' + Date.now(),
           user_id: user.id,
@@ -184,10 +184,11 @@ export const useShop = () => {
           product
         };
 
-        // Optimistic update
-        setCartItems([...cartItems, optimisticItem]);
+        // Immediate optimistic update - add to cart right away
+        const updatedCartItems = [...cartItems, optimisticItem];
+        setCartItems(updatedCartItems);
 
-        // Insert new item
+        // Insert new item in background
         const { data, error } = await supabase
           .from('cart_items')
           .insert({
@@ -208,7 +209,7 @@ export const useShop = () => {
           throw error;
         }
 
-        // Replace optimistic item with real data
+        // Replace the temporary item with the real one
         setCartItems(prev => prev.map(item => 
           item.id === optimisticItem.id ? data : item
         ));
