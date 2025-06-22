@@ -67,7 +67,7 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
     onNotificationClick?.();
   };
 
-  // Fixed delete handler with proper event handling
+  // Fixed delete handler that properly deletes from Supabase
   const handleDeleteNotification = async (e: React.MouseEvent<HTMLButtonElement>, notificationId: string) => {
     e.stopPropagation();
     e.preventDefault();
@@ -81,13 +81,13 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
         .eq('id', notificationId);
 
       if (error) {
-        console.error('Delete operation failed:', error);
-        throw error;
+        console.error('Supabase deletion error:', error);
+        return;
       }
       
       console.log('Delete operation completed successfully');
       
-      // Immediately refetch to update UI
+      // Refetch notifications to update the UI
       refetchNotifications();
     } catch (error) {
       console.error('Delete operation failed:', error);
@@ -160,15 +160,15 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
                         {!notification.read && (
                           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                         )}
-                        {/* Fixed delete button with proper event handling and styling */}
+                        {/* Fixed delete button with proper functionality */}
                         <button
                           onClick={(e) => handleDeleteNotification(e, notification.id)}
                           disabled={isDeletingNotification}
-                          className="p-1 h-6 w-6 opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-600 transition-all duration-200 rounded flex items-center justify-center"
+                          className="text-gray-400 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Delete"
                           aria-label="Delete notification"
-                          title="Delete notification"
                         >
-                          <X className="w-3 h-3" />
+                          ✕
                         </button>
                       </div>
                     </div>
