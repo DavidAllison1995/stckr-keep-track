@@ -1,4 +1,3 @@
-
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -66,7 +65,6 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
     onNotificationClick?.();
   };
 
-  // Use the proper mutation function for deletion
   const handleDeleteNotification = (e: React.MouseEvent<HTMLButtonElement>, notificationId: string) => {
     e.stopPropagation();
     e.preventDefault();
@@ -78,7 +76,7 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
       return;
     }
     
-    // Use the mutation function from the hook
+    console.log('Calling deleteNotification mutation with ID:', notificationId);
     deleteNotification(notificationId);
   };
 
