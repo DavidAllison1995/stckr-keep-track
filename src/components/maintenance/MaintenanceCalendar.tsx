@@ -112,7 +112,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
   };
 
   const renderMonthView = () => (
-    <div className="bg-white rounded-lg border overflow-hidden">
+    <div className="bg-white rounded-lg border overflow-hidden max-w-full">
       {/* Calendar Header */}
       <div className="flex items-center justify-between p-4 border-b bg-gray-50">
         <Button
@@ -144,7 +144,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7">
+      <div className="grid grid-cols-7 overflow-hidden">
         {calendarDays.map((day, index) => {
           const dateKey = format(day, 'yyyy-MM-dd');
           const taskCount = tasksPerDay.get(dateKey) || 0;
@@ -208,19 +208,21 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
   );
 
   const renderWeekView = () => (
-    <div className="bg-white rounded-lg border p-4">
-      <div className="text-center text-gray-500 py-8">
-        <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
-        <p>Week view coming soon</p>
+    <div className="bg-white rounded-lg border p-8 max-w-full">
+      <div className="text-center text-gray-500 py-16">
+        <CalendarIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
+        <h3 className="text-lg font-medium mb-2">Week View Coming Soon</h3>
+        <p className="text-sm">This feature is currently under development</p>
       </div>
     </div>
   );
 
   const renderDayView = () => (
-    <div className="bg-white rounded-lg border p-4">
-      <div className="text-center text-gray-500 py-8">
-        <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
-        <p>Day view coming soon</p>
+    <div className="bg-white rounded-lg border p-8 max-w-full">
+      <div className="text-center text-gray-500 py-16">
+        <CalendarIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
+        <h3 className="text-lg font-medium mb-2">Day View Coming Soon</h3>
+        <p className="text-sm">This feature is currently under development</p>
       </div>
     </div>
   );
@@ -228,12 +230,12 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
   return (
     <div className="h-full space-y-6 max-w-full overflow-hidden">
       {/* Header Controls */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <h2 className="text-2xl font-bold">Maintenance Calendar</h2>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           {/* Search Input */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -252,7 +254,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
               variant={viewMode === 'month' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('month')}
-              className={`${viewMode === 'month' ? 'bg-blue-500 text-white' : ''}`}
+              className={`${viewMode === 'month' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
             >
               Month
             </Button>
@@ -260,7 +262,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
               variant={viewMode === 'week' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('week')}
-              className={`${viewMode === 'week' ? 'bg-blue-500 text-white' : ''}`}
+              className={`${viewMode === 'week' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
             >
               Week
             </Button>
@@ -268,14 +270,14 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
               variant={viewMode === 'day' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('day')}
-              className={`${viewMode === 'day' ? 'bg-blue-500 text-white' : ''}`}
+              className={`${viewMode === 'day' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
             >
               Day
             </Button>
           </div>
           
           {onAddTask && (
-            <Button onClick={onAddTask} size="sm">
+            <Button onClick={onAddTask} size="sm" className="bg-blue-500 hover:bg-blue-600 text-white">
               <Plus className="w-4 h-4 mr-2" />
               Add Task
             </Button>
@@ -284,7 +286,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
       </div>
 
       {/* Main Calendar Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 max-w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 max-w-full overflow-hidden">
         {/* Calendar View */}
         <div className="lg:col-span-3 w-full max-w-full overflow-hidden">
           {viewMode === 'month' && renderMonthView()}
@@ -294,7 +296,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
 
         {/* Task Sidebar */}
         <div className="lg:col-span-1">
-          <Card className="h-fit max-h-[600px]">
+          <Card className="h-fit max-h-[600px] overflow-hidden">
             <CardContent className="p-6">
               <div className="space-y-4">
                 <div>
@@ -304,7 +306,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                 </div>
 
                 {tasksForSelectedDate.length > 0 ? (
-                  <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                  <div className="space-y-3 max-h-[450px] overflow-y-auto">
                     {tasksForSelectedDate.map(task => (
                       <div
                         key={task.id}
