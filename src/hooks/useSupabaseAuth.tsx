@@ -23,6 +23,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('Setting up auth state listener');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -35,51 +37,67 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('Cleaning up auth subscription');
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Login attempt for:', email);
+      setIsLoading(true);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('Login error:', error);
         toast({
           title: 'Login Failed',
           description: error.message,
           variant: 'destructive',
         });
+        setIsLoading(false);
         return { error: error.message };
       }
 
+      console.log('Login successful:', data.user?.email);
       toast({
         title: 'Welcome back!',
         description: 'You have been logged in successfully.',
       });
+      
       return {};
     } catch (error) {
       const message = 'An unexpected error occurred during login';
+      console.error('Unexpected login error:', error);
       toast({
         title: 'Login Failed',
         description: message,
         variant: 'destructive',
       });
+      setIsLoading(false);
       return { error: message };
     }
   };
 
   const signup = async (email: string, password: string, firstName: string, lastName: string) => {
     try {
+      console.log('Signup attempt for:', email);
+      setIsLoading(true);
+      
       const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -92,34 +110,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (error) {
+        console.error('Signup error:', error);
         toast({
           title: 'Signup Failed',
           description: error.message,
           variant: 'destructive',
         });
+        setIsLoading(false);
         return { error: error.message };
       }
 
+      console.log('Signup successful:', data.user?.email);
       toast({
         title: 'Account Created!',
         description: 'Please check your email to confirm your account.',
       });
+      
       return {};
     } catch (error) {
       const message = 'An unexpected error occurred during signup';
+      console.error('Unexpected signup error:', error);
       toast({
         title: 'Signup Failed',
         description: message,
         variant: 'destructive',
       });
+      setIsLoading(false);
       return { error: message };
     }
   };
 
   const logout = async () => {
     try {
+      console.log('Logout attempt');
       const { error } = await supabase.auth.signOut();
       if (error) {
+        console.error('Logout error:', error);
         toast({
           title: 'Logout Failed',
           description: error.message,
@@ -128,11 +154,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       
+      console.log('Logout successful');
       toast({
         title: 'Logged out',
         description: 'You have been logged out successfully.',
       });
     } catch (error) {
+      console.error('Unexpected logout error:', error);
       toast({
         title: 'Logout Failed',
         description: 'An unexpected error occurred during logout',
