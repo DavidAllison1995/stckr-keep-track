@@ -37,8 +37,8 @@ function App() {
       <AuthProvider>
         <UserSettingsProvider>
           <ThemeProvider>
-            <GlobalQRScannerProvider>
-              <Router>
+            <Router>
+              <GlobalQRScannerProvider>
                 <div className="min-h-screen bg-gray-50">
                   <Routes>
                     {/* Public routes */}
@@ -71,8 +71,8 @@ function App() {
                   </Routes>
                   <Toaster />
                 </div>
-              </Router>
-            </GlobalQRScannerProvider>
+              </GlobalQRScannerProvider>
+            </Router>
           </ThemeProvider>
         </UserSettingsProvider>
       </AuthProvider>
