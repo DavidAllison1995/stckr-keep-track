@@ -41,17 +41,22 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
 
   // Get the tab from URL params, falling back to defaultTab
   const urlTab = searchParams.get('tab') || defaultTab;
+  console.log('ItemDetail - URL tab:', urlTab, 'Default tab:', defaultTab);
+
+  // Initialize activeTab from URL or defaultTab
   const [activeTab, setActiveTab] = useState(urlTab);
 
   // Update active tab when URL parameters change
   useEffect(() => {
     const tabParam = searchParams.get('tab') || defaultTab;
-    console.log('URL tab parameter:', tabParam, 'Current active tab:', activeTab);
-    if (tabParam !== activeTab) {
-      console.log('Setting active tab to:', tabParam);
-      setActiveTab(tabParam);
-    }
-  }, [searchParams, defaultTab, activeTab]);
+    console.log('ItemDetail - Tab param from URL:', tabParam, 'Current active tab:', activeTab);
+    setActiveTab(tabParam);
+  }, [searchParams, defaultTab]);
+
+  // Log when activeTab changes
+  useEffect(() => {
+    console.log('ItemDetail - Active tab changed to:', activeTab);
+  }, [activeTab]);
 
   const handleDeleteItem = async () => {
     try {
@@ -76,7 +81,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
   };
 
   const handleTabChange = (value: string) => {
-    console.log('Tab changed to:', value);
+    console.log('ItemDetail - Tab changed to:', value);
     setActiveTab(value);
     
     // Update URL params without reloading
@@ -84,6 +89,8 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
     newSearchParams.set('tab', value);
     setSearchParams(newSearchParams);
   };
+
+  console.log('ItemDetail - Rendering with activeTab:', activeTab, 'item:', item?.name);
 
   return (
     <>

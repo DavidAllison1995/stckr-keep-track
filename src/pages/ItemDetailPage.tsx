@@ -9,19 +9,22 @@ const ItemDetailPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
-  console.log('About to call useSupabaseItems');
+  console.log('ItemDetailPage - ID from params:', id);
+  console.log('ItemDetailPage - Search params:', searchParams.toString());
+  
   const { getItemById } = useSupabaseItems();
-  console.log('useSupabaseItems call successful');
-
   const item = id ? getItemById(id) : null;
   const defaultTab = searchParams.get('tab') || 'details';
   const highlightTaskId = searchParams.get('highlight') || undefined;
+
+  console.log('ItemDetailPage - Item found:', item?.name, 'Default tab:', defaultTab, 'Highlight task:', highlightTaskId);
 
   const handleClose = () => {
     navigate('/items');
   };
 
   if (!item) {
+    console.log('ItemDetailPage - No item found, showing not found message');
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
         <div className="px-4 pt-4 pb-20">
@@ -42,6 +45,8 @@ const ItemDetailPage = () => {
       </div>
     );
   }
+
+  console.log('ItemDetailPage - Rendering ItemDetail component');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
