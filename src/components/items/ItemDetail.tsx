@@ -38,17 +38,18 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
 
   const handleDeleteItem = async () => {
     try {
-      // Check if we're on the item detail page (not in a modal)
+      // Check if we're on the standalone item detail page
       const isStandalonePage = location.pathname.includes(`/items/${item.id}`);
       
-      // Navigate immediately if on standalone page, before deleting
+      // If on standalone page, navigate away first to prevent "item not found" error
       if (isStandalonePage) {
         navigate('/items', { replace: true });
       }
       
+      // Delete the item (matches ItemCard approach)
       await deleteItem(item.id);
       
-      // If we're in a modal context, close the modal
+      // If in modal context, close the modal
       if (!isStandalonePage) {
         onClose();
       }
