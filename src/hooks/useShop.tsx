@@ -9,18 +9,21 @@ export interface Product {
   name: string;
   description: string | null;
   price: number;
-  image_url: string | null;
   printful_product_id: string | null;
   printful_variant_id: string | null;
   template_url: string | null;
   is_active: boolean;
   created_at: string;
+  updated_at: string;
 }
 
 export interface CartItem {
   id: string;
   product_id: string;
   quantity: number;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
   product?: Product;
 }
 
@@ -33,14 +36,18 @@ export interface Order {
   status: string;
   total_amount: number;
   created_at: string;
+  updated_at: string;
   order_items?: OrderItem[];
 }
 
 export interface OrderItem {
   id: string;
+  order_id: string;
+  product_id: string;
   quantity: number;
   unit_price: number;
   total_price: number;
+  qr_tokens: any;
   product?: Product;
 }
 
