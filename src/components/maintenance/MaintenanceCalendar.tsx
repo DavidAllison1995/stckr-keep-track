@@ -97,7 +97,13 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
       
       const dayData = taskMap.get(dateKey)!;
       dayData.tasks.push(task);
-      dayData.statusCounts[status] += 1;
+      
+      // Use task.status for completed tasks, calculated status for others
+      if (task.status === 'completed') {
+        dayData.statusCounts.completed += 1;
+      } else {
+        dayData.statusCounts[status] += 1;
+      }
     });
     
     return taskMap;
@@ -133,16 +139,35 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
     }
   };
 
-  const getTaskStatusColor = (status: string) => {
+  const getTaskStatusColor = (task: MaintenanceTask) => {
+    if (task.status === 'completed') {
+      return 'bg-green-100 text-green-800';
+    }
+    
+    const status = calculateTaskStatus(task.date);
     switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
       case 'overdue':
         return 'bg-red-100 text-red-800';
       case 'due_soon':
         return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getTaskStatusBorderColor = (task: MaintenanceTask) => {
+    if (task.status === 'completed') {
+      return 'border-l-2 border-green-500';
+    }
+    
+    const status = calculateTaskStatus(task.date);
+    switch (status) {
+      case 'overdue':
+        return 'border-l-2 border-red-500';
+      case 'due_soon':
+        return 'border-l-2 border-yellow-500';
+      default:
+        return 'border-l-2 border-green-500';
     }
   };
 
@@ -271,14 +296,15 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                   {dayData.tasks
                     .slice(0, 2)
                     .map(task => {
-                      const taskStatus = calculateTaskStatus(task.date);
+                      const taskStatus = task.status === 'completed' ? 'completed' : calculateTaskStatus(task.date);
                       return (
                         <div
                           key={task.id}
                           className={`text-xs p-1 rounded truncate ${
+                            taskStatus === 'completed' ? 'bg-green-100 text-green-800' :
                             taskStatus === 'overdue' ? 'bg-red-100 text-red-800' :
                             taskStatus === 'due_soon' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-green-100 text-green-800'
+                            'bg-gray-100 text-gray-800'
                           }`}
                         >
                           {task.title}
@@ -323,7 +349,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
       </div>
 
       {/* Week Grid */}
-      <div className="grid grid-cols-7 min-h-[400px]">
+      <div className="grid grid-cols-7 min-h-[500px]">
         {weekDays.map((day, index) => {
           const dateKey = format(day, 'yyyy-MM-dd');
           const dayData = tasksPerDay.get(dateKey);
@@ -340,13 +366,13 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
               onClick={() => handleDateClick(day)}
             >
               {/* Day Header */}
-              <div className="text-center mb-3">
+              <div className="text-center mb-3 pb-2 border-b">
                 <div className="text-xs text-gray-500 uppercase">
                   {format(day, 'EEE')}
                 </div>
                 <div
                   className={`
-                    text-lg font-medium
+                    text-lg font-medium mt-1
                     ${isTodayDate ? 'bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto' : ''}
                   `}
                 >
@@ -355,17 +381,19 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
               </div>
 
               {/* Tasks for this day */}
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-[400px] overflow-y-auto">
                 {dayData?.tasks.map(task => {
-                  const taskStatus = calculateTaskStatus(task.date);
+                  const taskStatus = task.status === 'completed' ? 'completed' : calculateTaskStatus(task.date);
                   return (
                     <div
                       key={task.id}
                       className={`
                         text-xs p-2 rounded cursor-pointer hover:opacity-80 transition-opacity
-                        ${taskStatus === 'overdue' ? 'bg-red-100 text-red-800 border-l-2 border-red-500' :
-                          taskStatus === 'due_soon' ? 'bg-yellow-100 text-yellow-800 border-l-2 border-yellow-500' :
-                          'bg-green-100 text-green-800 border-l-2 border-green-500'}
+                        ${getTaskStatusBorderColor(task)}
+                        ${taskStatus === 'completed' ? 'bg-green-50 text-green-800' :
+                          taskStatus === 'overdue' ? 'bg-red-50 text-red-800' :
+                          taskStatus === 'due_soon' ? 'bg-yellow-50 text-yellow-800' :
+                          'bg-gray-50 text-gray-800'}
                       `}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -379,6 +407,11 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                     </div>
                   );
                 })}
+                {!dayData?.tasks.length && (
+                  <div className="text-xs text-gray-400 text-center py-4">
+                    No tasks
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -421,26 +454,28 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                 Tasks for {format(currentDate, 'MMMM d, yyyy')} ({dayData.tasks.length})
               </h4>
               
-              <div className="space-y-3">
+              <div className="space-y-3 max-h-[500px] overflow-y-auto">
                 {dayData.tasks.map(task => {
-                  const taskStatus = calculateTaskStatus(task.date);
+                  const taskStatus = task.status === 'completed' ? 'completed' : calculateTaskStatus(task.date);
                   return (
                     <div
                       key={task.id}
                       className={`
                         p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors
-                        ${taskStatus === 'overdue' ? 'border-red-200 bg-red-50' :
+                        ${getTaskStatusBorderColor(task)}
+                        ${taskStatus === 'completed' ? 'border-green-200 bg-green-50' :
+                          taskStatus === 'overdue' ? 'border-red-200 bg-red-50' :
                           taskStatus === 'due_soon' ? 'border-yellow-200 bg-yellow-50' :
-                          'border-green-200 bg-green-50'}
+                          'border-gray-200 bg-gray-50'}
                       `}
                       onClick={() => handleTaskClick(task)}
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h5 className="font-medium text-gray-900">{task.title}</h5>
-                        <span className={`text-xs px-2 py-1 rounded-full ${getTaskStatusColor(taskStatus)}`}>
-                          {taskStatus === 'due_soon' ? 'Due Soon' : 
-                           taskStatus === 'overdue' ? 'Overdue' : 
-                           taskStatus === 'completed' ? 'Completed' : 'Up to Date'}
+                        <span className={`text-xs px-2 py-1 rounded-full ${getTaskStatusColor(task)}`}>
+                          {taskStatus === 'completed' ? 'Completed' :
+                           taskStatus === 'due_soon' ? 'Due Soon' : 
+                           taskStatus === 'overdue' ? 'Overdue' : 'Up to Date'}
                         </span>
                       </div>
                       
@@ -557,7 +592,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                 {tasksForSelectedDate.length > 0 ? (
                   <div className="space-y-3 max-h-[450px] overflow-y-auto">
                     {tasksForSelectedDate.map(task => {
-                      const taskStatus = calculateTaskStatus(task.date);
+                      const taskStatus = task.status === 'completed' ? 'completed' : calculateTaskStatus(task.date);
                       return (
                         <div
                           key={task.id}
@@ -568,10 +603,10 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                         >
                           <div className="flex items-start justify-between mb-2">
                             <h4 className="font-medium text-sm">{task.title}</h4>
-                            <span className={`text-xs px-2 py-1 rounded-full ${getTaskStatusColor(taskStatus)}`}>
-                              {taskStatus === 'due_soon' ? 'Due Soon' : 
-                               taskStatus === 'overdue' ? 'Overdue' : 
-                               taskStatus === 'completed' ? 'Completed' : 'Up to Date'}
+                            <span className={`text-xs px-2 py-1 rounded-full ${getTaskStatusColor(task)}`}>
+                              {taskStatus === 'completed' ? 'Completed' :
+                               taskStatus === 'due_soon' ? 'Due Soon' : 
+                               taskStatus === 'overdue' ? 'Overdue' : 'Up to Date'}
                             </span>
                           </div>
                           
