@@ -18,25 +18,68 @@ interface TaskStatusPageProps {
 
 const TaskStatusPage = ({ title, description, icon: Icon, color, filterTasks }: TaskStatusPageProps) => {
   const navigate = useNavigate();
-  const { tasks } = useSupabaseMaintenance();
+  const { tasks, isLoading } = useSupabaseMaintenance();
   const { getItemById } = useSupabaseItems();
 
   const filteredTasks = filterTasks(tasks);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'overdue': return 'bg-red-100 text-red-800';
-      case 'due_soon': return 'bg-yellow-100 text-yellow-800';
-      case 'up_to_date': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const getStatusColor = (task: any) => {
+    if (task.status === 'completed') {
+      return 'bg-green-100 text-green-800';
+    }
+    
+    const now = new Date();
+    const taskDate = new Date(task.date);
+    const fourteenDaysFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+    
+    if (taskDate < now) {
+      return 'bg-red-100 text-red-800';
+    } else if (taskDate <= fourteenDaysFromNow) {
+      return 'bg-yellow-100 text-yellow-800';
+    } else {
+      return 'bg-green-100 text-green-800';
+    }
+  };
+
+  const getStatusLabel = (task: any) => {
+    if (task.status === 'completed') {
+      return 'Completed';
+    }
+    
+    const now = new Date();
+    const taskDate = new Date(task.date);
+    const fourteenDaysFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+    
+    if (taskDate < now) {
+      return 'Overdue';
+    } else if (taskDate <= fourteenDaysFromNow) {
+      return 'Due Soon';
+    } else {
+      return 'Up to Date';
     }
   };
 
   const handleTaskClick = (task: any) => {
     if (task.item_id) {
-      navigate(`/items/${task.item_id}?tab=maintenance&highlight=${task.id}`);
+      navigate(`/items/${task.item_id}?tab=tasks&highlight=${task.id}`);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+        <div className="px-4 pt-4 pb-20">
+          <div className="bg-white rounded-t-3xl shadow-lg min-h-screen">
+            <div className="p-6 pb-8">
+              <div className="flex items-center justify-center h-64">
+                <div className="text-gray-500">Loading tasks...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
@@ -54,7 +97,7 @@ const TaskStatusPage = ({ title, description, icon: Icon, color, filterTasks }: 
                 <Icon className={`w-6 h-6 ${color}`} />
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-                  <p className="text-gray-600">{description}</p>
+                  <p className="text-gray-600">{description} ({filteredTasks.length} tasks)</p>
                 </div>
               </div>
             </div>
@@ -82,10 +125,9 @@ const TaskStatusPage = ({ title, description, icon: Icon, color, filterTasks }: 
                           <h3 className="font-semibold text-lg">{task.title}</h3>
                           <Badge
                             variant="secondary"
-                            className={getStatusColor(task.status)}
+                            className={getStatusColor(task)}
                           >
-                            {task.status === 'overdue' ? 'Overdue' :
-                             task.status === 'due_soon' ? 'Due Soon' : 'Up to Date'}
+                            {getStatusLabel(task)}
                           </Badge>
                         </div>
                         

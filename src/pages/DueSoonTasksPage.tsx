@@ -4,7 +4,17 @@ import { Clock } from 'lucide-react';
 
 const DueSoonTasksPage = () => {
   const filterDueSoonTasks = (tasks: any[]) => {
-    return tasks.filter(task => task.status === 'due_soon');
+    const now = new Date();
+    const fourteenDaysFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+    
+    return tasks.filter(task => {
+      // Skip completed tasks
+      if (task.status === 'completed') return false;
+      
+      const taskDate = new Date(task.date);
+      // Task is due soon if it's between now and 14 days from now
+      return taskDate >= now && taskDate <= fourteenDaysFromNow;
+    });
   };
 
   return (

@@ -4,18 +4,16 @@ import { CheckCircle } from 'lucide-react';
 
 const UpToDateTasksPage = () => {
   const filterUpToDateTasks = (tasks: any[]) => {
+    const now = new Date();
+    const fourteenDaysFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+    
     return tasks.filter(task => {
-      if (task.status === 'up_to_date') return true;
+      // Skip completed tasks
+      if (task.status === 'completed') return false;
       
-      // For pending tasks, check if they're due more than 14 days from now
-      if (task.status === 'pending') {
-        const taskDate = new Date(task.date);
-        const now = new Date();
-        const fourteenDaysFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
-        return taskDate > fourteenDaysFromNow;
-      }
-      
-      return false;
+      const taskDate = new Date(task.date);
+      // Task is up-to-date if it's due more than 14 days from now
+      return taskDate > fourteenDaysFromNow;
     });
   };
 
