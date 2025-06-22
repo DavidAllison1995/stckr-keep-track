@@ -14,6 +14,9 @@ import { ItemsProvider } from "@/hooks/useSupabaseItems";
 import { MaintenanceProvider } from "@/hooks/useSupabaseMaintenance";
 import PublicRoutes from "@/routes/PublicRoutes";
 import AdminRoutes from "@/routes/AdminRoutes";
+import Index from "@/pages/Index";
+import AuthPage from "@/pages/AuthPage";
+import QRRedirectPage from "@/pages/QRRedirectPage";
 import Dashboard from "@/pages/Dashboard";
 import ItemsPage from "@/pages/ItemsPage";
 import ItemDetailPage from "@/pages/ItemDetailPage";
@@ -42,24 +45,23 @@ function App() {
                   {/* Admin routes - most specific first */}
                   <Route path="/admin/*" element={<AdminRoutes />} />
                   
+                  {/* Public routes - these should be accessible without authentication */}
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<AuthPage />} />
+                  <Route 
+                    path="/:code" 
+                    element={
+                      <ItemsProvider>
+                        <MaintenanceProvider>
+                          <QRRedirectPage />
+                        </MaintenanceProvider>
+                      </ItemsProvider>
+                    } 
+                  />
+                  
                   {/* User protected routes - wrapped with providers */}
                   <Route
                     path="/dashboard"
-                    element={
-                      <ProtectedRoute>
-                        <ItemsProvider>
-                          <MaintenanceProvider>
-                            <ProtectedLayout>
-                              <Dashboard />
-                            </ProtectedLayout>
-                            <NavBar />
-                          </MaintenanceProvider>
-                        </ItemsProvider>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/"
                     element={
                       <ProtectedRoute>
                         <ItemsProvider>
@@ -210,9 +212,6 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-                  
-                  {/* Public routes */}
-                  <Route path="/*" element={<PublicRoutes />} />
 
                   {/* 404 */}
                   <Route path="*" element={<NotFound />} />
