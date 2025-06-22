@@ -32,31 +32,6 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
     };
   }, [isSidebarOpen]);
 
-  const getPageTitle = () => {
-    const path = location.pathname;
-
-    if (path === '/') return 'Dashboard';
-    if (path.startsWith('/items')) return 'Items';
-    if (path.startsWith('/maintenance')) return 'Maintenance';
-    if (path.startsWith('/calendar')) return 'Calendar';
-    if (path.startsWith('/profile')) return 'Profile';
-    if (path.startsWith('/settings')) return 'Settings';
-    if (path.startsWith('/admin')) return 'Admin';
-
-    return 'Dashboard';
-  };
-
-  const getPageDescription = () => {
-    const path = location.pathname;
-
-    if (path === '/') return 'Overview of your home';
-    if (path.startsWith('/items')) return 'Manage your items';
-    if (path.startsWith('/maintenance')) return 'Track maintenance tasks';
-    if (path.startsWith('/calendar')) return 'View your calendar';
-
-    return 'Manage your account';
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
@@ -64,14 +39,11 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
         <div className="bg-white dark:bg-gray-800 rounded-t-3xl shadow-lg">
           <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
             <div className="flex items-center gap-3">
-              <div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                  {getPageTitle()}
-                </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  {getPageDescription()}
-                </p>
-              </div>
+              <img 
+                src="/lovable-uploads/76adf774-322e-49f8-b8e3-6cccb8115efd.png" 
+                alt="STCKR Logo" 
+                className="h-8"
+              />
             </div>
             
             <div className="flex items-center gap-2">
