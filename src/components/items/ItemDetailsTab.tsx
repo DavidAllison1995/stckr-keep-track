@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Item } from '@/hooks/useSupabaseItems';
@@ -46,6 +47,18 @@ const ItemDetailsTab = ({ item, onTabChange }: ItemDetailsTabProps) => {
   };
 
   const handleViewAllDocuments = () => {
+    if (onTabChange) {
+      onTabChange('documents');
+    }
+  };
+
+  const handleMaintenanceSummaryClick = () => {
+    if (onTabChange) {
+      onTabChange('tasks');
+    }
+  };
+
+  const handleDocumentsSectionClick = () => {
     if (onTabChange) {
       onTabChange('documents');
     }
@@ -190,8 +203,8 @@ const ItemDetailsTab = ({ item, onTabChange }: ItemDetailsTabProps) => {
 
       {/* Right Column */}
       <div className="space-y-6">
-        {/* Enhanced Maintenance Summary */}
-        <Card className="shadow-sm border border-gray-200">
+        {/* Enhanced Maintenance Summary - Now Clickable */}
+        <Card className="shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition-shadow duration-200" onClick={handleMaintenanceSummaryClick}>
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2 text-gray-900">
               <Calendar className="w-5 h-5 text-blue-600" />
@@ -202,7 +215,10 @@ const ItemDetailsTab = ({ item, onTabChange }: ItemDetailsTabProps) => {
             <div className="flex flex-col space-y-3">
               {/* Next Task Button */}
               <button
-                onClick={handleNextTaskClick}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNextTaskClick();
+                }}
                 disabled={!nextTask}
                 className={`flex items-center justify-between p-3 rounded-xl transition-all duration-200 text-left border ${
                   nextTask
@@ -233,7 +249,10 @@ const ItemDetailsTab = ({ item, onTabChange }: ItemDetailsTabProps) => {
 
               {/* Recently Completed Button */}
               <button
-                onClick={handleRecentCompletedClick}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRecentCompletedClick();
+                }}
                 disabled={!recentCompleted}
                 className={`flex items-center justify-between p-3 rounded-xl transition-all duration-200 text-left border ${
                   recentCompleted
@@ -265,9 +284,9 @@ const ItemDetailsTab = ({ item, onTabChange }: ItemDetailsTabProps) => {
           </CardContent>
         </Card>
 
-        {/* Documents */}
+        {/* Documents - Now Clickable */}
         {item.documents && item.documents.length > 0 && (
-          <Card className="shadow-sm border border-gray-200">
+          <Card className="shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition-shadow duration-200" onClick={handleDocumentsSectionClick}>
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2 text-gray-900">
                 <FileText className="w-5 h-5 text-blue-600" />
@@ -294,7 +313,10 @@ const ItemDetailsTab = ({ item, onTabChange }: ItemDetailsTabProps) => {
                 variant="link" 
                 size="sm" 
                 className="p-0 h-auto text-blue-600 hover:text-blue-700 font-medium transition-colors duration-150"
-                onClick={handleViewAllDocuments}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewAllDocuments();
+                }}
               >
                 View All ({item.documents.length})
               </Button>
