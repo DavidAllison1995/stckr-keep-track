@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "./hooks/useSupabaseAuth";
+import { AdminAuthProvider } from "./hooks/useAdminAuth";
 import { UserSettingsProvider } from "./contexts/UserSettingsContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ItemsProvider } from "./hooks/useSupabaseItems";
@@ -205,8 +206,15 @@ function App() {
                       } 
                     />
                     
-                    {/* Admin routes */}
-                    <Route path="/admin/*" element={<AdminRoutes />} />
+                    {/* Admin routes - wrapped with AdminAuthProvider */}
+                    <Route 
+                      path="/admin/*" 
+                      element={
+                        <AdminAuthProvider>
+                          <AdminRoutes />
+                        </AdminAuthProvider>
+                      } 
+                    />
                     
                     {/* 404 */}
                     <Route path="*" element={<NotFound />} />
