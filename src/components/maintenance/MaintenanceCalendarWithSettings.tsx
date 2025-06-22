@@ -117,9 +117,7 @@ const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalend
 
       <Card className="p-4">
         <MaintenanceCalendar
-          onTaskClick={handleTaskClick}
-          onDateSelect={handleDateSelect}
-          dateFormat={settings?.calendar?.dateFormat}
+          onNavigateToItem={onNavigateToItem}
         />
       </Card>
 
