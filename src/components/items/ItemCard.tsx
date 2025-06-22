@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -29,6 +30,7 @@ interface ItemCardProps {
 }
 
 const ItemCard = ({ item, onClick }: ItemCardProps) => {
+  const navigate = useNavigate();
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
@@ -88,7 +90,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
 
   const handleTasksClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsDetailModalOpen(true);
+    navigate(`/items/${item.id}?tab=tasks`);
   };
 
   const handleDeleteItem = async () => {
@@ -274,7 +276,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                 className="flex-1"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setIsDetailModalOpen(true);
+                  navigate(`/items/${item.id}`);
                 }}
               >
                 View Details
