@@ -90,7 +90,11 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
 
   const handleTasksClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/items/${item.id}?tab=tasks`);
+    console.log('handleTasksClick called for item:', item.id);
+    console.log('Current window location:', window.location.href);
+    const targetUrl = `/items/${item.id}?tab=tasks`;
+    console.log('Navigating to:', targetUrl);
+    navigate(targetUrl);
   };
 
   const handleDeleteItem = async () => {
@@ -359,7 +363,6 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
         </DialogContent>
       </Dialog>
 
-      {/* Detail Modal */}
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -373,7 +376,6 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
