@@ -22,6 +22,7 @@ import ItemForm from './ItemForm';
 import ItemDetailsTab from './ItemDetailsTab';
 import ItemMaintenanceTab from './ItemMaintenanceTab';
 import ItemDocumentsTab from './ItemDocumentsTab';
+import ItemNotesTab from './ItemNotesTab';
 
 interface ItemDetailProps {
   item: Item;
@@ -33,7 +34,7 @@ interface ItemDetailProps {
 const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: ItemDetailProps) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(defaultTab);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { deleteItem } = useSupabaseItems();
   const navigate = useNavigate();
   const location = useLocation();
@@ -79,6 +80,11 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
   const handleTabChange = (value: string) => {
     console.log('Tab changed to:', value);
     setActiveTab(value);
+    
+    // Update URL params without reloading
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set('tab', value);
+    setSearchParams(newSearchParams);
   };
 
   return (
@@ -138,15 +144,16 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="tasks">Tasks</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="notes">Notes</TabsTrigger>
             <TabsTrigger value="qr">QR Code</TabsTrigger>
           </TabsList>
           
           <TabsContent value="details" className="mt-6">
-            <ItemDetailsTab item={item} />
+            <ItemDetailsTab item={item} onTabChange={handleTabChange} />
           </TabsContent>
           
           <TabsContent value="tasks" className="mt-6">
@@ -155,6 +162,10 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
           
           <TabsContent value="documents" className="mt-6">
             <ItemDocumentsTab itemId={item.id} />
+          </TabsContent>
+          
+          <TabsContent value="notes" className="mt-6">
+            <ItemNotesTab item={item} />
           </TabsContent>
           
           <TabsContent value="qr" className="mt-6">

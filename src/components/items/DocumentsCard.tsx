@@ -10,12 +10,6 @@ interface DocumentsCardProps {
 }
 
 const DocumentsCard = ({ item, onTabChange }: DocumentsCardProps) => {
-  const handleDocumentsSectionClick = () => {
-    if (onTabChange) {
-      onTabChange('documents');
-    }
-  };
-
   const handleViewAllDocuments = () => {
     if (onTabChange) {
       onTabChange('documents');
@@ -27,7 +21,7 @@ const DocumentsCard = ({ item, onTabChange }: DocumentsCardProps) => {
   }
 
   return (
-    <Card className="shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition-shadow duration-200" onClick={handleDocumentsSectionClick}>
+    <Card className="shadow-sm border border-gray-200">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2 text-gray-900">
           <FileText className="w-5 h-5 text-blue-600" />
@@ -54,10 +48,7 @@ const DocumentsCard = ({ item, onTabChange }: DocumentsCardProps) => {
           variant="link" 
           size="sm" 
           className="p-0 h-auto text-blue-600 hover:text-blue-700 font-medium transition-colors duration-150"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleViewAllDocuments();
-          }}
+          onClick={handleViewAllDocuments}
         >
           View All ({item.documents.length})
         </Button>

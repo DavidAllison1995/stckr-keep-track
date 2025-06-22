@@ -11,12 +11,6 @@ interface MaintenanceSummaryCardProps {
 }
 
 const MaintenanceSummaryCard = ({ nextTask, recentCompleted, onTabChange }: MaintenanceSummaryCardProps) => {
-  const handleMaintenanceSummaryClick = () => {
-    if (onTabChange) {
-      onTabChange('tasks');
-    }
-  };
-
   const handleNextTaskClick = () => {
     if (onTabChange) {
       onTabChange('tasks');
@@ -30,7 +24,7 @@ const MaintenanceSummaryCard = ({ nextTask, recentCompleted, onTabChange }: Main
   };
 
   return (
-    <Card className="shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition-shadow duration-200" onClick={handleMaintenanceSummaryClick}>
+    <Card className="shadow-sm border border-gray-200">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2 text-gray-900">
           <Calendar className="w-5 h-5 text-blue-600" />
@@ -41,10 +35,7 @@ const MaintenanceSummaryCard = ({ nextTask, recentCompleted, onTabChange }: Main
         <div className="flex flex-col space-y-3">
           {/* Next Task Button */}
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNextTaskClick();
-            }}
+            onClick={handleNextTaskClick}
             disabled={!nextTask}
             className={`flex items-center justify-between p-3 rounded-xl transition-all duration-200 text-left border ${
               nextTask
@@ -75,10 +66,7 @@ const MaintenanceSummaryCard = ({ nextTask, recentCompleted, onTabChange }: Main
 
           {/* Recently Completed Button */}
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleRecentCompletedClick();
-            }}
+            onClick={handleRecentCompletedClick}
             disabled={!recentCompleted}
             className={`flex items-center justify-between p-3 rounded-xl transition-all duration-200 text-left border ${
               recentCompleted
