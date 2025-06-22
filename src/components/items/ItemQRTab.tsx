@@ -195,14 +195,6 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
               </AlertDialogContent>
             </AlertDialog>
           </div>
-
-          {/* Info Section */}
-          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <p className="text-sm text-blue-800">
-              <strong>How it works:</strong> This QR code links directly to this item. 
-              Anyone who scans it will be taken to your item details.
-            </p>
-          </div>
         </CardContent>
       </Card>
 
