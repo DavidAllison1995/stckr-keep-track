@@ -1,30 +1,15 @@
 
 import { useState, useEffect } from 'react';
-import { Calendar, dateFnsLocalizer, View } from 'react-big-calendar';
-import { format, parse, startOfWeek, getDay } from 'date-fns';
-import { enUS } from 'date-fns/locale';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Filter, Plus, Search } from 'lucide-react';
+import { CalendarDays, Plus } from 'lucide-react';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useUserSettingsContext } from '@/contexts/UserSettingsContext';
-import { formatDateWithUserPreference } from '@/utils/dateFormat';
 import TaskSearch from './TaskSearch';
 import StatusBar from './StatusBar';
 import MaintenanceTaskForm from './MaintenanceTaskForm';
 import TaskEditDialog from './TaskEditDialog';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
-
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek,
-  getDay,
-  locales: {
-    'en-US': enUS,
-  },
-});
+import MaintenanceCalendar from './MaintenanceCalendar';
 
 interface MaintenanceCalendarWithSettingsProps {
   onNavigateToItem?: (itemId: string, taskId?: string) => void;
@@ -33,14 +18,12 @@ interface MaintenanceCalendarWithSettingsProps {
 const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalendarWithSettingsProps) => {
   const { tasks, isLoading } = useSupabaseMaintenance();
   const { settings } = useUserSettingsContext();
-  const [view, setView] = useState<View>('month');
+  const [view, setView] = useState<'month' | 'week'>('month');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showForm, setShowForm] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [filteredTasks, setFilteredTasks] = useState(tasks);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   // Set initial view based on user settings
   useEffect(() => {
@@ -54,9 +37,6 @@ const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalend
   }, [tasks]);
 
   const handleSearch = (query: string, status: string | null) => {
-    setSearchQuery(query);
-    setStatusFilter(status);
-    
     let filtered = tasks;
     
     if (query) {
@@ -73,57 +53,17 @@ const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalend
     setFilteredTasks(filtered);
   };
 
-  const calendarEvents = filteredTasks.map(task => ({
-    id: task.id,
-    title: task.title,
-    start: new Date(task.date),
-    end: new Date(task.date),
-    resource: task,
-  }));
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-500';
-      case 'overdue': return 'bg-red-500';
-      case 'due_soon': return 'bg-orange-500';
-      default: return 'bg-blue-500';
-    }
-  };
-
-  const eventStyleGetter = (event: any) => {
-    const backgroundColor = getStatusColor(event.resource.status);
-    return {
-      style: {
-        backgroundColor: backgroundColor.replace('bg-', '#'),
-        borderRadius: '4px',
-        opacity: 0.8,
-        color: 'white',
-        border: '0px',
-        display: 'block',
-      },
-    };
-  };
-
-  const CustomEvent = ({ event }: { event: any }) => (
-    <div className="text-xs p-1">
-      <div className="font-medium truncate">{event.title}</div>
-      <div className="text-xs opacity-75">
-        {formatDateWithUserPreference(event.start, settings?.calendar?.dateFormat)}
-      </div>
-    </div>
-  );
-
-  const handleSelectEvent = (event: any) => {
-    if (onNavigateToItem && event.resource.item_id) {
-      onNavigateToItem(event.resource.item_id, event.resource.id);
+  const handleTaskClick = (task: any) => {
+    if (onNavigateToItem && task.item_id) {
+      onNavigateToItem(task.item_id, task.id);
     } else {
-      setSelectedTask(event.resource);
+      setSelectedTask(task);
       setShowEditDialog(true);
     }
   };
 
-  const handleSelectSlot = ({ start }: { start: Date }) => {
-    setSelectedDate(start);
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date);
     setShowForm(true);
   };
 
@@ -149,7 +89,7 @@ const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalend
           </Button>
         </div>
 
-        <StatusBar tasks={tasks} />
+        <StatusBar />
         
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
@@ -175,35 +115,19 @@ const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalend
       </div>
 
       <Card className="p-4">
-        <div style={{ height: '600px' }}>
-          <Calendar
-            localizer={localizer}
-            events={calendarEvents}
-            startAccessor="start"
-            endAccessor="end"
-            view={view}
-            onView={setView}
-            date={selectedDate}
-            onNavigate={setSelectedDate}
-            onSelectEvent={handleSelectEvent}
-            onSelectSlot={handleSelectSlot}
-            selectable
-            eventPropGetter={eventStyleGetter}
-            components={{
-              event: CustomEvent,
-            }}
-            formats={{
-              dateFormat: settings?.calendar?.dateFormat === 'dd/MM/yyyy' ? 'dd' : 'DD',
-              dayFormat: settings?.calendar?.dateFormat === 'dd/MM/yyyy' ? 'dd' : 'DD',
-            }}
-          />
-        </div>
+        <MaintenanceCalendar
+          tasks={filteredTasks}
+          view={view}
+          onTaskClick={handleTaskClick}
+          onDateSelect={handleDateSelect}
+          dateFormat={settings?.calendar?.dateFormat}
+        />
       </Card>
 
       {showForm && (
         <MaintenanceTaskForm
-          isOpen={showForm}
-          onClose={() => setShowForm(false)}
+          open={showForm}
+          onOpenChange={setShowForm}
           defaultDate={selectedDate}
         />
       )}
@@ -213,6 +137,10 @@ const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalend
           task={selectedTask}
           open={showEditDialog}
           onOpenChange={setShowEditDialog}
+          onSuccess={() => {
+            setShowEditDialog(false);
+            setSelectedTask(null);
+          }}
         />
       )}
     </div>
