@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -23,6 +22,7 @@ import ItemDetailsTab from './ItemDetailsTab';
 import ItemMaintenanceTab from './ItemMaintenanceTab';
 import ItemDocumentsTab from './ItemDocumentsTab';
 import ItemNotesTab from './ItemNotesTab';
+import ItemQRTab from './ItemQRTab';
 
 interface ItemDetailProps {
   item: Item;
@@ -169,10 +169,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
           </TabsContent>
           
           <TabsContent value="qr" className="mt-6">
-            {/* QR Code content would go here */}
-            <div className="text-center py-8 text-gray-500">
-              QR Code functionality coming soon
-            </div>
+            <ItemQRTab item={item} />
           </TabsContent>
         </Tabs>
       </div>
