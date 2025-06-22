@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,9 +9,15 @@ import NotificationsList from './NotificationsList';
 
 const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { unreadCount, isLoading } = useNotifications();
+  const { unreadCount, isLoading, refetchNotifications } = useNotifications();
 
   console.log('NotificationBell render - unreadCount:', unreadCount, 'isLoading:', isLoading);
+
+  // FIXED: Ensure fresh data on mount
+  useEffect(() => {
+    console.log('NotificationBell mounted, refetching notifications');
+    refetchNotifications();
+  }, [refetchNotifications]);
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>

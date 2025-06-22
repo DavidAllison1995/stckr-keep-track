@@ -24,7 +24,7 @@ export const useNotifications = () => {
   const { user } = useSupabaseAuth();
   const queryClient = useQueryClient();
 
-  const { data: notifications = [], isLoading, error } = useQuery({
+  const { data: notifications = [], isLoading, error, refetch } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
       if (!user?.id) {
@@ -51,6 +51,12 @@ export const useNotifications = () => {
     enabled: !!user?.id,
     refetchInterval: 30000, // Backup polling every 30 seconds
   });
+
+  // Manual refetch function
+  const refetchNotifications = () => {
+    console.log('Manually refetching notifications');
+    refetch();
+  };
 
   // Log any query errors
   useEffect(() => {
@@ -123,7 +129,7 @@ export const useNotifications = () => {
     },
   });
 
-  // Set up realtime subscription - FIXED: Global subscription management
+  // Set up realtime subscription - FIXED: Global subscription management with refetch
   useEffect(() => {
     if (!user?.id) return;
 
@@ -144,8 +150,8 @@ export const useNotifications = () => {
           (payload) => {
             console.log('Realtime notification event:', payload.eventType, payload);
             
-            // Immediately invalidate and refetch notifications
-            queryClient.invalidateQueries({ queryKey: ['notifications'] });
+            // Immediately refetch notifications for real-time updates
+            refetchNotifications();
           }
         )
         .subscribe((status) => {
@@ -159,10 +165,9 @@ export const useNotifications = () => {
 
     return () => {
       // Only cleanup when the last component unmounts
-      // In practice, this will happen when the user logs out or app unmounts
       console.log('Component cleanup - subscription remains active');
     };
-  }, [user?.id]);
+  }, [user?.id, refetch]);
 
   // Global cleanup when user changes or app unmounts
   useEffect(() => {
@@ -191,5 +196,6 @@ export const useNotifications = () => {
     isMarkingAsRead: markAsReadMutation.isPending,
     isMarkingAllAsRead: markAllAsReadMutation.isPending,
     isDeletingNotification: deleteNotificationMutation.isPending,
+    refetchNotifications, // Expose refetch function
   };
 };

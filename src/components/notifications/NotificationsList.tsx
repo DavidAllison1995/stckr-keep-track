@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { Calendar, Package, Clock, AlertTriangle, CheckCircle, Plus, X } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface NotificationsListProps {
   onNotificationClick?: () => void;
@@ -22,7 +23,8 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
     markAllAsRead, 
     deleteNotification,
     isLoading,
-    isDeletingNotification
+    isDeletingNotification,
+    refetchNotifications
   } = useNotifications();
 
   console.log('NotificationsList render - notifications:', notifications, 'unreadCount:', unreadCount);
@@ -65,7 +67,7 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
     onNotificationClick?.();
   };
 
-  // FIXED: Proper delete handler with comprehensive logging
+  // FIXED: Proper delete handler with manual state update
   const handleDeleteNotification = async (e: React.MouseEvent, notificationId: string) => {
     e.stopPropagation();
     e.preventDefault();
@@ -73,8 +75,20 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
     console.log('Delete button clicked for notification ID:', notificationId);
     
     try {
-      await deleteNotification(notificationId);
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
+
+      if (error) {
+        console.error('Delete operation failed:', error);
+        throw error;
+      }
+      
       console.log('Delete operation completed successfully');
+      
+      // Immediately refetch to update UI
+      refetchNotifications();
     } catch (error) {
       console.error('Delete operation failed:', error);
     }
@@ -146,7 +160,7 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
                         {!notification.read && (
                           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                         )}
-                        {/* FIXED: Delete button with enhanced event handling and logging */}
+                        {/* FIXED: Delete button with proper event handling */}
                         <Button
                           variant="ghost"
                           size="sm"
