@@ -39,17 +39,23 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Get the tab from URL params, falling back to defaultTab
-  const urlTab = searchParams.get('tab') || defaultTab;
-  console.log('ItemDetail - URL tab:', urlTab, 'Default tab:', defaultTab);
+  // Normalize tab names - handle both 'maintenance' and 'tasks' as they refer to the same tab
+  const normalizeTabName = (tabName: string) => {
+    if (tabName === 'maintenance') return 'tasks';
+    return tabName;
+  };
 
-  // Initialize activeTab from URL or defaultTab
+  // Get the tab from URL params, falling back to defaultTab, and normalize it
+  const urlTab = normalizeTabName(searchParams.get('tab') || defaultTab);
+  console.log('ItemDetail - URL tab:', searchParams.get('tab'), 'Normalized to:', urlTab, 'Default tab:', defaultTab);
+
+  // Initialize activeTab from normalized URL or defaultTab
   const [activeTab, setActiveTab] = useState(urlTab);
 
   // Update active tab when URL parameters change
   useEffect(() => {
-    const tabParam = searchParams.get('tab') || defaultTab;
-    console.log('ItemDetail - Tab param from URL:', tabParam, 'Current active tab:', activeTab);
+    const tabParam = normalizeTabName(searchParams.get('tab') || defaultTab);
+    console.log('ItemDetail - Tab param from URL:', searchParams.get('tab'), 'Normalized to:', tabParam, 'Current active tab:', activeTab);
     setActiveTab(tabParam);
   }, [searchParams, defaultTab]);
 
@@ -84,7 +90,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
     console.log('ItemDetail - Tab changed to:', value);
     setActiveTab(value);
     
-    // Update URL params without reloading
+    // Update URL params without reloading - use the actual tab name in URL
     const newSearchParams = new URLSearchParams(searchParams);
     newSearchParams.set('tab', value);
     setSearchParams(newSearchParams);
