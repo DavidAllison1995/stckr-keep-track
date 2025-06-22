@@ -1,16 +1,26 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { Item } from '@/hooks/useSupabaseItems';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { useSupabaseItems } from '@/hooks/useSupabaseItems';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import ItemForm from './ItemForm';
 import ItemDetailsTab from './ItemDetailsTab';
 import ItemMaintenanceTab from './ItemMaintenanceTab';
 import ItemDocumentsTab from './ItemDocumentsTab';
-import ItemForm from './ItemForm';
-import QRSection from '@/components/qr/QRSection';
 
 interface ItemDetailProps {
   item: Item;
@@ -20,120 +30,116 @@ interface ItemDetailProps {
 }
 
 const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: ItemDetailProps) => {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<string>(defaultTab);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const { deleteItem } = useSupabaseItems();
 
-  const handleEdit = () => {
-    setIsEditing(true);
+  const handleDeleteItem = async () => {
+    try {
+      await deleteItem(item.id);
+      onClose(); // Close the detail view after deletion
+    } catch (error) {
+      console.error('Error deleting item:', error);
+    }
   };
-
-  const handleEditSuccess = () => {
-    setIsEditing(false);
-    // Trigger a refetch of item data
-    window.location.reload(); // Simple approach - could be optimized with proper state management
-  };
-
-  const handleClose = () => {
-    onClose();
-  };
-
-  const handleItemUpdate = () => {
-    // Trigger a refetch of item data
-    window.location.reload(); // Simple approach - could be optimized with proper state management
-  };
-
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
-  };
-
-  if (isEditing) {
-    return (
-      <Card className="max-w-4xl mx-auto rounded-2xl shadow-lg">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold">Edit {item.name}</h2>
-            <Button 
-              variant="outline"
-              onClick={() => setIsEditing(false)}
-            >
-              Cancel
-            </Button>
-          </div>
-          <ItemForm item={item} onSuccess={handleEditSuccess} />
-        </div>
-      </Card>
-    );
-  }
 
   return (
-    <Card className="max-w-4xl mx-auto rounded-2xl shadow-lg">
-      <div className="p-6">
+    <>
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-start pb-4 border-b">
-          <div>
-            <h2 className="text-2xl font-semibold">{item.name}</h2>
-            <div className="flex space-x-2 mt-1">
-              <Badge variant="outline">{item.category}</Badge>
-              {item.room && <Badge variant="outline">{item.room}</Badge>}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">{item.name}</h1>
+              <p className="text-gray-600">{item.category}</p>
             </div>
           </div>
-          <Button onClick={handleEdit} className="bg-blue-600 hover:bg-blue-700">
-            Edit
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsEditModalOpen(true)}
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Edit
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="outline"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Item</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete "{item.name}"? This action cannot be undone.
+                    All maintenance tasks and documents associated with this item will also be deleted.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={handleDeleteItem}
+                    className="bg-red-600 hover:bg-red-700"
+                  >
+                    Delete Item
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-6">
-          <TabsList className="grid w-full grid-cols-4 gap-4 bg-gray-50 p-1 rounded-lg">
-            <TabsTrigger 
-              value="details" 
-              className="py-2 px-4 data-[state=active]:bg-blue-50 data-[state=active]:font-semibold"
-            >
-              Details
-            </TabsTrigger>
-            <TabsTrigger 
-              value="maintenance" 
-              className="py-2 px-4 data-[state=active]:bg-blue-50 data-[state=active]:font-semibold"
-            >
-              Tasks
-            </TabsTrigger>
-            <TabsTrigger 
-              value="documents" 
-              className="py-2 px-4 data-[state=active]:bg-blue-50 data-[state=active]:font-semibold"
-            >
-              Documents
-            </TabsTrigger>
-            <TabsTrigger 
-              value="qr" 
-              className="py-2 px-4 data-[state=active]:bg-blue-50 data-[state=active]:font-semibold"
-            >
-              QR Code
-            </TabsTrigger>
+        <Tabs defaultValue={defaultTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="tasks">Tasks</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="qr">QR Code</TabsTrigger>
           </TabsList>
-
+          
           <TabsContent value="details" className="mt-6">
-            <ItemDetailsTab item={item} onTabChange={handleTabChange} />
+            <ItemDetailsTab item={item} />
           </TabsContent>
-
-          <TabsContent value="maintenance" className="mt-6">
-            <ItemMaintenanceTab itemId={item.id} highlightTaskId={highlightTaskId} />
+          
+          <TabsContent value="tasks" className="mt-6">
+            <ItemMaintenanceTab item={item} highlightTaskId={highlightTaskId} />
           </TabsContent>
-
+          
           <TabsContent value="documents" className="mt-6">
-            <ItemDocumentsTab itemId={item.id} />
+            <ItemDocumentsTab item={item} />
           </TabsContent>
-
+          
           <TabsContent value="qr" className="mt-6">
-            <QRSection
-              itemId={item.id}
-              qrCodeId={item.qr_code_id}
-              onUpdate={handleItemUpdate}
-            />
+            {/* QR Code content would go here */}
+            <div className="text-center py-8 text-gray-500">
+              QR Code functionality coming soon
+            </div>
           </TabsContent>
         </Tabs>
       </div>
-    </Card>
+
+      {/* Edit Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Item</DialogTitle>
+          </DialogHeader>
+          <ItemForm 
+            item={item}
+            onSuccess={() => setIsEditModalOpen(false)} 
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
