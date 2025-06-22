@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -34,12 +34,20 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { deleteItem } = useSupabaseItems();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleDeleteItem = async () => {
     try {
       await deleteItem(item.id);
-      // Navigate directly to items page instead of calling onClose
-      navigate('/items');
+      
+      // Check if we're on the item detail page (not in a modal)
+      if (location.pathname.includes(`/items/${item.id}`)) {
+        // We're on the standalone item page, navigate to items list
+        navigate('/items');
+      } else {
+        // We're in a modal context, just close the modal
+        onClose();
+      }
     } catch (error) {
       console.error('Error deleting item:', error);
     }
