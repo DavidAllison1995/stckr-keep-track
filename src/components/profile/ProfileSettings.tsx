@@ -31,6 +31,8 @@ const ProfileSettings = () => {
   const [localSettings, setLocalSettings] = useState(settings);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
 
   // Load profile data
   useState(() => {
@@ -467,8 +469,20 @@ const ProfileSettings = () => {
                 <CardTitle>Account Security</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <ChangePasswordDialog />
-                <DeleteAccountDialog />
+                <Button 
+                  variant="outline" 
+                  onClick={() => setChangePasswordOpen(true)}
+                  className="w-full justify-start"
+                >
+                  Change Password
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  onClick={() => setDeleteAccountOpen(true)}
+                  className="w-full justify-start"
+                >
+                  Delete Account
+                </Button>
               </CardContent>
             </Card>
 
@@ -484,6 +498,16 @@ const ProfileSettings = () => {
           </div>
         </div>
       </div>
+
+      {/* Dialogs */}
+      <ChangePasswordDialog 
+        open={changePasswordOpen} 
+        onOpenChange={setChangePasswordOpen} 
+      />
+      <DeleteAccountDialog 
+        open={deleteAccountOpen} 
+        onOpenChange={setDeleteAccountOpen} 
+      />
     </div>
   );
 };
