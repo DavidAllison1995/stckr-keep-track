@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, QrCode } from 'lucide-react';
+import { ArrowLeft, QrCode, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import QRScannerOverlay from '@/components/qr/QRScannerOverlay';
 
@@ -29,20 +29,32 @@ const ScannerPage = () => {
 
   return (
     <div className="p-4 pb-20 space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate(-1)}
-          className="p-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
-        <div className="flex items-center gap-2">
-          <QrCode className="w-6 h-6" />
-          <h1 className="text-2xl font-bold">QR Scanner</h1>
+      {/* Header with Buy Stickers Button */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(-1)}
+            className="p-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <QrCode className="w-6 h-6" />
+            <h1 className="text-2xl font-bold">QR Scanner</h1>
+          </div>
         </div>
+        
+        <Button
+          onClick={() => navigate('/shop')}
+          variant="outline"
+          size="sm"
+          className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+        >
+          <ShoppingCart className="w-4 h-4 mr-2" />
+          Buy Stickers
+        </Button>
       </div>
 
       {/* Scanner Card */}

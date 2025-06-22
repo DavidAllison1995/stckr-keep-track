@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingCart, Plus, Minus, Trash2, ExternalLink } from 'lucide-react';
 import { useShop } from '@/hooks/useShop';
+import { useNavigate } from 'react-router-dom';
 
 interface CartDrawerProps {
   open: boolean;
@@ -18,6 +19,7 @@ interface CartDrawerProps {
 }
 
 const CartDrawer = ({ open, onClose }: CartDrawerProps) => {
+  const navigate = useNavigate();
   const {
     cartItems,
     updateCartQuantity,
@@ -33,6 +35,11 @@ const CartDrawer = ({ open, onClose }: CartDrawerProps) => {
       window.open(checkoutUrl, '_blank');
       onClose();
     }
+  };
+
+  const handleContinueShopping = () => {
+    onClose();
+    navigate('/shop');
   };
 
   const cartTotal = getCartTotal();
@@ -59,7 +66,7 @@ const CartDrawer = ({ open, onClose }: CartDrawerProps) => {
               <ShoppingCart className="w-16 h-16 mx-auto text-gray-400 mb-4" />
               <h3 className="text-lg font-semibold text-gray-600 mb-2">Your cart is empty</h3>
               <p className="text-gray-500 mb-4">Add some products to get started!</p>
-              <Button onClick={onClose}>Continue Shopping</Button>
+              <Button onClick={handleContinueShopping}>Continue Shopping</Button>
             </div>
           ) : (
             <>

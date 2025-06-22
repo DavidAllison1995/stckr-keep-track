@@ -2,13 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
   User, 
   Menu, 
-  X
+  X,
+  ShoppingCart
 } from 'lucide-react';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import NavBar from '@/components/navigation/NavBar';
+import { useShop } from '@/hooks/useShop';
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;
@@ -18,6 +21,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { getCartItemCount } = useShop();
 
   useEffect(() => {
     if (!isSidebarOpen) return;
@@ -32,6 +36,8 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
       document.removeEventListener('mousedown', closeSidebar);
     };
   }, [isSidebarOpen]);
+
+  const cartItemCount = getCartItemCount();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
@@ -54,6 +60,25 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
             
             <div className="flex items-center gap-2">
               <NotificationBell />
+              
+              {/* Cart Icon */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/shop')}
+                className="relative p-2"
+              >
+                <ShoppingCart className="w-5 h-5" />
+                {cartItemCount > 0 && (
+                  <Badge
+                    variant="destructive"
+                    className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                  >
+                    {cartItemCount > 9 ? '9+' : cartItemCount}
+                  </Badge>
+                )}
+              </Button>
+
               <Button
                 variant="ghost"
                 size="sm"
