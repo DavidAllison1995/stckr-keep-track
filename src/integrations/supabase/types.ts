@@ -298,6 +298,7 @@ export type Database = {
           id: string
           is_admin: boolean | null
           last_name: string | null
+          profile_image_url: string | null
           updated_at: string | null
         }
         Insert: {
@@ -306,6 +307,7 @@ export type Database = {
           id: string
           is_admin?: boolean | null
           last_name?: string | null
+          profile_image_url?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -314,6 +316,7 @@ export type Database = {
           id?: string
           is_admin?: boolean | null
           last_name?: string | null
+          profile_image_url?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -406,37 +409,49 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          calendar_default_view: string | null
           created_at: string | null
+          date_format: string | null
           id: string
+          language: string | null
           notification_task_completed: boolean | null
           notification_task_created: boolean | null
           notification_task_due_soon: boolean | null
           notification_task_overdue: boolean | null
           notification_warranty_expiring: boolean | null
+          qr_scan_sound: boolean | null
           theme: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          calendar_default_view?: string | null
           created_at?: string | null
+          date_format?: string | null
           id?: string
+          language?: string | null
           notification_task_completed?: boolean | null
           notification_task_created?: boolean | null
           notification_task_due_soon?: boolean | null
           notification_task_overdue?: boolean | null
           notification_warranty_expiring?: boolean | null
+          qr_scan_sound?: boolean | null
           theme?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          calendar_default_view?: string | null
           created_at?: string | null
+          date_format?: string | null
           id?: string
+          language?: string | null
           notification_task_completed?: boolean | null
           notification_task_created?: boolean | null
           notification_task_due_soon?: boolean | null
           notification_task_overdue?: boolean | null
           notification_warranty_expiring?: boolean | null
+          qr_scan_sound?: boolean | null
           theme?: string | null
           updated_at?: string | null
           user_id?: string

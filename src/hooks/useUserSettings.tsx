@@ -18,6 +18,8 @@ export interface UserSettings {
   };
   pushNotifications: boolean;
   theme: 'light' | 'dark' | 'system';
+  language?: string;
+  qrScanSound?: boolean;
 }
 
 const defaultSettings: UserSettings = {
@@ -34,6 +36,8 @@ const defaultSettings: UserSettings = {
   },
   pushNotifications: false,
   theme: 'system',
+  language: 'en',
+  qrScanSound: true,
 };
 
 export const useUserSettings = () => {
@@ -80,11 +84,13 @@ export const useUserSettings = () => {
           taskCreated: data.notification_task_created ?? false,
         },
         calendar: {
-          defaultView: 'month',
-          dateFormat: 'MM/dd/yyyy',
+          defaultView: (data.calendar_default_view as 'week' | 'month') || 'month',
+          dateFormat: (data.date_format as 'MM/dd/yyyy' | 'dd/MM/yyyy') || 'MM/dd/yyyy',
         },
         pushNotifications: false,
         theme: (data.theme as 'light' | 'dark' | 'system') || 'system',
+        language: data.language || 'en',
+        qrScanSound: data.qr_scan_sound ?? true,
       };
 
       return mappedSettings;
@@ -100,6 +106,10 @@ export const useUserSettings = () => {
       const dbSettings = {
         user_id: user.id,
         theme: newSettings.theme,
+        language: newSettings.language,
+        qr_scan_sound: newSettings.qrScanSound,
+        calendar_default_view: newSettings.calendar.defaultView,
+        date_format: newSettings.calendar.dateFormat,
         notification_task_due_soon: newSettings.notifications.taskDueSoon,
         notification_task_overdue: newSettings.notifications.taskOverdue,
         notification_warranty_expiring: newSettings.notifications.warrantyExpiring,
