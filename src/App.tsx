@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "./hooks/useSupabaseAuth";
 import { UserSettingsProvider } from "./contexts/UserSettingsContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { GlobalQRScannerProvider } from "./contexts/GlobalQRScannerContext";
 import { ItemsProvider } from "./hooks/useSupabaseItems";
 import { MaintenanceProvider } from "./hooks/useSupabaseMaintenance";
 
@@ -32,6 +31,7 @@ import MaintenanceTasksRoutes from "./routes/MaintenanceTasksRoutes";
 import TaskRoutes from "./routes/TaskRoutes";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ProtectedLayout from "./components/layouts/ProtectedLayout";
+import { GlobalQRScannerProvider } from "./contexts/GlobalQRScannerContext";
 
 const queryClient = new QueryClient();
 
@@ -71,9 +71,11 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <ItemsProvider>
-                            <ProtectedLayout>
-                              <ItemsPage />
-                            </ProtectedLayout>
+                            <MaintenanceProvider>
+                              <ProtectedLayout>
+                                <ItemsPage />
+                              </ProtectedLayout>
+                            </MaintenanceProvider>
                           </ItemsProvider>
                         </ProtectedRoute>
                       } 
@@ -161,9 +163,11 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <ItemsProvider>
-                            <ProtectedLayout>
-                              <ScannerPage />
-                            </ProtectedLayout>
+                            <MaintenanceProvider>
+                              <ProtectedLayout>
+                                <ScannerPage />
+                              </ProtectedLayout>
+                            </MaintenanceProvider>
                           </ItemsProvider>
                         </ProtectedRoute>
                       } 
