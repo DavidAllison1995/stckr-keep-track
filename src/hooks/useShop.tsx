@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from './useSupabaseAuth';
@@ -364,6 +363,26 @@ export const useShop = () => {
     }
   };
 
+  // Get order status display info
+  const getOrderStatusInfo = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return { label: 'Pending Payment', color: 'yellow', description: 'Waiting for payment confirmation' };
+      case 'paid':
+        return { label: 'Payment Confirmed', color: 'green', description: 'Payment received, preparing for fulfillment' };
+      case 'processing':
+        return { label: 'Processing', color: 'blue', description: 'Order sent to Printful for production' };
+      case 'shipped':
+        return { label: 'Shipped', color: 'purple', description: 'Your stickers are on the way!' };
+      case 'failed':
+        return { label: 'Payment Failed', color: 'red', description: 'Payment was not successful' };
+      case 'cancelled':
+        return { label: 'Cancelled', color: 'gray', description: 'Order was cancelled' };
+      default:
+        return { label: status, color: 'gray', description: '' };
+    }
+  };
+
   useEffect(() => {
     console.log('useShop: Loading products on mount');
     loadProducts();
@@ -400,5 +419,6 @@ export const useShop = () => {
     loadProducts,
     loadCartItems,
     loadOrders,
+    getOrderStatusInfo,
   };
 };

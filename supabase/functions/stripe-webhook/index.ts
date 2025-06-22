@@ -45,18 +45,38 @@ serve(async (req) => {
         console.log("Checkout session completed:", session.id);
 
         // Update order status to paid
-        const { error } = await supabaseClient
+        const { data: updatedOrder, error } = await supabaseClient
           .from("orders")
           .update({ 
             status: "paid",
             updated_at: new Date().toISOString()
           })
-          .eq("stripe_session_id", session.id);
+          .eq("stripe_session_id", session.id)
+          .select()
+          .single();
 
         if (error) {
           console.error("Error updating order status:", error);
         } else {
           console.log("Order status updated to paid");
+          
+          // Trigger Printful fulfillment for paid order
+          try {
+            console.log("Triggering Printful fulfillment for order:", updatedOrder.id);
+            
+            const fulfillmentResponse = await supabaseClient.functions.invoke('printful-fulfillment', {
+              body: { orderId: updatedOrder.id }
+            });
+
+            if (fulfillmentResponse.error) {
+              console.error("Error triggering Printful fulfillment:", fulfillmentResponse.error);
+            } else {
+              console.log("Printful fulfillment triggered successfully");
+            }
+          } catch (fulfillmentError) {
+            console.error("Failed to trigger Printful fulfillment:", fulfillmentError);
+            // Don't fail the webhook - the order is still paid
+          }
         }
 
         // Clear user's cart after successful payment
