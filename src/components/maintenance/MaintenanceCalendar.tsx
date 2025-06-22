@@ -135,11 +135,14 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
   };
 
   const handleTaskClick = (task: MaintenanceTask) => {
+    console.log('Task clicked:', task.id, 'Item ID:', task.item_id);
     if (onNavigateToItem && task.item_id) {
       onNavigateToItem(task.item_id, task.id);
     } else if (task.item_id) {
       // Navigate to item detail page with tasks tab and highlight the specific task
-      navigate(`/items/${task.item_id}?tab=tasks&highlight=${task.id}`);
+      const url = `/items/${task.item_id}?tab=tasks&highlight=${task.id}`;
+      console.log('Navigating to:', url);
+      navigate(url);
     }
   };
 
