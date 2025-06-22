@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -33,27 +34,24 @@ interface ItemDetailProps {
 
 const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: ItemDetailProps) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(defaultTab);
   const [searchParams, setSearchParams] = useSearchParams();
   const { deleteItem } = useSupabaseItems();
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Get the tab from URL params, falling back to defaultTab
+  const urlTab = searchParams.get('tab') || defaultTab;
+  const [activeTab, setActiveTab] = useState(urlTab);
+
   // Update active tab when URL parameters change
   useEffect(() => {
-    const tabParam = searchParams.get('tab');
-    if (tabParam && tabParam !== activeTab) {
-      console.log('URL tab parameter changed to:', tabParam);
+    const tabParam = searchParams.get('tab') || defaultTab;
+    console.log('URL tab parameter:', tabParam, 'Current active tab:', activeTab);
+    if (tabParam !== activeTab) {
+      console.log('Setting active tab to:', tabParam);
       setActiveTab(tabParam);
     }
-  }, [searchParams, activeTab]);
-
-  // Also update when defaultTab prop changes
-  useEffect(() => {
-    if (defaultTab !== activeTab) {
-      setActiveTab(defaultTab);
-    }
-  }, [defaultTab]);
+  }, [searchParams, defaultTab, activeTab]);
 
   const handleDeleteItem = async () => {
     try {
