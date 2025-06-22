@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { CalendarDays, Plus } from 'lucide-react';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useUserSettingsContext } from '@/contexts/UserSettingsContext';
-import TaskSearch from './TaskSearch';
 import StatusBar from './StatusBar';
 import MaintenanceTaskForm from './MaintenanceTaskForm';
 import TaskEditDialog from './TaskEditDialog';
@@ -19,40 +18,10 @@ interface MaintenanceCalendarWithSettingsProps {
 const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalendarWithSettingsProps) => {
   const { tasks, isLoading } = useSupabaseMaintenance();
   const { settings } = useUserSettingsContext();
-  const [view, setView] = useState<'month' | 'week'>('month');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showForm, setShowForm] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [filteredTasks, setFilteredTasks] = useState(tasks);
-
-  // Set initial view based on user settings
-  useEffect(() => {
-    if (settings?.calendar?.defaultView) {
-      setView(settings.calendar.defaultView);
-    }
-  }, [settings?.calendar?.defaultView]);
-
-  useEffect(() => {
-    setFilteredTasks(tasks);
-  }, [tasks]);
-
-  const handleTaskSelect = (task: any) => {
-    if (onNavigateToItem && task.itemName !== 'No Item') {
-      // Navigate to item if it has one
-      const foundTask = tasks.find(t => t.id === task.id);
-      if (foundTask?.item_id) {
-        onNavigateToItem(foundTask.item_id, foundTask.id);
-      }
-    } else {
-      // Show edit dialog
-      const foundTask = tasks.find(t => t.id === task.id);
-      if (foundTask) {
-        setSelectedTask(foundTask);
-        setShowEditDialog(true);
-      }
-    }
-  };
 
   const handleTaskClick = (task: any) => {
     if (onNavigateToItem && task.item_id) {
@@ -91,28 +60,6 @@ const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalend
         </div>
 
         <StatusBar />
-        
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <TaskSearch onTaskSelect={handleTaskSelect} />
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant={view === 'month' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setView('month')}
-            >
-              Month
-            </Button>
-            <Button
-              variant={view === 'week' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setView('week')}
-            >
-              Week
-            </Button>
-          </div>
-        </div>
       </div>
 
       <Card className="p-4">

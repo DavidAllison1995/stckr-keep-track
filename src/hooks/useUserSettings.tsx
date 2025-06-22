@@ -12,11 +12,6 @@ export interface UserSettings {
     taskCompleted: boolean;
     taskCreated: boolean;
   };
-  calendar: {
-    defaultView: 'week' | 'month';
-    dateFormat: 'MM/dd/yyyy' | 'dd/MM/yyyy';
-  };
-  qrScanSound?: boolean;
 }
 
 const defaultSettings: UserSettings = {
@@ -27,11 +22,6 @@ const defaultSettings: UserSettings = {
     taskCompleted: false,
     taskCreated: false,
   },
-  calendar: {
-    defaultView: 'month',
-    dateFormat: 'MM/dd/yyyy',
-  },
-  qrScanSound: true,
 };
 
 export const useUserSettings = () => {
@@ -63,7 +53,7 @@ export const useUserSettings = () => {
 
       console.log('Loaded user settings from database:', data);
 
-      // Map database fields to frontend structure
+      // Map database fields to frontend structure - only notifications
       const mappedSettings: UserSettings = {
         notifications: {
           taskDueSoon: data.notification_task_due_soon ?? true,
@@ -72,11 +62,6 @@ export const useUserSettings = () => {
           taskCompleted: data.notification_task_completed ?? false,
           taskCreated: data.notification_task_created ?? false,
         },
-        calendar: {
-          defaultView: (data.calendar_default_view as 'week' | 'month') || 'month',
-          dateFormat: (data.date_format as 'MM/dd/yyyy' | 'dd/MM/yyyy') || 'MM/dd/yyyy',
-        },
-        qrScanSound: data.qr_scan_sound ?? true,
       };
 
       console.log('Mapped settings:', mappedSettings);
@@ -91,12 +76,9 @@ export const useUserSettings = () => {
 
       console.log('Updating settings for user:', user.id, newSettings);
 
-      // Map frontend structure to database fields
+      // Map frontend structure to database fields - only notifications
       const dbSettings = {
         user_id: user.id,
-        qr_scan_sound: newSettings.qrScanSound,
-        calendar_default_view: newSettings.calendar.defaultView,
-        date_format: newSettings.calendar.dateFormat,
         notification_task_due_soon: newSettings.notifications.taskDueSoon,
         notification_task_overdue: newSettings.notifications.taskOverdue,
         notification_warranty_expiring: newSettings.notifications.warrantyExpiring,

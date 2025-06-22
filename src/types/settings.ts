@@ -7,11 +7,6 @@ export interface UserSettings {
     taskCompleted: boolean;
     taskCreated: boolean;
   };
-  calendar: {
-    defaultView: 'week' | 'month';
-    dateFormat: 'MM/dd/yyyy' | 'dd/MM/yyyy';
-  };
-  qrScanSound?: boolean;
 }
 
 export interface UserProfile {
