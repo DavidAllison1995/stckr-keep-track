@@ -129,13 +129,13 @@ const ItemNotesTab = ({ item }: ItemNotesTabProps) => {
         <Card className="border border-gray-200">
           <CardContent className="p-6">
             <div className="space-y-4">
-              <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                    <StickyNote className="w-4 h-4 text-amber-600" />
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                    <StickyNote className="w-4 h-4 text-blue-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-amber-800 whitespace-pre-wrap break-words leading-relaxed">
+                    <p className="text-blue-800 whitespace-pre-wrap break-words leading-relaxed">
                       {item.notes}
                     </p>
                   </div>
