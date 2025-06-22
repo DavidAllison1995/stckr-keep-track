@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -32,11 +33,13 @@ interface ItemDetailProps {
 const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: ItemDetailProps) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { deleteItem } = useSupabaseItems();
+  const navigate = useNavigate();
 
   const handleDeleteItem = async () => {
     try {
       await deleteItem(item.id);
-      onClose(); // Close the detail view after deletion
+      // Navigate directly to items page instead of calling onClose
+      navigate('/items');
     } catch (error) {
       console.error('Error deleting item:', error);
     }
