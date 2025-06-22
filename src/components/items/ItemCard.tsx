@@ -3,10 +3,22 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Item } from '@/hooks/useSupabaseItems';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
+import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { getIconComponent } from '@/components/icons';
-import { QrCode, Download, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { QrCode, Download, Clock, AlertTriangle, CheckCircle2, Trash2 } from 'lucide-react';
 import ItemDetail from './ItemDetail';
 import ItemForm from './ItemForm';
 import QRCode from 'qrcode';
@@ -23,6 +35,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   
   const { getTasksByItem, tasks } = useSupabaseMaintenance();
+  const { deleteItem } = useSupabaseItems();
   const itemTasks = getTasksByItem(item.id, false); // Don't include completed tasks
   
   // Properly categorize tasks
@@ -73,6 +86,14 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
     }
   };
 
+  const handleDeleteItem = async () => {
+    try {
+      await deleteItem(item.id);
+    } catch (error) {
+      console.error('Error deleting item:', error);
+    }
+  };
+
   const downloadQrCode = async () => {
     if (!item.qr_code_id || !shortCode) return;
     
@@ -110,24 +131,6 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
         return null;
     }
   };
-
-  // Generate QR code thumbnail on mount
-  useEffect(() => {
-    if (item.qr_code_id) {
-      const generateQrCode = async () => {
-        try {
-          const dataUrl = await QRCode.toDataURL(`https://stckr.io/qr/${item.qr_code_id}`, { 
-            width: 128, 
-            margin: 0 
-          });
-          setQrDataUrl(dataUrl);
-        } catch (error) {
-          console.error('Error generating QR code:', error);
-        }
-      };
-      generateQrCode();
-    }
-  }, [item.qr_code_id]);
 
   return (
     <>
@@ -272,6 +275,38 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
               >
                 Edit
               </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Item</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete "{item.name}"? This action cannot be undone.
+                      All maintenance tasks and documents associated with this item will also be deleted.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleDeleteItem}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      Delete Item
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </CardContent>
