@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import { UserSettingsProvider } from '@/contexts/UserSettingsContext';
 import MaintenanceCalendarWithSettings from '@/components/maintenance/MaintenanceCalendarWithSettings';
+import StatusBar from '@/components/maintenance/StatusBar';
 
 const MaintenancePage = () => {
   const navigate = useNavigate();
@@ -17,7 +18,10 @@ const MaintenancePage = () => {
 
   return (
     <UserSettingsProvider>
-      <MaintenanceCalendarWithSettings onNavigateToItem={handleNavigateToItem} />
+      <div className="space-y-6">
+        <StatusBar />
+        <MaintenanceCalendarWithSettings onNavigateToItem={handleNavigateToItem} />
+      </div>
     </UserSettingsProvider>
   );
 };

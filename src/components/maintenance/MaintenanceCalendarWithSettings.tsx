@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { CalendarDays, Plus } from 'lucide-react';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useUserSettingsContext } from '@/contexts/UserSettingsContext';
-import StatusBar from './StatusBar';
 import MaintenanceTaskForm from './MaintenanceTaskForm';
 import TaskEditDialog from './TaskEditDialog';
 import MaintenanceCalendar from './MaintenanceCalendar';
@@ -58,8 +57,6 @@ const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalend
             Add Task
           </Button>
         </div>
-
-        <StatusBar />
       </div>
 
       <Card className="p-4">
