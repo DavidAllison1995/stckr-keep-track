@@ -14,6 +14,16 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center px-4 pt-16 pb-20 bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100">
+      {/* Logo in top left */}
+      <div className="absolute top-6 left-6 z-10">
+        <img 
+          src="/lovable-uploads/b040bcf1-975f-4316-8744-a19b2453d26e.png" 
+          alt="STCKR Logo" 
+          className="h-12 cursor-pointer hover:opacity-80 transition-opacity"
+          onClick={() => window.location.href = '/'}
+        />
+      </div>
+
       {/* Login button in top right */}
       <div className="absolute top-6 right-6 z-10">
         <Button 
