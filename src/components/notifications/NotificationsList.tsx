@@ -65,6 +65,7 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
     onNotificationClick?.();
   };
 
+  // FIXED: Proper delete handler with event prevention
   const handleDeleteNotification = (e: React.MouseEvent, notificationId: string) => {
     e.stopPropagation();
     e.preventDefault();
@@ -138,12 +139,14 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
                         {!notification.read && (
                           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                         )}
+                        {/* FIXED: Delete button with proper event handling */}
                         <Button
                           variant="ghost"
                           size="sm"
                           className="p-1 h-6 w-6 opacity-0 group-hover:opacity-100 hover:bg-red-100 transition-opacity"
                           onClick={(e) => handleDeleteNotification(e, notification.id)}
                           disabled={isDeletingNotification}
+                          type="button"
                         >
                           <X className="w-3 h-3 text-red-600" />
                         </Button>

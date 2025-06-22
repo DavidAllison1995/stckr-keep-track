@@ -118,14 +118,14 @@ export const useNotifications = () => {
     },
   });
 
-  // Set up realtime subscription for new notifications
+  // Set up realtime subscription for new notifications - FIXED: Only subscribe once
   useEffect(() => {
     if (!user?.id) return;
 
     console.log('Setting up realtime subscription for notifications');
     
     // Create a unique channel name to avoid conflicts
-    const channelName = `notifications_${user.id}_${Date.now()}`;
+    const channelName = `notifications_${user.id}`;
     
     const channel = supabase
       .channel(channelName)
@@ -177,7 +177,7 @@ export const useNotifications = () => {
       console.log('Cleaning up realtime subscription');
       supabase.removeChannel(channel);
     };
-  }, [user?.id, queryClient]);
+  }, [user?.id, queryClient]); // Fixed: Only depend on user.id and queryClient
 
   // Calculate unread count from current notifications
   const unreadCount = notifications.filter(n => !n.read).length;
