@@ -51,7 +51,8 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error fetching notifications:', error);
     } else {
       console.log('Fetched notifications:', data);
-      setNotifications(data || []);
+      // Type assertion to handle the database response
+      setNotifications((data || []) as Notification[]);
     }
     setIsLoading(false);
   };
