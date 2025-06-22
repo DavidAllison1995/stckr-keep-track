@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react';
 import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, addDays, subDays, startOfDay, endOfDay, isToday } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
@@ -171,21 +170,6 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
     }
   };
 
-  const getStatusDotColor = (status: string) => {
-    switch (status) {
-      case 'overdue':
-        return 'bg-red-500';
-      case 'due_soon':
-        return 'bg-yellow-500';
-      case 'up_to_date':
-        return 'bg-green-500';
-      case 'completed':
-        return 'bg-gray-400';
-      default:
-        return 'bg-gray-300';
-    }
-  };
-
   const renderStatusIndicators = (dayData: { tasks: MaintenanceTask[], statusCounts: Record<string, number> }) => {
     const indicators = [];
     const { statusCounts } = dayData;
@@ -280,11 +264,6 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                 >
                   {format(day, 'd')}
                 </span>
-                {dayData && dayData.tasks.length > 0 && (
-                  <span className="bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {dayData.tasks.length}
-                  </span>
-                )}
               </div>
               
               {/* Status Indicators */}
