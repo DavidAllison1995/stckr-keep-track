@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search, Plus } from 'lucide-react';
 import { useSupabaseMaintenance, MaintenanceTask } from '@/hooks/useSupabaseMaintenance';
 import { useUserSettingsContext } from '@/contexts/UserSettingsContext';
+import { useNavigate } from 'react-router-dom';
 
 interface MaintenanceCalendarProps {
   onNavigateToItem?: (itemId: string, taskId?: string) => void;
@@ -17,6 +18,7 @@ type ViewMode = 'month' | 'week' | 'day';
 const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalendarProps) => {
   const { tasks } = useSupabaseMaintenance();
   const { settings } = useUserSettingsContext();
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
@@ -135,6 +137,9 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
   const handleTaskClick = (task: MaintenanceTask) => {
     if (onNavigateToItem && task.item_id) {
       onNavigateToItem(task.item_id, task.id);
+    } else if (task.item_id) {
+      // Navigate to item detail page with tasks tab and highlight the specific task
+      navigate(`/items/${task.item_id}?tab=tasks&highlight=${task.id}`);
     }
   };
 
