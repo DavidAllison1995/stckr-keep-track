@@ -193,8 +193,17 @@ function App() {
                       } 
                     />
                     
-                    {/* Shop routes */}
-                    <Route path="/shop/*" element={<ShopRoutes />} />
+                    {/* Shop routes - now protected and with layout */}
+                    <Route 
+                      path="/shop/*" 
+                      element={
+                        <ProtectedRoute>
+                          <ProtectedLayout>
+                            <ShopRoutes />
+                          </ProtectedLayout>
+                        </ProtectedRoute>
+                      } 
+                    />
                     
                     {/* Admin routes */}
                     <Route path="/admin/*" element={<AdminRoutes />} />

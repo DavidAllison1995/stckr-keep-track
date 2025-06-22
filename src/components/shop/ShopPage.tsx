@@ -27,8 +27,8 @@ const ShopPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-white">
-      <div className="max-w-6xl mx-auto p-6 pb-24">
+    <div>
+      <div className="max-w-6xl mx-auto">
         {/* Header Section */}
         <div className="flex items-start justify-between mb-8">
           <div className="flex-1">
