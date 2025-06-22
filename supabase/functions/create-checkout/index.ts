@@ -14,6 +14,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Creating checkout session...');
+    
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -26,14 +28,19 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
     
     if (userError || !user?.email) {
+      console.error('User authentication failed:', userError);
       throw new Error("User not authenticated");
     }
+
+    console.log('User authenticated:', user.email);
 
     const { items } = await req.json();
     
     if (!items || !Array.isArray(items) || items.length === 0) {
       throw new Error("No items provided");
     }
+
+    console.log('Processing items:', items);
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
@@ -48,12 +55,17 @@ serve(async (req) => {
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
+      console.log('Found existing customer:', customerId);
+    } else {
+      console.log('No existing customer found, will create one in checkout');
     }
 
     // Calculate total amount
     const totalAmount = items.reduce((total: number, item: any) => {
       return total + (item.price * item.quantity);
     }, 0);
+
+    console.log('Total amount:', totalAmount);
 
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
@@ -64,6 +76,7 @@ serve(async (req) => {
           currency: "usd",
           product_data: {
             name: item.name,
+            description: `Product ID: ${item.product_id}`,
           },
           unit_amount: Math.round(item.price * 100), // Convert to cents
         },
@@ -77,6 +90,8 @@ serve(async (req) => {
         user_email: user.email,
       },
     });
+
+    console.log('Stripe session created:', session.id);
 
     // Create order record
     const { data: order, error: orderError } = await supabaseClient
@@ -96,6 +111,8 @@ serve(async (req) => {
       throw new Error("Failed to create order record");
     }
 
+    console.log('Order created:', order.id);
+
     // Create order items
     const orderItems = items.map((item: any) => ({
       order_id: order.id,
@@ -112,6 +129,8 @@ serve(async (req) => {
     if (itemsError) {
       console.error("Error creating order items:", itemsError);
       // Don't throw here as the order is already created
+    } else {
+      console.log('Order items created successfully');
     }
 
     return new Response(

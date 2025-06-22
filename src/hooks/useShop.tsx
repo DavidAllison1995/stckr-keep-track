@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from './useSupabaseAuth';
@@ -32,6 +33,7 @@ export interface Order {
   user_email: string;
   status: string;
   total_amount: number;
+  stripe_session_id?: string;
   created_at: string;
   updated_at: string;
   order_items?: OrderItem[];
@@ -109,17 +111,29 @@ export const useShop = () => {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('cart_items')
-        .upsert({
-          user_id: user.id,
-          product_id: productId,
-          quantity,
-        }, {
-          onConflict: 'user_id,product_id'
-        });
+      // Check if item already exists in cart
+      const existingItem = cartItems.find(item => item.product_id === productId);
+      
+      if (existingItem) {
+        // Update quantity
+        const { error } = await supabase
+          .from('cart_items')
+          .update({ quantity: existingItem.quantity + quantity })
+          .eq('id', existingItem.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Insert new item
+        const { error } = await supabase
+          .from('cart_items')
+          .insert({
+            user_id: user.id,
+            product_id: productId,
+            quantity,
+          });
+
+        if (error) throw error;
+      }
 
       await loadCartItems();
       toast({
