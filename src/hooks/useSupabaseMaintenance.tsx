@@ -47,7 +47,12 @@ export const useSupabaseMaintenance = () => {
 export const MaintenanceProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useSupabaseAuth();
   const queryClient = useQueryClient();
-  const { triggerTaskCreatedNotification, triggerTaskCompletedNotification } = useNotificationTriggers();
+  const { 
+    triggerTaskCreatedNotification, 
+    triggerTaskCompletedNotification,
+    triggerTaskDueSoonNotification,
+    triggerTaskOverdueNotification
+  } = useNotificationTriggers();
 
   // Fetch tasks
   const { data: tasks = [], isLoading, error } = useQuery({
@@ -118,7 +123,7 @@ export const MaintenanceProvider = ({ children }: { children: React.ReactNode })
       queryClient.invalidateQueries({ queryKey: ['maintenance_tasks', user?.id] });
       
       try {
-        // 🔍 FIXED: Check user preferences before triggering task created notification
+        // ✅ FIXED: Trigger task created notification following item creation pattern
         console.log('🔔 About to trigger task created notification...');
         console.log('Task details for notification:', { id: newTask.id, title: newTask.title, itemId: newTask.item_id });
         
@@ -162,7 +167,7 @@ export const MaintenanceProvider = ({ children }: { children: React.ReactNode })
       // Invalidate and refetch tasks
       queryClient.invalidateQueries({ queryKey: ['maintenance_tasks', user?.id] });
       
-      // 🔍 FIXED: Check if task was just completed and trigger notification
+      // ✅ FIXED: Check if task was just completed and trigger notification
       const originalTask = tasks.find(t => t.id === originalId);
       const wasJustCompleted = originalTask && originalTask.status !== 'completed' && updatedTask.status === 'completed';
       
@@ -176,6 +181,30 @@ export const MaintenanceProvider = ({ children }: { children: React.ReactNode })
           console.log('🔔 Task completed notification triggered successfully');
         } catch (notificationError) {
           console.error('❌ Failed to create task completed notification:', notificationError);
+        }
+      }
+
+      // ✅ NEW: Check for status transitions and trigger appropriate notifications
+      const becameDueSoon = originalTask && originalTask.status === 'pending' && updatedTask.status === 'due_soon';
+      const becameOverdue = originalTask && ['pending', 'due_soon'].includes(originalTask.status) && updatedTask.status === 'overdue';
+
+      if (becameDueSoon) {
+        try {
+          console.log('🔔 Task became due soon - triggering notification...');
+          await triggerTaskDueSoonNotification(updatedTask.id, updatedTask.title, updatedTask.date, updatedTask.item_id);
+          console.log('🔔 Task due soon notification triggered successfully');
+        } catch (notificationError) {
+          console.error('❌ Failed to create task due soon notification:', notificationError);
+        }
+      }
+
+      if (becameOverdue) {
+        try {
+          console.log('🔔 Task became overdue - triggering notification...');
+          await triggerTaskOverdueNotification(updatedTask.id, updatedTask.title, updatedTask.date, updatedTask.item_id);
+          console.log('🔔 Task overdue notification triggered successfully');
+        } catch (notificationError) {
+          console.error('❌ Failed to create task overdue notification:', notificationError);
         }
       }
     },

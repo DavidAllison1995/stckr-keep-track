@@ -32,6 +32,19 @@ export const useNotificationTriggers = () => {
     return preferences;
   };
 
+  // Helper to prevent duplicate notifications
+  const checkForExistingNotification = async (userId: string, taskId: string, type: string) => {
+    const { data } = await supabase
+      .from('notifications')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('task_id', taskId)
+      .eq('type', type)
+      .single();
+
+    return !!data;
+  };
+
   const triggerTaskCreatedNotification = async (taskId: string, taskTitle: string, itemId?: string) => {
     if (!user?.id) {
       console.error('No user ID available for task created notification');
@@ -41,14 +54,13 @@ export const useNotificationTriggers = () => {
     try {
       console.log('🔍 Checking task created notification preferences...');
       
-      // 🔍 FIXED: Check user preferences before creating notification
       const preferences = await getUserNotificationPreferences(user.id);
       if (!preferences?.notification_task_created) {
         console.log('🔕 Task created notifications disabled for user, skipping');
         return;
       }
 
-      console.log('Creating task created notification:', { taskId, taskTitle, itemId, userId: user.id });
+      console.log('✅ Creating task created notification:', { taskId, taskTitle, itemId, userId: user.id });
       const { data, error } = await supabase
         .from('notifications')
         .insert({
@@ -81,14 +93,13 @@ export const useNotificationTriggers = () => {
     try {
       console.log('🔍 Checking task completed notification preferences...');
       
-      // 🔍 FIXED: Check user preferences before creating notification
       const preferences = await getUserNotificationPreferences(user.id);
       if (!preferences?.notification_task_completed) {
         console.log('🔕 Task completed notifications disabled for user, skipping');
         return;
       }
 
-      console.log('Creating task completed notification:', { taskId, taskTitle, itemId, userId: user.id });
+      console.log('✅ Creating task completed notification:', { taskId, taskTitle, itemId, userId: user.id });
       const { data, error } = await supabase
         .from('notifications')
         .insert({
@@ -112,6 +123,98 @@ export const useNotificationTriggers = () => {
     }
   };
 
+  const triggerTaskDueSoonNotification = async (taskId: string, taskTitle: string, dueDate: string, itemId?: string) => {
+    if (!user?.id) {
+      console.error('No user ID available for task due soon notification');
+      return;
+    }
+
+    try {
+      console.log('🔍 Checking task due soon notification preferences...');
+      
+      const preferences = await getUserNotificationPreferences(user.id);
+      if (!preferences?.notification_task_due_soon) {
+        console.log('🔕 Task due soon notifications disabled for user, skipping');
+        return;
+      }
+
+      // Check for existing notification to prevent duplicates
+      const hasExisting = await checkForExistingNotification(user.id, taskId, 'task_due_soon');
+      if (hasExisting) {
+        console.log('🔕 Due soon notification already exists for this task, skipping');
+        return;
+      }
+
+      console.log('✅ Creating task due soon notification:', { taskId, taskTitle, dueDate, itemId, userId: user.id });
+      const { data, error } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: user.id,
+          type: 'task_due_soon',
+          title: `Task Due Soon: ${taskTitle}`,
+          message: `This task is due on ${new Date(dueDate).toLocaleDateString()}`,
+          task_id: taskId,
+          item_id: itemId
+        })
+        .select();
+
+      if (error) {
+        console.error('Supabase error creating due soon notification:', error);
+        throw error;
+      }
+      
+      console.log('✅ Task due soon notification created successfully:', data);
+    } catch (error) {
+      console.error('Error creating due soon notification:', error);
+    }
+  };
+
+  const triggerTaskOverdueNotification = async (taskId: string, taskTitle: string, dueDate: string, itemId?: string) => {
+    if (!user?.id) {
+      console.error('No user ID available for task overdue notification');
+      return;
+    }
+
+    try {
+      console.log('🔍 Checking task overdue notification preferences...');
+      
+      const preferences = await getUserNotificationPreferences(user.id);
+      if (!preferences?.notification_task_overdue) {
+        console.log('🔕 Task overdue notifications disabled for user, skipping');
+        return;
+      }
+
+      // Check for existing notification to prevent duplicates
+      const hasExisting = await checkForExistingNotification(user.id, taskId, 'task_overdue');
+      if (hasExisting) {
+        console.log('🔕 Overdue notification already exists for this task, skipping');
+        return;
+      }
+
+      console.log('✅ Creating task overdue notification:', { taskId, taskTitle, dueDate, itemId, userId: user.id });
+      const { data, error } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: user.id,
+          type: 'task_overdue',
+          title: `Task Overdue: ${taskTitle}`,
+          message: `This task was due on ${new Date(dueDate).toLocaleDateString()}`,
+          task_id: taskId,
+          item_id: itemId
+        })
+        .select();
+
+      if (error) {
+        console.error('Supabase error creating overdue notification:', error);
+        throw error;
+      }
+      
+      console.log('✅ Task overdue notification created successfully:', data);
+    } catch (error) {
+      console.error('Error creating overdue notification:', error);
+    }
+  };
+
   const triggerItemCreatedNotification = async (itemId: string, itemName: string) => {
     if (!user?.id) {
       console.error('No user ID available for item created notification');
@@ -119,7 +222,7 @@ export const useNotificationTriggers = () => {
     }
 
     try {
-      console.log('Creating item notification for:', { itemId, itemName, userId: user.id });
+      console.log('✅ Creating item notification for:', { itemId, itemName, userId: user.id });
       
       const { data, error } = await supabase
         .from('notifications')
@@ -185,6 +288,12 @@ export const useNotificationTriggers = () => {
       // Test task completed
       await triggerTaskCompletedNotification('test-task-id', 'Test Task Completed', 'test-item-id');
       
+      // Test task due soon
+      await triggerTaskDueSoonNotification('test-task-due-soon', 'Test Task Due Soon', new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), 'test-item-id');
+      
+      // Test task overdue
+      await triggerTaskOverdueNotification('test-task-overdue', 'Test Task Overdue', new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), 'test-item-id');
+      
       // Test item created
       await triggerItemCreatedNotification('test-item-id', 'Test Item Created');
       
@@ -200,6 +309,8 @@ export const useNotificationTriggers = () => {
   return {
     triggerTaskCreatedNotification,
     triggerTaskCompletedNotification,
+    triggerTaskDueSoonNotification,
+    triggerTaskOverdueNotification,
     triggerItemCreatedNotification,
     generateNotificationsManually,
     testNotificationTriggers, // For development testing

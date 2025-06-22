@@ -5,13 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useNotificationTriggers } from '@/hooks/useNotificationTriggers';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
-import { Bell, TestTube, Clock, CheckCircle, Package, AlertTriangle, Plus } from 'lucide-react';
+import { Bell, TestTube, Clock, CheckCircle, Package, AlertTriangle, Plus, AlertCircle } from 'lucide-react';
 
 const NotificationTestPanel = () => {
   const { user } = useSupabaseAuth();
   const { 
     triggerTaskCreatedNotification,
     triggerTaskCompletedNotification,
+    triggerTaskDueSoonNotification,
+    triggerTaskOverdueNotification,
     triggerItemCreatedNotification,
     generateNotificationsManually,
     testNotificationTriggers
@@ -94,8 +96,32 @@ const NotificationTestPanel = () => {
 
           <Button
             variant="outline"
+            onClick={() => testFunction('Task Due Soon', () => 
+              triggerTaskDueSoonNotification('test-task-3', 'Test Task Due Soon', new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), 'test-item-3')
+            )}
+            disabled={isLoading === 'Task Due Soon'}
+            className="flex items-center gap-2"
+          >
+            <Clock className="w-4 h-4" />
+            Test Task Due Soon
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={() => testFunction('Task Overdue', () => 
+              triggerTaskOverdueNotification('test-task-4', 'Test Task Overdue', new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), 'test-item-4')
+            )}
+            disabled={isLoading === 'Task Overdue'}
+            className="flex items-center gap-2"
+          >
+            <AlertTriangle className="w-4 h-4" />
+            Test Task Overdue
+          </Button>
+
+          <Button
+            variant="outline"
             onClick={() => testFunction('Item Created', () => 
-              triggerItemCreatedNotification('test-item-3', 'Test Item Creation')
+              triggerItemCreatedNotification('test-item-5', 'Test Item Creation')
             )}
             disabled={isLoading === 'Item Created'}
             className="flex items-center gap-2"
@@ -151,9 +177,11 @@ const NotificationTestPanel = () => {
         <div className="text-xs text-gray-600 space-y-1">
           <p><strong>Usage:</strong></p>
           <p>• Individual buttons test specific notification types</p>
+          <p>• "Task Due Soon" and "Task Overdue" test status change notifications</p>
           <p>• "Generate All" runs the scheduled notification check</p>
           <p>• "Run All Tests" triggers all notification types at once</p>
           <p>• Check the notification bell to see created notifications</p>
+          <p>• All notifications respect user preferences from settings</p>
         </div>
       </CardContent>
     </Card>
