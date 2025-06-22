@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,14 +20,14 @@ const TaskEditDialog = ({ task, open, onOpenChange, onSuccess }: TaskEditDialogP
   const { updateTask } = useSupabaseMaintenance();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
-    title: task?.title || '',
-    notes: task?.notes || '',
-    date: task?.date || '',
-    recurrence: task?.recurrence || 'none',
+    title: '',
+    notes: '',
+    date: '',
+    recurrence: 'none' as const,
   });
 
   // Update form data when task changes
-  useState(() => {
+  useEffect(() => {
     if (task) {
       setFormData({
         title: task.title,
@@ -36,7 +36,7 @@ const TaskEditDialog = ({ task, open, onOpenChange, onSuccess }: TaskEditDialogP
         recurrence: task.recurrence,
       });
     }
-  });
+  }, [task]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
