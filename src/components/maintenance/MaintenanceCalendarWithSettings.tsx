@@ -10,6 +10,7 @@ import StatusBar from './StatusBar';
 import MaintenanceTaskForm from './MaintenanceTaskForm';
 import TaskEditDialog from './TaskEditDialog';
 import MaintenanceCalendar from './MaintenanceCalendar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface MaintenanceCalendarWithSettingsProps {
   onNavigateToItem?: (itemId: string, taskId?: string) => void;
@@ -36,17 +37,21 @@ const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalend
     setFilteredTasks(tasks);
   }, [tasks]);
 
-  const handleSearch = (searchTerm: string) => {
-    if (!searchTerm) {
-      setFilteredTasks(tasks);
-      return;
+  const handleTaskSelect = (task: any) => {
+    if (onNavigateToItem && task.itemName !== 'No Item') {
+      // Navigate to item if it has one
+      const foundTask = tasks.find(t => t.id === task.id);
+      if (foundTask?.item_id) {
+        onNavigateToItem(foundTask.item_id, foundTask.id);
+      }
+    } else {
+      // Show edit dialog
+      const foundTask = tasks.find(t => t.id === task.id);
+      if (foundTask) {
+        setSelectedTask(foundTask);
+        setShowEditDialog(true);
+      }
     }
-    
-    const filtered = tasks.filter(task => 
-      task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.notes?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredTasks(filtered);
   };
 
   const handleTaskClick = (task: any) => {
@@ -89,7 +94,7 @@ const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalend
         
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
-            <TaskSearch onSearch={handleSearch} />
+            <TaskSearch onTaskSelect={handleTaskSelect} />
           </div>
           <div className="flex gap-2">
             <Button
@@ -112,18 +117,22 @@ const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalend
 
       <Card className="p-4">
         <MaintenanceCalendar
-          view={view}
           onTaskClick={handleTaskClick}
           onDateSelect={handleDateSelect}
           dateFormat={settings?.calendar?.dateFormat}
         />
       </Card>
 
-      <MaintenanceTaskForm
-        isOpen={showForm}
-        onClose={() => setShowForm(false)}
-        defaultDate={selectedDate}
-      />
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Maintenance Task</DialogTitle>
+          </DialogHeader>
+          <MaintenanceTaskForm
+            onSuccess={() => setShowForm(false)}
+          />
+        </DialogContent>
+      </Dialog>
 
       {selectedTask && (
         <TaskEditDialog
