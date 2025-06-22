@@ -45,6 +45,7 @@ export const useNotifications = () => {
       return data as Notification[];
     },
     enabled: !!user?.id,
+    refetchInterval: 30000, // Refetch every 30 seconds as backup
   });
 
   // Log any query errors
@@ -107,7 +108,11 @@ export const useNotifications = () => {
       }
     },
     onSuccess: () => {
+      console.log('Notification deleted successfully, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+    onError: (error) => {
+      console.error('Failed to delete notification:', error);
     },
   });
 
@@ -132,6 +137,7 @@ export const useNotifications = () => {
         },
         (payload) => {
           console.log('New notification received via realtime:', payload);
+          // Immediately invalidate and refetch to show new notification
           queryClient.invalidateQueries({ queryKey: ['notifications'] });
         }
       )
@@ -148,6 +154,19 @@ export const useNotifications = () => {
           queryClient.invalidateQueries({ queryKey: ['notifications'] });
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Notification deleted via realtime:', payload);
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        }
+      )
       .subscribe((status) => {
         console.log('Realtime subscription status:', status);
       });
@@ -158,6 +177,7 @@ export const useNotifications = () => {
     };
   }, [user?.id, queryClient]);
 
+  // Calculate unread count from current notifications
   const unreadCount = notifications.filter(n => !n.read).length;
   console.log('useNotifications - total notifications:', notifications.length, 'unread:', unreadCount);
 
@@ -171,5 +191,6 @@ export const useNotifications = () => {
     deleteNotification: deleteNotificationMutation.mutate,
     isMarkingAsRead: markAsReadMutation.isPending,
     isMarkingAllAsRead: markAllAsReadMutation.isPending,
+    isDeletingNotification: deleteNotificationMutation.isPending,
   };
 };

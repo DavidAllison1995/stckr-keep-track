@@ -21,7 +21,8 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
     markAsRead, 
     markAllAsRead, 
     deleteNotification,
-    isLoading 
+    isLoading,
+    isDeletingNotification
   } = useNotifications();
 
   console.log('NotificationsList render - notifications:', notifications, 'unreadCount:', unreadCount);
@@ -66,7 +67,8 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
 
   const handleDeleteNotification = (e: React.MouseEvent, notificationId: string) => {
     e.stopPropagation();
-    console.log('Deleting notification:', notificationId);
+    e.preventDefault();
+    console.log('Delete button clicked for notification:', notificationId);
     deleteNotification(notificationId);
   };
 
@@ -139,10 +141,11 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="p-1 h-6 w-6 opacity-0 group-hover:opacity-100 hover:bg-red-100"
+                          className="p-1 h-6 w-6 opacity-0 group-hover:opacity-100 hover:bg-red-100 transition-opacity"
                           onClick={(e) => handleDeleteNotification(e, notification.id)}
+                          disabled={isDeletingNotification}
                         >
-                          <X className="w-3 h-3" />
+                          <X className="w-3 h-3 text-red-600" />
                         </Button>
                       </div>
                     </div>
