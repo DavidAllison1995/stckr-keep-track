@@ -106,6 +106,8 @@ export const useNotifications = () => {
         console.error('Error deleting notification:', error);
         throw error;
       }
+      
+      console.log('Notification deleted successfully');
     },
     onSuccess: () => {
       console.log('Notification deleted successfully, invalidating queries');
