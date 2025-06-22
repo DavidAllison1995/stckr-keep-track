@@ -66,16 +66,128 @@ function App() {
                         </ProtectedRoute>
                       } 
                     />
-                    <Route path="/items" element={<ItemsPage />} />
-                    <Route path="/items/:id" element={<ItemDetailPage />} />
-                    <Route path="/maintenance" element={<MaintenancePage />} />
-                    <Route path="/maintenance/*" element={<MaintenanceRoutes />} />
-                    <Route path="/maintenance-tasks/*" element={<MaintenanceTasksRoutes />} />
-                    <Route path="/tasks" element={<TasksPage />} />
-                    <Route path="/tasks/*" element={<TaskRoutes />} />
-                    <Route path="/scanner" element={<ScannerPage />} />
-                    <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="/settings" element={<SettingsPage />} />
+                    <Route 
+                      path="/items" 
+                      element={
+                        <ProtectedRoute>
+                          <ItemsProvider>
+                            <ProtectedLayout>
+                              <ItemsPage />
+                            </ProtectedLayout>
+                          </ItemsProvider>
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/items/:id" 
+                      element={
+                        <ProtectedRoute>
+                          <ItemsProvider>
+                            <MaintenanceProvider>
+                              <ProtectedLayout>
+                                <ItemDetailPage />
+                              </ProtectedLayout>
+                            </MaintenanceProvider>
+                          </ItemsProvider>
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/maintenance" 
+                      element={
+                        <ProtectedRoute>
+                          <ItemsProvider>
+                            <MaintenanceProvider>
+                              <ProtectedLayout>
+                                <MaintenancePage />
+                              </ProtectedLayout>
+                            </MaintenanceProvider>
+                          </ItemsProvider>
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/maintenance/*" 
+                      element={
+                        <ProtectedRoute>
+                          <ItemsProvider>
+                            <MaintenanceProvider>
+                              <MaintenanceRoutes />
+                            </MaintenanceProvider>
+                          </ItemsProvider>
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/maintenance-tasks/*" 
+                      element={
+                        <ProtectedRoute>
+                          <ItemsProvider>
+                            <MaintenanceProvider>
+                              <MaintenanceTasksRoutes />
+                            </MaintenanceProvider>
+                          </ItemsProvider>
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/tasks" 
+                      element={
+                        <ProtectedRoute>
+                          <ItemsProvider>
+                            <MaintenanceProvider>
+                              <ProtectedLayout>
+                                <TasksPage />
+                              </ProtectedLayout>
+                            </MaintenanceProvider>
+                          </ItemsProvider>
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/tasks/*" 
+                      element={
+                        <ProtectedRoute>
+                          <ItemsProvider>
+                            <MaintenanceProvider>
+                              <TaskRoutes />
+                            </MaintenanceProvider>
+                          </ItemsProvider>
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/scanner" 
+                      element={
+                        <ProtectedRoute>
+                          <ItemsProvider>
+                            <ProtectedLayout>
+                              <ScannerPage />
+                            </ProtectedLayout>
+                          </ItemsProvider>
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/profile" 
+                      element={
+                        <ProtectedRoute>
+                          <ProtectedLayout>
+                            <ProfilePage />
+                          </ProtectedLayout>
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/settings" 
+                      element={
+                        <ProtectedRoute>
+                          <ProtectedLayout>
+                            <SettingsPage />
+                          </ProtectedLayout>
+                        </ProtectedRoute>
+                      } 
+                    />
                     
                     {/* Shop routes */}
                     <Route path="/shop/*" element={<ShopRoutes />} />
