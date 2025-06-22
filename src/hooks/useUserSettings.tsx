@@ -12,6 +12,7 @@ export interface UserSettings {
     taskCompleted: boolean;
     taskCreated: boolean;
   };
+  showCompletedTasks: boolean;
 }
 
 const defaultSettings: UserSettings = {
@@ -22,6 +23,7 @@ const defaultSettings: UserSettings = {
     taskCompleted: false,
     taskCreated: false,
   },
+  showCompletedTasks: false,
 };
 
 export const useUserSettings = () => {
@@ -53,7 +55,7 @@ export const useUserSettings = () => {
 
       console.log('Loaded user settings from database:', data);
 
-      // Map database fields to frontend structure - only notifications
+      // Map database fields to frontend structure
       const mappedSettings: UserSettings = {
         notifications: {
           taskDueSoon: data.notification_task_due_soon ?? true,
@@ -62,6 +64,7 @@ export const useUserSettings = () => {
           taskCompleted: data.notification_task_completed ?? false,
           taskCreated: data.notification_task_created ?? false,
         },
+        showCompletedTasks: false, // Default value since not stored in DB yet
       };
 
       console.log('Mapped settings:', mappedSettings);
@@ -76,7 +79,7 @@ export const useUserSettings = () => {
 
       console.log('Updating settings for user:', user.id, newSettings);
 
-      // Map frontend structure to database fields - only notifications
+      // Map frontend structure to database fields - only notifications for now
       const dbSettings = {
         user_id: user.id,
         notification_task_due_soon: newSettings.notifications.taskDueSoon,

@@ -6,7 +6,7 @@ import { enUS } from 'date-fns/locale';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search } from 'lucide-react';
-import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
+import { useSupabaseMaintenance, MaintenanceTask } from '@/hooks/useSupabaseMaintenance';
 import { useUserSettingsContext } from '@/contexts/UserSettingsContext';
 import TaskSearch from './TaskSearch';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -61,7 +61,7 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
   }, [tasks, selectedDate]);
 
   const handleSelectEvent = (event: any) => {
-    const task = event.resource;
+    const task = event.resource as MaintenanceTask;
     if (onNavigateToItem && task.item_id) {
       onNavigateToItem(task.item_id, task.id);
     }
@@ -166,8 +166,10 @@ const MaintenanceCalendar = ({ onNavigateToItem }: MaintenanceCalendarProps) => 
       {showSearch && (
         <TaskSearch
           onTaskSelect={(task) => {
-            if (onNavigateToItem && task.item_id) {
-              onNavigateToItem(task.item_id, task.id);
+            // Convert TaskSuggestion to proper navigation
+            const maintenanceTask = tasks.find(t => t.id === task.id);
+            if (onNavigateToItem && maintenanceTask?.item_id) {
+              onNavigateToItem(maintenanceTask.item_id, maintenanceTask.id);
             }
           }}
         />

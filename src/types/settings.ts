@@ -7,6 +7,7 @@ export interface UserSettings {
     taskCompleted: boolean;
     taskCreated: boolean;
   };
+  showCompletedTasks: boolean;
 }
 
 export interface UserProfile {
