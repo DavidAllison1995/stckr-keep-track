@@ -16,9 +16,6 @@ export interface UserSettings {
     defaultView: 'week' | 'month';
     dateFormat: 'MM/dd/yyyy' | 'dd/MM/yyyy';
   };
-  pushNotifications: boolean;
-  theme: 'light' | 'dark' | 'system';
-  language?: string;
   qrScanSound?: boolean;
 }
 
@@ -34,9 +31,6 @@ const defaultSettings: UserSettings = {
     defaultView: 'month',
     dateFormat: 'MM/dd/yyyy',
   },
-  pushNotifications: false,
-  theme: 'system',
-  language: 'en',
   qrScanSound: true,
 };
 
@@ -44,22 +38,12 @@ export const useUserSettings = () => {
   const { user } = useSupabaseAuth();
   const queryClient = useQueryClient();
 
-  // Apply theme to document
-  const applyTheme = (theme: 'light' | 'dark' | 'system') => {
-    const root = document.documentElement;
-    
-    if (theme === 'system') {
-      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      root.classList.toggle('dark', systemPrefersDark);
-    } else {
-      root.classList.toggle('dark', theme === 'dark');
-    }
-  };
-
   const { data: settings = defaultSettings, isLoading } = useQuery({
     queryKey: ['userSettings', user?.id],
     queryFn: async () => {
       if (!user?.id) return defaultSettings;
+
+      console.log('Fetching user settings for user:', user.id);
 
       const { data, error } = await supabase
         .from('user_settings')
@@ -72,7 +56,12 @@ export const useUserSettings = () => {
         return defaultSettings;
       }
 
-      if (!data) return defaultSettings;
+      if (!data) {
+        console.log('No user settings found, returning defaults');
+        return defaultSettings;
+      }
+
+      console.log('Loaded user settings from database:', data);
 
       // Map database fields to frontend structure
       const mappedSettings: UserSettings = {
@@ -87,12 +76,10 @@ export const useUserSettings = () => {
           defaultView: (data.calendar_default_view as 'week' | 'month') || 'month',
           dateFormat: (data.date_format as 'MM/dd/yyyy' | 'dd/MM/yyyy') || 'MM/dd/yyyy',
         },
-        pushNotifications: false,
-        theme: (data.theme as 'light' | 'dark' | 'system') || 'system',
-        language: data.language || 'en',
         qrScanSound: data.qr_scan_sound ?? true,
       };
 
+      console.log('Mapped settings:', mappedSettings);
       return mappedSettings;
     },
     enabled: !!user?.id,
@@ -102,11 +89,11 @@ export const useUserSettings = () => {
     mutationFn: async (newSettings: UserSettings) => {
       if (!user?.id) throw new Error('User not authenticated');
 
+      console.log('Updating settings for user:', user.id, newSettings);
+
       // Map frontend structure to database fields
       const dbSettings = {
         user_id: user.id,
-        theme: newSettings.theme,
-        language: newSettings.language,
         qr_scan_sound: newSettings.qrScanSound,
         calendar_default_view: newSettings.calendar.defaultView,
         date_format: newSettings.calendar.dateFormat,
@@ -117,35 +104,30 @@ export const useUserSettings = () => {
         notification_task_created: newSettings.notifications.taskCreated,
       };
 
+      console.log('Database settings to save:', dbSettings);
+
       const { error } = await supabase
         .from('user_settings')
         .upsert(dbSettings, { 
           onConflict: 'user_id'
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error saving user settings:', error);
+        throw error;
+      }
+
+      console.log('Settings saved successfully');
       return newSettings;
     },
     onSuccess: (newSettings) => {
-      applyTheme(newSettings.theme);
+      console.log('Settings mutation successful, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['userSettings'] });
     },
+    onError: (error) => {
+      console.error('Settings mutation failed:', error);
+    },
   });
-
-  useEffect(() => {
-    applyTheme(settings.theme);
-
-    // Listen for system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = () => {
-      if (settings.theme === 'system') {
-        applyTheme('system');
-      }
-    };
-    
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [settings.theme]);
 
   const updateSettings = async (newSettings: UserSettings) => {
     try {

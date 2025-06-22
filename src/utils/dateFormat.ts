@@ -28,3 +28,10 @@ export const formatDateTimeWithUserPreference = (
   const formatString = userDateFormat === 'MM/dd/yyyy' ? 'MM/dd/yyyy h:mm a' : 'dd/MM/yyyy HH:mm';
   return format(dateObj, formatString);
 };
+
+export const formatDateForDisplay = (
+  date: Date | string,
+  userDateFormat?: 'MM/dd/yyyy' | 'dd/MM/yyyy'
+): string => {
+  return formatDateWithUserPreference(date, userDateFormat);
+};

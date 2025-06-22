@@ -1,6 +1,7 @@
 
 import { useNavigate } from 'react-router-dom';
-import MaintenanceCalendar from '@/components/maintenance/MaintenanceCalendar';
+import { UserSettingsProvider } from '@/contexts/UserSettingsContext';
+import MaintenanceCalendarWithSettings from '@/components/maintenance/MaintenanceCalendarWithSettings';
 
 const MaintenancePage = () => {
   const navigate = useNavigate();
@@ -14,7 +15,11 @@ const MaintenancePage = () => {
     navigate(`/items/${itemId}?${params.toString()}`);
   };
 
-  return <MaintenanceCalendar onNavigateToItem={handleNavigateToItem} />;
+  return (
+    <UserSettingsProvider>
+      <MaintenanceCalendarWithSettings onNavigateToItem={handleNavigateToItem} />
+    </UserSettingsProvider>
+  );
 };
 
 export default MaintenancePage;

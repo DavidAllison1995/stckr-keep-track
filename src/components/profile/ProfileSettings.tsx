@@ -1,5 +1,5 @@
 
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useUserSettings } from '@/hooks/useUserSettings';
 import { supabase } from '@/integrations/supabase/client';
-import { Camera, Upload } from 'lucide-react';
+import { Camera } from 'lucide-react';
 import ChangePasswordDialog from './ChangePasswordDialog';
 import DeleteAccountDialog from './DeleteAccountDialog';
 
@@ -35,7 +35,7 @@ const ProfileSettings = () => {
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
 
   // Load profile data
-  useState(() => {
+  useEffect(() => {
     const loadProfile = async () => {
       if (!user?.id) return;
       
@@ -56,8 +56,12 @@ const ProfileSettings = () => {
     };
     
     loadProfile();
+  }, [user]);
+
+  // Update local settings when settings change
+  useEffect(() => {
     setLocalSettings(settings);
-  });
+  }, [settings]);
 
   const handleProfileImageUpload = async (file: File) => {
     if (!user?.id) return;
@@ -152,6 +156,7 @@ const ProfileSettings = () => {
   };
 
   const handleSaveSettings = async () => {
+    console.log('Saving settings:', localSettings);
     const result = await updateSettings(localSettings);
     
     if (result.success) {
@@ -268,47 +273,6 @@ const ProfileSettings = () => {
                 <CardTitle>App Preferences</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Theme */}
-                <div className="space-y-3">
-                  <Label>Theme</Label>
-                  <Select
-                    value={localSettings.theme}
-                    onValueChange={(value) => 
-                      setLocalSettings(prev => ({ ...prev, theme: value as 'light' | 'dark' | 'system' }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="light">Light</SelectItem>
-                      <SelectItem value="dark">Dark</SelectItem>
-                      <SelectItem value="system">System</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Language */}
-                <div className="space-y-3">
-                  <Label>Language</Label>
-                  <Select
-                    value={localSettings.language || 'en'}
-                    onValueChange={(value) => 
-                      setLocalSettings(prev => ({ ...prev, language: value }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Spanish</SelectItem>
-                      <SelectItem value="fr">French</SelectItem>
-                      <SelectItem value="de">German</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 {/* Calendar Default View */}
                 <div className="space-y-3">
                   <Label>Default Calendar View</Label>

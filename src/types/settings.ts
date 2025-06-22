@@ -3,7 +3,6 @@ export interface UserSettings {
   notifications: {
     taskDueSoon: boolean;
     taskOverdue: boolean;
-    taskUpcoming: boolean;
     warrantyExpiring: boolean;
     taskCompleted: boolean;
     taskCreated: boolean;
@@ -12,9 +11,6 @@ export interface UserSettings {
     defaultView: 'week' | 'month';
     dateFormat: 'MM/dd/yyyy' | 'dd/MM/yyyy';
   };
-  pushNotifications: boolean;
-  theme: 'light' | 'dark' | 'system';
-  language?: string;
   qrScanSound?: boolean;
 }
 
