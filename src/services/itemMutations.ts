@@ -41,9 +41,17 @@ export const useAddItemMutation = (userId: string | undefined) => {
       console.log('=== ITEM MUTATION SUCCESS ===');
       console.log('New item created:', newItem);
       
+      // Invalidate queries first
+      queryClient.invalidateQueries({ queryKey: ['items', userId] });
+      
       try {
-        // Invalidate queries first
-        queryClient.invalidateQueries({ queryKey: ['items', userId] });
+        // Trigger notification - with detailed logging
+        console.log('🔔 About to trigger item notification...');
+        console.log('Item details for notification:', { id: newItem.id, name: newItem.name });
+        
+        await triggerItemCreatedNotification(newItem.id, newItem.name);
+        
+        console.log('🔔 Item notification trigger completed successfully');
         
         // Show success toast
         toast({
@@ -51,20 +59,13 @@ export const useAddItemMutation = (userId: string | undefined) => {
           description: 'Item added successfully',
         });
         
-        // Trigger notification - with detailed logging
-        console.log('🔔 About to trigger item notification...');
-        console.log('Item details for notification:', { id: newItem.id, name: newItem.name });
-        
-        await triggerItemCreatedNotification(newItem.id, newItem.name);
-        
-        console.log('🔔 Item notification trigger completed');
         console.log('=== ITEM MUTATION SUCCESS COMPLETE ===');
       } catch (notificationError) {
         console.error('❌ Failed to create notification for new item:', notificationError);
-        // Don't fail the whole operation if notification fails
+        // Show toast indicating notification failed but item was created
         toast({
           title: 'Item created',
-          description: 'Item added successfully (notification may have failed)',
+          description: 'Item added successfully, but notification creation failed',
           variant: 'default',
         });
       }

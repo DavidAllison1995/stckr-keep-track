@@ -68,53 +68,34 @@ export const useNotificationTriggers = () => {
   };
 
   const triggerItemCreatedNotification = async (itemId: string, itemName: string) => {
-    console.log('=== STARTING ITEM NOTIFICATION CREATION ===');
-    console.log('User object:', user);
-    console.log('User ID:', user?.id);
-    console.log('Item ID:', itemId);
-    console.log('Item Name:', itemName);
-
     if (!user?.id) {
-      console.error('❌ No user ID available for item created notification');
-      console.error('User object:', user);
+      console.error('No user ID available for item created notification');
       return;
     }
 
     try {
-      console.log('✅ About to insert notification into database...');
-      
-      const notificationData = {
-        user_id: user.id,
-        type: 'item_created',
-        title: `New Item Added: ${itemName}`,
-        message: 'A new item has been added to your inventory',
-        item_id: itemId
-      };
-      
-      console.log('Notification data to insert:', notificationData);
+      console.log('Creating item notification for:', { itemId, itemName, userId: user.id });
       
       const { data, error } = await supabase
         .from('notifications')
-        .insert(notificationData)
+        .insert({
+          user_id: user.id,
+          type: 'item_created',
+          title: `New Item Added: ${itemName}`,
+          message: 'A new item has been added to your inventory',
+          item_id: itemId
+        })
         .select();
 
       if (error) {
-        console.error('❌ Supabase error creating item notification:', error);
-        console.error('Error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
+        console.error('Supabase error creating item notification:', error);
         throw error;
       }
       
-      console.log('✅ Item created notification inserted successfully:', data);
-      console.log('=== NOTIFICATION CREATION COMPLETE ===');
+      console.log('Item created notification created successfully:', data);
       return data;
     } catch (error) {
-      console.error('❌ Error creating item notification:', error);
-      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.error('Error creating item notification:', error);
       throw error;
     }
   };
