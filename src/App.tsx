@@ -6,6 +6,8 @@ import { AuthProvider } from "./hooks/useSupabaseAuth";
 import { UserSettingsProvider } from "./contexts/UserSettingsContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { GlobalQRScannerProvider } from "./contexts/GlobalQRScannerContext";
+import { ItemsProvider } from "./hooks/useSupabaseItems";
+import { MaintenanceProvider } from "./hooks/useSupabaseMaintenance";
 
 // Page imports
 import Index from "./pages/Index";
@@ -28,6 +30,8 @@ import AdminRoutes from "./routes/AdminRoutes";
 import MaintenanceRoutes from "./routes/MaintenanceRoutes";
 import MaintenanceTasksRoutes from "./routes/MaintenanceTasksRoutes";
 import TaskRoutes from "./routes/TaskRoutes";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import ProtectedLayout from "./components/layouts/ProtectedLayout";
 
 const queryClient = new QueryClient();
 
@@ -48,7 +52,20 @@ function App() {
                     <Route path="/claim/*" element={<ClaimRoutes />} />
                     
                     {/* Protected routes */}
-                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route 
+                      path="/dashboard" 
+                      element={
+                        <ProtectedRoute>
+                          <ItemsProvider>
+                            <MaintenanceProvider>
+                              <ProtectedLayout>
+                                <Dashboard />
+                              </ProtectedLayout>
+                            </MaintenanceProvider>
+                          </ItemsProvider>
+                        </ProtectedRoute>
+                      } 
+                    />
                     <Route path="/items" element={<ItemsPage />} />
                     <Route path="/items/:id" element={<ItemDetailPage />} />
                     <Route path="/maintenance" element={<MaintenancePage />} />
