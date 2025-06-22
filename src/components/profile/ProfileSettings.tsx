@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -10,18 +11,10 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import {
   Bell,
-  Settings,
   Shield,
   Upload,
   User,
@@ -50,9 +43,6 @@ const ProfileSettings = () => {
   const [lastName, setLastName] = useState('');
   const [profileImageUrl, setProfileImageUrl] = useState<string | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
-  const [calendarView, setCalendarView] = useState<'week' | 'month'>('month');
-  const [dateFormat, setDateFormat] = useState<'MM/dd/yyyy' | 'dd/MM/yyyy'>('MM/dd/yyyy');
-  const [qrScanSound, setQrScanSound] = useState(true);
   const [notifications, setNotifications] = useState({
     taskDueSoon: true,
     taskOverdue: true,
@@ -90,9 +80,6 @@ const ProfileSettings = () => {
 
   useEffect(() => {
     if (settings) {
-      setCalendarView(settings.calendar.defaultView);
-      setDateFormat(settings.calendar.dateFormat);
-      setQrScanSound(settings.qrScanSound === undefined ? true : settings.qrScanSound);
       setNotifications(settings.notifications);
     }
   }, [settings]);
@@ -142,11 +129,6 @@ const ProfileSettings = () => {
           taskCompleted: notifications.taskCompleted,
           taskCreated: notifications.taskCreated,
         },
-        calendar: {
-          defaultView: calendarView,
-          dateFormat: dateFormat,
-        },
-        qrScanSound: qrScanSound,
       };
 
       const result = await updateSettings(newSettings);
@@ -222,7 +204,7 @@ const ProfileSettings = () => {
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
-        <p className="text-gray-600 mt-2">Manage your profile information and app preferences</p>
+        <p className="text-gray-600 mt-2">Manage your profile information and notification preferences</p>
       </div>
 
       <div className="space-y-8">
@@ -303,72 +285,6 @@ const ProfileSettings = () => {
 
             <Button onClick={handleSaveProfile} disabled={isSaving}>
               {isSaving ? 'Saving...' : 'Save Profile Changes'}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* App Preferences Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="w-5 h-5" />
-              App Preferences
-            </CardTitle>
-            <CardDescription>
-              Customize how the app works for you
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Calendar View Preference */}
-            <div className="space-y-2">
-              <Label>Default Calendar View</Label>
-              <Select value={calendarView} onValueChange={(value: 'week' | 'month') => setCalendarView(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="week">Week View</SelectItem>
-                  <SelectItem value="month">Month View</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-sm text-gray-500">
-                Choose your preferred view when opening the maintenance calendar
-              </p>
-            </div>
-
-            {/* Date Format Preference */}
-            <div className="space-y-2">
-              <Label>Date Format</Label>
-              <Select value={dateFormat} onValueChange={(value: 'MM/dd/yyyy' | 'dd/MM/yyyy') => setDateFormat(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="MM/dd/yyyy">US Format (MM/DD/YYYY)</SelectItem>
-                  <SelectItem value="dd/MM/yyyy">International (DD/MM/YYYY)</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-sm text-gray-500">
-                Choose how dates are displayed throughout the app
-              </p>
-            </div>
-
-            {/* QR Scan Sound */}
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>QR Scan Sound</Label>
-                <p className="text-sm text-gray-500">
-                  Play a sound when successfully scanning QR codes
-                </p>
-              </div>
-              <Switch
-                checked={qrScanSound}
-                onCheckedChange={setQrScanSound}
-              />
-            </div>
-
-            <Button onClick={handleSaveSettings} disabled={isSaving}>
-              {isSaving ? 'Saving...' : 'Save App Preferences'}
             </Button>
           </CardContent>
         </Card>
