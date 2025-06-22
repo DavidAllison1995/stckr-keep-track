@@ -62,7 +62,7 @@ const AuthPage = () => {
         <div className="text-center mb-12">
           <div className="mb-6">
             <img 
-              src="/lovable-uploads/d82e8cb1-7c45-4ae2-8300-4cd24e786985.png" 
+              src="/lovable-uploads/b040bcf1-975f-4316-8744-a19b2453d26e.png" 
               alt="STCKR Logo" 
               className="h-16 mx-auto"
             />
