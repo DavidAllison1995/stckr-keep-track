@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -21,6 +20,7 @@ import {
   Key,
   Link,
   Trash,
+  LogOut,
 } from 'lucide-react';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,7 +35,7 @@ interface ProfileSettingsProps {
 }
 
 const ProfileSettings = () => {
-  const { user } = useSupabaseAuth();
+  const { user, logout } = useSupabaseAuth();
   const { toast } = useToast();
   const { settings, updateSettings, isLoading } = useUserSettingsContext();
 
@@ -190,6 +190,10 @@ const ProfileSettings = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleLogout = async () => {
+    await logout();
   };
 
   if (isLoading) {
@@ -423,6 +427,22 @@ const ProfileSettings = () => {
               >
                 <Link className="w-4 h-4 mr-2" />
                 Manage
+              </Button>
+            </div>
+
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="space-y-1">
+                <h4 className="font-medium">Log Out</h4>
+                <p className="text-sm text-gray-500">
+                  Sign out of your account
+                </p>
+              </div>
+              <Button 
+                variant="outline"
+                onClick={handleLogout}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Log Out
               </Button>
             </div>
 
