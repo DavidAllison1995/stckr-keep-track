@@ -67,8 +67,8 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
     onNotificationClick?.();
   };
 
-  // FIXED: Proper delete handler with manual state update
-  const handleDeleteNotification = async (e: React.MouseEvent, notificationId: string) => {
+  // Fixed delete handler with proper event handling
+  const handleDeleteNotification = async (e: React.MouseEvent<HTMLButtonElement>, notificationId: string) => {
     e.stopPropagation();
     e.preventDefault();
     
@@ -160,18 +160,16 @@ const NotificationsList = ({ onNotificationClick }: NotificationsListProps) => {
                         {!notification.read && (
                           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                         )}
-                        {/* FIXED: Delete button with proper event handling */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="p-1 h-6 w-6 opacity-0 group-hover:opacity-100 hover:bg-red-100 transition-opacity"
+                        {/* Fixed delete button with proper event handling and styling */}
+                        <button
                           onClick={(e) => handleDeleteNotification(e, notification.id)}
                           disabled={isDeletingNotification}
-                          type="button"
+                          className="p-1 h-6 w-6 opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-600 transition-all duration-200 rounded flex items-center justify-center"
+                          aria-label="Delete notification"
                           title="Delete notification"
                         >
-                          <X className="w-3 h-3 text-red-600" />
-                        </Button>
+                          <X className="w-3 h-3" />
+                        </button>
                       </div>
                     </div>
                     
