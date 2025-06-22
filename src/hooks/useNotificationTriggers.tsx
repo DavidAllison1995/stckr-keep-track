@@ -5,7 +5,7 @@ import { useSupabaseAuth } from './useSupabaseAuth';
 export const useNotificationTriggers = () => {
   const { user } = useSupabaseAuth();
 
-  // Helper function to check user notification preferences
+  // Helper function to check user notification preferences with proper defaults
   const getUserNotificationPreferences = async (userId: string) => {
     console.log('Fetching notification preferences for user:', userId);
     
@@ -20,11 +20,12 @@ export const useNotificationTriggers = () => {
       return null;
     }
 
+    // ✅ FIXED: Proper defaults with notification_task_completed: true by default
     const preferences = data || {
       notification_task_due_soon: true,
       notification_task_overdue: true,
       notification_warranty_expiring: true,
-      notification_task_completed: false,
+      notification_task_completed: true, // ✅ Default to true
       notification_task_created: false,
     };
 
@@ -56,7 +57,7 @@ export const useNotificationTriggers = () => {
       
       const preferences = await getUserNotificationPreferences(user.id);
       if (!preferences?.notification_task_created) {
-        console.log('🔕 Task created notifications disabled for user, skipping');
+        console.log('🔕 Task created notifications disabled for user, skipping notification creation');
         return;
       }
 
@@ -78,7 +79,7 @@ export const useNotificationTriggers = () => {
         throw error;
       }
       
-      console.log('✅ Task created notification created successfully:', data);
+      console.log('✅ Task created notification inserted successfully:', data);
     } catch (error) {
       console.error('Error creating task notification:', error);
     }
@@ -95,18 +96,33 @@ export const useNotificationTriggers = () => {
       
       const preferences = await getUserNotificationPreferences(user.id);
       if (!preferences?.notification_task_completed) {
-        console.log('🔕 Task completed notifications disabled for user, skipping');
+        console.log('🔕 Task completed notifications disabled for user, skipping notification creation');
         return;
       }
 
       console.log('✅ Creating task completed notification:', { taskId, taskTitle, itemId, userId: user.id });
+      
+      // Get item name for better notification message
+      let itemName = 'Unknown Item';
+      if (itemId) {
+        const { data: itemData } = await supabase
+          .from('items')
+          .select('name')
+          .eq('id', itemId)
+          .single();
+        
+        if (itemData) {
+          itemName = itemData.name;
+        }
+      }
+
       const { data, error } = await supabase
         .from('notifications')
         .insert({
           user_id: user.id,
           type: 'task_completed',
           title: `Task Completed: ${taskTitle}`,
-          message: 'A maintenance task has been completed',
+          message: `Task '${taskTitle}' for Item '${itemName}' was completed`,
           task_id: taskId,
           item_id: itemId
         })
@@ -117,7 +133,7 @@ export const useNotificationTriggers = () => {
         throw error;
       }
       
-      console.log('✅ Task completed notification created successfully:', data);
+      console.log('✅ Task completed notification inserted successfully:', data);
     } catch (error) {
       console.error('Error creating completion notification:', error);
     }
@@ -134,7 +150,7 @@ export const useNotificationTriggers = () => {
       
       const preferences = await getUserNotificationPreferences(user.id);
       if (!preferences?.notification_task_due_soon) {
-        console.log('🔕 Task due soon notifications disabled for user, skipping');
+        console.log('🔕 Task due soon notifications disabled for user, skipping notification creation');
         return;
       }
 
@@ -163,7 +179,7 @@ export const useNotificationTriggers = () => {
         throw error;
       }
       
-      console.log('✅ Task due soon notification created successfully:', data);
+      console.log('✅ Task due soon notification inserted successfully:', data);
     } catch (error) {
       console.error('Error creating due soon notification:', error);
     }
@@ -180,7 +196,7 @@ export const useNotificationTriggers = () => {
       
       const preferences = await getUserNotificationPreferences(user.id);
       if (!preferences?.notification_task_overdue) {
-        console.log('🔕 Task overdue notifications disabled for user, skipping');
+        console.log('🔕 Task overdue notifications disabled for user, skipping notification creation');
         return;
       }
 
@@ -209,7 +225,7 @@ export const useNotificationTriggers = () => {
         throw error;
       }
       
-      console.log('✅ Task overdue notification created successfully:', data);
+      console.log('✅ Task overdue notification inserted successfully:', data);
     } catch (error) {
       console.error('Error creating overdue notification:', error);
     }
@@ -240,7 +256,7 @@ export const useNotificationTriggers = () => {
         throw error;
       }
       
-      console.log('✅ Item created notification created successfully:', data);
+      console.log('✅ Item created notification inserted successfully:', data);
     } catch (error) {
       console.error('Error creating item notification:', error);
       throw error;

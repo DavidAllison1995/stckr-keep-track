@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -123,13 +122,12 @@ export const MaintenanceProvider = ({ children }: { children: React.ReactNode })
       queryClient.invalidateQueries({ queryKey: ['maintenance_tasks', user?.id] });
       
       try {
-        // ✅ FIXED: Trigger task created notification following item creation pattern
         console.log('🔔 About to trigger task created notification...');
         console.log('Task details for notification:', { id: newTask.id, title: newTask.title, itemId: newTask.item_id });
         
         await triggerTaskCreatedNotification(newTask.id, newTask.title, newTask.item_id);
         
-        console.log('🔔 Task created notification trigger completed successfully');
+        console.log('🔔 Task created notification trigger completed');
       } catch (notificationError) {
         console.error('❌ Failed to create task created notification:', notificationError);
       }
@@ -178,13 +176,13 @@ export const MaintenanceProvider = ({ children }: { children: React.ReactNode })
           
           await triggerTaskCompletedNotification(updatedTask.id, updatedTask.title, updatedTask.item_id);
           
-          console.log('🔔 Task completed notification triggered successfully');
+          console.log('🔔 Task completed notification trigger completed');
         } catch (notificationError) {
           console.error('❌ Failed to create task completed notification:', notificationError);
         }
       }
 
-      // ✅ NEW: Check for status transitions and trigger appropriate notifications
+      // ✅ Check for status transitions and trigger appropriate notifications
       const becameDueSoon = originalTask && originalTask.status === 'pending' && updatedTask.status === 'due_soon';
       const becameOverdue = originalTask && ['pending', 'due_soon'].includes(originalTask.status) && updatedTask.status === 'overdue';
 
@@ -192,7 +190,7 @@ export const MaintenanceProvider = ({ children }: { children: React.ReactNode })
         try {
           console.log('🔔 Task became due soon - triggering notification...');
           await triggerTaskDueSoonNotification(updatedTask.id, updatedTask.title, updatedTask.date, updatedTask.item_id);
-          console.log('🔔 Task due soon notification triggered successfully');
+          console.log('🔔 Task due soon notification trigger completed');
         } catch (notificationError) {
           console.error('❌ Failed to create task due soon notification:', notificationError);
         }
@@ -202,7 +200,7 @@ export const MaintenanceProvider = ({ children }: { children: React.ReactNode })
         try {
           console.log('🔔 Task became overdue - triggering notification...');
           await triggerTaskOverdueNotification(updatedTask.id, updatedTask.title, updatedTask.date, updatedTask.item_id);
-          console.log('🔔 Task overdue notification triggered successfully');
+          console.log('🔔 Task overdue notification trigger completed');
         } catch (notificationError) {
           console.error('❌ Failed to create task overdue notification:', notificationError);
         }
