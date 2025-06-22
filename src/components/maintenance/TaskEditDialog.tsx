@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useSupabaseMaintenance, MaintenanceTask } from '@/hooks/useSupabaseMaintenance';
+import { useSupabaseMaintenance, MaintenanceTask, RecurrenceType } from '@/hooks/useSupabaseMaintenance';
 import { useToast } from '@/hooks/use-toast';
 
 interface TaskEditDialogProps {
@@ -23,7 +23,7 @@ const TaskEditDialog = ({ task, open, onOpenChange, onSuccess }: TaskEditDialogP
     title: '',
     notes: '',
     date: '',
-    recurrence: 'none' as const,
+    recurrence: 'none' as RecurrenceType,
   });
 
   // Update form data when task changes
@@ -115,7 +115,7 @@ const TaskEditDialog = ({ task, open, onOpenChange, onSuccess }: TaskEditDialogP
 
           <div>
             <Label htmlFor="recurrence">Repeat</Label>
-            <Select value={formData.recurrence} onValueChange={(value: any) => setFormData(prev => ({ ...prev, recurrence: value }))}>
+            <Select value={formData.recurrence} onValueChange={(value: RecurrenceType) => setFormData(prev => ({ ...prev, recurrence: value }))}>
               <SelectTrigger>
                 <SelectValue placeholder="Select recurrence" />
               </SelectTrigger>
