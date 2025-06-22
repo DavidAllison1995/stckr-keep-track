@@ -8,6 +8,7 @@ import {
   X
 } from 'lucide-react';
 import NotificationBell from '@/components/notifications/NotificationBell';
+import NavBar from '@/components/navigation/NavBar';
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;
@@ -65,11 +66,14 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
           </div>
           
           {/* Content */}
-          <main className="p-6">
+          <main className="p-6 pb-20">
             {children}
           </main>
         </div>
       </div>
+      
+      {/* Navigation Bar */}
+      <NavBar />
     </div>
   );
 };
