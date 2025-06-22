@@ -111,11 +111,11 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
           </TabsContent>
           
           <TabsContent value="tasks" className="mt-6">
-            <ItemMaintenanceTab item={item} highlightTaskId={highlightTaskId} />
+            <ItemMaintenanceTab itemId={item.id} highlightTaskId={highlightTaskId} />
           </TabsContent>
           
           <TabsContent value="documents" className="mt-6">
-            <ItemDocumentsTab item={item} />
+            <ItemDocumentsTab itemId={item.id} />
           </TabsContent>
           
           <TabsContent value="qr" className="mt-6">
