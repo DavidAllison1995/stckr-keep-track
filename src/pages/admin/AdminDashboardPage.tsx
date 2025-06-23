@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,7 +50,12 @@ const AdminDashboardPage = () => {
       // Use Promise.allSettled to handle partial failures gracefully
       const [usersResult, ordersResult, qrCodesResult, claimsResult] = await Promise.allSettled([
         supabase.from('profiles').select('*', { count: 'exact', head: true }),
-        supabase.from('orders').select('*', { count: 'exact', head: true }),
+        // Only count orders that are actually paid and have been processed
+        supabase
+          .from('orders')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'paid') // Only paid orders
+          .not('stripe_session_id', 'is', null), // Must have Stripe session
         supabase.from('qr_codes').select('*', { count: 'exact', head: true }),
         supabase.from('user_qr_claims').select('*', { count: 'exact', head: true })
       ]);
