@@ -49,6 +49,7 @@ serve(async (req) => {
     }
 
     console.log('Order found:', order);
+    console.log('Order items:', order.order_items);
 
     // Validate that all products have Printful variant IDs
     const invalidProducts = order.order_items.filter((item: any) => 
@@ -67,6 +68,8 @@ serve(async (req) => {
       name: item.product.name,
     }));
 
+    console.log('Printful items prepared:', printfulItems);
+
     const printfulOrder = {
       external_id: order.id,
       shipping: "STANDARD",
@@ -84,13 +87,22 @@ serve(async (req) => {
       items: printfulItems
     };
 
-    console.log('Sending order to Printful:', printfulOrder);
+    console.log('Sending order to Printful:', JSON.stringify(printfulOrder, null, 2));
+
+    // Check if Printful API key is available
+    const printfulApiKey = Deno.env.get('PRINTFUL_API_KEY');
+    if (!printfulApiKey) {
+      console.error('PRINTFUL_API_KEY not found in environment variables');
+      throw new Error('Printful API key not configured');
+    }
+
+    console.log('Printful API key found, making request...');
 
     // Send order to Printful
     const printfulResponse = await fetch('https://api.printful.com/orders', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('PRINTFUL_API_KEY')}`,
+        'Authorization': `Bearer ${printfulApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(printfulOrder),
@@ -98,12 +110,15 @@ serve(async (req) => {
 
     const printfulResult = await printfulResponse.json();
     
+    console.log('Printful response status:', printfulResponse.status);
+    console.log('Printful response:', JSON.stringify(printfulResult, null, 2));
+    
     if (!printfulResponse.ok) {
       console.error('Printful API error:', printfulResult);
       throw new Error(`Printful API error: ${printfulResult.error?.message || 'Unknown error'}`);
     }
 
-    console.log('Printful order created:', printfulResult.result);
+    console.log('Printful order created successfully:', printfulResult.result);
 
     // Update order status to processing and store Printful order ID
     const { error: updateError } = await supabaseClient
@@ -117,6 +132,8 @@ serve(async (req) => {
 
     if (updateError) {
       console.error('Error updating order status:', updateError);
+    } else {
+      console.log('Order status updated to processing with Printful order ID:', printfulResult.result.id);
     }
 
     return new Response(JSON.stringify({ 
