@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -39,21 +40,112 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
     is_active: product?.is_active ?? true,
   });
   
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(product?.image_url || null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Supported file types
+  const SUPPORTED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+
+  const validateFile = (file: File): string | null => {
+    // Check file type
+    if (!SUPPORTED_TYPES.includes(file.type)) {
+      return 'Upload failed: Unsupported file type. Please use JPG, JPEG, PNG, or WebP format.';
+    }
+
+    // Check file size
+    if (file.size > MAX_FILE_SIZE) {
+      return 'Upload failed: File too large. Maximum size is 20MB.';
+    }
+
+    return null;
+  };
+
+  const compressImage = (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      img.onload = () => {
+        // Calculate new dimensions (max 1200px width/height while maintaining aspect ratio)
+        const maxSize = 1200;
+        let { width, height } = img;
+        
+        if (width > height) {
+          if (width > maxSize) {
+            height = (height * maxSize) / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width = (width * maxSize) / height;
+            height = maxSize;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // Draw and compress
+        ctx?.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, {
+                type: file.type,
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            } else {
+              resolve(file); // Fallback to original file
+            }
+          },
+          file.type,
+          0.8 // 80% quality
+        );
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+  };
 
   const handleImageUpload = async (file: File) => {
     setUploadingImage(true);
+    setUploadError(null);
+    
     try {
-      const fileExt = file.name.split('.').pop();
+      // Validate file
+      const validationError = validateFile(file);
+      if (validationError) {
+        setUploadError(validationError);
+        return;
+      }
+
+      // Compress image for better performance
+      const processedFile = await compressImage(file);
+      
+      const fileExt = processedFile.name.split('.').pop();
       const fileName = `product-${Date.now()}.${fileExt}`;
       
       const { data, error } = await supabase.storage
         .from('product-images')
-        .upload(fileName, file);
+        .upload(fileName, processedFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Upload error:', error);
+        if (error.message.includes('row-level security')) {
+          throw new Error('Upload failed: Permission denied. Please contact support.');
+        } else if (error.message.includes('size')) {
+          throw new Error('Upload failed: File too large.');
+        } else {
+          throw new Error(`Upload failed: ${error.message}`);
+        }
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('product-images')
@@ -68,9 +160,11 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
       });
     } catch (error) {
       console.error('Error uploading image:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed: Unknown error occurred.';
+      setUploadError(errorMessage);
       toast({
-        title: 'Error',
-        description: 'Failed to upload image',
+        title: 'Upload Error',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -81,20 +175,58 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImageFile(file);
+      // Create preview immediately
       const reader = new FileReader();
       reader.onload = (e) => {
         setImagePreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
+      
+      // Upload file
       handleImageUpload(file);
     }
   };
 
-  const removeImage = () => {
-    setImageFile(null);
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file && SUPPORTED_TYPES.includes(file.type)) {
+      // Create preview immediately
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+      
+      // Upload file
+      handleImageUpload(file);
+    } else {
+      setUploadError('Please drop a valid image file (JPG, PNG, WebP).');
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const removeImage = async () => {
+    // If there's an existing image URL, try to delete it from storage
+    if (formData.image_url && formData.image_url.includes('product-images')) {
+      try {
+        const fileName = formData.image_url.split('/').pop();
+        if (fileName) {
+          await supabase.storage
+            .from('product-images')
+            .remove([fileName]);
+        }
+      } catch (error) {
+        console.error('Error removing image from storage:', error);
+      }
+    }
+
     setImagePreview(null);
     setFormData(prev => ({ ...prev, image_url: '' }));
+    setUploadError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -117,7 +249,11 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
           {/* Product Image */}
           <div className="space-y-2">
             <Label>Product Image</Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+            <div 
+              className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 transition-colors"
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+            >
               {imagePreview ? (
                 <div className="relative">
                   <img
@@ -131,9 +267,15 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
                     size="sm"
                     className="absolute top-2 right-2"
                     onClick={removeImage}
+                    disabled={uploadingImage}
                   >
                     <X className="w-4 h-4" />
                   </Button>
+                  {uploadingImage && (
+                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
+                      <div className="text-white text-sm">Uploading...</div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center">
@@ -149,19 +291,28 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading }: ProductFormProp
                       {uploadingImage ? 'Uploading...' : 'Upload Image'}
                       <input
                         type="file"
-                        accept="image/*"
+                        accept=".jpg,.jpeg,.png,.webp"
                         className="absolute inset-0 opacity-0 cursor-pointer"
                         onChange={handleFileSelect}
                         disabled={uploadingImage}
                       />
                     </Button>
                     <p className="text-sm text-gray-500">
-                      PNG, JPG, GIF up to 5MB
+                      Drag & drop or click to upload<br />
+                      JPG, PNG, WebP up to 20MB
                     </p>
                   </div>
                 </div>
               )}
             </div>
+            
+            {/* Upload Error Alert */}
+            {uploadError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{uploadError}</AlertDescription>
+              </Alert>
+            )}
           </div>
 
           {/* Product Name */}
