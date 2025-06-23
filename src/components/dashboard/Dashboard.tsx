@@ -7,6 +7,7 @@ import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useNavigate } from 'react-router-dom';
 import { Package, Calendar, Wrench } from 'lucide-react';
+import { format, startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns';
 
 interface DashboardProps {
   onTabChange?: (tab: string) => void;
@@ -34,6 +35,58 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
     return taskDate > fourteenDaysFromNow;
   });
 
+  // Calculate this week's tasks
+  const getThisWeekTasks = () => {
+    const now = new Date();
+    const weekStart = startOfWeek(now, { weekStartsOn: 1 }); // Monday
+    const weekEnd = endOfWeek(now, { weekStartsOn: 1 }); // Sunday
+    
+    // Get all non-completed tasks for this week
+    const thisWeekTasks = tasks.filter(task => {
+      if (task.status === 'completed') return false;
+      
+      const taskDate = parseISO(task.date);
+      return isWithinInterval(taskDate, { start: weekStart, end: weekEnd });
+    });
+
+    // Group tasks by day
+    const tasksByDay = new Map();
+    
+    // Initialize all days of the week
+    const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    daysOfWeek.forEach(day => tasksByDay.set(day, []));
+    
+    // Group tasks by day name
+    thisWeekTasks.forEach(task => {
+      const taskDate = parseISO(task.date);
+      const dayName = format(taskDate, 'EEEE'); // Full day name
+      const existingTasks = tasksByDay.get(dayName) || [];
+      tasksByDay.set(dayName, [...existingTasks, task]);
+    });
+
+    // Convert to array and filter days with tasks (or show default days if no tasks)
+    const daysWithTasks = Array.from(tasksByDay.entries())
+      .map(([day, dayTasks]) => ({
+        day,
+        count: dayTasks.length,
+        tasks: dayTasks
+      }))
+      .filter(({ count }) => count > 0);
+
+    // If no tasks this week, show default days with 0 counts
+    if (daysWithTasks.length === 0) {
+      return [
+        { day: 'Monday', count: 0, tasks: [] },
+        { day: 'Wednesday', count: 0, tasks: [] },
+        { day: 'Friday', count: 0, tasks: [] }
+      ];
+    }
+
+    return daysWithTasks;
+  };
+
+  const thisWeekTasksData = getThisWeekTasks();
+
   const handleItemsClick = () => {
     navigate('/items');
   };
@@ -54,8 +107,27 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
     navigate(`/items/${itemId}`);
   };
 
+  const handleDayClick = () => {
+    // Navigate to maintenance calendar view
+    navigate('/maintenance');
+  };
+
   // Get user's first name from metadata or email
   const userName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'User';
+
+  // Color mapping for day tiles
+  const getColorForIndex = (index: number) => {
+    const colors = [
+      { bg: 'bg-blue-500', text: 'text-white' },
+      { bg: 'bg-purple-500', text: 'text-white' },
+      { bg: 'bg-green-500', text: 'text-white' },
+      { bg: 'bg-orange-500', text: 'text-white' },
+      { bg: 'bg-red-500', text: 'text-white' },
+      { bg: 'bg-indigo-500', text: 'text-white' },
+      { bg: 'bg-pink-500', text: 'text-white' }
+    ];
+    return colors[index % colors.length];
+  };
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -151,24 +223,21 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Mon</span>
-                <div className="w-6 h-6 bg-blue-500 rounded text-white text-xs flex items-center justify-center">
-                  {dueSoonTasks.length}
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Wed</span>
-                <div className="w-6 h-6 bg-purple-500 rounded text-white text-xs flex items-center justify-center">
-                  {inProgressTasks.length}
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Fri</span>
-                <div className="w-6 h-6 bg-green-500 rounded text-white text-xs flex items-center justify-center">
-                  {upToDateTasks.length}
-                </div>
-              </div>
+              {thisWeekTasksData.map((dayData, index) => {
+                const colors = dayData.count > 0 ? getColorForIndex(index) : { bg: 'bg-gray-300', text: 'text-gray-600' };
+                return (
+                  <div 
+                    key={dayData.day}
+                    className="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors"
+                    onClick={handleDayClick}
+                  >
+                    <span className="text-sm">{dayData.day.slice(0, 3)}</span>
+                    <div className={`w-6 h-6 ${colors.bg} rounded ${colors.text} text-xs flex items-center justify-center`}>
+                      {dayData.count}
+                    </div>
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
 
