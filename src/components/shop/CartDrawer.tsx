@@ -10,6 +10,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingCart, Plus, Minus, Trash2, ExternalLink } from 'lucide-react';
+import { useCart } from '@/contexts/CartContext';
 import { useShop } from '@/hooks/useShop';
 import { useNavigate } from 'react-router-dom';
 
@@ -25,9 +26,8 @@ const CartDrawer = ({ open, onClose }: CartDrawerProps) => {
     updateCartQuantity,
     removeFromCart,
     getCartTotal,
-    createCheckoutSession,
-    isLoading,
-  } = useShop();
+  } = useCart();
+  const { createCheckoutSession, isLoading } = useShop();
 
   const handleCheckout = async () => {
     const checkoutUrl = await createCheckoutSession();

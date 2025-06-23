@@ -3,13 +3,14 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { ShoppingCart, Plus, Minus, Package } from 'lucide-react';
 import { useShop } from '@/hooks/useShop';
+import { useCart } from '@/contexts/CartContext';
 import CartDrawer from './CartDrawer';
 
 const ShopPage = () => {
-  const { products, addToCart } = useShop();
+  const { products } = useShop();
+  const { addToCart } = useCart();
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const [isCartOpen, setIsCartOpen] = useState(false);
 

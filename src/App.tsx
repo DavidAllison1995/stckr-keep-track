@@ -8,6 +8,7 @@ import { UserSettingsProvider } from "./contexts/UserSettingsContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ItemsProvider } from "./hooks/useSupabaseItems";
 import { MaintenanceProvider } from "./hooks/useSupabaseMaintenance";
+import { CartProvider } from "./contexts/CartContext";
 
 // Page imports
 import Index from "./pages/Index";
@@ -33,8 +34,15 @@ import TaskRoutes from "./routes/TaskRoutes";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ProtectedLayout from "./components/layouts/ProtectedLayout";
 import { GlobalQRScannerProvider } from "./contexts/GlobalQRScannerContext";
+import { useShop } from "./hooks/useShop";
 
 const queryClient = new QueryClient();
+
+// Create a wrapper component to access useShop hook
+const CartProviderWrapper = ({ children }: { children: React.ReactNode }) => {
+  const { products } = useShop();
+  return <CartProvider products={products}>{children}</CartProvider>;
+};
 
 function App() {
   return (
@@ -52,16 +60,18 @@ function App() {
                     <Route path="/public/*" element={<PublicRoutes />} />
                     <Route path="/claim/*" element={<ClaimRoutes />} />
                     
-                    {/* Protected routes */}
+                    {/* Protected routes with Cart Context */}
                     <Route 
                       path="/dashboard" 
                       element={
                         <ProtectedRoute>
                           <ItemsProvider>
                             <MaintenanceProvider>
-                              <ProtectedLayout>
-                                <Dashboard />
-                              </ProtectedLayout>
+                              <CartProviderWrapper>
+                                <ProtectedLayout>
+                                  <Dashboard />
+                                </ProtectedLayout>
+                              </CartProviderWrapper>
                             </MaintenanceProvider>
                           </ItemsProvider>
                         </ProtectedRoute>
@@ -73,9 +83,11 @@ function App() {
                         <ProtectedRoute>
                           <ItemsProvider>
                             <MaintenanceProvider>
-                              <ProtectedLayout>
-                                <ItemsPage />
-                              </ProtectedLayout>
+                              <CartProviderWrapper>
+                                <ProtectedLayout>
+                                  <ItemsPage />
+                                </ProtectedLayout>
+                              </CartProviderWrapper>
                             </MaintenanceProvider>
                           </ItemsProvider>
                         </ProtectedRoute>
@@ -87,9 +99,11 @@ function App() {
                         <ProtectedRoute>
                           <ItemsProvider>
                             <MaintenanceProvider>
-                              <ProtectedLayout>
-                                <ItemDetailPage />
-                              </ProtectedLayout>
+                              <CartProviderWrapper>
+                                <ProtectedLayout>
+                                  <ItemDetailPage />
+                                </ProtectedLayout>
+                              </CartProviderWrapper>
                             </MaintenanceProvider>
                           </ItemsProvider>
                         </ProtectedRoute>
@@ -101,9 +115,11 @@ function App() {
                         <ProtectedRoute>
                           <ItemsProvider>
                             <MaintenanceProvider>
-                              <ProtectedLayout>
-                                <MaintenancePage />
-                              </ProtectedLayout>
+                              <CartProviderWrapper>
+                                <ProtectedLayout>
+                                  <MaintenancePage />
+                                </ProtectedLayout>
+                              </CartProviderWrapper>
                             </MaintenanceProvider>
                           </ItemsProvider>
                         </ProtectedRoute>
@@ -115,7 +131,9 @@ function App() {
                         <ProtectedRoute>
                           <ItemsProvider>
                             <MaintenanceProvider>
-                              <MaintenanceRoutes />
+                              <CartProviderWrapper>
+                                <MaintenanceRoutes />
+                              </CartProviderWrapper>
                             </MaintenanceProvider>
                           </ItemsProvider>
                         </ProtectedRoute>
@@ -127,7 +145,9 @@ function App() {
                         <ProtectedRoute>
                           <ItemsProvider>
                             <MaintenanceProvider>
-                              <MaintenanceTasksRoutes />
+                              <CartProviderWrapper>
+                                <MaintenanceTasksRoutes />
+                              </CartProviderWrapper>
                             </MaintenanceProvider>
                           </ItemsProvider>
                         </ProtectedRoute>
@@ -139,9 +159,11 @@ function App() {
                         <ProtectedRoute>
                           <ItemsProvider>
                             <MaintenanceProvider>
-                              <ProtectedLayout>
-                                <TasksPage />
-                              </ProtectedLayout>
+                              <CartProviderWrapper>
+                                <ProtectedLayout>
+                                  <TasksPage />
+                                </ProtectedLayout>
+                              </CartProviderWrapper>
                             </MaintenanceProvider>
                           </ItemsProvider>
                         </ProtectedRoute>
@@ -153,7 +175,9 @@ function App() {
                         <ProtectedRoute>
                           <ItemsProvider>
                             <MaintenanceProvider>
-                              <TaskRoutes />
+                              <CartProviderWrapper>
+                                <TaskRoutes />
+                              </CartProviderWrapper>
                             </MaintenanceProvider>
                           </ItemsProvider>
                         </ProtectedRoute>
@@ -165,9 +189,11 @@ function App() {
                         <ProtectedRoute>
                           <ItemsProvider>
                             <MaintenanceProvider>
-                              <ProtectedLayout>
-                                <ScannerPage />
-                              </ProtectedLayout>
+                              <CartProviderWrapper>
+                                <ProtectedLayout>
+                                  <ScannerPage />
+                                </ProtectedLayout>
+                              </CartProviderWrapper>
                             </MaintenanceProvider>
                           </ItemsProvider>
                         </ProtectedRoute>
@@ -177,9 +203,11 @@ function App() {
                       path="/profile" 
                       element={
                         <ProtectedRoute>
-                          <ProtectedLayout>
-                            <ProfilePage />
-                          </ProtectedLayout>
+                          <CartProviderWrapper>
+                            <ProtectedLayout>
+                              <ProfilePage />
+                            </ProtectedLayout>
+                          </CartProviderWrapper>
                         </ProtectedRoute>
                       } 
                     />
@@ -187,21 +215,25 @@ function App() {
                       path="/settings" 
                       element={
                         <ProtectedRoute>
-                          <ProtectedLayout>
-                            <SettingsPage />
-                          </ProtectedLayout>
+                          <CartProviderWrapper>
+                            <ProtectedLayout>
+                              <SettingsPage />
+                            </ProtectedLayout>
+                          </CartProviderWrapper>
                         </ProtectedRoute>
                       } 
                     />
                     
-                    {/* Shop routes - now protected and with layout */}
+                    {/* Shop routes - now wrapped with CartProvider in ShopRoutes */}
                     <Route 
                       path="/shop/*" 
                       element={
                         <ProtectedRoute>
-                          <ProtectedLayout>
-                            <ShopRoutes />
-                          </ProtectedLayout>
+                          <CartProviderWrapper>
+                            <ProtectedLayout>
+                              <ShopRoutes />
+                            </ProtectedLayout>
+                          </CartProviderWrapper>
                         </ProtectedRoute>
                       } 
                     />

@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import NavBar from '@/components/navigation/NavBar';
-import { useShop } from '@/hooks/useShop';
+import { useCart } from '@/contexts/CartContext';
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;
@@ -21,7 +21,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { getCartItemCount } = useShop();
+  const { getCartItemCount } = useCart();
 
   useEffect(() => {
     if (!isSidebarOpen) return;
@@ -61,7 +61,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
             <div className="flex items-center gap-2">
               <NotificationBell />
               
-              {/* Cart Icon */}
+              {/* Cart Icon with Badge */}
               <Button
                 variant="ghost"
                 size="sm"
