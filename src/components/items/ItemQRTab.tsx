@@ -82,9 +82,9 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
   };
 
   const generateQRCodeImageUrl = (code: string) => {
-    // Use the new universal URL format for QR codes
+    // Use the branded deep link format with high quality settings
     const qrUrl = `https://stckr.io/qr/${code}`;
-    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrUrl)}&ecc=H&color=000000&bgcolor=FFFFFF&margin=20`;
   };
 
   if (!item.qr_code_id) {

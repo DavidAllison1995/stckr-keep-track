@@ -29,7 +29,7 @@ serve(async (req) => {
 
     const { quantity = 9 } = await req.json()
 
-    // Generate unique QR codes
+    // Generate unique QR codes with branded format
     const codes = []
     for (let i = 0; i < quantity; i++) {
       const code = `QR-${Math.random().toString(36).substring(2, 8).toUpperCase()}`

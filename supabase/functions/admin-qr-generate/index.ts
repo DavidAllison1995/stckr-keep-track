@@ -30,18 +30,18 @@ serve(async (req) => {
     // Always generate 9 QR codes per batch
     const quantity = 9
 
-    // Generate unique codes with QR images
+    // Generate unique codes with branded QR images
     const codes = []
     
     for (let i = 0; i < quantity; i++) {
       const codeId = generateCodeId()
       const token = crypto.randomUUID()
       
-      // Generate QR code URL
-      const qrUrl = `https://4823056e-21ba-4628-9925-ad01b2666856.lovableproject.com/qr/${codeId}`
+      // Use branded deep link format
+      const qrUrl = `https://stckr.io/qr/${codeId}`
       
-      // Generate QR code as SVG using a different approach for Deno
-      const qrDataUrl = await generateQRCodeSVG(qrUrl, codeId)
+      // Generate QR code with logo space
+      const qrDataUrl = await generateBrandedQRCode(qrUrl, codeId)
       
       codes.push({ 
         id: codeId, 
@@ -81,11 +81,19 @@ function generateCodeId(): string {
   return result
 }
 
-async function generateQRCodeSVG(url: string, codeId: string): Promise<string> {
+async function generateBrandedQRCode(url: string, codeId: string): Promise<string> {
   try {
-    // Create a simple QR code using an external service for now
-    // This is a temporary solution that works in Deno
-    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}&format=png`
+    // Generate QR code with high error correction and logo space
+    // Using external service with custom parameters for branding
+    const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?` +
+      `size=400x400&` +
+      `data=${encodeURIComponent(url)}&` +
+      `format=png&` +
+      `ecc=H&` + // High error correction for logo space
+      `color=000000&` + // Black modules
+      `bgcolor=FFFFFF&` + // White background
+      `margin=20&` + // Quiet zone padding
+      `qzone=4` // Additional quiet zone
     
     const response = await fetch(qrApiUrl)
     if (!response.ok) {
@@ -98,7 +106,7 @@ async function generateQRCodeSVG(url: string, codeId: string): Promise<string> {
     
     return dataUrl
   } catch (error) {
-    console.error('Error generating QR code:', error)
+    console.error('Error generating branded QR code:', error)
     throw error
   }
 }

@@ -20,16 +20,19 @@ const QRCodeGrid = ({ codes, showDownloadPDF = false }: QRCodeGridProps) => {
 
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
     
-    // Calculate grid layout (3x3)
-    const margin = 20;
-    const qrSize = (pageWidth - margin * 4) / 3; // 3 columns with margins
+    // Calculate grid layout (3x3) optimized for print
+    const margin = 15;
+    const qrSize = (pageWidth - margin * 4) / 3;
     const startX = margin;
     const startY = margin;
     
-    pdf.setFontSize(16);
-    pdf.text('QR Code Batch', pageWidth / 2, 15, { align: 'center' });
+    // Add branded header
+    pdf.setFontSize(18);
+    pdf.text('Stckr Professional QR Batch', pageWidth / 2, 15, { align: 'center' });
+    
+    pdf.setFontSize(10);
+    pdf.text('Premium quality with logo placement guides', pageWidth / 2, 22, { align: 'center' });
     
     for (let i = 0; i < Math.min(codes.length, 9); i++) {
       const code = codes[i];
@@ -38,30 +41,53 @@ const QRCodeGrid = ({ codes, showDownloadPDF = false }: QRCodeGridProps) => {
       const row = Math.floor(i / 3);
       const col = i % 3;
       const x = startX + col * (qrSize + margin);
-      const y = startY + 20 + row * (qrSize + margin);
+      const y = startY + 30 + row * (qrSize + margin + 15);
       
       try {
         // Add QR code image
         pdf.addImage(code.image_url, 'PNG', x, y, qrSize, qrSize);
         
-        // Add code ID below the QR code
-        pdf.setFontSize(10);
-        pdf.text(code.id, x + qrSize / 2, y + qrSize + 10, { align: 'center' });
+        // Add code ID with branded styling
+        pdf.setFontSize(9);
+        pdf.text(code.id, x + qrSize / 2, y + qrSize + 8, { align: 'center' });
+        
+        // Add branded URL
+        pdf.setFontSize(7);
+        pdf.text(`stckr.io/qr/${code.id}`, x + qrSize / 2, y + qrSize + 14, { align: 'center' });
+        
+        // Add logo placement guide
+        const centerX = x + qrSize / 2;
+        const centerY = y + qrSize / 2;
+        const logoRadius = qrSize * 0.12;
+        
+        pdf.setDrawColor(200, 200, 200);
+        pdf.setFillColor(255, 255, 255);
+        pdf.circle(centerX, centerY, logoRadius, 'FD');
+        
       } catch (error) {
         console.error(`Error adding QR code ${code.id} to PDF:`, error);
       }
     }
     
-    pdf.save('qr-codes-batch.pdf');
+    // Add professional footer
+    pdf.setFontSize(8);
+    pdf.text('Professional grade QR codes with logo space - High error correction enabled', 
+             pageWidth / 2, pageWidth - 10, { align: 'center' });
+    
+    pdf.save('stckr-professional-qr-batch.pdf');
   };
 
   return (
     <div className="space-y-4">
       {showDownloadPDF && codes.length > 0 && (
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="font-semibold">Professional QR Codes</h3>
+            <p className="text-sm text-gray-600">Print-ready with logo placement guides</p>
+          </div>
           <Button onClick={downloadPDF} variant="outline" className="flex items-center gap-2">
             <Download className="w-4 h-4" />
-            Download PDF Sheet
+            Download Print Sheet
           </Button>
         </div>
       )}
@@ -69,13 +95,21 @@ const QRCodeGrid = ({ codes, showDownloadPDF = false }: QRCodeGridProps) => {
       <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
         {codes.slice(0, 9).map((code, index) => (
           <div key={code.id} className="text-center space-y-2">
-            <div className="border rounded-lg p-2 bg-white">
+            <div className="border rounded-lg p-2 bg-white shadow-sm">
               {code.image_url ? (
-                <img 
-                  src={code.image_url} 
-                  alt={`QR Code ${code.id}`}
-                  className="w-full h-auto max-w-[150px] mx-auto"
-                />
+                <div className="relative">
+                  <img 
+                    src={code.image_url} 
+                    alt={`QR Code ${code.id}`}
+                    className="w-full h-auto max-w-[150px] mx-auto"
+                  />
+                  {/* Logo space indicator */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-6 h-6 bg-white bg-opacity-90 rounded-full border border-gray-300 border-dashed flex items-center justify-center">
+                      <span className="text-xs text-gray-400 font-bold">L</span>
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <div className="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-500 text-sm">
                   No QR Image
@@ -83,9 +117,16 @@ const QRCodeGrid = ({ codes, showDownloadPDF = false }: QRCodeGridProps) => {
               )}
             </div>
             <div className="text-sm font-mono font-semibold">{code.id}</div>
+            <div className="text-xs text-gray-500">stckr.io/qr/{code.id}</div>
           </div>
         ))}
       </div>
+      
+      {codes.length > 0 && (
+        <div className="text-center text-sm text-gray-600 mt-4 bg-blue-50 p-3 rounded-lg">
+          <strong>Ready for Production:</strong> High-resolution QR codes with designated logo space for professional branding
+        </div>
+      )}
     </div>
   );
 };
