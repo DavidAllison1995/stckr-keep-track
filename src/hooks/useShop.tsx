@@ -9,6 +9,7 @@ export interface Product {
   name: string;
   description: string | null;
   price: number;
+  image_url: string | null;
   printful_product_id: string | null;
   printful_variant_id: string | null;
   template_url: string | null;
