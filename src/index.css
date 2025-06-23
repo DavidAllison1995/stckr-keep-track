@@ -157,6 +157,41 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 
+  /* Mobile-optimized tabs */
+  .mobile-tabs-list {
+    @apply w-full overflow-x-auto scrollbar-hide;
+    @apply flex items-center justify-start sm:justify-center;
+    @apply bg-muted rounded-md p-1;
+    scroll-snap-type: x mandatory;
+  }
+
+  .mobile-tab-trigger {
+    @apply flex-shrink-0 px-2 sm:px-3;
+    @apply text-xs sm:text-sm;
+    @apply min-w-[60px] sm:min-w-auto;
+    @apply touch-target;
+    scroll-snap-align: start;
+  }
+
+  /* Mobile responsive images */
+  .mobile-image {
+    @apply w-full h-auto max-w-full;
+    @apply object-cover rounded-lg;
+  }
+
+  /* Mobile responsive containers */
+  .mobile-container {
+    @apply w-full max-w-none sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl;
+    @apply mx-auto px-4 sm:px-6;
+  }
+
+  /* Mobile modal adjustments */
+  .mobile-modal {
+    @apply max-w-[95vw] sm:max-w-md;
+    @apply max-h-[90vh] overflow-y-auto;
+    @apply mx-4 sm:mx-auto;
+  }
+
   /* Drag scroll utilities */
   .drag-scroll {
     cursor: grab;
@@ -204,5 +239,57 @@
     .mobile-items-grid > * {
       flex: 0 0 calc(90% - 0.25rem);
     }
+    
+    /* Additional mobile breakpoint styles */
+    .mobile-btn {
+      @apply px-3 py-2 text-sm min-h-[44px];
+    }
+    
+    .mobile-text-sm {
+      @apply text-sm;
+    }
+    
+    .mobile-text-base {
+      @apply text-base;
+    }
+    
+    .mobile-text-lg {
+      @apply text-lg;
+    }
+    
+    .mobile-text-xl {
+      @apply text-xl;
+    }
+    
+    .mobile-text-2xl {
+      @apply text-2xl;
+    }
+    
+    /* Ensure minimum font sizes on very small screens */
+    body {
+      font-size: 14px;
+    }
+  }
+
+  /* Responsive flexbox utilities */
+  .mobile-flex-col {
+    @apply flex flex-col sm:flex-row;
+  }
+
+  .mobile-flex-wrap {
+    @apply flex flex-wrap gap-2 sm:gap-4;
+  }
+
+  /* Mobile card optimizations */
+  .mobile-card {
+    @apply w-full p-3 sm:p-4 md:p-6;
+    @apply space-y-3 sm:space-y-4;
+  }
+
+  /* Mobile navigation adjustments */
+  .mobile-nav {
+    @apply flex items-center justify-between;
+    @apply px-4 sm:px-6 py-3 sm:py-4;
+    @apply border-b;
   }
 }
