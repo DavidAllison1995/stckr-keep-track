@@ -82,7 +82,10 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
     }
   }, [item.qr_code_id]);
 
-  const handleCardClick = () => {
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Prevent click if user is dragging
+    e.stopPropagation();
+    
     if (onClick) {
       onClick();
     }
@@ -145,7 +148,10 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
 
   return (
     <>
-      <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={handleCardClick}>
+      <Card 
+        className="hover:shadow-md transition-shadow cursor-pointer select-none" 
+        onClick={handleCardClick}
+      >
         <CardContent className="p-4">
           <div className="space-y-3">
             {/* Item Image/Icon */}
@@ -155,6 +161,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                   src={item.photo_url} 
                   alt={item.name} 
                   className="w-full h-full object-cover rounded-lg" 
+                  draggable={false}
                 />
               ) : (
                 <IconComponent className="w-12 h-12 text-gray-600" />
@@ -232,6 +239,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                       src={qrDataUrl} 
                       alt="QR code thumbnail" 
                       className="w-12 h-12 rounded border"
+                      draggable={false}
                     />
                   ) : (
                     <QrCode className="w-12 h-12 text-gray-400" />

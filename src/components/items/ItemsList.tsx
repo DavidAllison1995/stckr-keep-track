@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
+import { useDragScroll } from '@/hooks/useDragScroll';
 import { getIconComponent } from '@/components/icons';
 import ItemCard from './ItemCard';
 import ItemForm from './ItemForm';
@@ -21,6 +22,8 @@ const ItemsList = ({ onItemSelect }: ItemsListProps) => {
   const [roomFilter, setRoomFilter] = useState('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
+  const { getDragProps, isDragActive } = useDragScroll();
+
   const categories = Array.from(new Set(items.map(item => item.category)));
   const rooms = Array.from(new Set(items.map(item => item.room).filter(Boolean)));
 
@@ -34,6 +37,9 @@ const ItemsList = ({ onItemSelect }: ItemsListProps) => {
   });
 
   const handleItemClick = (itemId: string) => {
+    // Prevent navigation if user was dragging
+    if (isDragActive()) return;
+    
     if (onItemSelect) {
       onItemSelect(itemId);
     }
@@ -107,7 +113,7 @@ const ItemsList = ({ onItemSelect }: ItemsListProps) => {
         </CardContent>
       </Card>
 
-      {/* Items Grid */}
+      {/* Items Horizontal Scroll */}
       {filteredItems.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
@@ -124,14 +130,27 @@ const ItemsList = ({ onItemSelect }: ItemsListProps) => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredItems.map(item => (
-            <ItemCard 
-              key={item.id} 
-              item={item} 
-              onClick={() => handleItemClick(item.id)}
-            />
-          ))}
+        <div className="relative">
+          <div 
+            {...getDragProps()}
+            className="flex gap-4 overflow-x-auto scrollbar-hide pb-4"
+            style={{ 
+              scrollBehavior: 'smooth',
+              WebkitOverflowScrolling: 'touch'
+            }}
+          >
+            {filteredItems.map(item => (
+              <div 
+                key={item.id} 
+                className="w-[calc(33.333%-0.67rem)] min-w-[280px] sm:min-w-[300px] lg:min-w-[320px] flex-shrink-0"
+              >
+                <ItemCard 
+                  item={item} 
+                  onClick={() => handleItemClick(item.id)}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
