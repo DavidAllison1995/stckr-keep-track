@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -83,8 +82,9 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
   };
 
   const generateQRCodeImageUrl = (code: string) => {
-    // Generate QR code image URL using a QR code service
-    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`https://upkeep.lovable.app/claim/${code}`)}`;
+    // Use the new universal URL format for QR codes
+    const qrUrl = `https://stckr.io/qr/${code}`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUrl)}`;
   };
 
   if (!item.qr_code_id) {
@@ -145,10 +145,13 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
                 }}
               />
             </div>
-            <div className="mt-4">
+            <div className="mt-4 space-y-2">
               <Badge variant="secondary" className="text-sm font-mono">
                 {item.qr_code_id}
               </Badge>
+              <div className="text-xs text-gray-500">
+                Points to: https://stckr.io/qr/{item.qr_code_id}
+              </div>
             </div>
           </div>
 

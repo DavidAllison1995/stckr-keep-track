@@ -24,7 +24,8 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
       
       for (const code of codes) {
         try {
-          const url = `https://4823056e-21ba-4628-9925-ad01b2666856.lovableproject.com/qr/${code.code}`;
+          // Use the new universal URL format
+          const url = `https://stckr.io/qr/${code.code}`;
           const qrDataUrl = await QRCode.toDataURL(url, {
             width: 300,
             margin: 1,

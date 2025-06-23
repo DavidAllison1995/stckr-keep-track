@@ -57,8 +57,33 @@ function App() {
                     {/* Public routes */}
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<AuthPage />} />
+                    
+                    {/* Universal QR code route - publicly accessible */}
+                    <Route 
+                      path="/qr/:code" 
+                      element={
+                        <ItemsProvider>
+                          <MaintenanceProvider>
+                            <QRRedirectPage />
+                          </MaintenanceProvider>
+                        </ItemsProvider>
+                      } 
+                    />
+                    
                     <Route path="/public/*" element={<PublicRoutes />} />
                     <Route path="/claim/*" element={<ClaimRoutes />} />
+                    
+                    {/* Legacy route for backward compatibility */}
+                    <Route 
+                      path="/:code" 
+                      element={
+                        <ItemsProvider>
+                          <MaintenanceProvider>
+                            <QRRedirectPage />
+                          </MaintenanceProvider>
+                        </ItemsProvider>
+                      } 
+                    />
                     
                     {/* Protected routes with Cart Context */}
                     <Route 
