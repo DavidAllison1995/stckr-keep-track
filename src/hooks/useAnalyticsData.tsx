@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -88,9 +87,12 @@ export const useAnalyticsData = () => {
 
   const getOrderStatsData = async () => {
     console.log('Fetching order stats data...');
+    // Only count orders that are actually paid and have been processed
     const { data, error } = await supabase
       .from('orders')
       .select('created_at, total_amount')
+      .eq('status', 'paid') // Only count paid orders
+      .not('stripe_session_id', 'is', null) // Must have Stripe session
       .order('created_at');
 
     if (error) {
@@ -98,6 +100,8 @@ export const useAnalyticsData = () => {
       throw error;
     }
 
+    // Since we're filtering for legitimate orders only, this should now return zero
+    // until new legitimate orders are placed
     const monthlyData: { [key: string]: { orders: number; revenue: number } } = {};
     data?.forEach(order => {
       const month = new Date(order.created_at).toLocaleDateString('en-US', { 
@@ -116,7 +120,7 @@ export const useAnalyticsData = () => {
       orders: stats.orders, 
       revenue: stats.revenue 
     }));
-    console.log('Order stats data:', result);
+    console.log('Order stats data (paid orders only):', result);
     return result;
   };
 

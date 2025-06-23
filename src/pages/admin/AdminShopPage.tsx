@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -96,7 +95,7 @@ const AdminShopPage = () => {
 
   const loadOrders = async () => {
     try {
-      // Only load orders that are actually paid (not pending checkout sessions)
+      // Only load orders that are actually paid and have valid Stripe sessions
       const { data, error } = await supabase
         .from('orders')
         .select(`
@@ -111,7 +110,8 @@ const AdminShopPage = () => {
             )
           )
         `)
-        .in('status', ['paid', 'processing', 'shipped', 'cancelled'])
+        .eq('status', 'paid') // Only paid orders
+        .not('stripe_session_id', 'is', null) // Must have Stripe session
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -345,62 +345,72 @@ const AdminShopPage = () => {
                   Order Management
                 </CardTitle>
                 <p className="text-sm text-gray-600 mt-2">
-                  Orders are automatically sent to Printful for fulfillment after payment confirmation
+                  Showing only confirmed, paid orders. Orders are automatically sent to Printful for fulfillment after payment confirmation.
                 </p>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Order ID</TableHead>
-                      <TableHead>Customer</TableHead>
-                      <TableHead>Total</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Printful</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {orders.map((order) => (
-                      <TableRow key={order.id}>
-                        <TableCell className="font-mono text-sm">
-                          {order.id.slice(0, 8)}...
-                        </TableCell>
-                        <TableCell>{order.user_email}</TableCell>
-                        <TableCell>£{order.total_amount.toFixed(2)}</TableCell>
-                        <TableCell>
-                          <Badge variant={getStatusBadgeVariant(order.status)}>
-                            {order.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {order.printful_order_id ? (
-                            <Badge variant="default" className="text-xs">
-                              #{order.printful_order_id}
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary" className="text-xs">
-                              Not sent
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(order.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedOrder(order)}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
+                {orders.length === 0 ? (
+                  <div className="text-center py-8">
+                    <ShoppingCart className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                    <p className="text-gray-500">No confirmed orders yet</p>
+                    <p className="text-sm text-gray-400 mt-2">
+                      Orders will appear here once customers complete their purchases
+                    </p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Order ID</TableHead>
+                        <TableHead>Customer</TableHead>
+                        <TableHead>Total</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Printful</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {orders.map((order) => (
+                        <TableRow key={order.id}>
+                          <TableCell className="font-mono text-sm">
+                            {order.id.slice(0, 8)}...
+                          </TableCell>
+                          <TableCell>{order.user_email}</TableCell>
+                          <TableCell>£{order.total_amount.toFixed(2)}</TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusBadgeVariant(order.status)}>
+                              {order.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {order.printful_order_id ? (
+                              <Badge variant="default" className="text-xs">
+                                #{order.printful_order_id}
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary" className="text-xs">
+                                Not sent
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(order.created_at).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedOrder(order)}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
