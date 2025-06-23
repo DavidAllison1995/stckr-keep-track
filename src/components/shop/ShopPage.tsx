@@ -9,7 +9,7 @@ import { useShop } from '@/hooks/useShop';
 import CartDrawer from './CartDrawer';
 
 const ShopPage = () => {
-  const { products, addToCart, getCartItemCount } = useShop();
+  const { products, addToCart } = useShop();
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const [isCartOpen, setIsCartOpen] = useState(false);
 
@@ -44,22 +44,14 @@ const ShopPage = () => {
             <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mt-3"></div>
           </div>
           
-          {/* Cart Button */}
+          {/* Cart Button - NO BADGE */}
           <Button
             onClick={() => setIsCartOpen(true)}
-            className="relative bg-white border-2 border-blue-200 text-blue-700 hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white hover:border-transparent transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+            className="bg-white border-2 border-blue-200 text-blue-700 hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white hover:border-transparent transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
             size="lg"
           >
             <ShoppingCart className="w-5 h-5 mr-2" />
             Cart
-            {getCartItemCount() > 0 && (
-              <Badge 
-                variant="destructive" 
-                className="absolute -top-2 -right-2 px-2 py-1 text-xs animate-pulse"
-              >
-                {getCartItemCount()}
-              </Badge>
-            )}
           </Button>
         </div>
 

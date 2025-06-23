@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from './useSupabaseAuth';
@@ -119,7 +120,7 @@ export const useShop = () => {
     }
   };
 
-  // Add to cart with immediate optimistic updates
+  // Add to cart with INSTANT optimistic updates
   const addToCart = async (productId: string, quantity: number = 1) => {
     if (!user) {
       toast({
@@ -147,15 +148,16 @@ export const useShop = () => {
         const existingItem = cartItems[existingItemIndex];
         const newQuantity = existingItem.quantity + quantity;
         
-        // Immediate optimistic update
+        // INSTANT optimistic update - update immediately
         const updatedCartItems = [...cartItems];
         updatedCartItems[existingItemIndex] = {
           ...existingItem,
-          quantity: newQuantity
+          quantity: newQuantity,
+          updated_at: new Date().toISOString()
         };
         setCartItems(updatedCartItems);
 
-        // Update in database
+        // Update in database (background operation)
         const { error } = await supabase
           .from('cart_items')
           .update({ 
@@ -167,7 +169,7 @@ export const useShop = () => {
         if (error) {
           console.error('Error updating cart item:', error);
           // Revert optimistic update on error
-          setCartItems(cartItems);
+          loadCartItems(true);
           throw error;
         }
       } else {
@@ -175,7 +177,7 @@ export const useShop = () => {
         
         // Create optimistic item with a temporary ID
         const optimisticItem: CartItem = {
-          id: 'temp-' + Date.now(),
+          id: 'temp-' + Date.now() + '-' + Math.random(),
           user_id: user.id,
           product_id: productId,
           quantity,
@@ -184,11 +186,12 @@ export const useShop = () => {
           product
         };
 
-        // Immediate optimistic update - add to cart right away
+        // INSTANT optimistic update - add to cart immediately
         const updatedCartItems = [...cartItems, optimisticItem];
         setCartItems(updatedCartItems);
+        console.log('Cart immediately updated with optimistic item:', optimisticItem);
 
-        // Insert new item in background
+        // Insert new item in database (background operation)
         const { data, error } = await supabase
           .from('cart_items')
           .insert({
@@ -213,6 +216,7 @@ export const useShop = () => {
         setCartItems(prev => prev.map(item => 
           item.id === optimisticItem.id ? data : item
         ));
+        console.log('Replaced optimistic item with real data:', data);
       }
 
       toast({
@@ -239,9 +243,13 @@ export const useShop = () => {
     try {
       console.log('Updating cart quantity:', { cartItemId, quantity });
       
-      // Optimistic update
+      // INSTANT optimistic update
       const optimisticCartItems = cartItems.map(item =>
-        item.id === cartItemId ? { ...item, quantity } : item
+        item.id === cartItemId ? { 
+          ...item, 
+          quantity,
+          updated_at: new Date().toISOString()
+        } : item
       );
       setCartItems(optimisticCartItems);
 
@@ -256,7 +264,7 @@ export const useShop = () => {
       if (error) {
         console.error('Error updating cart quantity:', error);
         // Revert optimistic update on error
-        setCartItems(cartItems);
+        loadCartItems(true);
         throw error;
       }
     } catch (error) {
@@ -274,7 +282,7 @@ export const useShop = () => {
     try {
       console.log('Removing from cart:', cartItemId);
       
-      // Optimistic update
+      // INSTANT optimistic update
       const optimisticCartItems = cartItems.filter(item => item.id !== cartItemId);
       setCartItems(optimisticCartItems);
 
@@ -286,7 +294,7 @@ export const useShop = () => {
       if (error) {
         console.error('Error removing from cart:', error);
         // Revert optimistic update on error
-        setCartItems(cartItems);
+        loadCartItems(true);
         throw error;
       }
       
