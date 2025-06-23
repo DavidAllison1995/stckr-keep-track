@@ -6,8 +6,9 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useNavigate } from 'react-router-dom';
-import { Package, Calendar, Wrench } from 'lucide-react';
+import { Package, Calendar, Wrench, ChevronRight } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns';
+import { useDragScroll } from '@/hooks/useDragScroll';
 
 interface DashboardProps {
   onTabChange?: (tab: string) => void;
@@ -18,16 +19,15 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
   const { items } = useSupabaseItems();
   const { tasks, getTasksByStatus } = useSupabaseMaintenance();
   const navigate = useNavigate();
+  const { getDragProps, isDragActive } = useDragScroll();
 
   const overdueTasks = getTasksByStatus('overdue');
   const dueSoonTasks = getTasksByStatus('due_soon');
   const inProgressTasks = getTasksByStatus('in_progress');
   const pendingTasks = getTasksByStatus('pending');
   
-  // Calculate upcoming (non-completed) tasks
   const upcomingTasks = [...overdueTasks, ...dueSoonTasks, ...inProgressTasks, ...pendingTasks];
   
-  // For up-to-date tasks, we need to filter pending tasks that are due more than 14 days from now
   const upToDateTasks = getTasksByStatus('pending').filter(task => {
     const taskDate = new Date(task.date);
     const now = new Date();
@@ -35,13 +35,11 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
     return taskDate > fourteenDaysFromNow;
   });
 
-  // Calculate this week's tasks
   const getThisWeekTasks = () => {
     const now = new Date();
-    const weekStart = startOfWeek(now, { weekStartsOn: 1 }); // Monday
-    const weekEnd = endOfWeek(now, { weekStartsOn: 1 }); // Sunday
+    const weekStart = startOfWeek(now, { weekStartsOn: 1 });
+    const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
     
-    // Get all non-completed tasks for this week
     const thisWeekTasks = tasks.filter(task => {
       if (task.status === 'completed') return false;
       
@@ -49,22 +47,17 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
       return isWithinInterval(taskDate, { start: weekStart, end: weekEnd });
     });
 
-    // Group tasks by day
     const tasksByDay = new Map();
-    
-    // Initialize all days of the week
     const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     daysOfWeek.forEach(day => tasksByDay.set(day, []));
     
-    // Group tasks by day name
     thisWeekTasks.forEach(task => {
       const taskDate = parseISO(task.date);
-      const dayName = format(taskDate, 'EEEE'); // Full day name
+      const dayName = format(taskDate, 'EEEE');
       const existingTasks = tasksByDay.get(dayName) || [];
       tasksByDay.set(dayName, [...existingTasks, task]);
     });
 
-    // Convert to array and filter days with tasks (or show default days if no tasks)
     const daysWithTasks = Array.from(tasksByDay.entries())
       .map(([day, dayTasks]) => ({
         day,
@@ -73,7 +66,6 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
       }))
       .filter(({ count }) => count > 0);
 
-    // If no tasks this week, show default days with 0 counts
     if (daysWithTasks.length === 0) {
       return [
         { day: 'Monday', count: 0, tasks: [] },
@@ -104,18 +96,16 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
   };
 
   const handleItemClick = (itemId: string) => {
+    if (isDragActive()) return;
     navigate(`/items/${itemId}`);
   };
 
   const handleDayClick = () => {
-    // Navigate to maintenance calendar view
     navigate('/maintenance');
   };
 
-  // Get user's first name from metadata or email
   const userName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'User';
 
-  // Color mapping for day tiles
   const getColorForIndex = (index: number) => {
     const colors = [
       { bg: 'bg-blue-500', text: 'text-white' },
@@ -130,38 +120,47 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+    <div className="max-w-6xl mx-auto mobile-padding">
+      {/* Mobile-optimized Header */}
+      <div className="text-center mb-6 sm:mb-8">
+        <h1 className="mobile-text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2">
           Welcome back, {userName}!
         </h1>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Main Content - Items List */}
-        <div className="lg:col-span-2">
-          <Card className="shadow-xl border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Package className="w-5 h-5 text-blue-600" />
-                  <span>Recent Items</span>
-                </div>
-                <Button variant="ghost" size="sm" onClick={handleItemsClick}>
-                  View All
+      {/* Mobile-first Layout */}
+      <div className="space-y-6">
+        {/* Recent Items Section - Mobile Optimized */}
+        <Card className="shadow-lg border-0">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center justify-between mobile-text-lg">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Package className="w-5 h-5 text-blue-600" />
+                <span>Recent Items</span>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleItemsClick}
+                className="mobile-text-sm"
+              >
+                <span className="hidden sm:inline">View All</span>
+                <ChevronRight className="w-4 h-4 sm:hidden" />
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="mobile-spacing">
+            {items.length === 0 ? (
+              <div className="text-center py-6 sm:py-8">
+                <div className="text-3xl sm:text-4xl mb-2">📦</div>
+                <p className="text-gray-600 mb-4 mobile-text-base">No items yet</p>
+                <Button onClick={handleItemsClick} className="mobile-btn">
+                  Add Your First Item
                 </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {items.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-2">📦</div>
-                  <p className="text-gray-600 mb-4">No items yet</p>
-                  <Button onClick={handleItemsClick}>Add Your First Item</Button>
-                </div>
-              ) : (
-                items.slice(0, 3).map((item) => {
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {items.slice(0, 3).map((item) => {
                   const itemTasks = tasks.filter(task => task.item_id === item.id && task.status !== 'completed');
                   const hasOverdue = itemTasks.some(task => new Date(task.date) < new Date() && task.status !== 'completed');
                   const hasDueSoon = itemTasks.some(task => {
@@ -176,20 +175,20 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
                   return (
                     <div 
                       key={item.id} 
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                      className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors touch-target"
                       onClick={() => handleItemClick(item.id)}
                     >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center">
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
                           {item.photo_url ? (
                             <img src={item.photo_url} alt={item.name} className="w-full h-full object-cover rounded-lg" />
                           ) : (
-                            <span className="text-lg">📦</span>
+                            <span className="text-lg sm:text-xl">📦</span>
                           )}
                         </div>
-                        <div>
-                          <div className="font-medium">{item.name}</div>
-                          <div className="text-sm text-gray-500">Status: Good</div>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium mobile-text-base truncate">{item.name}</div>
+                          <div className="mobile-text-sm text-gray-500">Status: Good</div>
                         </div>
                       </div>
                       <Badge 
@@ -198,37 +197,67 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
                           maintenanceStatus === "Due soon" ? "secondary" : 
                           "outline"
                         }
+                        className="ml-2 flex-shrink-0 mobile-text-sm"
                       >
-                        {maintenanceStatus}
+                        <span className="hidden sm:inline">{maintenanceStatus}</span>
+                        <span className="sm:hidden">{maintenanceStatus === "Overdue" ? "!" : maintenanceStatus === "Due soon" ? "⚠" : "✓"}</span>
                       </Badge>
                     </div>
                   );
-                })
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Maintenance Calendar */}
-          <Card 
-            className="shadow-xl border-0 cursor-pointer hover:shadow-2xl transition-all duration-300 hover:scale-105"
-            onClick={handleCalendarClick}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center text-lg">
-                <Calendar className="mr-2 h-5 w-5 text-blue-600" />
-                This Week
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+        {/* Mobile-optimized Calendar Section */}
+        <Card 
+          className="shadow-lg border-0 cursor-pointer hover:shadow-xl transition-all duration-300"
+          onClick={handleCalendarClick}
+        >
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center mobile-text-lg">
+              <Calendar className="mr-2 h-5 w-5 text-blue-600" />
+              This Week
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* Mobile: Horizontal scrollable week view */}
+            <div className="sm:hidden">
+              <div 
+                {...getDragProps()}
+                className="flex gap-3 overflow-x-auto scrollbar-hide pb-2"
+                style={{ 
+                  scrollBehavior: 'smooth',
+                  WebkitOverflowScrolling: 'touch'
+                }}
+              >
+                {thisWeekTasksData.map((dayData, index) => {
+                  const colors = dayData.count > 0 ? getColorForIndex(index) : { bg: 'bg-gray-300', text: 'text-gray-600' };
+                  return (
+                    <div 
+                      key={dayData.day}
+                      className="flex flex-col items-center gap-2 min-w-[60px] cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+                      onClick={handleDayClick}
+                    >
+                      <span className="mobile-text-sm font-medium">{dayData.day.slice(0, 3)}</span>
+                      <div className={`w-8 h-8 ${colors.bg} rounded-full ${colors.text} text-xs flex items-center justify-center font-medium`}>
+                        {dayData.count}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Desktop: Vertical list */}
+            <div className="hidden sm:block space-y-3">
               {thisWeekTasksData.map((dayData, index) => {
                 const colors = dayData.count > 0 ? getColorForIndex(index) : { bg: 'bg-gray-300', text: 'text-gray-600' };
                 return (
                   <div 
                     key={dayData.day}
-                    className="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors"
+                    className="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors touch-target"
                     onClick={handleDayClick}
                   >
                     <span className="text-sm">{dayData.day.slice(0, 3)}</span>
@@ -238,42 +267,42 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
                   </div>
                 );
               })}
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Quick Stats */}
-          <Card className="shadow-xl border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center text-lg">
-                <Wrench className="mr-2 h-5 w-5 text-blue-600" />
-                Quick Stats
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div 
-                className="flex justify-between cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
-                onClick={handleItemsClick}
-              >
-                <span className="text-sm text-gray-600">Total Items</span>
-                <span className="font-medium">{items.length}</span>
-              </div>
-              <div 
-                className="flex justify-between cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
-                onClick={() => handleTaskStatusClick('due-soon')}
-              >
-                <span className="text-sm text-gray-600">Due Soon</span>
-                <span className="font-medium text-yellow-600">{dueSoonTasks.length}</span>
-              </div>
-              <div 
-                className="flex justify-between cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
-                onClick={() => handleTaskStatusClick('overdue')}
-              >
-                <span className="text-sm text-gray-600">Overdue</span>
-                <span className="font-medium text-red-600">{overdueTasks.length}</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Mobile-optimized Quick Stats */}
+        <Card className="shadow-lg border-0">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center mobile-text-lg">
+              <Wrench className="mr-2 h-5 w-5 text-blue-600" />
+              Quick Stats
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="mobile-spacing">
+            <div 
+              className="flex justify-between items-center cursor-pointer hover:bg-gray-50 p-3 rounded transition-colors touch-target"
+              onClick={handleItemsClick}
+            >
+              <span className="mobile-text-base text-gray-600">Total Items</span>
+              <span className="font-medium mobile-text-base">{items.length}</span>
+            </div>
+            <div 
+              className="flex justify-between items-center cursor-pointer hover:bg-gray-50 p-3 rounded transition-colors touch-target"
+              onClick={() => handleTaskStatusClick('due-soon')}
+            >
+              <span className="mobile-text-base text-gray-600">Due Soon</span>
+              <span className="font-medium text-yellow-600 mobile-text-base">{dueSoonTasks.length}</span>
+            </div>
+            <div 
+              className="flex justify-between items-center cursor-pointer hover:bg-gray-50 p-3 rounded transition-colors touch-target"
+              onClick={() => handleTaskStatusClick('overdue')}
+            >
+              <span className="mobile-text-base text-gray-600">Overdue</span>
+              <span className="font-medium text-red-600 mobile-text-base">{overdueTasks.length}</span>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

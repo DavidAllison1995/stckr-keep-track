@@ -106,4 +106,54 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Mobile-first touch targets */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Mobile-optimized spacing */
+  .mobile-padding {
+    @apply px-4 sm:px-6;
+  }
+
+  .mobile-spacing {
+    @apply space-y-3 sm:space-y-4;
+  }
+
+  /* Mobile-friendly card layouts */
+  .mobile-card-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
+  }
+
+  /* Responsive text sizing */
+  .mobile-text-sm {
+    @apply text-xs sm:text-sm;
+  }
+
+  .mobile-text-base {
+    @apply text-sm sm:text-base;
+  }
+
+  .mobile-text-lg {
+    @apply text-base sm:text-lg;
+  }
+
+  .mobile-text-xl {
+    @apply text-lg sm:text-xl;
+  }
+
+  .mobile-text-2xl {
+    @apply text-xl sm:text-2xl;
+  }
+
+  /* Responsive button sizing */
+  .mobile-btn {
+    @apply px-4 py-3 text-sm sm:px-6 sm:py-2 sm:text-base touch-target;
+  }
+
+  /* Safe area for mobile devices */
+  .safe-area-padding {
+    @apply pb-safe-area-inset-bottom;
+  }
 }
