@@ -9,6 +9,23 @@ interface OrderRevenueChartProps {
 }
 
 const OrderRevenueChart = ({ data }: OrderRevenueChartProps) => {
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border rounded shadow-lg">
+          <p className="font-medium">{label}</p>
+          <p style={{ color: payload[0].color }}>
+            Orders: {payload[0].value}
+          </p>
+          <p style={{ color: payload[1].color }}>
+            Revenue: £{payload[1].value.toFixed(2)}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -23,10 +40,10 @@ const OrderRevenueChart = ({ data }: OrderRevenueChartProps) => {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis />
-            <Tooltip />
+            <Tooltip content={<CustomTooltip />} />
             <Legend />
             <Bar dataKey="orders" fill="#3b82f6" name="Orders" />
-            <Bar dataKey="revenue" fill="#10b981" name="Revenue ($)" />
+            <Bar dataKey="revenue" fill="#10b981" name="Revenue (£)" />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

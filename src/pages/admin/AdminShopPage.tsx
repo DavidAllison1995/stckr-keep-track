@@ -291,7 +291,7 @@ const AdminShopPage = () => {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell>${product.price.toFixed(2)}</TableCell>
+                          <TableCell>£{product.price.toFixed(2)}</TableCell>
                           <TableCell>
                             <Badge variant={product.is_active ? 'default' : 'secondary'}>
                               {product.is_active ? 'Active' : 'Inactive'}
@@ -368,7 +368,7 @@ const AdminShopPage = () => {
                           {order.id.slice(0, 8)}...
                         </TableCell>
                         <TableCell>{order.user_email}</TableCell>
-                        <TableCell>${order.total_amount.toFixed(2)}</TableCell>
+                        <TableCell>£{order.total_amount.toFixed(2)}</TableCell>
                         <TableCell>
                           <Badge variant={getStatusBadgeVariant(order.status)}>
                             {order.status}

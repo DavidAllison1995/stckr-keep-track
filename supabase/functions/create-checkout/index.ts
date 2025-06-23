@@ -70,7 +70,7 @@ serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: items.map((item: any) => ({
         price_data: {
-          currency: 'usd',
+          currency: 'gbp', // Changed to GBP
           product_data: {
             name: item.name,
           },

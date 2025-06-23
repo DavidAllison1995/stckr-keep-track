@@ -94,7 +94,7 @@ const CartDrawer = ({ open, onClose }: CartDrawerProps) => {
                             {item.product?.name || 'Product'}
                           </h4>
                           <p className="text-sm text-gray-600 mb-2">
-                            ${item.product?.price?.toFixed(2) || '0.00'} each
+                            £{item.product?.price?.toFixed(2) || '0.00'} each
                           </p>
                           
                           <div className="flex items-center justify-between">
@@ -133,7 +133,7 @@ const CartDrawer = ({ open, onClose }: CartDrawerProps) => {
                         
                         <div className="text-right">
                           <Badge variant="secondary" className="text-sm font-medium">
-                            ${((item.product?.price || 0) * item.quantity).toFixed(2)}
+                            £{((item.product?.price || 0) * item.quantity).toFixed(2)}
                           </Badge>
                         </div>
                       </div>
@@ -146,7 +146,7 @@ const CartDrawer = ({ open, onClose }: CartDrawerProps) => {
               <div className="border-t pt-4 space-y-4">
                 <div className="flex items-center justify-between text-lg font-semibold">
                   <span>Total</span>
-                  <span>${cartTotal.toFixed(2)}</span>
+                  <span>£{cartTotal.toFixed(2)}</span>
                 </div>
                 
                 <Button
