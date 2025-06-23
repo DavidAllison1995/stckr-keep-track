@@ -168,7 +168,7 @@
   .mobile-tab-trigger {
     @apply flex-shrink-0 px-2 sm:px-3;
     @apply text-xs sm:text-sm;
-    @apply min-w-[60px] sm:min-w-auto;
+    @apply min-w-[60px] sm:min-w-fit;
     @apply touch-target;
     scroll-snap-align: start;
   }
