@@ -58,6 +58,17 @@ serve(async (req) => {
 
     if (invalidProducts.length > 0) {
       console.error('Products missing Printful variant IDs:', invalidProducts);
+      const errorMessage = `Products missing Printful variant IDs: ${invalidProducts.map((p: any) => p.product.name).join(', ')}`;
+      
+      // Update order with fulfillment error
+      await supabaseClient
+        .from('orders')
+        .update({ 
+          fulfillment_error: errorMessage,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
+        
       throw new Error('Some products are not configured for Printful fulfillment');
     }
 
@@ -93,7 +104,18 @@ serve(async (req) => {
     const printfulApiKey = Deno.env.get('PRINTFUL_API_KEY');
     if (!printfulApiKey) {
       console.error('PRINTFUL_API_KEY not found in environment variables');
-      throw new Error('Printful API key not configured');
+      const errorMessage = 'Printful API key not configured';
+      
+      // Update order with fulfillment error
+      await supabaseClient
+        .from('orders')
+        .update({ 
+          fulfillment_error: errorMessage,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
+        
+      throw new Error(errorMessage);
     }
 
     console.log('Printful API key found, making request...');
@@ -115,7 +137,18 @@ serve(async (req) => {
     
     if (!printfulResponse.ok) {
       console.error('Printful API error:', printfulResult);
-      throw new Error(`Printful API error: ${printfulResult.error?.message || 'Unknown error'}`);
+      const errorMessage = `Printful API error: ${printfulResult.error?.message || 'Unknown error'}`;
+      
+      // Update order with fulfillment error
+      await supabaseClient
+        .from('orders')
+        .update({ 
+          fulfillment_error: errorMessage,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
+        
+      throw new Error(errorMessage);
     }
 
     console.log('Printful order created successfully:', printfulResult.result);
@@ -126,6 +159,7 @@ serve(async (req) => {
       .update({ 
         status: 'processing',
         printful_order_id: printfulResult.result.id,
+        fulfillment_error: null, // Clear any previous errors
         updated_at: new Date().toISOString()
       })
       .eq('id', orderId);

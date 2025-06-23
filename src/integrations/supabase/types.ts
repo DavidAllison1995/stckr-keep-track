@@ -260,7 +260,9 @@ export type Database = {
       orders: {
         Row: {
           created_at: string | null
+          fulfillment_error: string | null
           id: string
+          printful_order_id: string | null
           status: string
           stripe_session_id: string | null
           total_amount: number
@@ -270,7 +272,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          fulfillment_error?: string | null
           id?: string
+          printful_order_id?: string | null
           status?: string
           stripe_session_id?: string | null
           total_amount: number
@@ -280,7 +284,9 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          fulfillment_error?: string | null
           id?: string
+          printful_order_id?: string | null
           status?: string
           stripe_session_id?: string | null
           total_amount?: number
