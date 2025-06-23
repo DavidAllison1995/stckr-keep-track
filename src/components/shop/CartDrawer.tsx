@@ -10,7 +10,6 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingCart, Plus, Minus, Trash2, ExternalLink } from 'lucide-react';
-import { useCart } from '@/contexts/CartContext';
 import { useShop } from '@/hooks/useShop';
 import { useNavigate } from 'react-router-dom';
 
@@ -26,10 +25,12 @@ const CartDrawer = ({ open, onClose }: CartDrawerProps) => {
     updateCartQuantity,
     removeFromCart,
     getCartTotal,
-  } = useCart();
-  const { createCheckoutSession, isLoading } = useShop();
+    createCheckoutSession,
+    isLoading
+  } = useShop();
 
   const handleCheckout = async () => {
+    console.log('Checkout button clicked, cart items:', cartItems.length);
     const checkoutUrl = await createCheckoutSession();
     if (checkoutUrl) {
       window.open(checkoutUrl, '_blank');
@@ -77,7 +78,15 @@ const CartDrawer = ({ open, onClose }: CartDrawerProps) => {
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
                         <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <ShoppingCart className="w-6 h-6 text-gray-400" />
+                          {item.product?.image_url ? (
+                            <img 
+                              src={item.product.image_url} 
+                              alt={item.product.name}
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                          ) : (
+                            <ShoppingCart className="w-6 h-6 text-gray-400" />
+                          )}
                         </div>
                         
                         <div className="flex-1 min-w-0">
