@@ -100,60 +100,50 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
 
   return (
     <>
-      <div className="space-y-4 sm:space-y-6">
-        {/* Mobile-optimized Header */}
-        <div className="space-y-3 sm:space-y-0">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={onClose}
-                className="flex-shrink-0 touch-target"
-              >
-                <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Back</span>
-              </Button>
-              <div className="min-w-0 flex-1">
-                <h1 className="mobile-text-xl sm:text-2xl font-bold truncate">{item.name}</h1>
-                <p className="mobile-text-sm text-gray-600 truncate">{item.category}</p>
-              </div>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">{item.name}</h1>
+              <p className="text-gray-600">{item.category}</p>
             </div>
           </div>
-          
-          {/* Mobile-stacked Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-2 sm:justify-end">
+          <div className="flex gap-2">
             <Button 
               variant="outline" 
               onClick={() => setIsEditModalOpen(true)}
-              className="mobile-btn sm:w-auto"
             >
               <Edit className="w-4 h-4 mr-2" />
-              Edit Item
+              Edit
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button 
                   variant="outline"
-                  className="mobile-btn sm:w-auto text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Item
+                  Delete
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent className="max-w-sm sm:max-w-md mx-4">
+              <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="mobile-text-lg">Delete Item</AlertDialogTitle>
-                  <AlertDialogDescription className="mobile-text-base">
+                  <AlertDialogTitle>Delete Item</AlertDialogTitle>
+                  <AlertDialogDescription>
                     Are you sure you want to delete "{item.name}"? This action cannot be undone.
                     All maintenance tasks and documents associated with this item will also be deleted.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-                  <AlertDialogCancel className="mobile-btn">Cancel</AlertDialogCancel>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction 
                     onClick={handleDeleteItem}
-                    className="mobile-btn bg-red-600 hover:bg-red-700"
+                    className="bg-red-600 hover:bg-red-700"
                   >
                     Delete Item
                   </AlertDialogAction>
@@ -163,35 +153,33 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
           </div>
         </div>
 
-        {/* Mobile-optimized Tabs */}
+        {/* Tabs */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <div className="relative">
-            <TabsList className="mobile-tabs-list">
-              <TabsTrigger value="details" className="mobile-tab-trigger">Details</TabsTrigger>
-              <TabsTrigger value="tasks" className="mobile-tab-trigger">Tasks</TabsTrigger>
-              <TabsTrigger value="documents" className="mobile-tab-trigger">Docs</TabsTrigger>
-              <TabsTrigger value="notes" className="mobile-tab-trigger">Notes</TabsTrigger>
-              <TabsTrigger value="qr" className="mobile-tab-trigger">QR</TabsTrigger>
-            </TabsList>
-          </div>
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="tasks">Tasks</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="notes">Notes</TabsTrigger>
+            <TabsTrigger value="qr">QR Code</TabsTrigger>
+          </TabsList>
           
-          <TabsContent value="details" className="mt-4 sm:mt-6">
+          <TabsContent value="details" className="mt-6">
             <ItemDetailsTab item={item} onTabChange={handleTabChange} />
           </TabsContent>
           
-          <TabsContent value="tasks" className="mt-4 sm:mt-6">
+          <TabsContent value="tasks" className="mt-6">
             <ItemMaintenanceTab itemId={item.id} highlightTaskId={highlightTaskId} />
           </TabsContent>
           
-          <TabsContent value="documents" className="mt-4 sm:mt-6">
+          <TabsContent value="documents" className="mt-6">
             <ItemDocumentsTab itemId={item.id} />
           </TabsContent>
           
-          <TabsContent value="notes" className="mt-4 sm:mt-6">
+          <TabsContent value="notes" className="mt-6">
             <ItemNotesTab item={item} />
           </TabsContent>
           
-          <TabsContent value="qr" className="mt-4 sm:mt-6">
+          <TabsContent value="qr" className="mt-6">
             <ItemQRTab item={item} />
           </TabsContent>
         </Tabs>
@@ -199,9 +187,9 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
 
       {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-sm sm:max-w-md max-h-[90vh] overflow-y-auto mx-4">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="mobile-text-lg">Edit Item</DialogTitle>
+            <DialogTitle>Edit Item</DialogTitle>
           </DialogHeader>
           <ItemForm 
             item={item}
