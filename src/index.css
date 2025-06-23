@@ -154,6 +154,55 @@
 
   /* Safe area for mobile devices */
   .safe-area-padding {
-    @apply pb-safe-area-inset-bottom;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Drag scroll utilities */
+  .drag-scroll {
+    cursor: grab;
+    user-select: none;
+  }
+
+  .drag-scroll:active {
+    cursor: grabbing;
+  }
+
+  .drag-scroll.dragging {
+    pointer-events: none;
+  }
+
+  .drag-scroll.dragging * {
+    pointer-events: none;
+  }
+
+  /* Mobile item grid */
+  .mobile-items-grid {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .mobile-items-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-items-grid > * {
+    flex: 0 0 calc(33.333% - 0.75rem);
+    scroll-snap-align: start;
+  }
+
+  @media (max-width: 768px) {
+    .mobile-items-grid > * {
+      flex: 0 0 calc(85% - 0.5rem);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .mobile-items-grid > * {
+      flex: 0 0 calc(90% - 0.25rem);
+    }
   }
 }
