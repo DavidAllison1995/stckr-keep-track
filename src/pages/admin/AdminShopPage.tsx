@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -48,6 +49,7 @@ interface Order {
   total_amount: number;
   status: string;
   created_at: string;
+  printful_order_id?: string | null;
   order_items?: {
     id: string;
     quantity: number;
