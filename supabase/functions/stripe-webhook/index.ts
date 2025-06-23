@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -44,71 +43,107 @@ serve(async (req) => {
         const session = event.data.object as Stripe.Checkout.Session;
         console.log("Checkout session completed:", session.id);
 
-        // Update order status to paid
-        const { data: updatedOrder, error } = await supabaseClient
-          .from("orders")
-          .update({ 
-            status: "paid",
-            updated_at: new Date().toISOString()
-          })
-          .eq("stripe_session_id", session.id)
-          .select()
-          .single();
-
-        if (error) {
-          console.error("Error updating order status:", error);
-          throw error;
-        }
-
-        console.log("Order status updated to paid:", updatedOrder.id);
-        
-        // Automatically trigger Printful fulfillment for paid order
         try {
-          console.log("Triggering Printful fulfillment for order:", updatedOrder.id);
+          // Parse items from session metadata
+          const items = JSON.parse(session.metadata?.items || '[]');
+          const userId = session.metadata?.user_id;
+          const userEmail = session.metadata?.user_email;
+
+          if (!userId || !userEmail || !items.length) {
+            throw new Error("Missing required session metadata");
+          }
+
+          console.log("Processing payment for user:", userEmail, "with items:", items);
+
+          // Calculate total amount
+          const totalAmount = items.reduce((total: number, item: any) => {
+            return total + (item.price * item.quantity);
+          }, 0);
+
+          // First, create the order record
+          const { data: order, error: orderError } = await supabaseClient
+            .from("orders")
+            .insert({
+              user_id: userId,
+              user_email: userEmail,
+              status: "paid",
+              total_amount: totalAmount,
+              stripe_session_id: session.id,
+            })
+            .select()
+            .single();
+
+          if (orderError) {
+            console.error("Error creating order:", orderError);
+            throw orderError;
+          }
+
+          console.log("Order created:", order.id);
+
+          // Create order items
+          const orderItems = items.map((item: any) => ({
+            order_id: order.id,
+            product_id: item.product_id,
+            quantity: item.quantity,
+            unit_price: item.price,
+            total_price: item.price * item.quantity,
+          }));
+
+          const { error: itemsError } = await supabaseClient
+            .from("order_items")
+            .insert(orderItems);
+
+          if (itemsError) {
+            console.error("Error creating order items:", itemsError);
+            // Delete the order if items creation fails
+            await supabaseClient.from("orders").delete().eq("id", order.id);
+            throw itemsError;
+          }
+
+          console.log("Order items created successfully");
+
+          // Now attempt Printful fulfillment
+          console.log("Triggering Printful fulfillment for order:", order.id);
           
           const fulfillmentResponse = await supabaseClient.functions.invoke('printful-fulfillment', {
-            body: { orderId: updatedOrder.id }
+            body: { orderId: order.id }
           });
 
           if (fulfillmentResponse.error) {
-            console.error("Error triggering Printful fulfillment:", fulfillmentResponse.error);
-            // Update order status to indicate fulfillment failed
+            console.error("Printful fulfillment failed:", fulfillmentResponse.error);
+            
+            // Update order with fulfillment error but keep it as paid
             await supabaseClient
               .from("orders")
               .update({ 
-                status: "paid", // Keep as paid since payment succeeded
                 fulfillment_error: fulfillmentResponse.error.message,
                 updated_at: new Date().toISOString()
               })
-              .eq("id", updatedOrder.id);
+              .eq("id", order.id);
+              
+            console.log("Order marked with fulfillment error but kept as paid for manual review");
           } else {
-            console.log("Printful fulfillment triggered successfully:", fulfillmentResponse.data);
+            console.log("Printful fulfillment successful:", fulfillmentResponse.data);
           }
-        } catch (fulfillmentError) {
-          console.error("Failed to trigger Printful fulfillment:", fulfillmentError);
-          // Update order with error info but don't fail the webhook
-          await supabaseClient
-            .from("orders")
-            .update({ 
-              fulfillment_error: String(fulfillmentError),
-              updated_at: new Date().toISOString()
-            })
-            .eq("id", updatedOrder.id);
-        }
 
-        // Clear user's cart after successful payment
-        if (session.metadata?.user_id) {
+          // Clear user's cart after successful order creation
           const { error: cartError } = await supabaseClient
             .from("cart_items")
             .delete()
-            .eq("user_id", session.metadata.user_id);
+            .eq("user_id", userId);
 
           if (cartError) {
             console.error("Error clearing cart:", cartError);
           } else {
-            console.log("Cart cleared for user:", session.metadata.user_id);
+            console.log("Cart cleared for user:", userId);
           }
+
+        } catch (error) {
+          console.error("Failed to process completed checkout:", error);
+          // Note: We don't throw here to avoid webhook retry loops
+          // The order creation failure is logged but webhook returns success
         }
+        
         break;
       }
 
@@ -116,19 +151,7 @@ serve(async (req) => {
       case "payment_intent.payment_failed": {
         const session = event.data.object as Stripe.Checkout.Session;
         console.log("Payment failed or expired:", session.id);
-
-        // Update order status to failed
-        const { error } = await supabaseClient
-          .from("orders")
-          .update({ 
-            status: "failed",
-            updated_at: new Date().toISOString()
-          })
-          .eq("stripe_session_id", session.id);
-
-        if (error) {
-          console.error("Error updating order status to failed:", error);
-        }
+        // No order to update since we don't create orders until payment succeeds
         break;
       }
 

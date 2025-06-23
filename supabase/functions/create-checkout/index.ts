@@ -18,35 +18,32 @@ serve(async (req) => {
     
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
     );
 
-    // Get user from auth header
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
-    
-    if (userError || !user?.email) {
-      console.error('User authentication failed:', userError);
+    const { data } = await supabaseClient.auth.getUser(token);
+    const user = data.user;
+
+    if (!user?.email) {
       throw new Error("User not authenticated");
     }
 
     console.log('User authenticated:', user.email);
 
     const { items } = await req.json();
-    
-    if (!items || !Array.isArray(items) || items.length === 0) {
+    console.log('Processing items:', items);
+
+    if (!items || items.length === 0) {
       throw new Error("No items provided");
     }
-
-    console.log('Processing items:', items);
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
 
-    // Check if customer exists
+    // Check for existing customer
     const customers = await stripe.customers.list({
       email: user.email,
       limit: 1,
@@ -60,94 +57,48 @@ serve(async (req) => {
       console.log('No existing customer found, will create one in checkout');
     }
 
-    // Calculate total amount
+    // Calculate total
     const totalAmount = items.reduce((total: number, item: any) => {
       return total + (item.price * item.quantity);
     }, 0);
-
+    
     console.log('Total amount:', totalAmount);
 
-    // Create checkout session
+    // Create Stripe checkout session - NO ORDER CREATION YET
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: items.map((item: any) => ({
         price_data: {
-          currency: "usd",
+          currency: 'usd',
           product_data: {
             name: item.name,
-            description: `Product ID: ${item.product_id}`,
           },
-          unit_amount: Math.round(item.price * 100), // Convert to cents
+          unit_amount: Math.round(item.price * 100),
         },
         quantity: item.quantity,
       })),
-      mode: "payment",
-      success_url: `${req.headers.get("origin")}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin")}/shop`,
+      mode: 'payment',
+      success_url: `${req.headers.get('origin')}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.get('origin')}/shop`,
       metadata: {
         user_id: user.id,
         user_email: user.email,
+        items: JSON.stringify(items), // Store items in metadata for webhook processing
       },
     });
 
     console.log('Stripe session created:', session.id);
 
-    // Create order record
-    const { data: order, error: orderError } = await supabaseClient
-      .from("orders")
-      .insert({
-        user_id: user.id,
-        user_email: user.email,
-        stripe_session_id: session.id,
-        status: "pending",
-        total_amount: totalAmount,
-      })
-      .select()
-      .single();
-
-    if (orderError) {
-      console.error("Error creating order:", orderError);
-      throw new Error("Failed to create order record");
-    }
-
-    console.log('Order created:', order.id);
-
-    // Create order items
-    const orderItems = items.map((item: any) => ({
-      order_id: order.id,
-      product_id: item.product_id,
-      quantity: item.quantity,
-      unit_price: item.price,
-      total_price: item.price * item.quantity,
-    }));
-
-    const { error: itemsError } = await supabaseClient
-      .from("order_items")
-      .insert(orderItems);
-
-    if (itemsError) {
-      console.error("Error creating order items:", itemsError);
-      // Don't throw here as the order is already created
-    } else {
-      console.log('Order items created successfully');
-    }
-
-    return new Response(
-      JSON.stringify({ url: session.url }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      }
-    );
+    return new Response(JSON.stringify({ url: session.url }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
   } catch (error) {
-    console.error("Error creating checkout session:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      }
-    );
+    console.error("Checkout error:", error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
   }
 });
