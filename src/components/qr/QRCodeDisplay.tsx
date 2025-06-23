@@ -115,15 +115,16 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
         // Add QR code image
         pdf.addImage(qrImage, 'PNG', x, y, qrSize, qrSize);
         
-        // Add Stckr icon in center of QR code
+        // Add Stckr icon in center of QR code with bigger square space
         if (iconImg) {
-          const iconSize = qrSize * 0.22; // 22% of QR code size
+          const iconSize = qrSize * 0.28; // Increased from 0.22 to 0.28 (28% of QR code size)
           const centerX = x + qrSize / 2;
           const centerY = y + qrSize / 2;
           
-          // Add white background circle for better contrast
+          // Add larger white square background for better contrast
+          const bgSize = iconSize * 1.1; // Square background slightly larger than icon
           pdf.setFillColor(255, 255, 255);
-          pdf.circle(centerX, centerY, iconSize / 1.8, 'F');
+          pdf.rect(centerX - bgSize/2, centerY - bgSize/2, bgSize, bgSize, 'F');
           
           // Add the Stckr icon
           pdf.addImage(iconImg, 'PNG', 
@@ -162,13 +163,13 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
                     alt={`QR Code ${code.code}`}
                     className="w-full h-auto max-w-[180px] mx-auto"
                   />
-                  {/* Stckr icon overlay for preview */}
+                  {/* Larger square Stckr icon overlay for preview */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
+                    <div className="w-12 h-12 bg-white rounded-sm flex items-center justify-center shadow-sm border border-gray-200">
                       <img 
                         src="/stckr-icon.png" 
                         alt="Stckr" 
-                        className="w-8 h-8"
+                        className="w-10 h-10"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
