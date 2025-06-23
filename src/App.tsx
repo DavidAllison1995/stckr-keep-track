@@ -22,6 +22,7 @@ import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
+import QRRedirectPage from "./pages/QRRedirectPage";
 
 // Route components
 import PublicRoutes from "./routes/PublicRoutes";
