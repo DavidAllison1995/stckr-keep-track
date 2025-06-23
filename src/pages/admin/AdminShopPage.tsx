@@ -2,9 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -18,9 +15,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { 
   Plus, 
@@ -29,17 +23,18 @@ import {
   Eye,
   Package,
   ShoppingCart,
-  DollarSign
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import AdminLayout from '@/components/admin/AdminLayout';
+import ProductForm from '@/components/admin/ProductForm';
 
 interface Product {
   id: string;
   name: string;
   description: string | null;
   price: number;
+  image_url: string | null;
   printful_product_id: string | null;
   printful_variant_id: string | null;
   template_url: string | null;
@@ -73,16 +68,6 @@ const AdminShopPage = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  const [productForm, setProductForm] = useState({
-    name: '',
-    description: '',
-    price: '',
-    printful_product_id: '',
-    printful_variant_id: '',
-    template_url: '',
-    is_active: true,
-  });
-
   useEffect(() => {
     loadProducts();
     loadOrders();
@@ -109,6 +94,7 @@ const AdminShopPage = () => {
 
   const loadOrders = async () => {
     try {
+      // Only load orders that are actually paid (not pending checkout sessions)
       const { data, error } = await supabase
         .from('orders')
         .select(`
@@ -123,6 +109,7 @@ const AdminShopPage = () => {
             )
           )
         `)
+        .in('status', ['paid', 'processing', 'shipped', 'cancelled'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -137,16 +124,9 @@ const AdminShopPage = () => {
     }
   };
 
-  const handleProductSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleProductSubmit = async (productData: any) => {
     setIsLoading(true);
-
     try {
-      const productData = {
-        ...productForm,
-        price: parseFloat(productForm.price),
-      };
-
       if (editingProduct) {
         const { error } = await supabase
           .from('products')
@@ -174,15 +154,6 @@ const AdminShopPage = () => {
 
       setShowProductDialog(false);
       setEditingProduct(null);
-      setProductForm({
-        name: '',
-        description: '',
-        price: '',
-        printful_product_id: '',
-        printful_variant_id: '',
-        template_url: '',
-        is_active: true,
-      });
       loadProducts();
     } catch (error) {
       console.error('Error saving product:', error);
@@ -198,15 +169,6 @@ const AdminShopPage = () => {
 
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product);
-    setProductForm({
-      name: product.name,
-      description: product.description || '',
-      price: product.price.toString(),
-      printful_product_id: product.printful_product_id || '',
-      printful_variant_id: product.printful_variant_id || '',
-      template_url: product.template_url || '',
-      is_active: product.is_active,
-    });
     setShowProductDialog(true);
   };
 
@@ -241,11 +203,9 @@ const AdminShopPage = () => {
       case 'paid':
       case 'shipped':
         return 'default';
-      case 'pending':
       case 'processing':
         return 'secondary';
       case 'cancelled':
-      case 'failed':
         return 'destructive';
       default:
         return 'outline';
@@ -273,103 +233,19 @@ const AdminShopPage = () => {
                   <Package className="w-5 h-5" />
                   Product Catalog
                 </CardTitle>
-                <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
-                  <DialogTrigger asChild>
-                    <Button onClick={() => {
-                      setEditingProduct(null);
-                      setProductForm({
-                        name: '',
-                        description: '',
-                        price: '',
-                        printful_product_id: '',
-                        printful_variant_id: '',
-                        template_url: '',
-                        is_active: true,
-                      });
-                    }}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Product
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>
-                        {editingProduct ? 'Edit Product' : 'Add New Product'}
-                      </DialogTitle>
-                    </DialogHeader>
-                    <form onSubmit={handleProductSubmit} className="space-y-4">
-                      <div>
-                        <Label htmlFor="name">Product Name</Label>
-                        <Input
-                          id="name"
-                          value={productForm.name}
-                          onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea
-                          id="description"
-                          value={productForm.description}
-                          onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="price">Price ($)</Label>
-                        <Input
-                          id="price"
-                          type="number"
-                          step="0.01"
-                          value={productForm.price}
-                          onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="printful_product_id">Printful Product ID</Label>
-                        <Input
-                          id="printful_product_id"
-                          value={productForm.printful_product_id}
-                          onChange={(e) => setProductForm({ ...productForm, printful_product_id: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="printful_variant_id">Printful Variant ID</Label>
-                        <Input
-                          id="printful_variant_id"
-                          value={productForm.printful_variant_id}
-                          onChange={(e) => setProductForm({ ...productForm, printful_variant_id: e.target.value })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="template_url">Template URL</Label>
-                        <Input
-                          id="template_url"
-                          value={productForm.template_url}
-                          onChange={(e) => setProductForm({ ...productForm, template_url: e.target.value })}
-                        />
-                      </div>
-                      <div className="flex justify-end space-x-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setShowProductDialog(false)}
-                        >
-                          Cancel
-                        </Button>
-                        <Button type="submit" disabled={isLoading}>
-                          {isLoading ? 'Saving...' : 'Save Product'}
-                        </Button>
-                      </div>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                <Button onClick={() => {
+                  setEditingProduct(null);
+                  setShowProductDialog(true);
+                }}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Product
+                </Button>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Image</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Price</TableHead>
                       <TableHead>Status</TableHead>
@@ -381,10 +257,25 @@ const AdminShopPage = () => {
                     {products.map((product) => (
                       <TableRow key={product.id}>
                         <TableCell>
+                          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                            {product.image_url ? (
+                              <img 
+                                src={product.image_url} 
+                                alt={product.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <Package className="w-6 h-6 text-gray-400" />
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
                           <div>
                             <div className="font-medium">{product.name}</div>
                             {product.description && (
-                              <div className="text-sm text-gray-500">{product.description}</div>
+                              <div className="text-sm text-gray-500 truncate max-w-xs">
+                                {product.description}
+                              </div>
                             )}
                           </div>
                         </TableCell>
@@ -461,42 +352,13 @@ const AdminShopPage = () => {
                         </TableCell>
                         <TableCell>
                           <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setSelectedOrder(order)}
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Order Details</DialogTitle>
-                              </DialogHeader>
-                              {selectedOrder && (
-                                <div className="space-y-4">
-                                  <div>
-                                    <p><strong>Order ID:</strong> {selectedOrder.id}</p>
-                                    <p><strong>Customer:</strong> {selectedOrder.user_email}</p>
-                                    <p><strong>Status:</strong> {selectedOrder.status}</p>
-                                    <p><strong>Total:</strong> ${selectedOrder.total_amount.toFixed(2)}</p>
-                                  </div>
-                                  {selectedOrder.order_items && (
-                                    <div>
-                                      <h4 className="font-medium">Items:</h4>
-                                      {selectedOrder.order_items.map((item) => (
-                                        <div key={item.id} className="border p-2 rounded">
-                                          <p>{item.products.name}</p>
-                                          <p>Quantity: {item.quantity}</p>
-                                          <p>Price: ${item.total_price.toFixed(2)}</p>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </DialogContent>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedOrder(order)}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
                           </Dialog>
                         </TableCell>
                       </TableRow>
@@ -507,6 +369,18 @@ const AdminShopPage = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Product Form Dialog */}
+        <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <ProductForm
+              product={editingProduct}
+              onSubmit={handleProductSubmit}
+              onCancel={() => setShowProductDialog(false)}
+              isLoading={isLoading}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
