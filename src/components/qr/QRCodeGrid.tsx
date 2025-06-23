@@ -20,20 +20,50 @@ const QRCodeGrid = ({ codes, showDownloadPDF = false }: QRCodeGridProps) => {
 
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
     
-    // Calculate grid layout (3x3) optimized for print
-    const margin = 15;
+    // Clean layout with proper margins for printing
+    const margin = 20;
+    const logoHeight = 25;
+    const logoSpace = 35;
     const qrSize = (pageWidth - margin * 4) / 3;
     const startX = margin;
-    const startY = margin;
+    const startY = margin + logoSpace;
     
-    // Add branded header
-    pdf.setFontSize(18);
-    pdf.text('Stckr Professional QR Batch', pageWidth / 2, 15, { align: 'center' });
+    // Add Stckr logo at top center
+    try {
+      // Load and add the full Stckr logo
+      const logoImg = new Image();
+      logoImg.crossOrigin = 'anonymous';
+      logoImg.src = '/stckr-logo-full.png';
+      
+      await new Promise((resolve, reject) => {
+        logoImg.onload = resolve;
+        logoImg.onerror = reject;
+      });
+      
+      const logoWidth = logoHeight * (logoImg.width / logoImg.height);
+      pdf.addImage(logoImg, 'PNG', (pageWidth - logoWidth) / 2, margin, logoWidth, logoHeight);
+    } catch (error) {
+      console.error('Error loading Stckr logo:', error);
+    }
     
-    pdf.setFontSize(10);
-    pdf.text('Premium quality with square logo placement guides', pageWidth / 2, 22, { align: 'center' });
+    // Load Stckr icon for QR code centers
+    let iconImg: HTMLImageElement | null = null;
+    try {
+      iconImg = new Image();
+      iconImg.crossOrigin = 'anonymous';
+      iconImg.src = '/stckr-icon.png';
+      
+      await new Promise((resolve, reject) => {
+        iconImg!.onload = resolve;
+        iconImg!.onerror = reject;
+      });
+    } catch (error) {
+      console.error('Error loading Stckr icon:', error);
+    }
     
+    // Generate clean 3x3 grid of QR codes
     for (let i = 0; i < Math.min(codes.length, 9); i++) {
       const code = codes[i];
       if (!code.image_url) continue;
@@ -41,50 +71,43 @@ const QRCodeGrid = ({ codes, showDownloadPDF = false }: QRCodeGridProps) => {
       const row = Math.floor(i / 3);
       const col = i % 3;
       const x = startX + col * (qrSize + margin);
-      const y = startY + 30 + row * (qrSize + margin + 15);
+      const y = startY + row * (qrSize + margin);
       
       try {
         // Add QR code image
         pdf.addImage(code.image_url, 'PNG', x, y, qrSize, qrSize);
         
-        // Add code ID with branded styling
-        pdf.setFontSize(9);
-        pdf.text(code.id, x + qrSize / 2, y + qrSize + 8, { align: 'center' });
-        
-        // Add branded URL
-        pdf.setFontSize(7);
-        pdf.text(`stckr.io/qr/${code.id}`, x + qrSize / 2, y + qrSize + 14, { align: 'center' });
-        
-        // Add larger square logo placement guide
-        const centerX = x + qrSize / 2;
-        const centerY = y + qrSize / 2;
-        const logoSize = qrSize * 0.20; // Larger 20% square area
-        
-        pdf.setDrawColor(200, 200, 200);
-        pdf.setFillColor(255, 255, 255);
-        pdf.rect(centerX - logoSize/2, centerY - logoSize/2, logoSize, logoSize, 'FD');
+        // Add Stckr icon in center of QR code
+        if (iconImg) {
+          const iconSize = qrSize * 0.22; // 22% of QR code size
+          const centerX = x + qrSize / 2;
+          const centerY = y + qrSize / 2;
+          
+          // Add white background circle for better contrast
+          pdf.setFillColor(255, 255, 255);
+          pdf.circle(centerX, centerY, iconSize / 1.8, 'F');
+          
+          // Add the Stckr icon
+          pdf.addImage(iconImg, 'PNG', 
+            centerX - iconSize/2, 
+            centerY - iconSize/2, 
+            iconSize, 
+            iconSize
+          );
+        }
         
       } catch (error) {
         console.error(`Error adding QR code ${code.id} to PDF:`, error);
       }
     }
     
-    // Add professional footer
-    pdf.setFontSize(8);
-    pdf.text('Professional grade QR codes with square logo space - High error correction enabled', 
-             pageWidth / 2, pageWidth - 10, { align: 'center' });
-    
-    pdf.save('stckr-professional-qr-batch.pdf');
+    pdf.save('stckr-qr-sheet.pdf');
   };
 
   return (
     <div className="space-y-4">
       {showDownloadPDF && codes.length > 0 && (
-        <div className="flex justify-between items-center">
-          <div>
-            <h3 className="font-semibold">Professional QR Codes</h3>
-            <p className="text-sm text-gray-600">Print-ready with logo placement guides</p>
-          </div>
+        <div className="flex justify-center">
           <Button onClick={downloadPDF} variant="outline" className="flex items-center gap-2">
             <Download className="w-4 h-4" />
             Download Print Sheet
@@ -94,7 +117,7 @@ const QRCodeGrid = ({ codes, showDownloadPDF = false }: QRCodeGridProps) => {
       
       <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
         {codes.slice(0, 9).map((code, index) => (
-          <div key={code.id} className="text-center space-y-2">
+          <div key={code.id} className="text-center">
             <div className="border rounded-lg p-2 bg-white shadow-sm">
               {code.image_url ? (
                 <div className="relative">
@@ -103,10 +126,18 @@ const QRCodeGrid = ({ codes, showDownloadPDF = false }: QRCodeGridProps) => {
                     alt={`QR Code ${code.id}`}
                     className="w-full h-auto max-w-[150px] mx-auto"
                   />
-                  {/* Larger square logo space indicator */}
+                  {/* Stckr icon overlay for preview */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-10 h-10 bg-white bg-opacity-95 border-2 border-gray-300 border-dashed flex items-center justify-center">
-                      <span className="text-xs text-gray-400 font-bold">LOGO</span>
+                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm">
+                      <img 
+                        src="/stckr-icon.png" 
+                        alt="Stckr" 
+                        className="w-6 h-6"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -116,15 +147,13 @@ const QRCodeGrid = ({ codes, showDownloadPDF = false }: QRCodeGridProps) => {
                 </div>
               )}
             </div>
-            <div className="text-sm font-mono font-semibold">{code.id}</div>
-            <div className="text-xs text-gray-500">stckr.io/qr/{code.id}</div>
           </div>
         ))}
       </div>
       
       {codes.length > 0 && (
         <div className="text-center text-sm text-gray-600 mt-4 bg-blue-50 p-3 rounded-lg">
-          <strong>Ready for Production:</strong> High-resolution QR codes with larger square logo space for professional branding
+          <strong>Print Ready:</strong> Clean branded QR sheet with Stckr logo - ready for Printful
         </div>
       )}
     </div>
