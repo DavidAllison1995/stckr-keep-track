@@ -82,9 +82,9 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
   };
 
   const generateQRCodeImageUrl = (code: string) => {
-    // Use the branded deep link format with high quality settings
+    // Use the branded deep link format with high quality settings and larger logo space
     const qrUrl = `https://stckr.io/qr/${code}`;
-    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrUrl)}&ecc=H&color=000000&bgcolor=FFFFFF&margin=20`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrUrl)}&ecc=H&color=000000&bgcolor=FFFFFF&margin=25`;
   };
 
   if (!item.qr_code_id) {
@@ -134,16 +134,24 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
           {/* QR Code Display */}
           <div className="text-center">
             <div className="inline-block p-4 bg-white rounded-lg border-2 border-gray-200 shadow-sm">
-              <img
-                src={generateQRCodeImageUrl(item.qr_code_id)}
-                alt="QR Code"
-                className="w-48 h-48 mx-auto"
-                onError={(e) => {
-                  // Fallback to a simple QR code placeholder
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                }}
-              />
+              <div className="relative">
+                <img
+                  src={generateQRCodeImageUrl(item.qr_code_id)}
+                  alt="QR Code"
+                  className="w-48 h-48 mx-auto"
+                  onError={(e) => {
+                    // Fallback to a simple QR code placeholder
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
+                {/* Larger square logo space indicator */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-12 h-12 bg-white bg-opacity-95 border-2 border-gray-300 border-dashed flex items-center justify-center">
+                    <span className="text-xs text-gray-500 font-bold">LOGO</span>
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="mt-4 space-y-2">
               <Badge variant="secondary" className="text-sm font-mono">

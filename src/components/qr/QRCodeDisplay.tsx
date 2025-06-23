@@ -27,13 +27,13 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
           // Use the branded deep link format
           const url = `https://stckr.io/qr/${code.code}`;
           const qrDataUrl = await QRCode.toDataURL(url, {
-            width: 400,
-            margin: 2,
+            width: 500, // Larger size for better quality
+            margin: 3, // Larger margin for logo space
             color: {
               dark: '#000000',
               light: '#FFFFFF'
             },
-            errorCorrectionLevel: 'H', // High error correction for logo space
+            errorCorrectionLevel: 'H', // High error correction for larger logo space
             type: 'image/png',
             quality: 1.0,
             rendererOpts: {
@@ -71,7 +71,7 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
     pdf.text('Stckr Premium QR Code Sheet', pageWidth / 2, 15, { align: 'center' });
     
     pdf.setFontSize(10);
-    pdf.text('High-resolution codes with logo space - Ready for printing', pageWidth / 2, 22, { align: 'center' });
+    pdf.text('High-resolution codes with square logo space - Ready for printing', pageWidth / 2, 22, { align: 'center' });
     
     for (let i = 0; i < Math.min(codes.length, 9); i++) {
       const code = codes[i];
@@ -96,14 +96,14 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
         pdf.setFontSize(7);
         pdf.text(`stckr.io/qr/${code.code}`, x + qrSize / 2, y + qrSize + 14, { align: 'center' });
         
-        // Add center indicator for logo placement (light gray circle)
+        // Add larger square indicator for logo placement
         const centerX = x + qrSize / 2;
         const centerY = y + qrSize / 2;
-        const logoRadius = qrSize * 0.12; // ~25% of QR size for logo space
+        const logoSize = qrSize * 0.20; // Larger 20% square area for logo
         
         pdf.setDrawColor(200, 200, 200);
         pdf.setFillColor(255, 255, 255);
-        pdf.circle(centerX, centerY, logoRadius, 'FD');
+        pdf.rect(centerX - logoSize/2, centerY - logoSize/2, logoSize, logoSize, 'FD');
         
       } catch (error) {
         console.error(`Error adding QR code ${code.code} to PDF:`, error);
@@ -112,7 +112,7 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
     
     // Add footer with instructions
     pdf.setFontSize(8);
-    pdf.text('Instructions: White circles indicate logo placement area. Codes use high error correction.', 
+    pdf.text('Instructions: White squares indicate logo placement area. Codes use high error correction for larger logos.', 
              pageWidth / 2, pageWidth - 10, { align: 'center' });
     
     pdf.save('stckr-premium-qr-codes.pdf');
@@ -142,9 +142,9 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
                     alt={`QR Code ${code.code}`}
                     className="w-full h-auto max-w-[180px] mx-auto"
                   />
-                  {/* Logo space indicator */}
+                  {/* Larger square logo space indicator */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-8 h-8 bg-white bg-opacity-90 rounded-full border-2 border-gray-300 border-dashed flex items-center justify-center">
+                    <div className="w-12 h-12 bg-white bg-opacity-95 border-2 border-gray-300 border-dashed flex items-center justify-center">
                       <span className="text-xs text-gray-500 font-bold">LOGO</span>
                     </div>
                   </div>
@@ -162,7 +162,7 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
       </div>
       
       <div className="text-center text-sm text-gray-600 mt-4 bg-blue-50 p-3 rounded-lg">
-        <strong>Print Ready:</strong> Each QR code includes space for the Stckr logo and uses high error correction for reliable scanning
+        <strong>Print Ready:</strong> Each QR code includes larger square space for the Stckr logo with high error correction for reliable scanning
       </div>
     </div>
   );
