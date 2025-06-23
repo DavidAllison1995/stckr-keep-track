@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,6 +39,7 @@ interface Product {
   template_url: string | null;
   is_active: boolean;
   created_at: string;
+  updated_at: string;
 }
 
 interface Order {
@@ -77,7 +77,7 @@ const AdminShopPage = () => {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select('id, name, description, price, image_url, printful_product_id, printful_variant_id, template_url, is_active, created_at, updated_at')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
