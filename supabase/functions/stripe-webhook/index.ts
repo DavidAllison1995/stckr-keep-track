@@ -57,26 +57,43 @@ serve(async (req) => {
 
         if (error) {
           console.error("Error updating order status:", error);
-        } else {
-          console.log("Order status updated to paid");
-          
-          // Trigger Printful fulfillment for paid order
-          try {
-            console.log("Triggering Printful fulfillment for order:", updatedOrder.id);
-            
-            const fulfillmentResponse = await supabaseClient.functions.invoke('printful-fulfillment', {
-              body: { orderId: updatedOrder.id }
-            });
+          throw error;
+        }
 
-            if (fulfillmentResponse.error) {
-              console.error("Error triggering Printful fulfillment:", fulfillmentResponse.error);
-            } else {
-              console.log("Printful fulfillment triggered successfully");
-            }
-          } catch (fulfillmentError) {
-            console.error("Failed to trigger Printful fulfillment:", fulfillmentError);
-            // Don't fail the webhook - the order is still paid
+        console.log("Order status updated to paid:", updatedOrder.id);
+        
+        // Automatically trigger Printful fulfillment for paid order
+        try {
+          console.log("Triggering Printful fulfillment for order:", updatedOrder.id);
+          
+          const fulfillmentResponse = await supabaseClient.functions.invoke('printful-fulfillment', {
+            body: { orderId: updatedOrder.id }
+          });
+
+          if (fulfillmentResponse.error) {
+            console.error("Error triggering Printful fulfillment:", fulfillmentResponse.error);
+            // Update order status to indicate fulfillment failed
+            await supabaseClient
+              .from("orders")
+              .update({ 
+                status: "paid", // Keep as paid since payment succeeded
+                fulfillment_error: fulfillmentResponse.error.message,
+                updated_at: new Date().toISOString()
+              })
+              .eq("id", updatedOrder.id);
+          } else {
+            console.log("Printful fulfillment triggered successfully:", fulfillmentResponse.data);
           }
+        } catch (fulfillmentError) {
+          console.error("Failed to trigger Printful fulfillment:", fulfillmentError);
+          // Update order with error info but don't fail the webhook
+          await supabaseClient
+            .from("orders")
+            .update({ 
+              fulfillment_error: String(fulfillmentError),
+              updated_at: new Date().toISOString()
+            })
+            .eq("id", updatedOrder.id);
         }
 
         // Clear user's cart after successful payment

@@ -50,21 +50,32 @@ serve(async (req) => {
 
     console.log('Order found:', order);
 
+    // Validate that all products have Printful variant IDs
+    const invalidProducts = order.order_items.filter((item: any) => 
+      !item.product.printful_variant_id
+    );
+
+    if (invalidProducts.length > 0) {
+      console.error('Products missing Printful variant IDs:', invalidProducts);
+      throw new Error('Some products are not configured for Printful fulfillment');
+    }
+
     // Prepare Printful order data
     const printfulItems = order.order_items.map((item: any) => ({
-      variant_id: item.product.printful_variant_id,
+      variant_id: parseInt(item.product.printful_variant_id),
       quantity: item.quantity,
       name: item.product.name,
     }));
 
     const printfulOrder = {
       external_id: order.id,
-      shipping: "STANDARD", // You can make this configurable
+      shipping: "STANDARD",
       recipient: {
-        name: order.user_email.split('@')[0], // Basic name from email
+        name: order.user_email.split('@')[0], // Basic name from email - you'll want to collect actual shipping info
         email: order.user_email,
-        // You'll want to collect shipping address during checkout
-        address1: "123 Main St", // Placeholder - you'll need to collect this
+        // Note: You'll need to collect actual shipping address during checkout
+        // For now using placeholder values
+        address1: "123 Main St",
         city: "City",
         state_code: "CA",
         country_code: "US",
@@ -94,11 +105,12 @@ serve(async (req) => {
 
     console.log('Printful order created:', printfulResult.result);
 
-    // Update order status to processing
+    // Update order status to processing and store Printful order ID
     const { error: updateError } = await supabaseClient
       .from('orders')
       .update({ 
         status: 'processing',
+        printful_order_id: printfulResult.result.id,
         updated_at: new Date().toISOString()
       })
       .eq('id', orderId);
@@ -109,14 +121,18 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       success: true, 
-      printfulOrderId: printfulResult.result.id 
+      printfulOrderId: printfulResult.result.id,
+      message: 'Order sent to Printful for fulfillment'
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
     console.error("Printful fulfillment error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      success: false 
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

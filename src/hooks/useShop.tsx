@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from './useSupabaseAuth';
@@ -419,23 +418,57 @@ export const useShop = () => {
     }
   };
 
-  // Get order status display info
+  // Get order status display info with Printful integration
   const getOrderStatusInfo = (status: string) => {
     switch (status) {
       case 'pending':
-        return { label: 'Pending Payment', color: 'yellow', description: 'Waiting for payment confirmation' };
+        return { 
+          label: 'Pending Payment', 
+          color: 'yellow', 
+          description: 'Waiting for payment confirmation' 
+        };
       case 'paid':
-        return { label: 'Payment Confirmed', color: 'green', description: 'Payment received, preparing for fulfillment' };
+        return { 
+          label: 'Payment Confirmed', 
+          color: 'green', 
+          description: 'Payment received, preparing for fulfillment' 
+        };
       case 'processing':
-        return { label: 'Processing', color: 'blue', description: 'Order sent to Printful for production' };
+        return { 
+          label: 'Processing', 
+          color: 'blue', 
+          description: 'Order sent to Printful for production' 
+        };
       case 'shipped':
-        return { label: 'Shipped', color: 'purple', description: 'Your stickers are on the way!' };
+        return { 
+          label: 'Shipped', 
+          color: 'purple', 
+          description: 'Your stickers are on the way!' 
+        };
+      case 'delivered':
+        return { 
+          label: 'Delivered', 
+          color: 'green', 
+          description: 'Order has been delivered' 
+        };
       case 'failed':
-        return { label: 'Payment Failed', color: 'red', description: 'Payment was not successful' };
+        return { 
+          label: 'Payment Failed', 
+          color: 'red', 
+          description: 'Payment was not successful' 
+        };
       case 'cancelled':
-        return { label: 'Cancelled', color: 'gray', description: 'Order was cancelled' };
+        return { 
+          label: 'Cancelled', 
+          color: 'gray', 
+          description: 'Order was cancelled' 
+        };
       default:
-        return { label: status, color: 'gray', description: '' };
+        return { 
+          label: status, 
+          color: 'gray', 
+          description: '' 
+        };
     }
   };
 
