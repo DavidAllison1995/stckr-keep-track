@@ -1,43 +1,31 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, QrCode, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import QRScannerOverlay from '@/components/qr/QRScannerOverlay';
-
 const ScannerPage = () => {
   const navigate = useNavigate();
   const [showScanner, setShowScanner] = useState(false);
   const [scannedCode, setScannedCode] = useState<string | null>(null);
-
   const handleScan = (result: string) => {
     console.log('QR Code scanned:', result);
     setScannedCode(result);
     setShowScanner(false);
   };
-
   const handleStartScan = () => {
     setShowScanner(true);
     setScannedCode(null);
   };
-
   const handleCloseScanner = () => {
     setShowScanner(false);
     setScannedCode(null);
   };
-
-  return (
-    <div className="p-4 pb-20 space-y-6">
+  return <div className="p-4 pb-20 space-y-6">
       {/* Header with Buy Stickers Button */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate(-1)}
-            className="p-2"
-          >
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="p-2">
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="flex items-center gap-2">
@@ -46,12 +34,7 @@ const ScannerPage = () => {
           </div>
         </div>
         
-        <Button
-          onClick={() => navigate('/shop')}
-          variant="outline"
-          size="sm"
-          className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-        >
+        <Button onClick={() => navigate('/shop')} variant="outline" size="sm" className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100">
           <ShoppingCart className="w-4 h-4 mr-2" />
           Buy Stickers
         </Button>
@@ -90,7 +73,7 @@ const ScannerPage = () => {
               </li>
               <li className="flex gap-2">
                 <span className="text-blue-600">2.</span>
-                <span>Point your camera at any QR code</span>
+                <span>Point your camera at your STCKR QR code</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-blue-600">3.</span>
@@ -106,13 +89,7 @@ const ScannerPage = () => {
       </Card>
 
       {/* QR Scanner Overlay */}
-      <QRScannerOverlay
-        isOpen={showScanner}
-        onClose={handleCloseScanner}
-        scannedCode={scannedCode}
-      />
-    </div>
-  );
+      <QRScannerOverlay isOpen={showScanner} onClose={handleCloseScanner} scannedCode={scannedCode} />
+    </div>;
 };
-
 export default ScannerPage;
