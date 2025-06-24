@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useShop } from '@/hooks/useShop';
+import { useCart } from '@/contexts/CartContext';
 
 const ShopSuccessPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { clearCart, loadOrders } = useShop();
+  const { loadOrders } = useShop();
+  const { clearCart } = useCart();
   const sessionId = searchParams.get('session_id');
 
   useEffect(() => {
