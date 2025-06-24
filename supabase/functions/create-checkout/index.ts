@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -64,7 +63,7 @@ serve(async (req) => {
     
     console.log('Total amount:', totalAmount);
 
-    // Create Stripe checkout session with shipping address collection
+    // Create Stripe checkout session with shipping address collection for all Printful supported countries
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -80,7 +79,18 @@ serve(async (req) => {
       })),
       mode: 'payment',
       shipping_address_collection: {
-        allowed_countries: ['GB', 'US', 'CA', 'AU', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE'],
+        allowed_countries: [
+          // North America
+          'US', 'CA', 'MX',
+          // Europe
+          'GB', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'CH', 'IE', 'PT', 'LU',
+          'SE', 'NO', 'DK', 'FI', 'PL', 'CZ', 'SK', 'HU', 'SI', 'HR', 'EE', 'LV', 'LT',
+          'RO', 'BG', 'GR', 'CY', 'MT',
+          // Asia-Pacific
+          'AU', 'NZ', 'JP', 'SG', 'HK', 'MY', 'TH', 'KR',
+          // Other regions
+          'BR', 'IL', 'ZA', 'IN', 'PH', 'VN', 'ID', 'TW'
+        ],
       },
       success_url: `${req.headers.get('origin')}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get('origin')}/shop`,
@@ -91,7 +101,7 @@ serve(async (req) => {
       },
     });
 
-    console.log('Stripe session created with shipping collection:', session.id);
+    console.log('Stripe session created with shipping collection for all Printful countries:', session.id);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

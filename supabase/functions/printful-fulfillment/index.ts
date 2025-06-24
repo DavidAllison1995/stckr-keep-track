@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -101,29 +100,69 @@ serve(async (req) => {
 
     console.log('Printful items prepared:', printfulItems);
 
-    // Map country codes for Printful compatibility
+    // Enhanced country code mapping for all Printful supported countries
     const getCountryCode = (country: string) => {
       const countryMap: { [key: string]: string } = {
-        'GB': 'GB',
-        'United Kingdom': 'GB',
-        'US': 'US',
-        'United States': 'US',
-        'CA': 'CA',
-        'Canada': 'CA',
-        'AU': 'AU',
-        'Australia': 'AU',
-        'DE': 'DE',
-        'Germany': 'DE',
-        'FR': 'FR',
-        'France': 'FR',
-        'IT': 'IT',
-        'Italy': 'IT',
-        'ES': 'ES',
-        'Spain': 'ES',
-        'NL': 'NL',
-        'Netherlands': 'NL',
-        'BE': 'BE',
-        'Belgium': 'BE',
+        // North America
+        'US': 'US', 'United States': 'US', 'USA': 'US',
+        'CA': 'CA', 'Canada': 'CA',
+        'MX': 'MX', 'Mexico': 'MX',
+        
+        // Europe
+        'GB': 'GB', 'United Kingdom': 'GB', 'UK': 'GB',
+        'DE': 'DE', 'Germany': 'DE', 'Deutschland': 'DE',
+        'FR': 'FR', 'France': 'FR',
+        'IT': 'IT', 'Italy': 'IT', 'Italia': 'IT',
+        'ES': 'ES', 'Spain': 'ES', 'España': 'ES',
+        'NL': 'NL', 'Netherlands': 'NL', 'Holland': 'NL',
+        'BE': 'BE', 'Belgium': 'BE', 'België': 'BE',
+        'AT': 'AT', 'Austria': 'AT', 'Österreich': 'AT',
+        'CH': 'CH', 'Switzerland': 'CH', 'Schweiz': 'CH',
+        'IE': 'IE', 'Ireland': 'IE',
+        'PT': 'PT', 'Portugal': 'PT',
+        'LU': 'LU', 'Luxembourg': 'LU',
+        
+        // Nordic countries
+        'SE': 'SE', 'Sweden': 'SE', 'Sverige': 'SE',
+        'NO': 'NO', 'Norway': 'NO', 'Norge': 'NO',
+        'DK': 'DK', 'Denmark': 'DK', 'Danmark': 'DK',
+        'FI': 'FI', 'Finland': 'FI', 'Suomi': 'FI',
+        
+        // Eastern Europe
+        'PL': 'PL', 'Poland': 'PL', 'Polska': 'PL',
+        'CZ': 'CZ', 'Czech Republic': 'CZ', 'Czechia': 'CZ',
+        'SK': 'SK', 'Slovakia': 'SK',
+        'HU': 'HU', 'Hungary': 'HU',
+        'SI': 'SI', 'Slovenia': 'SI',
+        'HR': 'HR', 'Croatia': 'HR',
+        'EE': 'EE', 'Estonia': 'EE',
+        'LV': 'LV', 'Latvia': 'LV',
+        'LT': 'LT', 'Lithuania': 'LT',
+        'RO': 'RO', 'Romania': 'RO',
+        'BG': 'BG', 'Bulgaria': 'BG',
+        'GR': 'GR', 'Greece': 'GR',
+        'CY': 'CY', 'Cyprus': 'CY',
+        'MT': 'MT', 'Malta': 'MT',
+        
+        // Asia-Pacific
+        'AU': 'AU', 'Australia': 'AU',
+        'NZ': 'NZ', 'New Zealand': 'NZ',
+        'JP': 'JP', 'Japan': 'JP',
+        'SG': 'SG', 'Singapore': 'SG',
+        'HK': 'HK', 'Hong Kong': 'HK',
+        'MY': 'MY', 'Malaysia': 'MY',
+        'TH': 'TH', 'Thailand': 'TH',
+        'KR': 'KR', 'South Korea': 'KR', 'Korea': 'KR',
+        
+        // Other regions
+        'BR': 'BR', 'Brazil': 'BR', 'Brasil': 'BR',
+        'IL': 'IL', 'Israel': 'IL',
+        'ZA': 'ZA', 'South Africa': 'ZA',
+        'IN': 'IN', 'India': 'IN',
+        'PH': 'PH', 'Philippines': 'PH',
+        'VN': 'VN', 'Vietnam': 'VN',
+        'ID': 'ID', 'Indonesia': 'ID',
+        'TW': 'TW', 'Taiwan': 'TW',
       };
       return countryMap[country] || country;
     };
