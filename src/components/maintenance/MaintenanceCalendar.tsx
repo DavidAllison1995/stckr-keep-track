@@ -539,11 +539,37 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
         <div className="space-y-1">
           {/* Title and Add Button Row */}
           <div className="flex items-center justify-between">
+            <h1 className="text-lg font-bold">Maintenance Calendar</h1>
             {onAddTask && (
               <Button onClick={onAddTask} size="sm" className="bg-blue-500 hover:bg-blue-600 text-white p-1 h-8 w-8">
                 <Plus className="w-4 h-4" />
               </Button>
             )}
+          </div>
+          
+          {/* Mobile Status Tiles Row - Positioned after title */}
+          <div className="flex justify-between gap-2 mb-1">
+            <button
+              onClick={() => handleStatusTileClick('up-to-date')}
+              className="flex flex-col items-center gap-1 bg-green-50 border border-green-200 rounded-lg px-3 py-2 flex-1 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+            >
+              <CheckCircle className="w-4 h-4 text-green-600" />
+              <span className="text-sm font-semibold text-green-800">{statusCounts.upToDate}</span>
+            </button>
+            <button
+              onClick={() => handleStatusTileClick('due-soon')}
+              className="flex flex-col items-center gap-1 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 flex-1 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+            >
+              <Clock className="w-4 h-4 text-yellow-600" />
+              <span className="text-sm font-semibold text-yellow-800">{statusCounts.dueSoon}</span>
+            </button>
+            <button
+              onClick={() => handleStatusTileClick('overdue')}
+              className="flex flex-col items-center gap-1 bg-red-50 border border-red-200 rounded-lg px-3 py-2 flex-1 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+            >
+              <AlertTriangle className="w-4 h-4 text-red-600" />
+              <span className="text-sm font-semibold text-red-800">{statusCounts.overdue}</span>
+            </button>
           </div>
           
           {/* View Toggle Row */}
@@ -584,31 +610,6 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-7 text-xs py-1 h-8"
             />
-          </div>
-          
-          {/* Mobile Status Tiles Row - Clickable (positioned above calendar) */}
-          <div className="flex justify-between gap-2 mb-1">
-            <button
-              onClick={() => handleStatusTileClick('up-to-date')}
-              className="flex flex-col items-center gap-1 bg-green-50 border border-green-200 rounded-lg px-3 py-2 flex-1 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
-            >
-              <CheckCircle className="w-4 h-4 text-green-600" />
-              <span className="text-sm font-semibold text-green-800">{statusCounts.upToDate}</span>
-            </button>
-            <button
-              onClick={() => handleStatusTileClick('due-soon')}
-              className="flex flex-col items-center gap-1 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 flex-1 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
-            >
-              <Clock className="w-4 h-4 text-yellow-600" />
-              <span className="text-sm font-semibold text-yellow-800">{statusCounts.dueSoon}</span>
-            </button>
-            <button
-              onClick={() => handleStatusTileClick('overdue')}
-              className="flex flex-col items-center gap-1 bg-red-50 border border-red-200 rounded-lg px-3 py-2 flex-1 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
-            >
-              <AlertTriangle className="w-4 h-4 text-red-600" />
-              <span className="text-sm font-semibold text-red-800">{statusCounts.overdue}</span>
-            </button>
           </div>
         </div>
       ) : (
