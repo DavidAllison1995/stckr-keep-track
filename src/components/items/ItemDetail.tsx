@@ -17,6 +17,7 @@ import {
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { Item } from '@/hooks/useSupabaseItems';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ItemForm from './ItemForm';
 import ItemDetailsTab from './ItemDetailsTab';
@@ -38,46 +39,38 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
   const { deleteItem } = useSupabaseItems();
   const navigate = useNavigate();
   const location = useLocation();
+  const isMobile = useIsMobile();
 
-  // Normalize tab names - handle both 'maintenance' and 'tasks' as they refer to the same tab
   const normalizeTabName = (tabName: string) => {
     if (tabName === 'maintenance') return 'tasks';
     return tabName;
   };
 
-  // Get the tab from URL params, falling back to defaultTab, and normalize it
   const urlTab = normalizeTabName(searchParams.get('tab') || defaultTab);
   console.log('ItemDetail - URL tab:', searchParams.get('tab'), 'Normalized to:', urlTab, 'Default tab:', defaultTab);
 
-  // Initialize activeTab from normalized URL or defaultTab
   const [activeTab, setActiveTab] = useState(urlTab);
 
-  // Update active tab when URL parameters change
   useEffect(() => {
     const tabParam = normalizeTabName(searchParams.get('tab') || defaultTab);
     console.log('ItemDetail - Tab param from URL:', searchParams.get('tab'), 'Normalized to:', tabParam, 'Current active tab:', activeTab);
     setActiveTab(tabParam);
   }, [searchParams, defaultTab]);
 
-  // Log when activeTab changes
   useEffect(() => {
     console.log('ItemDetail - Active tab changed to:', activeTab);
   }, [activeTab]);
 
   const handleDeleteItem = async () => {
     try {
-      // Check if we're on the standalone item detail page
       const isStandalonePage = location.pathname.includes(`/items/${item.id}`);
       
-      // If on standalone page, navigate away first to prevent "item not found" error
       if (isStandalonePage) {
         navigate('/items', { replace: true });
       }
       
-      // Delete the item (matches ItemCard approach)
       await deleteItem(item.id);
       
-      // If in modal context, close the modal
       if (!isStandalonePage) {
         onClose();
       }
@@ -90,7 +83,6 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
     console.log('ItemDetail - Tab changed to:', value);
     setActiveTab(value);
     
-    // Update URL params without reloading - use the actual tab name in URL
     const newSearchParams = new URLSearchParams(searchParams);
     newSearchParams.set('tab', value);
     setSearchParams(newSearchParams);
@@ -100,38 +92,41 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
+          <div className="flex items-center gap-2 md:gap-3">
+            <Button variant="ghost" size="sm" onClick={onClose} className="p-2 md:px-3">
+              <ArrowLeft className="w-4 h-4 md:mr-2" />
+              {!isMobile && <span>Back</span>}
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">{item.name}</h1>
-              <p className="text-gray-600">{item.category}</p>
+              <h1 className="text-xl md:text-2xl font-bold">{item.name}</h1>
+              <p className="text-sm md:text-base text-gray-600">{item.category}</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1 md:gap-2">
             <Button 
               variant="outline" 
+              size={isMobile ? "sm" : "default"}
               onClick={() => setIsEditModalOpen(true)}
+              className={isMobile ? "px-2" : ""}
             >
-              <Edit className="w-4 h-4 mr-2" />
-              Edit
+              <Edit className="w-4 h-4 md:mr-2" />
+              {!isMobile && <span>Edit</span>}
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button 
                   variant="outline"
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                  size={isMobile ? "sm" : "default"}
+                  className={`text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 ${isMobile ? "px-2" : ""}`}
                 >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
+                  <Trash2 className="w-4 h-4 md:mr-2" />
+                  {!isMobile && <span>Delete</span>}
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+              <AlertDialogContent className={isMobile ? "max-w-sm mx-4" : ""}>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete Item</AlertDialogTitle>
                   <AlertDialogDescription>
@@ -139,11 +134,11 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
                     All maintenance tasks and documents associated with this item will also be deleted.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogFooter className={isMobile ? "flex-col space-y-2" : ""}>
+                  <AlertDialogCancel className={isMobile ? "w-full" : ""}>Cancel</AlertDialogCancel>
                   <AlertDialogAction 
                     onClick={handleDeleteItem}
-                    className="bg-red-600 hover:bg-red-700"
+                    className={`bg-red-600 hover:bg-red-700 ${isMobile ? "w-full" : ""}`}
                   >
                     Delete Item
                   </AlertDialogAction>
@@ -155,31 +150,43 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="tasks">Tasks</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-            <TabsTrigger value="notes">Notes</TabsTrigger>
-            <TabsTrigger value="qr">QR Code</TabsTrigger>
+          <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 h-auto' : 'grid-cols-5'}`}>
+            <TabsTrigger value="details" className={isMobile ? "text-xs py-2" : ""}>Details</TabsTrigger>
+            <TabsTrigger value="tasks" className={isMobile ? "text-xs py-2" : ""}>Tasks</TabsTrigger>
+            {!isMobile && (
+              <>
+                <TabsTrigger value="documents">Documents</TabsTrigger>
+                <TabsTrigger value="notes">Notes</TabsTrigger>
+                <TabsTrigger value="qr">QR Code</TabsTrigger>
+              </>
+            )}
           </TabsList>
           
-          <TabsContent value="details" className="mt-6">
+          {isMobile && (
+            <div className="flex gap-1 mt-2 overflow-x-auto">
+              <TabsTrigger value="documents" className="text-xs py-2 px-3 whitespace-nowrap">Documents</TabsTrigger>
+              <TabsTrigger value="notes" className="text-xs py-2 px-3 whitespace-nowrap">Notes</TabsTrigger>
+              <TabsTrigger value="qr" className="text-xs py-2 px-3 whitespace-nowrap">QR Code</TabsTrigger>
+            </div>
+          )}
+          
+          <TabsContent value="details" className={isMobile ? "mt-4" : "mt-6"}>
             <ItemDetailsTab item={item} onTabChange={handleTabChange} />
           </TabsContent>
           
-          <TabsContent value="tasks" className="mt-6">
+          <TabsContent value="tasks" className={isMobile ? "mt-4" : "mt-6"}>
             <ItemMaintenanceTab itemId={item.id} highlightTaskId={highlightTaskId} />
           </TabsContent>
           
-          <TabsContent value="documents" className="mt-6">
+          <TabsContent value="documents" className={isMobile ? "mt-4" : "mt-6"}>
             <ItemDocumentsTab itemId={item.id} />
           </TabsContent>
           
-          <TabsContent value="notes" className="mt-6">
+          <TabsContent value="notes" className={isMobile ? "mt-4" : "mt-6"}>
             <ItemNotesTab item={item} />
           </TabsContent>
           
-          <TabsContent value="qr" className="mt-6">
+          <TabsContent value="qr" className={isMobile ? "mt-4" : "mt-6"}>
             <ItemQRTab item={item} />
           </TabsContent>
         </Tabs>
@@ -187,7 +194,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
 
       {/* Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className={`${isMobile ? 'max-w-sm mx-4' : 'max-w-md'} max-h-[90vh] overflow-y-auto`}>
           <DialogHeader>
             <DialogTitle>Edit Item</DialogTitle>
           </DialogHeader>

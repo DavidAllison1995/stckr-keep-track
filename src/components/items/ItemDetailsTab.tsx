@@ -1,10 +1,11 @@
-
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { Item } from '@/hooks/useSupabaseItems';
+import { useIsMobile } from '@/hooks/use-mobile';
 import MaintenanceSummaryCard from './MaintenanceSummaryCard';
 import DocumentsCard from './DocumentsCard';
 import ItemInfoCard from './ItemInfoCard';
 import ItemPhotoCard from './ItemPhotoCard';
+import MobileItemDetailsTab from './mobile/MobileItemDetailsTab';
 
 interface ItemDetailsTabProps {
   item: Item;
@@ -12,14 +13,19 @@ interface ItemDetailsTabProps {
 }
 
 const ItemDetailsTab = ({ item, onTabChange }: ItemDetailsTabProps) => {
+  const isMobile = useIsMobile();
   const { getTasksByItem } = useSupabaseMaintenance();
 
-  // Get active and completed tasks for this item
-  const activeTasks = getTasksByItem(item.id, false); // Don't include completed
-  const allTasks = getTasksByItem(item.id, true); // Include completed
+  // If mobile, use the mobile-optimized version
+  if (isMobile) {
+    return <MobileItemDetailsTab item={item} onTabChange={onTabChange} />;
+  }
+
+  // Desktop version - keep existing code
+  const activeTasks = getTasksByItem(item.id, false);
+  const allTasks = getTasksByItem(item.id, true);
   const completedTasks = allTasks.filter(task => task.status === 'completed');
 
-  // Calculate next task and recently completed
   const nextTask = activeTasks
     .filter(task => task.status !== 'completed')
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
