@@ -35,6 +35,8 @@ interface CartContextType {
   clearCart: () => Promise<void>;
   getCartTotal: () => number;
   getCartItemCount: () => number;
+  getNewItemsCount: () => number;
+  markCartAsViewed: () => void;
   isLoading: boolean;
 }
 
@@ -58,12 +60,14 @@ export const CartProvider = ({ children, products }: CartProviderProps) => {
   const { toast } = useToast();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [lastViewedCount, setLastViewedCount] = useState(0);
 
   // Load cart items from database
   const loadCartItems = async (skipLogging = false) => {
     if (!user) {
       if (!skipLogging) console.log('No user, clearing cart');
       setCartItems([]);
+      setLastViewedCount(0);
       return;
     }
 
@@ -85,6 +89,12 @@ export const CartProvider = ({ children, products }: CartProviderProps) => {
       
       if (!skipLogging) console.log('Cart items loaded:', data);
       setCartItems(data || []);
+      
+      // Set initial viewed count to current count to avoid showing badge on first load
+      if (data) {
+        const totalCount = data.reduce((count, item) => count + item.quantity, 0);
+        setLastViewedCount(totalCount);
+      }
     } catch (error) {
       console.error('Error loading cart:', error);
       toast({
@@ -303,6 +313,7 @@ export const CartProvider = ({ children, products }: CartProviderProps) => {
         throw error;
       }
       setCartItems([]);
+      setLastViewedCount(0);
     } catch (error) {
       console.error('Error clearing cart:', error);
     }
@@ -324,6 +335,21 @@ export const CartProvider = ({ children, products }: CartProviderProps) => {
     return count;
   };
 
+  // Get new items count (for badge)
+  const getNewItemsCount = () => {
+    const currentCount = getCartItemCount();
+    const newItemsCount = Math.max(0, currentCount - lastViewedCount);
+    console.log('New items count:', newItemsCount, 'current:', currentCount, 'lastViewed:', lastViewedCount);
+    return newItemsCount;
+  };
+
+  // Mark cart as viewed (clear badge)
+  const markCartAsViewed = () => {
+    const currentCount = getCartItemCount();
+    setLastViewedCount(currentCount);
+    console.log('Cart marked as viewed, setting lastViewedCount to:', currentCount);
+  };
+
   // Load cart when user changes
   useEffect(() => {
     console.log('CartProvider: User changed:', user?.id);
@@ -331,6 +357,7 @@ export const CartProvider = ({ children, products }: CartProviderProps) => {
       loadCartItems();
     } else {
       setCartItems([]);
+      setLastViewedCount(0);
     }
   }, [user]);
 
@@ -347,6 +374,8 @@ export const CartProvider = ({ children, products }: CartProviderProps) => {
     clearCart,
     getCartTotal,
     getCartItemCount,
+    getNewItemsCount,
+    markCartAsViewed,
     isLoading,
   };
 

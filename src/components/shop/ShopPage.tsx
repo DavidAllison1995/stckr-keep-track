@@ -25,6 +25,9 @@ const ShopPage = () => {
     const quantity = getQuantity(productId);
     await addToCart(productId, quantity);
     setQuantities(prev => ({ ...prev, [productId]: 1 }));
+    
+    // Auto-open cart drawer after adding item
+    setIsCartOpen(true);
   };
 
   return (
@@ -45,7 +48,7 @@ const ShopPage = () => {
             <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mt-3"></div>
           </div>
           
-          {/* Cart Button - NO BADGE */}
+          {/* Cart Button */}
           <Button
             onClick={() => setIsCartOpen(true)}
             className="bg-white border-2 border-blue-200 text-blue-700 hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white hover:border-transparent transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"

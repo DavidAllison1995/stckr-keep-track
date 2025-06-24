@@ -12,6 +12,7 @@ import {
 import NotificationBell from '@/components/notifications/NotificationBell';
 import NavBar from '@/components/navigation/NavBar';
 import { useCart } from '@/contexts/CartContext';
+import CartDrawer from '@/components/shop/CartDrawer';
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;
@@ -21,7 +22,8 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { getCartItemCount } = useCart();
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const { getNewItemsCount, markCartAsViewed } = useCart();
 
   useEffect(() => {
     if (!isSidebarOpen) return;
@@ -37,7 +39,12 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
     };
   }, [isSidebarOpen]);
 
-  const cartItemCount = getCartItemCount();
+  const newItemsCount = getNewItemsCount();
+
+  const handleCartClick = () => {
+    markCartAsViewed(); // Clear the badge when cart is opened
+    setIsCartOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
@@ -65,16 +72,16 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/shop')}
+                onClick={handleCartClick}
                 className="relative p-2"
               >
                 <ShoppingCart className="w-4 md:w-5 h-4 md:h-5" />
-                {cartItemCount > 0 && (
+                {newItemsCount > 0 && (
                   <Badge
                     variant="destructive"
                     className="absolute -top-1 -right-1 h-4 md:h-5 w-4 md:w-5 p-0 flex items-center justify-center text-xs"
                   >
-                    {cartItemCount > 9 ? '9+' : cartItemCount}
+                    {newItemsCount > 9 ? '9+' : newItemsCount}
                   </Badge>
                 )}
               </Button>
@@ -99,6 +106,9 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
       
       {/* Navigation Bar */}
       <NavBar />
+      
+      {/* Cart Drawer */}
+      <CartDrawer open={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
   );
 };
