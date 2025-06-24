@@ -288,7 +288,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
             <div
               key={index}
               className={`
-                ${isMobile ? 'min-h-[70px] p-1' : 'min-h-[100px] p-2'} border-r border-b last:border-r-0 cursor-pointer hover:bg-gray-50 transition-colors
+                ${isMobile ? 'min-h-[80px] p-2' : 'min-h-[100px] p-2'} border-r border-b last:border-r-0 cursor-pointer hover:bg-gray-50 transition-colors
                 ${isSelected ? 'bg-blue-50 border-blue-300' : ''}
                 ${!isCurrentMonth ? 'text-gray-300 bg-gray-25' : ''}
               `}
@@ -297,8 +297,8 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
               <div className="flex items-center justify-between mb-1">
                 <span
                   className={`
-                    ${isMobile ? 'text-xs' : 'text-sm'} font-medium
-                    ${isTodayDate ? `bg-blue-500 text-white rounded-full ${isMobile ? 'w-5 h-5 text-xs' : 'w-6 h-6'} flex items-center justify-center` : ''}
+                    ${isMobile ? 'text-sm' : 'text-sm'} font-medium
+                    ${isTodayDate ? `bg-blue-500 text-white rounded-full ${isMobile ? 'w-6 h-6 text-sm' : 'w-6 h-6'} flex items-center justify-center` : ''}
                     ${isSelected && !isTodayDate ? 'text-blue-600' : ''}
                   `}
                 >
@@ -313,13 +313,13 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
               {isCurrentMonth && dayData && dayData.tasks.length > 0 && (
                 <div className="space-y-1 mt-1">
                   {dayData.tasks
-                    .slice(0, isMobile ? 1 : 2)
+                    .slice(0, isMobile ? 2 : 2)
                     .map(task => {
                       const taskStatus = task.status === 'completed' ? 'completed' : calculateTaskStatus(task.date);
                       return (
                         <div
                           key={task.id}
-                          className={`${isMobile ? 'text-[10px] p-0.5' : 'text-xs p-1'} rounded truncate ${
+                          className={`${isMobile ? 'text-xs p-1' : 'text-xs p-1'} rounded truncate ${
                             taskStatus === 'completed' ? 'bg-green-100 text-green-800' :
                             taskStatus === 'overdue' ? 'bg-red-100 text-red-800' :
                             taskStatus === 'due_soon' ? 'bg-yellow-100 text-yellow-800' :
@@ -330,9 +330,9 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                         </div>
                       );
                     })}
-                  {dayData.tasks.length > (isMobile ? 1 : 2) && (
-                    <div className={`${isMobile ? 'text-[10px]' : 'text-xs'} text-gray-500`}>
-                      +{dayData.tasks.length - (isMobile ? 1 : 2)} more
+                  {dayData.tasks.length > (isMobile ? 2 : 2) && (
+                    <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-500`}>
+                      +{dayData.tasks.length - (isMobile ? 2 : 2)} more
                     </div>
                   )}
                 </div>
@@ -539,7 +539,6 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
         <div className="space-y-1">
           {/* Title and Add Button Row */}
           <div className="flex items-center justify-between">
-            <h1 className="text-lg font-bold">Maintenance Calendar</h1>
             {onAddTask && (
               <Button onClick={onAddTask} size="sm" className="bg-blue-500 hover:bg-blue-600 text-white p-1 h-8 w-8">
                 <Plus className="w-4 h-4" />
@@ -587,7 +586,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
             />
           </div>
           
-          {/* Mobile Status Tiles Row - Clickable */}
+          {/* Mobile Status Tiles Row - Clickable (positioned above calendar) */}
           <div className="flex justify-between gap-2 mb-1">
             <button
               onClick={() => handleStatusTileClick('up-to-date')}
