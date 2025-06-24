@@ -415,6 +415,56 @@ export type Database = {
           },
         ]
       }
+      shipping_addresses: {
+        Row: {
+          city: string
+          country: string
+          created_at: string
+          id: string
+          line1: string
+          line2: string | null
+          name: string
+          order_id: string | null
+          postal_code: string
+          state: string | null
+          updated_at: string
+        }
+        Insert: {
+          city: string
+          country: string
+          created_at?: string
+          id?: string
+          line1: string
+          line2?: string | null
+          name: string
+          order_id?: string | null
+          postal_code: string
+          state?: string | null
+          updated_at?: string
+        }
+        Update: {
+          city?: string
+          country?: string
+          created_at?: string
+          id?: string
+          line1?: string
+          line2?: string | null
+          name?: string
+          order_id?: string | null
+          postal_code?: string
+          state?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipping_addresses_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_qr_claims: {
         Row: {
           claimed_at: string

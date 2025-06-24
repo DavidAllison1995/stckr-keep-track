@@ -29,7 +29,7 @@ serve(async (req) => {
 
     console.log('Processing order:', orderId);
 
-    // Get order details with items and products
+    // Get order details with items, products, and shipping address
     const { data: order, error: orderError } = await supabaseClient
       .from('orders')
       .select(`
@@ -37,7 +37,8 @@ serve(async (req) => {
         order_items (
           *,
           product:products (*)
-        )
+        ),
+        shipping_addresses (*)
       `)
       .eq('id', orderId)
       .eq('status', 'paid')
@@ -50,6 +51,25 @@ serve(async (req) => {
 
     console.log('Order found:', order);
     console.log('Order items:', order.order_items);
+    console.log('Shipping addresses:', order.shipping_addresses);
+
+    // Check if we have a shipping address
+    const shippingAddress = order.shipping_addresses?.[0];
+    if (!shippingAddress) {
+      const errorMessage = 'No shipping address found for order';
+      console.error(errorMessage);
+      
+      // Update order with fulfillment error
+      await supabaseClient
+        .from('orders')
+        .update({ 
+          fulfillment_error: errorMessage,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', orderId);
+        
+      throw new Error(errorMessage);
+    }
 
     // Validate that all products have Printful variant IDs
     const invalidProducts = order.order_items.filter((item: any) => 
@@ -81,19 +101,45 @@ serve(async (req) => {
 
     console.log('Printful items prepared:', printfulItems);
 
+    // Map country codes for Printful compatibility
+    const getCountryCode = (country: string) => {
+      const countryMap: { [key: string]: string } = {
+        'GB': 'GB',
+        'United Kingdom': 'GB',
+        'US': 'US',
+        'United States': 'US',
+        'CA': 'CA',
+        'Canada': 'CA',
+        'AU': 'AU',
+        'Australia': 'AU',
+        'DE': 'DE',
+        'Germany': 'DE',
+        'FR': 'FR',
+        'France': 'FR',
+        'IT': 'IT',
+        'Italy': 'IT',
+        'ES': 'ES',
+        'Spain': 'ES',
+        'NL': 'NL',
+        'Netherlands': 'NL',
+        'BE': 'BE',
+        'Belgium': 'BE',
+      };
+      return countryMap[country] || country;
+    };
+
     const printfulOrder = {
       external_id: order.id,
       shipping: "STANDARD",
       recipient: {
-        name: order.user_email.split('@')[0], // Basic name from email - you'll want to collect actual shipping info
+        name: shippingAddress.name,
         email: order.user_email,
-        // Note: You'll need to collect actual shipping address during checkout
-        // For now using placeholder values
-        address1: "123 Main St",
-        city: "City",
-        state_code: "CA",
-        country_code: "US",
-        zip: "12345"
+        address1: shippingAddress.line1,
+        address2: shippingAddress.line2 || undefined,
+        city: shippingAddress.city,
+        state_code: shippingAddress.state || undefined,
+        country_code: getCountryCode(shippingAddress.country),
+        zip: shippingAddress.postal_code
       },
       items: printfulItems
     };

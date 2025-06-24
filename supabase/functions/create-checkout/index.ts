@@ -64,13 +64,13 @@ serve(async (req) => {
     
     console.log('Total amount:', totalAmount);
 
-    // Create Stripe checkout session - NO ORDER CREATION YET
+    // Create Stripe checkout session with shipping address collection
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: items.map((item: any) => ({
         price_data: {
-          currency: 'gbp', // Changed to GBP
+          currency: 'gbp',
           product_data: {
             name: item.name,
           },
@@ -79,16 +79,19 @@ serve(async (req) => {
         quantity: item.quantity,
       })),
       mode: 'payment',
+      shipping_address_collection: {
+        allowed_countries: ['GB', 'US', 'CA', 'AU', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE'],
+      },
       success_url: `${req.headers.get('origin')}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get('origin')}/shop`,
       metadata: {
         user_id: user.id,
         user_email: user.email,
-        items: JSON.stringify(items), // Store items in metadata for webhook processing
+        items: JSON.stringify(items),
       },
     });
 
-    console.log('Stripe session created:', session.id);
+    console.log('Stripe session created with shipping collection:', session.id);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
