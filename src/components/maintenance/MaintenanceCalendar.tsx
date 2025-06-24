@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search, Plus } fro
 import { useSupabaseMaintenance, MaintenanceTask } from '@/hooks/useSupabaseMaintenance';
 import { useUserSettingsContext } from '@/contexts/UserSettingsContext';
 import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MaintenanceCalendarProps {
   onNavigateToItem?: (itemId: string, taskId?: string) => void;
@@ -19,6 +20,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
   const { tasks } = useSupabaseMaintenance();
   const { settings } = useUserSettingsContext();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
@@ -501,17 +503,27 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
   };
 
   return (
-    <div className="h-full space-y-6 w-full overflow-hidden">
-      {/* Header Controls */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-4">
-          {/* View Toggle - moved to left with title */}
-          <div className="flex bg-gray-100 rounded-lg p-1">
+    <div className={`h-full w-full overflow-hidden ${isMobile ? 'space-y-2' : 'space-y-6'}`}>
+      {/* Mobile Optimized Header Layout */}
+      {isMobile ? (
+        <div className="space-y-2">
+          {/* Top Row: Title and Add Button */}
+          <div className="flex items-center justify-between">
+            <h1 className="text-lg font-bold">Maintenance Calendar</h1>
+            {onAddTask && (
+              <Button onClick={onAddTask} size="sm" className="bg-blue-500 hover:bg-blue-600 text-white px-2">
+                <Plus className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+          
+          {/* Second Row: View Toggle */}
+          <div className="flex bg-gray-100 rounded-lg p-1 w-fit">
             <Button
               variant={viewMode === 'month' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('month')}
-              className={`${viewMode === 'month' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
+              className={`text-xs px-3 py-1 ${viewMode === 'month' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
             >
               Month
             </Button>
@@ -519,7 +531,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
               variant={viewMode === 'week' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('week')}
-              className={`${viewMode === 'week' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
+              className={`text-xs px-3 py-1 ${viewMode === 'week' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
             >
               Week
             </Button>
@@ -527,15 +539,13 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
               variant={viewMode === 'day' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('day')}
-              className={`${viewMode === 'day' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
+              className={`text-xs px-3 py-1 ${viewMode === 'day' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
             >
               Day
             </Button>
           </div>
-        </div>
-
-        <div className="flex items-center gap-3 flex-wrap">
-          {/* Search Input */}
+          
+          {/* Third Row: Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
@@ -543,53 +553,102 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
               placeholder="Search tasks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-64"
+              className="pl-10 text-sm py-2"
             />
           </div>
-          
-          {onAddTask && (
-            <Button onClick={onAddTask} size="sm" className="bg-blue-500 hover:bg-blue-600 text-white">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Task
-            </Button>
-          )}
         </div>
-      </div>
+      ) : (
+        // Desktop Header Layout (unchanged)
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            {/* View Toggle */}
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <Button
+                variant={viewMode === 'month' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('month')}
+                className={`${viewMode === 'month' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
+              >
+                Month
+              </Button>
+              <Button
+                variant={viewMode === 'week' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('week')}
+                className={`${viewMode === 'week' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
+              >
+                Week
+              </Button>
+              <Button
+                variant={viewMode === 'day' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('day')}
+                className={`${viewMode === 'day' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
+              >
+                Day
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Search tasks..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 w-64"
+              />
+            </div>
+            
+            {onAddTask && (
+              <Button onClick={onAddTask} size="sm" className="bg-blue-500 hover:bg-blue-600 text-white">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Task
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Main Calendar Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 w-full overflow-hidden">
+      <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-1 lg:grid-cols-4 gap-6'} w-full overflow-hidden`}>
         {/* Calendar View */}
-        <div className="lg:col-span-3 w-full overflow-hidden">
-          {viewMode === 'month' && renderMonthView()}
-          {viewMode === 'week' && renderWeekView()}
-          {viewMode === 'day' && renderDayView()}
+        <div className={`${isMobile ? 'col-span-1' : 'lg:col-span-3'} w-full overflow-hidden`}>
+          <div className={isMobile ? 'max-h-[60vh] overflow-y-auto' : ''}>
+            {viewMode === 'month' && renderMonthView()}
+            {viewMode === 'week' && renderWeekView()}
+            {viewMode === 'day' && renderDayView()}
+          </div>
         </div>
 
         {/* Task Sidebar */}
-        <div className="lg:col-span-1">
-          <Card className="h-fit max-h-[600px] overflow-hidden">
-            <CardContent className="p-6">
+        <div className={`${isMobile ? 'col-span-1' : 'lg:col-span-1'}`}>
+          <Card className={`h-fit ${isMobile ? 'max-h-[30vh]' : 'max-h-[600px]'} overflow-hidden`}>
+            <CardContent className={isMobile ? 'p-3' : 'p-6'}>
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">
-                    {format(selectedDate, 'EEEE, MMMM do, yyyy')}
+                  <h3 className={`${isMobile ? 'text-sm' : 'text-lg'} font-semibold mb-2`}>
+                    {format(selectedDate, isMobile ? 'MMM do, yyyy' : 'EEEE, MMMM do, yyyy')}
                   </h3>
                 </div>
 
                 {tasksForSelectedDate.length > 0 ? (
-                  <div className="space-y-3 max-h-[450px] overflow-y-auto">
+                  <div className={`space-y-3 ${isMobile ? 'max-h-[20vh]' : 'max-h-[450px]'} overflow-y-auto`}>
                     {tasksForSelectedDate.map(task => {
                       const taskStatus = task.status === 'completed' ? 'completed' : calculateTaskStatus(task.date);
                       return (
                         <div
                           key={task.id}
-                          className={`p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors ${
+                          className={`${isMobile ? 'p-2' : 'p-3'} rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors ${
                             task.status === 'completed' ? 'opacity-60' : ''
                           }`}
                           onClick={() => handleTaskClick(task)}
                         >
                           <div className="flex items-start justify-between mb-2">
-                            <h4 className="font-medium text-sm">{task.title}</h4>
+                            <h4 className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>{task.title}</h4>
                             <span className={`text-xs px-2 py-1 rounded-full ${getTaskStatusColor(task)}`}>
                               {taskStatus === 'completed' ? 'Completed' :
                                taskStatus === 'due_soon' ? 'Due Soon' : 
@@ -598,7 +657,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                           </div>
                           
                           {task.notes && (
-                            <p className="text-xs text-gray-600 mb-2">{task.notes}</p>
+                            <p className={`text-xs text-gray-600 mb-2 ${isMobile ? 'line-clamp-1' : ''}`}>{task.notes}</p>
                           )}
                           
                           <div className="text-xs text-gray-500">
@@ -611,10 +670,10 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                     })}
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-8 text-gray-500">
-                    <CalendarIcon className="w-12 h-12 mb-3 opacity-50" />
+                  <div className={`flex flex-col items-center justify-center ${isMobile ? 'py-4' : 'py-8'} text-gray-500`}>
+                    <CalendarIcon className={`${isMobile ? 'w-8 h-8 mb-2' : 'w-12 h-12 mb-3'} opacity-50`} />
                     <p className="text-sm">No tasks on this date</p>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-400 mt-1`}>
                       Click a day with tasks to see them here
                     </p>
                   </div>
