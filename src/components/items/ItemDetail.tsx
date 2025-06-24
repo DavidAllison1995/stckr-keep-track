@@ -150,24 +150,24 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className={`grid w-full ${isMobile ? 'grid-cols-2 h-auto' : 'grid-cols-5'}`}>
-            <TabsTrigger value="details" className={isMobile ? "text-xs py-2" : ""}>Details</TabsTrigger>
-            <TabsTrigger value="tasks" className={isMobile ? "text-xs py-2" : ""}>Tasks</TabsTrigger>
-            {!isMobile && (
-              <>
-                <TabsTrigger value="documents">Documents</TabsTrigger>
-                <TabsTrigger value="notes">Notes</TabsTrigger>
-                <TabsTrigger value="qr">QR Code</TabsTrigger>
-              </>
-            )}
-          </TabsList>
-          
-          {isMobile && (
-            <div className="flex gap-1 mt-2 overflow-x-auto">
-              <TabsTrigger value="documents" className="text-xs py-2 px-3 whitespace-nowrap">Documents</TabsTrigger>
-              <TabsTrigger value="notes" className="text-xs py-2 px-3 whitespace-nowrap">Notes</TabsTrigger>
-              <TabsTrigger value="qr" className="text-xs py-2 px-3 whitespace-nowrap">QR Code</TabsTrigger>
-            </div>
+          {isMobile ? (
+            // Mobile tab layout - single scrollable list
+            <TabsList className="grid w-full grid-cols-5 h-auto overflow-x-auto">
+              <TabsTrigger value="details" className="text-xs py-2 px-2 whitespace-nowrap">Details</TabsTrigger>
+              <TabsTrigger value="tasks" className="text-xs py-2 px-2 whitespace-nowrap">Tasks</TabsTrigger>
+              <TabsTrigger value="documents" className="text-xs py-2 px-2 whitespace-nowrap">Docs</TabsTrigger>
+              <TabsTrigger value="notes" className="text-xs py-2 px-2 whitespace-nowrap">Notes</TabsTrigger>
+              <TabsTrigger value="qr" className="text-xs py-2 px-2 whitespace-nowrap">QR</TabsTrigger>
+            </TabsList>
+          ) : (
+            // Desktop tab layout
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="tasks">Tasks</TabsTrigger>
+              <TabsTrigger value="documents">Documents</TabsTrigger>
+              <TabsTrigger value="notes">Notes</TabsTrigger>
+              <TabsTrigger value="qr">QR Code</TabsTrigger>
+            </TabsList>
           )}
           
           <TabsContent value="details" className={isMobile ? "mt-4" : "mt-6"}>
