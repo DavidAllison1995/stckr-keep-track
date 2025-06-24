@@ -16,37 +16,32 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       console.error('No authorization header provided')
-      return new Response('Unauthorized - No auth header', { status: 401, headers: corsHeaders })
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - No auth header' }), 
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     const token = authHeader.replace('Bearer ', '')
     console.log('Token received:', token ? 'Present' : 'Missing')
     
-    // Create client with anon key to verify user
-    const anonClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    )
-    
-    // Set the auth token
-    await anonClient.auth.setSession({
-      access_token: token,
-      refresh_token: ''
-    })
-    
-    const { data: { user }, error: authError } = await anonClient.auth.getUser()
-    if (authError || !user) {
-      console.error('Auth verification failed:', authError)
-      return new Response('Unauthorized - Invalid token', { status: 401, headers: corsHeaders })
-    }
-
-    console.log('User authenticated:', user.email)
-
-    // Create service role client for admin operations
+    // Create service role client for all operations (bypasses RLS)
     const serviceClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+    
+    // Verify the token and get user using service role client
+    const { data: { user }, error: authError } = await serviceClient.auth.getUser(token)
+    if (authError || !user) {
+      console.error('Auth verification failed:', authError)
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Invalid token', details: authError?.message }), 
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log('User authenticated:', user.email)
 
     // Check if user is admin
     const { data: profile, error: profileError } = await serviceClient
@@ -55,9 +50,20 @@ serve(async (req) => {
       .eq('id', user.id)
       .single()
 
-    if (profileError || !profile?.is_admin) {
-      console.error('Admin check failed:', profileError, 'is_admin:', profile?.is_admin)
-      return new Response('Forbidden - Admin access required', { status: 403, headers: corsHeaders })
+    if (profileError) {
+      console.error('Profile lookup failed:', profileError)
+      return new Response(
+        JSON.stringify({ error: 'Failed to verify admin status', details: profileError.message }), 
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (!profile?.is_admin) {
+      console.error('Admin check failed - is_admin:', profile?.is_admin)
+      return new Response(
+        JSON.stringify({ error: 'Forbidden - Admin access required' }), 
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     console.log('Admin access confirmed for user:', user.email)
@@ -70,7 +76,10 @@ serve(async (req) => {
 
     if (error) {
       console.error('Error fetching QR codes:', error)
-      return new Response('Failed to fetch codes', { status: 500, headers: corsHeaders })
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch codes', details: error.message }), 
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     console.log('Successfully fetched QR codes:', data?.length || 0)
@@ -90,6 +99,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Unexpected error:', error)
-    return new Response('Internal error', { status: 500, headers: corsHeaders })
+    return new Response(
+      JSON.stringify({ error: 'Internal error', details: error.message }), 
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   }
 })

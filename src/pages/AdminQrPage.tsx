@@ -30,17 +30,28 @@ const AdminQrPage = () => {
   const [deletingCodes, setDeletingCodes] = useState<Set<string>>(new Set());
 
   const loadCodes = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user found, skipping load');
+      return;
+    }
     
     setIsLoading(true);
     try {
       console.log('Loading QR codes via admin-qr-list function...');
       const session = await supabase.auth.getSession();
-      console.log('Session token available:', !!session.data.session?.access_token);
+      console.log('Session details:', {
+        hasSession: !!session.data.session,
+        hasToken: !!session.data.session?.access_token,
+        userEmail: session.data.session?.user?.email
+      });
+      
+      if (!session.data.session?.access_token) {
+        throw new Error('No valid session token available');
+      }
       
       const { data, error } = await supabase.functions.invoke('admin-qr-list', {
         headers: {
-          Authorization: `Bearer ${session.data.session?.access_token}`,
+          Authorization: `Bearer ${session.data.session.access_token}`,
         },
       });
 
@@ -50,14 +61,21 @@ const AdminQrPage = () => {
       }
       
       console.log('Successfully loaded QR codes:', data);
-      setCodes(data.codes || []);
+      
+      if (data && data.codes) {
+        setCodes(data.codes);
+      } else {
+        console.warn('No codes data in response:', data);
+        setCodes([]);
+      }
     } catch (error) {
       console.error('Error loading codes:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load QR codes',
+        description: `Failed to load QR codes: ${error.message || 'Unknown error'}`,
         variant: 'destructive',
       });
+      setCodes([]);
     } finally {
       setIsLoading(false);
     }
