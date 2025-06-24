@@ -11,6 +11,8 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ error?: string }>;
   signup: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error?: string }>;
+  signInWithGoogle: () => Promise<{ error?: string }>;
+  signInWithApple: () => Promise<{ error?: string }>;
   logout: () => Promise<void>;
 }
 
@@ -116,6 +118,66 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) {
+        toast({
+          title: 'Google Sign-In Failed',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return { error: error.message };
+      }
+
+      return {};
+    } catch (error) {
+      const message = 'An unexpected error occurred during Google sign-in';
+      toast({
+        title: 'Google Sign-In Failed',
+        description: message,
+        variant: 'destructive',
+      });
+      return { error: message };
+    }
+  };
+
+  const signInWithApple = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) {
+        toast({
+          title: 'Apple Sign-In Failed',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return { error: error.message };
+      }
+
+      return {};
+    } catch (error) {
+      const message = 'An unexpected error occurred during Apple sign-in';
+      toast({
+        title: 'Apple Sign-In Failed',
+        description: message,
+        variant: 'destructive',
+      });
+      return { error: message };
+    }
+  };
+
   const logout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -148,6 +210,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isLoading,
     login,
     signup,
+    signInWithGoogle,
+    signInWithApple,
     logout,
   };
 

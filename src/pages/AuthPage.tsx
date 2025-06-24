@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,12 +8,15 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { Mail, Lock, User } from 'lucide-react';
+
 const AuthPage = () => {
   const {
     isAuthenticated,
     isLoading,
     login,
-    signup
+    signup,
+    signInWithGoogle,
+    signInWithApple
   } = useSupabaseAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -20,6 +24,7 @@ const AuthPage = () => {
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
+
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-blue-50 to-white">
         <div className="text-center">
@@ -28,6 +33,7 @@ const AuthPage = () => {
         </div>
       </div>;
   }
+
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -37,6 +43,7 @@ const AuthPage = () => {
     await login(email, password);
     setIsSubmitting(false);
   };
+
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -48,7 +55,21 @@ const AuthPage = () => {
     await signup(email, password, firstName, lastName);
     setIsSubmitting(false);
   };
-  return <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-white flex items-center justify-center p-4">
+
+  const handleGoogleSignIn = async () => {
+    setIsSubmitting(true);
+    await signInWithGoogle();
+    setIsSubmitting(false);
+  };
+
+  const handleAppleSignIn = async () => {
+    setIsSubmitting(true);
+    await signInWithApple();
+    setIsSubmitting(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo and Branding */}
         <div className="text-center mb-12">
@@ -64,6 +85,37 @@ const AuthPage = () => {
             <CardTitle className="text-2xl font-bold text-gray-900">Get Started</CardTitle>
           </CardHeader>
           <CardContent>
+            {/* Social Login Buttons */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <Button 
+                variant="outline" 
+                className="w-full h-12 border-gray-200 hover:border-gray-300"
+                onClick={handleGoogleSignIn}
+                disabled={isSubmitting}
+              >
+                <span className="mr-2">🌐</span>
+                Google
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full h-12 border-gray-200 hover:border-gray-300"
+                onClick={handleAppleSignIn}
+                disabled={isSubmitting}
+              >
+                <span className="mr-2">🍎</span>
+                Apple
+              </Button>
+            </div>
+
+            <div className="relative mb-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-gray-200" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-gray-500">Or continue with email</span>
+              </div>
+            </div>
+
             <Tabs defaultValue="signup" className="w-full">
               {/* Custom Styled Tab Pills */}
               <div className="bg-gray-100 p-1 rounded-full mb-8">
@@ -140,6 +192,8 @@ const AuthPage = () => {
           </CardContent>
         </Card>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default AuthPage;

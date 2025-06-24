@@ -6,6 +6,8 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { ConnectedAccounts } from '@/types/settings';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ConnectedAccountsDialogProps {
   open: boolean;
@@ -19,37 +21,63 @@ const ConnectedAccountsDialog = ({ open, onOpenChange }: ConnectedAccountsDialog
   });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useSupabaseAuth();
 
   useEffect(() => {
-    const savedAccounts = localStorage.getItem('connectedAccounts');
-    if (savedAccounts) {
-      try {
-        setAccounts(JSON.parse(savedAccounts));
-      } catch (error) {
-        console.error('Failed to parse connected accounts:', error);
-      }
+    if (user) {
+      // Check which OAuth providers are linked to the user's account
+      const identities = user.identities || [];
+      const googleConnected = identities.some(identity => identity.provider === 'google');
+      const appleConnected = identities.some(identity => identity.provider === 'apple');
+      
+      setAccounts({
+        google: googleConnected,
+        apple: appleConnected,
+      });
     }
-  }, []);
+  }, [user]);
 
   const handleToggleAccount = async (provider: 'google' | 'apple', connect: boolean) => {
     setIsLoading(true);
     
     try {
-      // Simulate OAuth flow or disconnection
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (connect) {
+        // Link OAuth provider
+        const { error } = await supabase.auth.linkIdentity({
+          provider: provider,
+        });
+        
+        if (error) {
+          throw error;
+        }
+        
+        toast({
+          title: 'Success',
+          description: `${provider} account connected successfully`,
+        });
+      } else {
+        // Unlink OAuth provider
+        const identity = user?.identities?.find(id => id.provider === provider);
+        if (identity) {
+          const { error } = await supabase.auth.unlinkIdentity(identity);
+          
+          if (error) {
+            throw error;
+          }
+          
+          toast({
+            title: 'Success',
+            description: `${provider} account disconnected successfully`,
+          });
+        }
+      }
       
-      const updatedAccounts = { ...accounts, [provider]: connect };
-      setAccounts(updatedAccounts);
-      localStorage.setItem('connectedAccounts', JSON.stringify(updatedAccounts));
-      
-      toast({
-        title: 'Success',
-        description: `${provider} account ${connect ? 'connected' : 'disconnected'} successfully`,
-      });
-    } catch (error) {
+      // Update local state
+      setAccounts(prev => ({ ...prev, [provider]: connect }));
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: `Failed to ${connect ? 'connect' : 'disconnect'} ${provider} account`,
+        description: error.message || `Failed to ${connect ? 'connect' : 'disconnect'} ${provider} account`,
         variant: 'destructive',
       });
     } finally {
