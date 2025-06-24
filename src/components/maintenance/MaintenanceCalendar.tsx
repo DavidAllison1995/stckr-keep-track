@@ -8,6 +8,7 @@ import { useSupabaseMaintenance, MaintenanceTask } from '@/hooks/useSupabaseMain
 import { useUserSettingsContext } from '@/contexts/UserSettingsContext';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { calculateTaskStatus, getStatusLabel, getStatusColor, getStatusBorderColor, getTaskStatusCounts, TaskStatus } from '@/utils/taskStatus';
 
 interface MaintenanceCalendarProps {
   onNavigateToItem?: (itemId: string, taskId?: string) => void;
@@ -26,45 +27,9 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Calculate task status based on date
-  const calculateTaskStatus = (taskDate: string) => {
-    const now = new Date();
-    const due = new Date(taskDate);
-    const diffInDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (diffInDays < 0) {
-      return 'overdue';
-    } else if (diffInDays <= 14) {
-      return 'due_soon';
-    } else {
-      return 'up_to_date';
-    }
-  };
-
-  // Calculate status counts for mobile status bar
+  // Calculate status counts for mobile status bar using centralized logic
   const statusCounts = useMemo(() => {
-    const now = new Date();
-    const fourteenDaysFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
-
-    const upToDate = tasks.filter(task => {
-      if (task.status === 'completed') return false;
-      const taskDate = new Date(task.date);
-      return taskDate > fourteenDaysFromNow;
-    }).length;
-
-    const dueSoon = tasks.filter(task => {
-      if (task.status === 'completed') return false;
-      const taskDate = new Date(task.date);
-      return taskDate >= now && taskDate <= fourteenDaysFromNow;
-    }).length;
-
-    const overdue = tasks.filter(task => {
-      if (task.status === 'completed') return false;
-      const taskDate = new Date(task.date);
-      return taskDate < now;
-    }).length;
-
-    return { upToDate, dueSoon, overdue };
+    return getTaskStatusCounts(tasks.filter(task => task.status !== 'completed'));
   }, [tasks]);
 
   // Filter tasks based on settings and search
@@ -109,13 +74,13 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
     return eachDayOfInterval({ start, end });
   }, [currentDate]);
 
-  // Get tasks per day with status information
+  // Get tasks per day with status information using centralized logic
   const tasksPerDay = useMemo(() => {
     const taskMap = new Map<string, { tasks: MaintenanceTask[], statusCounts: Record<string, number> }>();
     
     filteredTasks.forEach(task => {
       const dateKey = format(new Date(task.date), 'yyyy-MM-dd');
-      const status = calculateTaskStatus(task.date);
+      const status = task.status === 'completed' ? 'completed' : calculateTaskStatus(task.date);
       
       if (!taskMap.has(dateKey)) {
         taskMap.set(dateKey, { 
@@ -126,13 +91,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
       
       const dayData = taskMap.get(dateKey)!;
       dayData.tasks.push(task);
-      
-      // Use task.status for completed tasks, calculated status for others
-      if (task.status === 'completed') {
-        dayData.statusCounts.completed += 1;
-      } else {
-        dayData.statusCounts[status] += 1;
-      }
+      dayData.statusCounts[status] += 1;
     });
     
     return taskMap;
@@ -178,36 +137,14 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
     navigate(`/tasks/${status}`);
   };
 
-  const getTaskStatusColor = (task: MaintenanceTask) => {
-    if (task.status === 'completed') {
-      return 'bg-green-100 text-green-800';
-    }
-    
-    const status = calculateTaskStatus(task.date);
-    switch (status) {
-      case 'overdue':
-        return 'bg-red-100 text-red-800';
-      case 'due_soon':
-        return 'bg-yellow-100 text-yellow-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  const getTaskStatusColorClass = (task: MaintenanceTask) => {
+    const status = task.status === 'completed' ? 'completed' : calculateTaskStatus(task.date);
+    return getStatusColor(status as TaskStatus);
   };
 
-  const getTaskStatusBorderColor = (task: MaintenanceTask) => {
-    if (task.status === 'completed') {
-      return 'border-l-2 border-green-500';
-    }
-    
-    const status = calculateTaskStatus(task.date);
-    switch (status) {
-      case 'overdue':
-        return 'border-l-2 border-red-500';
-      case 'due_soon':
-        return 'border-l-2 border-yellow-500';
-      default:
-        return 'border-l-2 border-green-500';
-    }
+  const getTaskStatusBorderColorClass = (task: MaintenanceTask) => {
+    const status = task.status === 'completed' ? 'completed' : calculateTaskStatus(task.date);
+    return getStatusBorderColor(status as TaskStatus);
   };
 
   const renderStatusIndicators = (dayData: { tasks: MaintenanceTask[], statusCounts: Record<string, number> }) => {
@@ -408,7 +345,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                       key={task.id}
                       className={`
                         ${isMobile ? 'text-xs p-1' : 'text-xs p-2'} rounded cursor-pointer hover:opacity-80 transition-opacity
-                        ${getTaskStatusBorderColor(task)}
+                        ${getTaskStatusBorderColorClass(task)}
                         ${taskStatus === 'completed' ? 'bg-green-50 text-green-800' :
                           taskStatus === 'overdue' ? 'bg-red-50 text-red-800' :
                           taskStatus === 'due_soon' ? 'bg-yellow-50 text-yellow-800' :
@@ -481,7 +418,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                       key={task.id}
                       className={`
                         ${isMobile ? 'p-3' : 'p-4'} rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors
-                        ${getTaskStatusBorderColor(task)}
+                        ${getTaskStatusBorderColorClass(task)}
                         ${taskStatus === 'completed' ? 'border-green-200 bg-green-50' :
                           taskStatus === 'overdue' ? 'border-red-200 bg-red-50' :
                           taskStatus === 'due_soon' ? 'border-yellow-200 bg-yellow-50' :
@@ -491,10 +428,10 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h5 className={`font-medium text-gray-900 ${isMobile ? 'text-sm' : ''}`}>{task.title}</h5>
-                        <span className={`text-xs px-2 py-1 rounded-full ${getTaskStatusColor(task)}`}>
+                        <span className={`text-xs px-2 py-1 rounded-full ${getTaskStatusColorClass(task)}`}>
                           {taskStatus === 'completed' ? 'Completed' :
-                           taskStatus === 'due_soon' ? 'Due Soon' : 
-                           taskStatus === 'overdue' ? 'Overdue' : 'Up to Date'}
+                           taskStatus === 'due_soon' ? 'Soon' : 
+                           taskStatus === 'overdue' ? 'Late' : 'OK'}
                         </span>
                       </div>
                       
@@ -554,14 +491,14 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
               className="flex flex-col items-center gap-1 bg-green-50 border border-green-200 rounded-lg px-3 py-2 flex-1 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
             >
               <CheckCircle className="w-4 h-4 text-green-600" />
-              <span className="text-sm font-semibold text-green-800">{statusCounts.upToDate}</span>
+              <span className="text-sm font-semibold text-green-800">{statusCounts.up_to_date}</span>
             </button>
             <button
               onClick={() => handleStatusTileClick('due-soon')}
               className="flex flex-col items-center gap-1 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 flex-1 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
             >
               <Clock className="w-4 h-4 text-yellow-600" />
-              <span className="text-sm font-semibold text-yellow-800">{statusCounts.dueSoon}</span>
+              <span className="text-sm font-semibold text-yellow-800">{statusCounts.due_soon}</span>
             </button>
             <button
               onClick={() => handleStatusTileClick('overdue')}
@@ -704,7 +641,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                         >
                           <div className="flex items-start justify-between mb-1">
                             <h4 className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'} truncate`}>{task.title}</h4>
-                            <span className={`text-xs px-1 py-0.5 rounded-full ${getTaskStatusColor(task)}`}>
+                            <span className={`text-xs px-1 py-0.5 rounded-full ${getTaskStatusColorClass(task)}`}>
                               {taskStatus === 'completed' ? 'Done' :
                                taskStatus === 'due_soon' ? 'Soon' : 
                                taskStatus === 'overdue' ? 'Late' : 'OK'}

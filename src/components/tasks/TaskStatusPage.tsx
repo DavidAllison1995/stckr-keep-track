@@ -7,6 +7,7 @@ import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LucideIcon } from 'lucide-react';
+import { calculateTaskStatus, getStatusLabel, getStatusColor } from '@/utils/taskStatus';
 
 interface TaskStatusPageProps {
   title: string;
@@ -27,40 +28,14 @@ const TaskStatusPage = ({ title, description, icon: Icon, color, filterTasks }: 
   const filteredTasks = tasks ? filterTasks(tasks) : [];
   console.log('TaskStatusPage - Filtered tasks:', filteredTasks.length);
 
-  const getStatusColor = (task: any) => {
-    if (task.status === 'completed') {
-      return 'bg-green-100 text-green-800';
-    }
-    
-    const now = new Date();
-    const taskDate = new Date(task.date);
-    const fourteenDaysFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
-    
-    if (taskDate < now) {
-      return 'bg-red-100 text-red-800';
-    } else if (taskDate <= fourteenDaysFromNow) {
-      return 'bg-yellow-100 text-yellow-800';
-    } else {
-      return 'bg-green-100 text-green-800';
-    }
+  const getTaskStatusColor = (task: any) => {
+    const status = task.status === 'completed' ? 'completed' : calculateTaskStatus(task.date);
+    return getStatusColor(status);
   };
 
-  const getStatusLabel = (task: any) => {
-    if (task.status === 'completed') {
-      return 'Completed';
-    }
-    
-    const now = new Date();
-    const taskDate = new Date(task.date);
-    const fourteenDaysFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
-    
-    if (taskDate < now) {
-      return 'Overdue';
-    } else if (taskDate <= fourteenDaysFromNow) {
-      return 'Due Soon';
-    } else {
-      return 'Up to Date';
-    }
+  const getTaskStatusLabel = (task: any) => {
+    const status = task.status === 'completed' ? 'completed' : calculateTaskStatus(task.date);
+    return getStatusLabel(status);
   };
 
   const handleTaskClick = (task: any) => {
@@ -129,9 +104,9 @@ const TaskStatusPage = ({ title, description, icon: Icon, color, filterTasks }: 
                           <h3 className="font-semibold text-lg">{task.title}</h3>
                           <Badge
                             variant="secondary"
-                            className={getStatusColor(task)}
+                            className={getTaskStatusColor(task)}
                           >
-                            {getStatusLabel(task)}
+                            {getTaskStatusLabel(task)}
                           </Badge>
                         </div>
                         

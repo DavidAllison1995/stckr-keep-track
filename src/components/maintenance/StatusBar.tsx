@@ -3,49 +3,31 @@ import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { Link } from 'react-router-dom';
+import { getTaskStatusCounts } from '@/utils/taskStatus';
 
 const StatusBar = () => {
   const { tasks } = useSupabaseMaintenance();
 
-  // Calculate task statuses based on dates
-  const now = new Date();
-  const fourteenDaysFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
-
-  const upToDateTasks = tasks.filter(task => {
-    if (task.status === 'completed') return false;
-    const taskDate = new Date(task.date);
-    return taskDate > fourteenDaysFromNow;
-  });
-
-  const dueSoonTasks = tasks.filter(task => {
-    if (task.status === 'completed') return false;
-    const taskDate = new Date(task.date);
-    return taskDate >= now && taskDate <= fourteenDaysFromNow;
-  });
-
-  const overdueTasks = tasks.filter(task => {
-    if (task.status === 'completed') return false;
-    const taskDate = new Date(task.date);
-    return taskDate < now;
-  });
+  // Calculate task statuses using centralized logic
+  const statusCounts = getTaskStatusCounts(tasks.filter(task => task.status !== 'completed'));
 
   const statusCards = [{
     title: 'Up-to-Date',
-    count: upToDateTasks.length,
+    count: statusCounts.up_to_date,
     icon: CheckCircle,
     color: 'text-green-600 bg-green-100',
     route: '/tasks/up-to-date',
     description: 'Tasks due in 14+ days'
   }, {
     title: 'Due Soon',
-    count: dueSoonTasks.length,
+    count: statusCounts.due_soon,
     icon: Clock,
     color: 'text-yellow-600 bg-yellow-100',
     route: '/tasks/due-soon',
     description: 'Tasks due within 14 days'
   }, {
     title: 'Overdue',
-    count: overdueTasks.length,
+    count: statusCounts.overdue,
     icon: AlertTriangle,
     color: 'text-red-600 bg-red-100',
     route: '/tasks/overdue',

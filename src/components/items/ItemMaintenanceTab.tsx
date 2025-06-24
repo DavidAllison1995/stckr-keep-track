@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +8,7 @@ import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
 import TaskEditDialog from '@/components/maintenance/TaskEditDialog';
 import { Plus, Calendar, CheckCircle2, Clock, AlertTriangle, Trash2, Edit } from 'lucide-react';
+import { calculateTaskStatus, getStatusLabel, getStatusColor, getStatusBorderColor } from '@/utils/taskStatus';
 
 interface ItemMaintenanceTabProps {
   itemId: string;
@@ -24,29 +24,20 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
 
   const itemTasks = tasks.filter(task => task.item_id === itemId);
   
-  // Properly categorize tasks
-  const pendingTasks = itemTasks.filter(task => task.status === 'pending');
-  const dueSoonTasks = itemTasks.filter(task => task.status === 'due_soon');
-  const overdueTasks = itemTasks.filter(task => task.status === 'overdue');
-  const inProgressTasks = itemTasks.filter(task => task.status === 'in_progress');
+  // Categorize tasks using centralized logic
+  const activeTasks = itemTasks.filter(task => task.status !== 'completed');
   const completedTasks = itemTasks.filter(task => task.status === 'completed');
-
-  // All non-completed tasks for display
-  const activeTasks = [...overdueTasks, ...dueSoonTasks, ...inProgressTasks, ...pendingTasks];
 
   // Debug logging
   useEffect(() => {
     console.log(`ItemMaintenanceTab - All tasks:`, tasks.length);
     console.log(`ItemMaintenanceTab - Tasks for item ${itemId}:`, itemTasks.length);
     console.log(`ItemMaintenanceTab - Item tasks:`, itemTasks);
-    console.log(`ItemMaintenanceTab - Active tasks breakdown:`, {
-      overdue: overdueTasks.length,
-      dueSoon: dueSoonTasks.length,
-      inProgress: inProgressTasks.length,
-      pending: pendingTasks.length,
+    console.log(`ItemMaintenanceTab - Active vs completed breakdown:`, {
+      active: activeTasks.length,
       completed: completedTasks.length
     });
-  }, [tasks, itemTasks, itemId, overdueTasks.length, dueSoonTasks.length, inProgressTasks.length, pendingTasks.length, completedTasks.length]);
+  }, [tasks, itemTasks, itemId, activeTasks.length, completedTasks.length]);
 
   const handleTaskComplete = (taskId: string) => {
     updateTask(taskId, { status: 'completed' });
@@ -66,34 +57,38 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
     setIsEditDialogOpen(false);
   };
 
-  const getTaskIcon = (status: string) => {
+  const getTaskIcon = (task: any) => {
+    const status = task.status === 'completed' ? 'completed' : calculateTaskStatus(task.date);
     switch (status) {
       case 'overdue':
         return <AlertTriangle className="w-4 h-4 text-red-500" />;
       case 'due_soon':
         return <Clock className="w-4 h-4 text-yellow-500" />;
-      case 'in_progress':
-        return <Clock className="w-4 h-4 text-blue-500" />;
-      case 'pending':
+      case 'up_to_date':
+        return <CheckCircle2 className="w-4 h-4 text-green-500" />;
+      case 'completed':
         return <CheckCircle2 className="w-4 h-4 text-gray-500" />;
       default:
         return <CheckCircle2 className="w-4 h-4 text-gray-500" />;
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'overdue':
-        return <Badge variant="destructive">Overdue</Badge>;
-      case 'due_soon':
-        return <Badge className="bg-yellow-500 text-white">Due Soon</Badge>;
-      case 'in_progress':
-        return <Badge className="bg-blue-500 text-white">In Progress</Badge>;
-      case 'pending':
-        return <Badge variant="outline">Pending</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
+  const getStatusBadge = (task: any) => {
+    const status = task.status === 'completed' ? 'completed' : calculateTaskStatus(task.date);
+    const label = getStatusLabel(status);
+    const colorClass = getStatusColor(status);
+    
+    return <Badge className={colorClass}>{label}</Badge>;
+  };
+
+  const getTaskStatusColorClass = (task: any) => {
+    const status = task.status === 'completed' ? 'completed' : calculateTaskStatus(task.date);
+    return getStatusColor(status);
+  };
+
+  const getTaskStatusBorderColorClass = (task: any) => {
+    const status = task.status === 'completed' ? 'completed' : calculateTaskStatus(task.date);
+    return getStatusBorderColor(status);
   };
 
   if (showAddForm) {
@@ -147,9 +142,9 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        {getTaskIcon(task.status)}
+                        {getTaskIcon(task)}
                         <h5 className="font-medium text-gray-900">{task.title}</h5>
-                        {getStatusBadge(task.status)}
+                        {getStatusBadge(task)}
                       </div>
                       {task.notes && (
                         <p className="text-sm text-gray-600 mt-1">{task.notes}</p>
