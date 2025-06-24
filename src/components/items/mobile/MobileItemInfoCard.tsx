@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Item } from '@/hooks/useSupabaseItems';
-import { Calendar, MapPin, DollarSign, Shield, Package } from 'lucide-react';
+import { Calendar, MapPin, Package, Shield } from 'lucide-react';
 
 interface MobileItemInfoCardProps {
   item: Item;
@@ -55,24 +55,11 @@ const MobileItemInfoCard = ({ item }: MobileItemInfoCardProps) => {
               <span>Warranty: {formatDate(item.warranty_date)}</span>
             </div>
           )}
-          
-          {item.purchase_price && (
-            <div className="flex items-center gap-2 text-gray-600">
-              <DollarSign className="w-4 h-4" />
-              <span>Price: ${item.purchase_price}</span>
-            </div>
-          )}
         </div>
 
-        {item.model && (
+        {item.notes && (
           <div className="text-sm text-gray-600">
-            <span className="font-medium">Model:</span> {item.model}
-          </div>
-        )}
-
-        {item.serial_number && (
-          <div className="text-sm text-gray-600">
-            <span className="font-medium">Serial:</span> {item.serial_number}
+            <span className="font-medium">Notes:</span> {item.notes}
           </div>
         )}
       </CardContent>
