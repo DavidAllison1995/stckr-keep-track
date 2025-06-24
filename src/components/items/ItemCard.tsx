@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -19,7 +20,7 @@ import { Item } from '@/hooks/useSupabaseItems';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { getIconComponent } from '@/components/icons';
-import { QrCode, Download, Clock, AlertTriangle, CheckCircle2, Trash2, ChevronRight } from 'lucide-react';
+import { QrCode, Download, Clock, AlertTriangle, CheckCircle2, Trash2, ChevronRight, Check, X } from 'lucide-react';
 import ItemDetail from './ItemDetail';
 import ItemForm from './ItemForm';
 import QRCode from 'qrcode';
@@ -174,15 +175,31 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                 <h3 className="font-semibold text-lg line-clamp-1">{item.name}</h3>
               </div>
               
-              <div className="flex items-center gap-2">
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                   {item.category}
-                </span>
+                </Badge>
                 {item.room && (
-                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                  <Badge variant="secondary" className="bg-green-100 text-green-800">
                     {item.room}
-                  </span>
+                  </Badge>
                 )}
+                <Badge 
+                  variant="secondary" 
+                  className={item.qr_code_id ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}
+                >
+                  {item.qr_code_id ? (
+                    <>
+                      <Check className="w-3 h-3 mr-1" />
+                      QR Assigned
+                    </>
+                  ) : (
+                    <>
+                      <X className="w-3 h-3 mr-1" />
+                      QR Not Assigned
+                    </>
+                  )}
+                </Badge>
               </div>
 
               {item.description && (
@@ -227,43 +244,6 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                         <span className="text-gray-600">{pendingTasks.length} pending</span>
                       </div>
                     )}
-                  </div>
-                </div>
-              )}
-
-              {/* QR Code Section */}
-              {item.qr_code_id ? (
-                <div className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
-                  {qrDataUrl ? (
-                    <img 
-                      src={qrDataUrl} 
-                      alt="QR code thumbnail" 
-                      className="w-12 h-12 rounded border"
-                      draggable={false}
-                    />
-                  ) : (
-                    <QrCode className="w-12 h-12 text-gray-400" />
-                  )}
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">Sticker {shortCode}</div>
-                    <Button 
-                      variant="link" 
-                      size="sm" 
-                      className="p-0 h-auto text-xs"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsQrModalOpen(true);
-                      }}
-                    >
-                      View full code
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
-                  <QrCode className="w-12 h-12 text-gray-400" />
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-500">No QR assigned</div>
                   </div>
                 </div>
               )}
