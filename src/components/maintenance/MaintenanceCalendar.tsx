@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react';
 import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, addDays, subDays, startOfDay, endOfDay, isToday } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
@@ -175,6 +174,10 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
     }
   };
 
+  const handleStatusTileClick = (status: string) => {
+    navigate(`/tasks/${status}`);
+  };
+
   const getTaskStatusColor = (task: MaintenanceTask) => {
     if (task.status === 'completed') {
       return 'bg-green-100 text-green-800';
@@ -285,7 +288,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
             <div
               key={index}
               className={`
-                ${isMobile ? 'min-h-[80px] p-1' : 'min-h-[100px] p-2'} border-r border-b last:border-r-0 cursor-pointer hover:bg-gray-50 transition-colors
+                ${isMobile ? 'min-h-[70px] p-1' : 'min-h-[100px] p-2'} border-r border-b last:border-r-0 cursor-pointer hover:bg-gray-50 transition-colors
                 ${isSelected ? 'bg-blue-50 border-blue-300' : ''}
                 ${!isCurrentMonth ? 'text-gray-300 bg-gray-25' : ''}
               `}
@@ -530,43 +533,27 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
   };
 
   return (
-    <div className={`h-full w-full ${isMobile ? 'space-y-1' : 'space-y-6'}`}>
+    <div className={`h-full w-full ${isMobile ? 'space-y-1 px-2 py-1' : 'space-y-6'}`}>
       {/* Mobile Optimized Header Layout */}
       {isMobile ? (
         <div className="space-y-1">
-          {/* Status Tiles Row - Horizontal */}
-          <div className="flex justify-between gap-2 mb-2">
-            <div className="flex items-center gap-1 bg-green-50 border border-green-200 rounded-lg px-2 py-1 flex-1">
-              <CheckCircle className="w-4 h-4 text-green-600" />
-              <span className="text-sm font-semibold text-green-800">{statusCounts.upToDate}</span>
-            </div>
-            <div className="flex items-center gap-1 bg-yellow-50 border border-yellow-200 rounded-lg px-2 py-1 flex-1">
-              <Clock className="w-4 h-4 text-yellow-600" />
-              <span className="text-sm font-semibold text-yellow-800">{statusCounts.dueSoon}</span>
-            </div>
-            <div className="flex items-center gap-1 bg-red-50 border border-red-200 rounded-lg px-2 py-1 flex-1">
-              <AlertTriangle className="w-4 h-4 text-red-600" />
-              <span className="text-sm font-semibold text-red-800">{statusCounts.overdue}</span>
-            </div>
-          </div>
-
           {/* Title and Add Button Row */}
-          <div className="flex items-center justify-between mb-1">
-            <h1 className="text-base font-bold">Maintenance Calendar</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-lg font-bold">Maintenance Calendar</h1>
             {onAddTask && (
-              <Button onClick={onAddTask} size="sm" className="bg-blue-500 hover:bg-blue-600 text-white p-1 h-7 w-7">
+              <Button onClick={onAddTask} size="sm" className="bg-blue-500 hover:bg-blue-600 text-white p-1 h-8 w-8">
                 <Plus className="w-4 h-4" />
               </Button>
             )}
           </div>
           
           {/* View Toggle Row */}
-          <div className="flex bg-gray-100 rounded-lg p-0.5 w-fit mb-1">
+          <div className="flex bg-gray-100 rounded-lg p-0.5 w-fit">
             <Button
               variant={viewMode === 'month' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('month')}
-              className={`text-xs px-2 py-1 h-6 ${viewMode === 'month' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
+              className={`text-xs px-3 py-1 h-7 ${viewMode === 'month' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
             >
               Month
             </Button>
@@ -574,7 +561,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
               variant={viewMode === 'week' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('week')}
-              className={`text-xs px-2 py-1 h-6 ${viewMode === 'week' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
+              className={`text-xs px-3 py-1 h-7 ${viewMode === 'week' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
             >
               Week
             </Button>
@@ -582,22 +569,47 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
               variant={viewMode === 'day' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('day')}
-              className={`text-xs px-2 py-1 h-6 ${viewMode === 'day' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
+              className={`text-xs px-3 py-1 h-7 ${viewMode === 'day' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
             >
               Day
             </Button>
           </div>
           
           {/* Search Row */}
-          <div className="relative mb-1">
+          <div className="relative">
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400" />
             <Input
               type="text"
               placeholder="Search tasks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-7 text-xs py-1 h-7"
+              className="pl-7 text-xs py-1 h-8"
             />
+          </div>
+          
+          {/* Mobile Status Tiles Row - Clickable */}
+          <div className="flex justify-between gap-2 mb-1">
+            <button
+              onClick={() => handleStatusTileClick('up-to-date')}
+              className="flex flex-col items-center gap-1 bg-green-50 border border-green-200 rounded-lg px-3 py-2 flex-1 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+            >
+              <CheckCircle className="w-4 h-4 text-green-600" />
+              <span className="text-sm font-semibold text-green-800">{statusCounts.upToDate}</span>
+            </button>
+            <button
+              onClick={() => handleStatusTileClick('due-soon')}
+              className="flex flex-col items-center gap-1 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 flex-1 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+            >
+              <Clock className="w-4 h-4 text-yellow-600" />
+              <span className="text-sm font-semibold text-yellow-800">{statusCounts.dueSoon}</span>
+            </button>
+            <button
+              onClick={() => handleStatusTileClick('overdue')}
+              className="flex flex-col items-center gap-1 bg-red-50 border border-red-200 rounded-lg px-3 py-2 flex-1 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+            >
+              <AlertTriangle className="w-4 h-4 text-red-600" />
+              <span className="text-sm font-semibold text-red-800">{statusCounts.overdue}</span>
+            </button>
           </div>
         </div>
       ) : (
@@ -660,7 +672,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
       <div className={`grid ${isMobile ? 'grid-cols-1 gap-1' : 'grid-cols-1 lg:grid-cols-4 gap-6'} w-full overflow-hidden`}>
         {/* Calendar View */}
         <div className={`${isMobile ? 'col-span-1' : 'lg:col-span-3'} w-full overflow-hidden`}>
-          <div className={isMobile ? 'max-h-[calc(100vh-200px)] overflow-y-auto' : ''}>
+          <div className={isMobile ? 'max-h-[60vh] overflow-y-auto' : ''}>
             {viewMode === 'month' && renderMonthView()}
             {viewMode === 'week' && renderWeekView()}
             {viewMode === 'day' && renderDayView()}
@@ -669,7 +681,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
 
         {/* Task Sidebar */}
         <div className={`${isMobile ? 'col-span-1' : 'lg:col-span-1'}`}>
-          <Card className={`h-fit ${isMobile ? 'max-h-[25vh]' : 'max-h-[600px]'} overflow-hidden`}>
+          <Card className={`h-fit ${isMobile ? 'max-h-[30vh]' : 'max-h-[600px]'} overflow-hidden`}>
             <CardContent className={isMobile ? 'p-2' : 'p-6'}>
               <div className="space-y-4">
                 <div>
@@ -679,7 +691,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                 </div>
 
                 {tasksForSelectedDate.length > 0 ? (
-                  <div className={`space-y-2 ${isMobile ? 'max-h-[15vh]' : 'max-h-[450px]'} overflow-y-auto`}>
+                  <div className={`space-y-2 ${isMobile ? 'max-h-[20vh]' : 'max-h-[450px]'} overflow-y-auto`}>
                     {tasksForSelectedDate.map(task => {
                       const taskStatus = task.status === 'completed' ? 'completed' : calculateTaskStatus(task.date);
                       return (
@@ -691,7 +703,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                           onClick={() => handleTaskClick(task)}
                         >
                           <div className="flex items-start justify-between mb-1">
-                            <h4 className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>{task.title}</h4>
+                            <h4 className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'} truncate`}>{task.title}</h4>
                             <span className={`text-xs px-1 py-0.5 rounded-full ${getTaskStatusColor(task)}`}>
                               {taskStatus === 'completed' ? 'Done' :
                                taskStatus === 'due_soon' ? 'Soon' : 
