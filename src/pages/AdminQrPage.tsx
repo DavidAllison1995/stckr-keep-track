@@ -15,6 +15,7 @@ interface QRCodeData {
   id: string;
   created_at: string;
   is_active: boolean;
+  code?: string;
   image_url?: string;
 }
 
@@ -34,9 +35,12 @@ const AdminQrPage = () => {
     setIsLoading(true);
     try {
       console.log('Loading QR codes via admin-qr-list function...');
+      const session = await supabase.auth.getSession();
+      console.log('Session token available:', !!session.data.session?.access_token);
+      
       const { data, error } = await supabase.functions.invoke('admin-qr-list', {
         headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          Authorization: `Bearer ${session.data.session?.access_token}`,
         },
       });
 
@@ -201,7 +205,7 @@ const AdminQrPage = () => {
       {/* QR Codes Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Global QR Codes ({codes.length})</CardTitle>
+          <CardTitle>All QR Codes ({codes.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -237,7 +241,12 @@ const AdminQrPage = () => {
                               <QrCode className="w-6 h-6 text-gray-400" />
                             </div>
                           )}
-                          <div className="font-mono text-sm">{code.id}</div>
+                          <div>
+                            <div className="font-mono text-sm">{code.id}</div>
+                            {code.code && (
+                              <div className="text-xs text-gray-500">Code: {code.code}</div>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="py-3 px-4">

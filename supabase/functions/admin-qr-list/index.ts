@@ -13,12 +13,6 @@ serve(async (req) => {
   }
 
   try {
-    // Create Supabase client with service role key for admin operations
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       console.error('No authorization header provided')
@@ -26,14 +20,21 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace('Bearer ', '')
+    console.log('Token received:', token ? 'Present' : 'Missing')
     
-    // Verify user is authenticated using the anon key client
+    // Create client with anon key to verify user
     const anonClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     )
     
-    const { data: { user }, error: authError } = await anonClient.auth.getUser(token)
+    // Set the auth token
+    await anonClient.auth.setSession({
+      access_token: token,
+      refresh_token: ''
+    })
+    
+    const { data: { user }, error: authError } = await anonClient.auth.getUser()
     if (authError || !user) {
       console.error('Auth verification failed:', authError)
       return new Response('Unauthorized - Invalid token', { status: 401, headers: corsHeaders })
@@ -41,8 +42,14 @@ serve(async (req) => {
 
     console.log('User authenticated:', user.email)
 
-    // Check if user is admin using service role client
-    const { data: profile, error: profileError } = await supabaseClient
+    // Create service role client for admin operations
+    const serviceClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    // Check if user is admin
+    const { data: profile, error: profileError } = await serviceClient
       .from('profiles')
       .select('is_admin')
       .eq('id', user.id)
@@ -55,10 +62,10 @@ serve(async (req) => {
 
     console.log('Admin access confirmed for user:', user.email)
 
-    // Get all global QR codes including image_url using service role
-    const { data, error } = await supabaseClient
-      .from('global_qr_codes')
-      .select('id, created_at, is_active, image_url')
+    // Get all QR codes from the qr_codes table
+    const { data, error } = await serviceClient
+      .from('qr_codes')
+      .select('id, code, created_at')
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -68,8 +75,16 @@ serve(async (req) => {
 
     console.log('Successfully fetched QR codes:', data?.length || 0)
 
+    // Transform data to match expected format
+    const formattedCodes = data.map(code => ({
+      id: code.id,
+      created_at: code.created_at,
+      is_active: true, // All QR codes are active by default
+      code: code.code
+    }))
+
     return new Response(
-      JSON.stringify({ codes: data }),
+      JSON.stringify({ codes: formattedCodes }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
