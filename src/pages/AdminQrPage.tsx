@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -62,7 +63,8 @@ const AdminQrPage = () => {
       
       const { data, error } = await supabase.functions.invoke('admin-qr-list', {
         headers: {
-          Authorization: `Bearer ${sessionData.session.access_token}`,
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
+          'Content-Type': 'application/json',
         },
       });
 
@@ -113,7 +115,8 @@ const AdminQrPage = () => {
       const { data, error } = await supabase.functions.invoke('admin-qr-generate', {
         body: { quantity },
         headers: {
-          Authorization: `Bearer ${sessionData.session.access_token}`,
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
+          'Content-Type': 'application/json',
         },
       });
 
@@ -157,7 +160,8 @@ const AdminQrPage = () => {
       const { error } = await supabase.functions.invoke('admin-qr-delete', {
         body: { codeId },
         headers: {
-          Authorization: `Bearer ${sessionData.session.access_token}`,
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
+          'Content-Type': 'application/json',
         },
       });
 

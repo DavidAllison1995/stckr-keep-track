@@ -13,22 +13,87 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
+    console.log('=== Admin QR Generate Function Started ===')
+    
+    const authHeader = req.headers.get('Authorization')
+    console.log('Auth header present:', !!authHeader)
+    
+    if (!authHeader) {
+      console.error('No authorization header provided')
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - No auth header' }), 
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const token = authHeader.replace('Bearer ', '')
+    console.log('Token extracted, length:', token.length)
+
+    // Create service role client for database operations
+    const serviceClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
-
-    const authHeader = req.headers.get('Authorization')!
-    const token = authHeader.replace('Bearer ', '')
     
-    // Verify user is authenticated
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
+    console.log('Service client created')
+    
+    // Create anon client for user verification
+    const anonClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: authHeader,
+          },
+        },
+      }
+    )
+    
+    // Verify user with the token
+    const { data: { user }, error: authError } = await anonClient.auth.getUser()
+    console.log('User verification result:', { user: !!user, error: authError?.message })
+    
     if (authError || !user) {
-      return new Response('Unauthorized', { status: 401, headers: corsHeaders })
+      console.error('Auth verification failed:', authError)
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Invalid token', details: authError?.message }), 
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    // Always generate 9 QR codes per batch
-    const quantity = 9
+    console.log('User authenticated:', user.email, 'ID:', user.id)
+
+    // Check if user is admin using service client
+    console.log('Checking admin status for user:', user.id)
+    const { data: profile, error: profileError } = await serviceClient
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single()
+
+    console.log('Profile query result:', { profile, error: profileError })
+
+    if (profileError) {
+      console.error('Profile lookup failed:', profileError)
+      return new Response(
+        JSON.stringify({ error: 'Failed to verify admin status', details: profileError.message }), 
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (!profile?.is_admin) {
+      console.error('Admin check failed - is_admin:', profile?.is_admin)
+      return new Response(
+        JSON.stringify({ error: 'Forbidden - Admin access required' }), 
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log('Admin access confirmed for user:', user.email)
+
+    const { quantity = 9 } = await req.json()
+    console.log('Generating QR codes with quantity:', quantity)
 
     // Generate unique codes with branded QR images
     const codes = []
@@ -45,30 +110,53 @@ serve(async (req) => {
       
       codes.push({ 
         id: codeId, 
+        code: codeId,
         token,
         image_url: qrDataUrl
       })
     }
 
-    // Insert codes using service role
-    const { data, error } = await supabaseClient
-      .from('global_qr_codes')
-      .insert(codes)
+    console.log('Generated codes data:', codes.length)
+
+    // Insert codes using service role client to bypass RLS
+    const { data, error } = await serviceClient
+      .from('qr_codes')
+      .insert(codes.map(code => ({
+        id: code.id,
+        code: code.code
+      })))
       .select()
 
     if (error) {
       console.error('Error inserting QR codes:', error)
-      return new Response('Failed to generate codes', { status: 500, headers: corsHeaders })
+      return new Response(
+        JSON.stringify({ error: 'Failed to generate codes', details: error.message }), 
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
+    console.log('Successfully inserted QR codes to database:', data?.length || 0)
+
+    // Return codes with image URLs for frontend display
+    const returnCodes = codes.map((code, index) => ({
+      id: code.id,
+      code: code.code,
+      created_at: new Date().toISOString(),
+      is_active: true,
+      image_url: code.image_url
+    }))
+
     return new Response(
-      JSON.stringify({ codes: data }),
+      JSON.stringify({ codes: returnCodes }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
-    console.error('Error:', error)
-    return new Response('Internal error', { status: 500, headers: corsHeaders })
+    console.error('Unexpected error in admin-qr-generate:', error)
+    return new Response(
+      JSON.stringify({ error: 'Internal error', details: error.message }), 
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   }
 })
 

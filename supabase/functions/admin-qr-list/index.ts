@@ -37,14 +37,21 @@ serve(async (req) => {
     
     console.log('Service client created')
     
-    // Create regular client for user verification
-    const regularClient = createClient(
+    // Create anon client for user verification
+    const anonClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: authHeader,
+          },
+        },
+      }
     )
     
-    // Set the auth token on the regular client
-    const { data: { user }, error: authError } = await regularClient.auth.getUser(token)
+    // Verify user with the token
+    const { data: { user }, error: authError } = await anonClient.auth.getUser()
     console.log('User verification result:', { user: !!user, error: authError?.message })
     
     if (authError || !user) {
