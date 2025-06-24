@@ -13,7 +13,11 @@ serve(async (req) => {
   }
 
   try {
+    console.log('=== Admin QR List Function Started ===')
+    
     const authHeader = req.headers.get('Authorization')
+    console.log('Auth header present:', !!authHeader)
+    
     if (!authHeader) {
       console.error('No authorization header provided')
       return new Response(
@@ -23,16 +27,26 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace('Bearer ', '')
-    console.log('Token received:', token ? 'Present' : 'Missing')
+    console.log('Token extracted, length:', token.length)
     
-    // Create service role client for all operations (bypasses RLS)
+    // Create service role client for database operations
     const serviceClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
     
-    // Verify the token and get user using service role client
-    const { data: { user }, error: authError } = await serviceClient.auth.getUser(token)
+    console.log('Service client created')
+    
+    // Create regular client for user verification
+    const regularClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    )
+    
+    // Set the auth token on the regular client
+    const { data: { user }, error: authError } = await regularClient.auth.getUser(token)
+    console.log('User verification result:', { user: !!user, error: authError?.message })
+    
     if (authError || !user) {
       console.error('Auth verification failed:', authError)
       return new Response(
@@ -41,14 +55,17 @@ serve(async (req) => {
       )
     }
 
-    console.log('User authenticated:', user.email)
+    console.log('User authenticated:', user.email, 'ID:', user.id)
 
-    // Check if user is admin
+    // Check if user is admin using service client
+    console.log('Checking admin status for user:', user.id)
     const { data: profile, error: profileError } = await serviceClient
       .from('profiles')
       .select('is_admin')
       .eq('id', user.id)
       .single()
+
+    console.log('Profile query result:', { profile, error: profileError })
 
     if (profileError) {
       console.error('Profile lookup failed:', profileError)
@@ -68,11 +85,18 @@ serve(async (req) => {
 
     console.log('Admin access confirmed for user:', user.email)
 
-    // Get all QR codes from the qr_codes table
+    // Get all QR codes using service role client to bypass RLS
+    console.log('Fetching QR codes from qr_codes table...')
     const { data, error } = await serviceClient
       .from('qr_codes')
       .select('id, code, created_at')
       .order('created_at', { ascending: false })
+
+    console.log('QR codes query result:', { 
+      dataCount: data?.length || 0, 
+      error: error?.message,
+      hasData: !!data 
+    })
 
     if (error) {
       console.error('Error fetching QR codes:', error)
@@ -85,12 +109,14 @@ serve(async (req) => {
     console.log('Successfully fetched QR codes:', data?.length || 0)
 
     // Transform data to match expected format
-    const formattedCodes = data.map(code => ({
+    const formattedCodes = (data || []).map(code => ({
       id: code.id,
       created_at: code.created_at,
       is_active: true, // All QR codes are active by default
       code: code.code
     }))
+
+    console.log('Returning formatted codes:', formattedCodes.length)
 
     return new Response(
       JSON.stringify({ codes: formattedCodes }),
@@ -98,7 +124,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Unexpected error:', error)
+    console.error('Unexpected error in admin-qr-list:', error)
     return new Response(
       JSON.stringify({ error: 'Internal error', details: error.message }), 
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

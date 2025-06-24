@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,21 +37,40 @@ const AdminQrPage = () => {
     setIsLoading(true);
     try {
       console.log('Loading QR codes via admin-qr-list function...');
-      const session = await supabase.auth.getSession();
-      console.log('Session details:', {
-        hasSession: !!session.data.session,
-        hasToken: !!session.data.session?.access_token,
-        userEmail: session.data.session?.user?.email
+      
+      // Get current session with more detailed logging
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      console.log('Session check:', {
+        hasSession: !!sessionData.session,
+        hasToken: !!sessionData.session?.access_token,
+        userEmail: sessionData.session?.user?.email,
+        sessionError: sessionError?.message
       });
       
-      if (!session.data.session?.access_token) {
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error(`Session error: ${sessionError.message}`);
+      }
+      
+      if (!sessionData.session?.access_token) {
+        console.error('No valid session token available');
         throw new Error('No valid session token available');
       }
       
+      console.log('Calling admin-qr-list function with token...');
+      
       const { data, error } = await supabase.functions.invoke('admin-qr-list', {
         headers: {
-          Authorization: `Bearer ${session.data.session.access_token}`,
+          Authorization: `Bearer ${sessionData.session.access_token}`,
         },
+      });
+
+      console.log('Function response:', { 
+        data, 
+        error,
+        hasData: !!data,
+        hasCodes: !!data?.codes 
       });
 
       if (error) {
@@ -60,9 +78,8 @@ const AdminQrPage = () => {
         throw error;
       }
       
-      console.log('Successfully loaded QR codes:', data);
-      
       if (data && data.codes) {
+        console.log('Successfully loaded QR codes:', data.codes.length);
         setCodes(data.codes);
       } else {
         console.warn('No codes data in response:', data);
@@ -87,10 +104,16 @@ const AdminQrPage = () => {
     setIsGenerating(true);
     try {
       console.log('Generating QR codes via admin-qr-generate function...');
+      
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session?.access_token) {
+        throw new Error('No valid session token available');
+      }
+      
       const { data, error } = await supabase.functions.invoke('admin-qr-generate', {
         body: { quantity },
         headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          Authorization: `Bearer ${sessionData.session.access_token}`,
         },
       });
 
@@ -111,7 +134,7 @@ const AdminQrPage = () => {
       console.error('Error generating codes:', error);
       toast({
         title: 'Error',
-        description: 'Failed to generate QR codes',
+        description: `Failed to generate QR codes: ${error.message || 'Unknown error'}`,
         variant: 'destructive',
       });
     } finally {
@@ -125,10 +148,16 @@ const AdminQrPage = () => {
     setDeletingCodes(prev => new Set(prev).add(codeId));
     try {
       console.log('Deleting QR code via admin-qr-delete function...');
+      
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session?.access_token) {
+        throw new Error('No valid session token available');
+      }
+      
       const { error } = await supabase.functions.invoke('admin-qr-delete', {
         body: { codeId },
         headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          Authorization: `Bearer ${sessionData.session.access_token}`,
         },
       });
 
@@ -148,7 +177,7 @@ const AdminQrPage = () => {
       console.error('Error deleting code:', error);
       toast({
         title: 'Error',
-        description: 'Failed to delete QR code',
+        description: `Failed to delete QR code: ${error.message || 'Unknown error'}`,
         variant: 'destructive',
       });
     } finally {
@@ -230,7 +259,7 @@ const AdminQrPage = () => {
             <div className="text-center py-8">Loading QR codes...</div>
           ) : codes.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              No QR codes generated yet
+              No QR codes found or failed to load. Please try refreshing the page.
             </div>
           ) : (
             <div className="overflow-x-auto">
