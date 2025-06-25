@@ -130,8 +130,8 @@ serve(async (req) => {
       const qrDataUrl = await generateBrandedQRCode(qrUrl, codeId)
       
       codes.push({ 
-        id: codeId, 
-        code: codeId,
+        id: crypto.randomUUID(), // Generate proper UUID for the database id field
+        code: codeId, // Use the generated code for the code field
         token,
         image_url: qrDataUrl
       })
@@ -143,8 +143,8 @@ serve(async (req) => {
     const { data, error } = await serviceClient
       .from('qr_codes')
       .insert(codes.map(code => ({
-        id: code.id,
-        code: code.code
+        id: code.id, // This is now a proper UUID
+        code: code.code // This is the readable code like "ABC123"
       })))
       .select()
 
