@@ -46,14 +46,6 @@ const ItemDetailsTab = ({ item, onTabChange }: ItemDetailsTabProps) => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Photo</h3>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsImageModalOpen(true)}
-            >
-              <Camera className="w-4 h-4 mr-2" />
-              {item.photo_url ? 'Change Photo' : 'Add Photo'}
-            </Button>
           </div>
           
           <div className="relative">
