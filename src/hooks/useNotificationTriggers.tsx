@@ -8,8 +8,18 @@ export const useNotificationTriggers = () => {
   const { settings } = useUserSettings();
 
   const triggerTaskCreatedNotification = async (taskId: string, taskTitle: string, taskDate: string, itemId?: string) => {
-    if (!user?.id || !settings.notifications.taskCreated) {
-      console.log('Task created notification skipped - user not found or disabled');
+    console.log('triggerTaskCreatedNotification called with:', { taskId, taskTitle, taskDate, itemId });
+    console.log('Current user:', user?.id);
+    console.log('Current settings:', settings);
+    console.log('Task created setting:', settings.notifications.taskCreated);
+
+    if (!user?.id) {
+      console.log('Task created notification skipped - no user ID');
+      return;
+    }
+
+    if (!settings.notifications.taskCreated) {
+      console.log('Task created notification skipped - setting disabled in user preferences');
       return;
     }
 
@@ -41,6 +51,8 @@ export const useNotificationTriggers = () => {
   };
 
   const triggerTaskCompletedNotification = async (taskId: string, taskTitle: string, itemId?: string) => {
+    console.log('triggerTaskCompletedNotification called with:', { taskId, taskTitle, itemId });
+    
     if (!user?.id || !settings.notifications.taskCompleted) {
       console.log('Task completed notification skipped - user not found or disabled');
       return;
@@ -72,6 +84,8 @@ export const useNotificationTriggers = () => {
   };
 
   const triggerTaskUpdatedNotification = async (taskId: string, taskTitle: string, newDueDate: string, itemId?: string) => {
+    console.log('triggerTaskUpdatedNotification called with:', { taskId, taskTitle, newDueDate, itemId });
+    
     if (!user?.id || !settings.notifications.taskUpdated) {
       console.log('Task updated notification skipped - user not found or disabled');
       return;
