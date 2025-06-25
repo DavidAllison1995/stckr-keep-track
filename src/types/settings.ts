@@ -3,9 +3,12 @@ export interface UserSettings {
   notifications: {
     taskDueSoon: boolean;
     taskOverdue: boolean;
+    taskDueToday: boolean;
     warrantyExpiring: boolean;
     taskCompleted: boolean;
     taskCreated: boolean;
+    taskUpdated: boolean;
+    recurringTaskReminder: boolean;
   };
   showCompletedTasks: boolean;
 }

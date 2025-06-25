@@ -1,25 +1,29 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from './useSupabaseAuth';
+import { useUserSettings } from './useUserSettings';
 
 export const useNotificationTriggers = () => {
   const { user } = useSupabaseAuth();
+  const { settings } = useUserSettings();
 
-  const triggerTaskCreatedNotification = async (taskId: string, taskTitle: string, itemId?: string) => {
-    if (!user?.id) {
-      console.error('No user ID available for task created notification');
+  const triggerTaskCreatedNotification = async (taskId: string, taskTitle: string, taskDate: string, itemId?: string) => {
+    if (!user?.id || !settings.notifications.taskCreated) {
+      console.log('Task created notification skipped - user not found or disabled');
       return;
     }
 
     try {
-      console.log('Creating task created notification:', { taskId, taskTitle, itemId, userId: user.id });
+      console.log('Creating task created notification:', { taskId, taskTitle, taskDate, itemId, userId: user.id });
+      const formattedDate = new Date(taskDate).toLocaleDateString();
+      
       const { data, error } = await supabase
         .from('notifications')
         .insert({
           user_id: user.id,
           type: 'task_created',
           title: `New Task Created: ${taskTitle}`,
-          message: 'A new maintenance task has been added',
+          message: `New task '${taskTitle}' has been added for ${formattedDate}.`,
           task_id: taskId,
           item_id: itemId
         })
@@ -37,8 +41,8 @@ export const useNotificationTriggers = () => {
   };
 
   const triggerTaskCompletedNotification = async (taskId: string, taskTitle: string, itemId?: string) => {
-    if (!user?.id) {
-      console.error('No user ID available for task completed notification');
+    if (!user?.id || !settings.notifications.taskCompleted) {
+      console.log('Task completed notification skipped - user not found or disabled');
       return;
     }
 
@@ -50,7 +54,7 @@ export const useNotificationTriggers = () => {
           user_id: user.id,
           type: 'task_completed',
           title: `Task Completed: ${taskTitle}`,
-          message: 'A maintenance task has been completed',
+          message: `Task '${taskTitle}' has been marked as completed.`,
           task_id: taskId,
           item_id: itemId
         })
@@ -64,6 +68,39 @@ export const useNotificationTriggers = () => {
       console.log('Task completed notification created successfully:', data);
     } catch (error) {
       console.error('Error creating completion notification:', error);
+    }
+  };
+
+  const triggerTaskUpdatedNotification = async (taskId: string, taskTitle: string, newDueDate: string, itemId?: string) => {
+    if (!user?.id || !settings.notifications.taskUpdated) {
+      console.log('Task updated notification skipped - user not found or disabled');
+      return;
+    }
+
+    try {
+      console.log('Creating task updated notification:', { taskId, taskTitle, newDueDate, itemId, userId: user.id });
+      const formattedDate = new Date(newDueDate).toLocaleDateString();
+      
+      const { data, error } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: user.id,
+          type: 'task_updated',
+          title: `Task Updated: ${taskTitle}`,
+          message: `'${taskTitle}' was updated. New due date: ${formattedDate}.`,
+          task_id: taskId,
+          item_id: itemId
+        })
+        .select();
+
+      if (error) {
+        console.error('Supabase error creating task updated notification:', error);
+        throw error;
+      }
+      
+      console.log('Task updated notification created successfully:', data);
+    } catch (error) {
+      console.error('Error creating task updated notification:', error);
     }
   };
 
@@ -124,6 +161,7 @@ export const useNotificationTriggers = () => {
   return {
     triggerTaskCreatedNotification,
     triggerTaskCompletedNotification,
+    triggerTaskUpdatedNotification,
     triggerItemCreatedNotification,
     generateNotificationsManually,
   };

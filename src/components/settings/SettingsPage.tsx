@@ -76,6 +76,19 @@ const SettingsPage = () => {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
+                <Label>Task Created</Label>
+                <p className="text-sm text-gray-500">
+                  Get notified when new maintenance tasks are created
+                </p>
+              </div>
+              <Switch
+                checked={settings.notifications.taskCreated}
+                onCheckedChange={(checked) => handleNotificationToggle('taskCreated', checked)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
                 <Label>Task Due Soon</Label>
                 <p className="text-sm text-gray-500">
                   Get notified when maintenance tasks are due within 3 days
@@ -84,6 +97,19 @@ const SettingsPage = () => {
               <Switch
                 checked={settings.notifications.taskDueSoon}
                 onCheckedChange={(checked) => handleNotificationToggle('taskDueSoon', checked)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Task Due Today</Label>
+                <p className="text-sm text-gray-500">
+                  Get notified when maintenance tasks are due today
+                </p>
+              </div>
+              <Switch
+                checked={settings.notifications.taskDueToday}
+                onCheckedChange={(checked) => handleNotificationToggle('taskDueToday', checked)}
               />
             </div>
 
@@ -102,14 +128,14 @@ const SettingsPage = () => {
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>Warranty Expiring</Label>
+                <Label>Task Updated</Label>
                 <p className="text-sm text-gray-500">
-                  Get notified when item warranties are about to expire
+                  Get notified when maintenance tasks are edited or updated
                 </p>
               </div>
               <Switch
-                checked={settings.notifications.warrantyExpiring}
-                onCheckedChange={(checked) => handleNotificationToggle('warrantyExpiring', checked)}
+                checked={settings.notifications.taskUpdated}
+                onCheckedChange={(checked) => handleNotificationToggle('taskUpdated', checked)}
               />
             </div>
 
@@ -128,14 +154,27 @@ const SettingsPage = () => {
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>Task Created</Label>
+                <Label>Recurring Task Reminder</Label>
                 <p className="text-sm text-gray-500">
-                  Get notified when new maintenance tasks are created
+                  Get notified 3 days before recurring tasks are due
                 </p>
               </div>
               <Switch
-                checked={settings.notifications.taskCreated}
-                onCheckedChange={(checked) => handleNotificationToggle('taskCreated', checked)}
+                checked={settings.notifications.recurringTaskReminder}
+                onCheckedChange={(checked) => handleNotificationToggle('recurringTaskReminder', checked)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Warranty Expiring</Label>
+                <p className="text-sm text-gray-500">
+                  Get notified when item warranties are about to expire
+                </p>
+              </div>
+              <Switch
+                checked={settings.notifications.warrantyExpiring}
+                onCheckedChange={(checked) => handleNotificationToggle('warrantyExpiring', checked)}
               />
             </div>
           </CardContent>

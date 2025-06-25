@@ -1,9 +1,9 @@
-
 import { createContext, useContext, ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from './useSupabaseAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useNotificationTriggers } from './useNotificationTriggers';
 
 export type MaintenanceTaskStatus = 'pending' | 'in_progress' | 'completed' | 'overdue' | 'due_soon';
 export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
@@ -43,6 +43,11 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { 
+    triggerTaskCreatedNotification, 
+    triggerTaskCompletedNotification, 
+    triggerTaskUpdatedNotification 
+  } = useNotificationTriggers();
 
   const { data: tasks = [], isLoading } = useQuery({
     queryKey: ['maintenance-tasks', user?.id],
@@ -91,12 +96,17 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['maintenance-tasks', user?.id] });
       toast({
         title: 'Success',
         description: 'Maintenance task added successfully',
       });
+      
+      // Trigger task created notification
+      if (data) {
+        triggerTaskCreatedNotification(data.id, data.title, data.date, data.item_id || undefined);
+      }
     },
     onError: (error) => {
       console.error('Error adding maintenance task:', error);
@@ -110,6 +120,8 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
 
   const updateTaskMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<MaintenanceTask> }) => {
+      const originalTask = tasks.find(t => t.id === id);
+      
       const { data, error } = await supabase
         .from('maintenance_tasks')
         .update(updates)
@@ -118,10 +130,18 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (error) throw error;
-      return data;
+      return { data, originalTask };
     },
-    onSuccess: () => {
+    onSuccess: ({ data, originalTask }) => {
       queryClient.invalidateQueries({ queryKey: ['maintenance-tasks', user?.id] });
+      
+      // Trigger task updated notification if the date or title changed
+      if (data && originalTask && (
+        data.date !== originalTask.date || 
+        data.title !== originalTask.title
+      )) {
+        triggerTaskUpdatedNotification(data.id, data.title, data.date, data.item_id || undefined);
+      }
     },
     onError: (error) => {
       console.error('Error updating maintenance task:', error);
@@ -186,12 +206,17 @@ export const MaintenanceProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['maintenance-tasks', user?.id] });
       toast({
         title: 'Success',
         description: 'Task marked as complete',
       });
+      
+      // Trigger task completed notification
+      if (data) {
+        triggerTaskCompletedNotification(data.id, data.title, data.item_id || undefined);
+      }
     },
     onError: (error) => {
       console.error('Error marking task complete:', error);

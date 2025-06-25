@@ -8,9 +8,12 @@ export interface UserSettings {
   notifications: {
     taskDueSoon: boolean;
     taskOverdue: boolean;
+    taskDueToday: boolean;
     warrantyExpiring: boolean;
     taskCompleted: boolean;
     taskCreated: boolean;
+    taskUpdated: boolean;
+    recurringTaskReminder: boolean;
   };
   showCompletedTasks: boolean;
 }
@@ -19,9 +22,12 @@ const defaultSettings: UserSettings = {
   notifications: {
     taskDueSoon: true,
     taskOverdue: true,
+    taskDueToday: true,
     warrantyExpiring: true,
     taskCompleted: false,
     taskCreated: false,
+    taskUpdated: true,
+    recurringTaskReminder: true,
   },
   showCompletedTasks: false,
 };
@@ -60,9 +66,12 @@ export const useUserSettings = () => {
         notifications: {
           taskDueSoon: data.notification_task_due_soon ?? true,
           taskOverdue: data.notification_task_overdue ?? true,
+          taskDueToday: data.notification_task_due_today ?? true,
           warrantyExpiring: data.notification_warranty_expiring ?? true,
           taskCompleted: data.notification_task_completed ?? false,
           taskCreated: data.notification_task_created ?? false,
+          taskUpdated: data.notification_task_updated ?? true,
+          recurringTaskReminder: data.notification_recurring_task_reminder ?? true,
         },
         showCompletedTasks: false, // Default value since not stored in DB yet
       };
@@ -79,14 +88,17 @@ export const useUserSettings = () => {
 
       console.log('Updating settings for user:', user.id, newSettings);
 
-      // Map frontend structure to database fields - only notifications for now
+      // Map frontend structure to database fields
       const dbSettings = {
         user_id: user.id,
         notification_task_due_soon: newSettings.notifications.taskDueSoon,
         notification_task_overdue: newSettings.notifications.taskOverdue,
+        notification_task_due_today: newSettings.notifications.taskDueToday,
         notification_warranty_expiring: newSettings.notifications.warrantyExpiring,
         notification_task_completed: newSettings.notifications.taskCompleted,
         notification_task_created: newSettings.notifications.taskCreated,
+        notification_task_updated: newSettings.notifications.taskUpdated,
+        notification_recurring_task_reminder: newSettings.notifications.recurringTaskReminder,
       };
 
       console.log('Database settings to save:', dbSettings);

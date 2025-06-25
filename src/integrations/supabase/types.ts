@@ -511,10 +511,13 @@ export type Database = {
           date_format: string | null
           id: string
           language: string | null
+          notification_recurring_task_reminder: boolean | null
           notification_task_completed: boolean | null
           notification_task_created: boolean | null
           notification_task_due_soon: boolean | null
+          notification_task_due_today: boolean | null
           notification_task_overdue: boolean | null
+          notification_task_updated: boolean | null
           notification_warranty_expiring: boolean | null
           qr_scan_sound: boolean | null
           theme: string | null
@@ -527,10 +530,13 @@ export type Database = {
           date_format?: string | null
           id?: string
           language?: string | null
+          notification_recurring_task_reminder?: boolean | null
           notification_task_completed?: boolean | null
           notification_task_created?: boolean | null
           notification_task_due_soon?: boolean | null
+          notification_task_due_today?: boolean | null
           notification_task_overdue?: boolean | null
+          notification_task_updated?: boolean | null
           notification_warranty_expiring?: boolean | null
           qr_scan_sound?: boolean | null
           theme?: string | null
@@ -543,10 +549,13 @@ export type Database = {
           date_format?: string | null
           id?: string
           language?: string | null
+          notification_recurring_task_reminder?: boolean | null
           notification_task_completed?: boolean | null
           notification_task_created?: boolean | null
           notification_task_due_soon?: boolean | null
+          notification_task_due_today?: boolean | null
           notification_task_overdue?: boolean | null
+          notification_task_updated?: boolean | null
           notification_warranty_expiring?: boolean | null
           qr_scan_sound?: boolean | null
           theme?: string | null

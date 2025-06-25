@@ -25,18 +25,52 @@ serve(async (req) => {
     // Get user settings to filter notifications
     const { data: userSettings } = await supabaseClient
       .from('user_settings')
-      .select('user_id, notification_task_due_soon, notification_task_overdue, notification_warranty_expiring')
+      .select('user_id, notification_task_due_soon, notification_task_overdue, notification_task_due_today, notification_warranty_expiring, notification_recurring_task_reminder')
 
     const userSettingsMap = new Map(
       userSettings?.map(setting => [setting.user_id, setting]) || []
     )
 
-    // 1. Check for tasks due soon (3 days)
+    // 1. Check for tasks due today
+    const { data: tasksDueToday } = await supabaseClient
+      .from('maintenance_tasks')
+      .select('id, user_id, title, date, item_id')
+      .eq('status', 'pending')
+      .eq('date', today.toISOString().split('T')[0])
+
+    for (const task of tasksDueToday || []) {
+      const userSettings = userSettingsMap.get(task.user_id)
+      if (!userSettings?.notification_task_due_today) continue
+
+      // Check if notification already exists
+      const { data: existingNotification } = await supabaseClient
+        .from('notifications')
+        .select('id')
+        .eq('user_id', task.user_id)
+        .eq('task_id', task.id)
+        .eq('type', 'task_due_today')
+        .single()
+
+      if (!existingNotification) {
+        await supabaseClient
+          .from('notifications')
+          .insert({
+            user_id: task.user_id,
+            type: 'task_due_today',
+            title: `Due Today: ${task.title}`,
+            message: `Today: '${task.title}' is due.`,
+            task_id: task.id,
+            item_id: task.item_id
+          })
+      }
+    }
+
+    // 2. Check for tasks due soon (3 days, excluding today)
     const { data: tasksDueSoon } = await supabaseClient
       .from('maintenance_tasks')
       .select('id, user_id, title, date, item_id')
       .eq('status', 'pending')
-      .gte('date', today.toISOString().split('T')[0])
+      .gt('date', today.toISOString().split('T')[0])
       .lte('date', threeDaysFromNow.toISOString().split('T')[0])
 
     for (const task of tasksDueSoon || []) {
@@ -53,20 +87,21 @@ serve(async (req) => {
         .single()
 
       if (!existingNotification) {
+        const daysUntilDue = Math.ceil((new Date(task.date).getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
         await supabaseClient
           .from('notifications')
           .insert({
             user_id: task.user_id,
             type: 'task_due_soon',
             title: `Task Due Soon: ${task.title}`,
-            message: `This task is due on ${new Date(task.date).toLocaleDateString()}`,
+            message: `Reminder: '${task.title}' is due in ${daysUntilDue} day(s).`,
             task_id: task.id,
             item_id: task.item_id
           })
       }
     }
 
-    // 2. Check for overdue tasks
+    // 3. Check for overdue tasks
     const { data: overdueTasks } = await supabaseClient
       .from('maintenance_tasks')
       .select('id, user_id, title, date, item_id')
@@ -93,7 +128,7 @@ serve(async (req) => {
             user_id: task.user_id,
             type: 'task_overdue',
             title: `Task Overdue: ${task.title}`,
-            message: `This task was due on ${new Date(task.date).toLocaleDateString()}`,
+            message: `Overdue: '${task.title}' was due on ${new Date(task.date).toLocaleDateString()}.`,
             task_id: task.id,
             item_id: task.item_id
           })
@@ -106,7 +141,43 @@ serve(async (req) => {
       }
     }
 
-    // 3. Check for warranties expiring soon (7 days)
+    // 4. Check for recurring task reminders (3 days before next instance)
+    const { data: recurringTasks } = await supabaseClient
+      .from('maintenance_tasks')
+      .select('id, user_id, title, date, item_id, recurrence')
+      .neq('recurrence', 'none')
+      .eq('status', 'pending')
+      .gte('date', today.toISOString().split('T')[0])
+      .lte('date', threeDaysFromNow.toISOString().split('T')[0])
+
+    for (const task of recurringTasks || []) {
+      const userSettings = userSettingsMap.get(task.user_id)
+      if (!userSettings?.notification_recurring_task_reminder) continue
+
+      // Check if notification already exists
+      const { data: existingNotification } = await supabaseClient
+        .from('notifications')
+        .select('id')
+        .eq('user_id', task.user_id)
+        .eq('task_id', task.id)
+        .eq('type', 'recurring_task_reminder')
+        .single()
+
+      if (!existingNotification) {
+        await supabaseClient
+          .from('notifications')
+          .insert({
+            user_id: task.user_id,
+            type: 'recurring_task_reminder',
+            title: `Recurring Task Reminder: ${task.title}`,
+            message: `'${task.title}' recurs soon on ${new Date(task.date).toLocaleDateString()}.`,
+            task_id: task.id,
+            item_id: task.item_id
+          })
+      }
+    }
+
+    // 5. Check for warranties expiring soon (7 days)
     const { data: itemsWarrantyExpiring } = await supabaseClient
       .from('items')
       .select('id, user_id, name, warranty_date')
