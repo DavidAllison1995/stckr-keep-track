@@ -211,7 +211,7 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Maintenance Calendar */}
+          {/* Calendar */}
           <Card 
             className="shadow-xl border-0 cursor-pointer hover:shadow-2xl transition-all duration-300 hover:scale-105"
             onClick={handleCalendarClick}

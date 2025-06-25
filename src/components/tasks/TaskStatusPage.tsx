@@ -4,10 +4,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CalendarPlus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LucideIcon } from 'lucide-react';
 import { calculateTaskStatus, getStatusLabel, getStatusColor } from '@/utils/taskStatus';
+import { generateICSFile } from '@/utils/calendarExport';
 
 interface TaskStatusPageProps {
   title: string;
@@ -42,6 +43,12 @@ const TaskStatusPage = ({ title, description, icon: Icon, color, filterTasks }: 
     if (task.item_id) {
       navigate(`/items/${task.item_id}?tab=tasks&highlight=${task.id}`);
     }
+  };
+
+  const handleAddToCalendar = (task: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const assignedItem = task.item_id ? getItemById(task.item_id) : null;
+    generateICSFile(task, assignedItem?.name);
   };
 
   if (isLoading) {
@@ -102,12 +109,23 @@ const TaskStatusPage = ({ title, description, icon: Icon, color, filterTasks }: 
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-2">
                           <h3 className="font-semibold text-lg">{task.title}</h3>
-                          <Badge
-                            variant="secondary"
-                            className={getTaskStatusColor(task)}
-                          >
-                            {getTaskStatusLabel(task)}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => handleAddToCalendar(task, e)}
+                              title="Add to Calendar"
+                            >
+                              <CalendarPlus className="w-4 h-4 mr-1" />
+                              Add to Calendar
+                            </Button>
+                            <Badge
+                              variant="secondary"
+                              className={getTaskStatusColor(task)}
+                            >
+                              {getTaskStatusLabel(task)}
+                            </Badge>
+                          </div>
                         </div>
                         
                         {task.notes && (

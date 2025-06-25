@@ -5,10 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
+import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
 import TaskEditDialog from '@/components/maintenance/TaskEditDialog';
-import { Plus, Calendar, CheckCircle2, Clock, AlertTriangle, Trash2, Edit } from 'lucide-react';
+import { Plus, Calendar, CheckCircle2, Clock, AlertTriangle, Trash2, Edit, CalendarPlus } from 'lucide-react';
 import { calculateTaskStatus, getStatusLabel, getStatusColor, getStatusBorderColor } from '@/utils/taskStatus';
+import { generateICSFile } from '@/utils/calendarExport';
 
 interface ItemMaintenanceTabProps {
   itemId: string;
@@ -17,12 +19,14 @@ interface ItemMaintenanceTabProps {
 
 const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps) => {
   const { tasks, updateTask, deleteTask } = useSupabaseMaintenance();
+  const { getItemById } = useSupabaseItems();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
   const [editingTask, setEditingTask] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const itemTasks = tasks.filter(task => task.item_id === itemId);
+  const item = getItemById(itemId);
   
   // Categorize tasks using centralized logic
   const activeTasks = itemTasks.filter(task => task.status !== 'completed');
@@ -55,6 +59,10 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
   const handleEditSuccess = () => {
     setEditingTask(null);
     setIsEditDialogOpen(false);
+  };
+
+  const handleAddToCalendar = (task: any) => {
+    generateICSFile(task, item?.name);
   };
 
   const getTaskIcon = (task: any) => {
@@ -161,7 +169,16 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleAddToCalendar(task)}
+                        title="Add to Calendar"
+                      >
+                        <CalendarPlus className="w-4 h-4 mr-1" />
+                        Add to Calendar
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"

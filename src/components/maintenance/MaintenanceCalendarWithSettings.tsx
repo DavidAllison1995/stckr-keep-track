@@ -50,7 +50,7 @@ const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalend
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CalendarDays className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold">Maintenance Calendar</h1>
+            <h1 className="text-2xl font-bold">Calendar</h1>
           </div>
           <Button onClick={() => setShowForm(true)}>
             <Plus className="w-4 h-4 mr-2" />

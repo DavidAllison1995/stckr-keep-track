@@ -1,11 +1,11 @@
-
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, Package } from 'lucide-react';
+import { ArrowLeft, Calendar, Package, CalendarPlus } from 'lucide-react';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
+import { generateICSFile } from '@/utils/calendarExport';
 
 const TasksPage = () => {
   const { status } = useParams<{ status: string }>();
@@ -61,6 +61,12 @@ const TasksPage = () => {
     params.set('tab', 'maintenance');
     params.set('highlight', taskId);
     navigate(`/items/${itemId}?${params.toString()}`);
+  };
+
+  const handleAddToCalendar = (task: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const assignedItem = task.item_id ? getItemById(task.item_id) : null;
+    generateICSFile(task, assignedItem?.name);
   };
 
   const formatDate = (dateString: string) => {
@@ -128,6 +134,15 @@ const TasksPage = () => {
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                               <h3 className="font-semibold text-lg">{task.title}</h3>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => handleAddToCalendar(task, e)}
+                                title="Add to Calendar"
+                              >
+                                <CalendarPlus className="w-4 h-4 mr-1" />
+                                Add to Calendar
+                              </Button>
                               <Badge className={statusInfo.color}>
                                 {status?.replace('-', ' ')}
                               </Badge>
