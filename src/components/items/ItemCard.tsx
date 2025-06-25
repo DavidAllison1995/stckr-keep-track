@@ -150,122 +150,127 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
   return (
     <>
       <Card 
-        className="hover:shadow-md transition-shadow cursor-pointer select-none" 
+        className="hover:shadow-md transition-shadow cursor-pointer select-none h-full flex flex-col" 
         onClick={handleCardClick}
       >
-        <CardContent className="p-4">
-          <div className="space-y-3">
-            {/* Item Image/Icon */}
-            <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center">
-              {item.photo_url ? (
-                <img 
-                  src={item.photo_url} 
-                  alt={item.name} 
-                  className="w-full h-full object-contain rounded-lg" 
-                  draggable={false}
-                />
-              ) : (
-                <IconComponent className="w-12 h-12 text-gray-600" />
+        <CardContent className="p-0 flex flex-col h-full">
+          {/* Full-width Image/Icon Section */}
+          <div className="w-full aspect-square bg-gradient-to-br from-blue-50 to-gray-50 flex items-center justify-center border-b border-gray-100">
+            {item.photo_url ? (
+              <img 
+                src={item.photo_url} 
+                alt={item.name} 
+                className="w-full h-full object-contain" 
+                draggable={false}
+              />
+            ) : (
+              <IconComponent className="w-16 h-16 text-gray-600" />
+            )}
+          </div>
+
+          {/* Content Section */}
+          <div className="p-4 flex-1 flex flex-col space-y-3 overflow-hidden">
+            {/* Title */}
+            <h3 className="font-semibold text-lg line-clamp-1 text-gray-900">{item.name}</h3>
+            
+            {/* Tags Section */}
+            <div className="flex items-center gap-2 flex-wrap min-h-[20px]">
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
+                {item.category}
+              </Badge>
+              {item.room && (
+                <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                  {item.room}
+                </Badge>
               )}
+              <Badge 
+                variant="secondary" 
+                className={`text-xs ${item.qr_code_id ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}`}
+              >
+                {item.qr_code_id ? (
+                  <>
+                    <Check className="w-3 h-3 mr-1" />
+                    QR
+                  </>
+                ) : (
+                  <>
+                    <X className="w-3 h-3 mr-1" />
+                    No QR
+                  </>
+                )}
+              </Badge>
             </div>
 
-            {/* Item Info */}
-            <div className="space-y-2">
-              <div>
-                <h3 className="font-semibold text-lg line-clamp-1">{item.name}</h3>
-              </div>
-              
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  {item.category}
-                </Badge>
-                {item.room && (
-                  <Badge variant="secondary" className="bg-green-100 text-green-800">
-                    {item.room}
-                  </Badge>
-                )}
-                <Badge 
-                  variant="secondary" 
-                  className={item.qr_code_id ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}
-                >
-                  {item.qr_code_id ? (
-                    <>
-                      <Check className="w-3 h-3 mr-1" />
-                      QR Assigned
-                    </>
-                  ) : (
-                    <>
-                      <X className="w-3 h-3 mr-1" />
-                      QR Not Assigned
-                    </>
-                  )}
-                </Badge>
-              </div>
+            {/* Description */}
+            {item.description && (
+              <p className="text-sm text-gray-600 line-clamp-2">{item.description}</p>
+            )}
 
-              {item.description && (
-                <p className="text-sm text-gray-600 line-clamp-2">{item.description}</p>
-              )}
-
-              {/* Maintenance Tasks Summary */}
-              {itemTasks.length > 0 && (
-                <div 
-                  className="bg-gray-50 rounded-lg p-2 space-y-1 cursor-pointer hover:bg-gray-100 transition-colors"
-                  onClick={handleTasksClick}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="text-xs font-medium text-gray-700">Maintenance Tasks</div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs text-blue-600">View all</span>
-                      <ChevronRight className="w-3 h-3 text-blue-600" />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 text-xs">
-                    {overdueTasks.length > 0 && (
-                      <div className="flex items-center gap-1">
-                        {getTaskIcon(overdueTasks.length, 'overdue')}
-                        <span className="text-red-600">{overdueTasks.length} overdue</span>
-                      </div>
-                    )}
-                    {dueSoonTasks.length > 0 && (
-                      <div className="flex items-center gap-1">
-                        {getTaskIcon(dueSoonTasks.length, 'due_soon')}
-                        <span className="text-yellow-600">{dueSoonTasks.length} due soon</span>
-                      </div>
-                    )}
-                    {inProgressTasks.length > 0 && (
-                      <div className="flex items-center gap-1">
-                        {getTaskIcon(inProgressTasks.length, 'in_progress')}
-                        <span className="text-blue-600">{inProgressTasks.length} in progress</span>
-                      </div>
-                    )}
-                    {pendingTasks.length > 0 && (
-                      <div className="flex items-center gap-1">
-                        {getTaskIcon(pendingTasks.length, 'pending')}
-                        <span className="text-gray-600">{pendingTasks.length} pending</span>
-                      </div>
-                    )}
-                  </div>
+            {/* Task Status Section */}
+            {itemTasks.length > 0 && (
+              <div 
+                className="bg-gray-50 rounded-lg p-2 cursor-pointer hover:bg-gray-100 transition-colors border"
+                onClick={handleTasksClick}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-medium text-gray-700">Maintenance</span>
+                  <ChevronRight className="w-3 h-3 text-blue-600" />
                 </div>
-              )}
+                <div className="flex items-center gap-3 text-xs">
+                  {overdueTasks.length > 0 && (
+                    <div className="flex items-center gap-1">
+                      {getTaskIcon(overdueTasks.length, 'overdue')}
+                      <span className="text-red-600">{overdueTasks.length} overdue</span>
+                    </div>
+                  )}
+                  {dueSoonTasks.length > 0 && (
+                    <div className="flex items-center gap-1">
+                      {getTaskIcon(dueSoonTasks.length, 'due_soon')}
+                      <span className="text-yellow-600">{dueSoonTasks.length} due soon</span>
+                    </div>
+                  )}
+                  {inProgressTasks.length > 0 && (
+                    <div className="flex items-center gap-1">
+                      {getTaskIcon(inProgressTasks.length, 'in_progress')}
+                      <span className="text-blue-600">{inProgressTasks.length} in progress</span>
+                    </div>
+                  )}
+                  {pendingTasks.length > 0 && (
+                    <div className="flex items-center gap-1">
+                      {getTaskIcon(pendingTasks.length, 'pending')}
+                      <span className="text-gray-600">{pendingTasks.length} pending</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
-              {(item.purchase_date || item.warranty_date) && (
+            {/* Dates Section */}
+            {(item.purchase_date || item.warranty_date) && (
+              <div className="bg-gray-50 rounded-md p-2 border">
                 <div className="text-xs text-gray-500 space-y-1">
                   {item.purchase_date && (
-                    <div>Purchased: {new Date(item.purchase_date).toLocaleDateString()}</div>
+                    <div className="flex justify-between">
+                      <span>Purchased:</span>
+                      <span>{new Date(item.purchase_date).toLocaleDateString()}</span>
+                    </div>
                   )}
                   {item.warranty_date && (
-                    <div>Warranty: {new Date(item.warranty_date).toLocaleDateString()}</div>
+                    <div className="flex justify-between">
+                      <span>Warranty:</span>
+                      <span>{new Date(item.warranty_date).toLocaleDateString()}</span>
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Actions */}
-            <div className="flex gap-2 pt-2">
+            <div className="flex gap-2 mt-auto pt-2">
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="flex-1"
+                className="flex-1 text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(`/items/${item.id}`);
@@ -276,6 +281,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
               <Button 
                 variant="ghost" 
                 size="sm"
+                className="text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsEditModalOpen(true);
@@ -288,7 +294,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2"
                     onClick={(e) => {
                       e.stopPropagation();
                     }}
