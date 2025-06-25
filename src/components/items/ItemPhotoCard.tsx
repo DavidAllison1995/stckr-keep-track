@@ -18,7 +18,7 @@ const ItemPhotoCard = ({ item }: ItemPhotoCardProps) => {
             <img 
               src={item.photo_url} 
               alt={item.name} 
-              className="w-full h-full object-cover rounded-xl" 
+              className="w-full h-full object-contain rounded-xl" 
             />
           ) : (
             <IconComponent className="w-16 h-16 text-blue-600" />

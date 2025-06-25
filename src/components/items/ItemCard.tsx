@@ -161,7 +161,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                 <img 
                   src={item.photo_url} 
                   alt={item.name} 
-                  className="w-full h-full object-cover rounded-lg" 
+                  className="w-full h-full object-contain rounded-lg" 
                   draggable={false}
                 />
               ) : (
