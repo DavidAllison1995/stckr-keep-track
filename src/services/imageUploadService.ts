@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ImageUploadResult {
@@ -11,13 +10,9 @@ export const uploadItemImage = async (
   itemId: string,
   file: File
 ): Promise<ImageUploadResult> => {
-  // Validate file
+  // Validate file type only
   if (!file.type.startsWith('image/')) {
     throw new Error('File must be an image');
-  }
-
-  if (file.size > 10 * 1024 * 1024) { // 10MB
-    throw new Error('File size must be less than 10MB');
   }
 
   // Compress and resize image if needed

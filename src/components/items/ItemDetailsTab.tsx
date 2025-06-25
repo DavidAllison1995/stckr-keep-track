@@ -78,7 +78,11 @@ const ItemDetailsTab = ({ item, onTabChange }: ItemDetailsTabProps) => {
         {/* Info Section */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Details</h3>
-          <InfoCard item={item} onTabChange={onTabChange} />
+          {isMobile ? (
+            <InfoCard item={item} />
+          ) : (
+            <InfoCard item={item} onTabChange={onTabChange} />
+          )}
         </div>
       </div>
 
