@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,10 +54,7 @@ const ItemDetailsTab = ({ item, onTabChange }: ItemDetailsTabProps) => {
               <Card className="shadow-sm border border-gray-200">
                 <CardContent className={isMobile ? "p-3" : "p-4"}>
                   <div className={`w-full ${isMobile ? 'h-32' : 'h-48'} bg-gradient-to-br from-blue-50 to-gray-50 rounded-lg flex items-center justify-center border border-gray-100`}>
-                    <div className="text-center">
-                      <IconComponent className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} text-blue-600 mx-auto mb-2`} />
-                      <p className="text-sm text-gray-500">No photo added</p>
-                    </div>
+                    <IconComponent className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} text-blue-600`} />
                   </div>
                 </CardContent>
               </Card>
