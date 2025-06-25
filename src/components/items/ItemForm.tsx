@@ -7,7 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSupabaseItems, Item } from '@/hooks/useSupabaseItems';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import IconPicker from '@/components/IconPicker';
+import ImageUpload from '@/components/forms/ImageUpload';
 
 interface ItemFormProps {
   item?: Item;
@@ -18,6 +20,7 @@ interface ItemFormProps {
 
 const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) => {
   const navigate = useNavigate();
+  const { user } = useSupabaseAuth();
   const { addItem, updateItem } = useSupabaseItems();
   const [formData, setFormData] = useState({
     name: '',
@@ -28,6 +31,7 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
     purchase_date: '',
     warranty_date: '',
     qr_code_id: initialQrCode || '',
+    photo_url: '',
   });
 
   const categories = ['Appliance', 'Electronics', 'Furniture', 'Vehicle', 'Tool', 'Other'];
@@ -45,6 +49,7 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
         purchase_date: item.purchase_date || '',
         warranty_date: item.warranty_date || '',
         qr_code_id: item.qr_code_id || '',
+        photo_url: item.photo_url || '',
       });
     } else if (initialQrCode) {
       setFormData(prev => ({
@@ -53,6 +58,10 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
       }));
     }
   }, [item, initialQrCode]);
+
+  const handleImageChange = (url: string | null) => {
+    setFormData(prev => ({ ...prev, photo_url: url || '' }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,6 +84,7 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
           purchase_date: formData.purchase_date || undefined,
           warranty_date: formData.warranty_date || undefined,
           qr_code_id: formData.qr_code_id || undefined,
+          photo_url: formData.photo_url || undefined,
         });
         newItem = item;
       } else {
@@ -87,7 +97,7 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
           description: formData.description || undefined,
           purchase_date: formData.purchase_date || undefined,
           warranty_date: formData.warranty_date || undefined,
-          photo_url: undefined,
+          photo_url: formData.photo_url || undefined,
           qr_code_id: formData.qr_code_id || undefined,
           notes: undefined,
           documents: [],
@@ -107,6 +117,9 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
     }
   };
 
+  // Generate a temporary ID for new items for image upload
+  const itemIdForUpload = item?.id || `temp-${Date.now()}`;
+
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -121,6 +134,16 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
             required
           />
         </div>
+
+        {/* Image Upload Section */}
+        {user && (
+          <ImageUpload
+            currentImageUrl={formData.photo_url}
+            onImageChange={handleImageChange}
+            userId={user.id}
+            itemId={itemIdForUpload}
+          />
+        )}
 
         <IconPicker
           selectedIconId={formData.icon_id}
