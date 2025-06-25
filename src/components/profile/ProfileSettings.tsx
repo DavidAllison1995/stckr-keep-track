@@ -49,9 +49,12 @@ const ProfileSettings = () => {
   const [notifications, setNotifications] = useState({
     taskDueSoon: true,
     taskOverdue: true,
+    taskDueToday: true,
     warrantyExpiring: true,
     taskCompleted: false,
     taskCreated: false,
+    taskUpdated: true,
+    recurringTaskReminder: true,
   });
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showConnectedAccounts, setShowConnectedAccounts] = useState(false);
@@ -128,11 +131,14 @@ const ProfileSettings = () => {
         notifications: {
           taskDueSoon: notifications.taskDueSoon,
           taskOverdue: notifications.taskOverdue,
+          taskDueToday: notifications.taskDueToday,
           warrantyExpiring: notifications.warrantyExpiring,
           taskCompleted: notifications.taskCompleted,
           taskCreated: notifications.taskCreated,
+          taskUpdated: notifications.taskUpdated,
+          recurringTaskReminder: notifications.recurringTaskReminder,
         },
-        showCompletedTasks: settings.showCompletedTasks, // Include the missing property
+        showCompletedTasks: settings.showCompletedTasks,
       };
 
       const result = await updateSettings(newSettings);
@@ -321,6 +327,21 @@ const ProfileSettings = () => {
               <CardContent className="space-y-4 pt-0">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
+                    <Label>Task Created</Label>
+                    <p className="text-sm text-gray-500">
+                      Get notified when new maintenance tasks are created
+                    </p>
+                  </div>
+                  <Switch
+                    checked={notifications.taskCreated}
+                    onCheckedChange={(checked) => 
+                      setNotifications(prev => ({ ...prev, taskCreated: checked }))
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
                     <Label>Task Due Soon</Label>
                     <p className="text-sm text-gray-500">
                       Get notified when maintenance tasks are due within 3 days
@@ -330,6 +351,21 @@ const ProfileSettings = () => {
                     checked={notifications.taskDueSoon}
                     onCheckedChange={(checked) => 
                       setNotifications(prev => ({ ...prev, taskDueSoon: checked }))
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Task Due Today</Label>
+                    <p className="text-sm text-gray-500">
+                      Get notified when maintenance tasks are due today
+                    </p>
+                  </div>
+                  <Switch
+                    checked={notifications.taskDueToday}
+                    onCheckedChange={(checked) => 
+                      setNotifications(prev => ({ ...prev, taskDueToday: checked }))
                     }
                   />
                 </div>
@@ -351,15 +387,15 @@ const ProfileSettings = () => {
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>Warranty Expiring</Label>
+                    <Label>Task Updated</Label>
                     <p className="text-sm text-gray-500">
-                      Get notified when item warranties are about to expire
+                      Get notified when maintenance tasks are edited or updated
                     </p>
                   </div>
                   <Switch
-                    checked={notifications.warrantyExpiring}
+                    checked={notifications.taskUpdated}
                     onCheckedChange={(checked) => 
-                      setNotifications(prev => ({ ...prev, warrantyExpiring: checked }))
+                      setNotifications(prev => ({ ...prev, taskUpdated: checked }))
                     }
                   />
                 </div>
@@ -381,15 +417,30 @@ const ProfileSettings = () => {
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label>Task Created</Label>
+                    <Label>Recurring Task Reminder</Label>
                     <p className="text-sm text-gray-500">
-                      Get notified when new maintenance tasks are created
+                      Get notified 3 days before recurring tasks are due
                     </p>
                   </div>
                   <Switch
-                    checked={notifications.taskCreated}
+                    checked={notifications.recurringTaskReminder}
                     onCheckedChange={(checked) => 
-                      setNotifications(prev => ({ ...prev, taskCreated: checked }))
+                      setNotifications(prev => ({ ...prev, recurringTaskReminder: checked }))
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Warranty Expiring</Label>
+                    <p className="text-sm text-gray-500">
+                      Get notified when item warranties are about to expire
+                    </p>
+                  </div>
+                  <Switch
+                    checked={notifications.warrantyExpiring}
+                    onCheckedChange={(checked) => 
+                      setNotifications(prev => ({ ...prev, warrantyExpiring: checked }))
                     }
                   />
                 </div>
