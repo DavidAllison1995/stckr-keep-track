@@ -74,7 +74,7 @@ const TaskStatusPage = ({ title, description, icon: Icon, color, filterTasks }: 
           <div className="p-6 pb-8">
             {/* Header */}
             <div className="flex items-center gap-4 mb-6">
-              <Link to="/maintenance">
+              <Link to="/calendar">
                 <Button variant="ghost" size="sm" className="p-2">
                   <ArrowLeft className="w-4 h-4" />
                 </Button>

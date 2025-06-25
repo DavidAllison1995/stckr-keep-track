@@ -1,5 +1,5 @@
 
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "./hooks/useSupabaseAuth";
@@ -15,7 +15,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import ItemsPage from "./pages/ItemsPage";
 import ItemDetailPage from "./pages/ItemDetailPage";
-import MaintenancePage from "./pages/MaintenancePage";
+import CalendarPage from "./pages/CalendarPage";
 import TasksPage from "./pages/TasksPage";
 import ScannerPage from "./pages/ScannerPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -29,7 +29,7 @@ import PublicRoutes from "./routes/PublicRoutes";
 import ClaimRoutes from "./routes/ClaimRoutes";
 import ShopRoutes from "./routes/ShopRoutes";
 import AdminRoutes from "./routes/AdminRoutes";
-import MaintenanceRoutes from "./routes/MaintenanceRoutes";
+import CalendarRoutes from "./routes/CalendarRoutes";
 import MaintenanceTasksRoutes from "./routes/MaintenanceTasksRoutes";
 import TaskRoutes from "./routes/TaskRoutes";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -135,15 +135,17 @@ function App() {
                         </ProtectedRoute>
                       } 
                     />
+                    
+                    {/* Calendar routes - updated from /maintenance to /calendar */}
                     <Route 
-                      path="/maintenance" 
+                      path="/calendar" 
                       element={
                         <ProtectedRoute>
                           <ItemsProvider>
                             <MaintenanceProvider>
                               <CartProviderWrapper>
                                 <ProtectedLayout>
-                                  <MaintenancePage />
+                                  <CalendarPage />
                                 </ProtectedLayout>
                               </CartProviderWrapper>
                             </MaintenanceProvider>
@@ -152,19 +154,24 @@ function App() {
                       } 
                     />
                     <Route 
-                      path="/maintenance/*" 
+                      path="/calendar/*" 
                       element={
                         <ProtectedRoute>
                           <ItemsProvider>
                             <MaintenanceProvider>
                               <CartProviderWrapper>
-                                <MaintenanceRoutes />
+                                <CalendarRoutes />
                               </CartProviderWrapper>
                             </MaintenanceProvider>
                           </ItemsProvider>
                         </ProtectedRoute>
                       } 
                     />
+                    
+                    {/* Redirect from old /maintenance route to /calendar for backward compatibility */}
+                    <Route path="/maintenance" element={<Navigate to="/calendar" replace />} />
+                    <Route path="/maintenance/*" element={<Navigate to="/calendar" replace />} />
+                    
                     <Route 
                       path="/maintenance-tasks/*" 
                       element={

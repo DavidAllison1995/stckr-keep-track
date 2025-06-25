@@ -1,4 +1,3 @@
-
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -92,11 +91,11 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
   };
 
   const handleMaintenanceClick = () => {
-    navigate('/maintenance');
+    navigate('/calendar');
   };
 
   const handleCalendarClick = () => {
-    navigate('/maintenance');
+    navigate('/calendar');
   };
 
   const handleTaskStatusClick = (status: string) => {
