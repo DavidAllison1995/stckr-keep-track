@@ -92,7 +92,28 @@ serve(async (req) => {
 
     console.log('Admin access confirmed for user:', user.email)
 
-    const { quantity = 9 } = await req.json()
+    // Parse request body with error handling
+    let requestBody
+    try {
+      const bodyText = await req.text()
+      console.log('Raw body text:', bodyText)
+      
+      if (!bodyText || bodyText.trim() === '') {
+        console.log('Empty body, using default quantity')
+        requestBody = {}
+      } else {
+        requestBody = JSON.parse(bodyText)
+      }
+      console.log('Parsed request body:', requestBody)
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError)
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body', details: parseError.message }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const { quantity = 9 } = requestBody
     console.log('Generating QR codes with quantity:', quantity)
 
     // Generate unique codes with branded QR images
