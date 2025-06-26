@@ -42,11 +42,11 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
           <div className="text-center lg:text-left space-y-8 animate-fade-in">
             <div className="space-y-6">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                Finally, a Smart Way to 
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600"> Organize Everything You Own.</span>
+                Everything Stored.<br />
+                Nothing Missed.
               </h1>
               <p className="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                Keep all your manuals, warranties, and important dates in one place — from your boiler to your car. No more drawer chaos or inbox digging.
+                Digitise your items with STCKR, track maintenance, and keep all the important info at your fingertips.
               </p>
             </div>
             
