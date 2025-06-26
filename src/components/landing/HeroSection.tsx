@@ -42,8 +42,8 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
           <div className="text-center lg:text-left space-y-8 animate-fade-in">
             <div className="space-y-6">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                Everything Stored.<br />
-                Nothing Missed.
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Everything Stored.</span><br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Nothing Missed.</span>
               </h1>
               <p className="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
                 Digitise your items with STCKR, track maintenance, and keep all the important info at your fingertips.
