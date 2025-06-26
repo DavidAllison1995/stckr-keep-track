@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { validatePassword } from '@/utils/inputValidation';
 
 interface ChangePasswordDialogProps {
   open: boolean;
@@ -30,10 +32,12 @@ const ChangePasswordDialog = ({ open, onOpenChange }: ChangePasswordDialogProps)
       return;
     }
 
-    if (newPassword.length < 8) {
+    // Validate new password strength
+    const passwordValidation = validatePassword(newPassword);
+    if (!passwordValidation.isValid) {
       toast({
         title: 'Error',
-        description: 'Password must be at least 8 characters long',
+        description: passwordValidation.errors[0],
         variant: 'destructive',
       });
       return;
@@ -41,9 +45,47 @@ const ChangePasswordDialog = ({ open, onOpenChange }: ChangePasswordDialogProps)
 
     setIsLoading(true);
     
-    // Simulate API call
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user?.email) {
+        toast({
+          title: 'Error',
+          description: 'User not authenticated',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Reauthenticate with current password
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+
+      if (reauthError) {
+        toast({
+          title: 'Error',
+          description: 'Current password is incorrect',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Update password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (updateError) {
+        toast({
+          title: 'Error',
+          description: 'Failed to update password',
+          variant: 'destructive',
+        });
+        return;
+      }
       
       toast({
         title: 'Success',
@@ -57,7 +99,7 @@ const ChangePasswordDialog = ({ open, onOpenChange }: ChangePasswordDialogProps)
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to change password',
+        description: 'An unexpected error occurred',
         variant: 'destructive',
       });
     } finally {

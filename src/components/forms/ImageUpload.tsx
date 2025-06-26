@@ -20,8 +20,35 @@ const ImageUpload = ({ currentImageUrl, onImageChange, userId, itemId, disabled 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
+  // File validation constants
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+  const validateFile = (file: File): string | null => {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return 'Please select a valid image file (JPEG, PNG, or WebP)';
+    }
+    
+    if (file.size > MAX_FILE_SIZE) {
+      return 'File size must be less than 5MB';
+    }
+    
+    return null;
+  };
+
   const handleFileSelect = async (file: File) => {
     if (!file) return;
+
+    // Validate file
+    const validationError = validateFile(file);
+    if (validationError) {
+      toast({
+        title: 'Invalid file',
+        description: validationError,
+        variant: 'destructive',
+      });
+      return;
+    }
 
     try {
       setIsUploading(true);
@@ -45,11 +72,10 @@ const ImageUpload = ({ currentImageUrl, onImageChange, userId, itemId, disabled 
         description: 'Image uploaded successfully',
       });
     } catch (error) {
-      console.error('Upload failed:', error);
       setPreviewUrl(currentImageUrl || null);
       toast({
         title: 'Upload failed',
-        description: error instanceof Error ? error.message : 'Failed to upload image',
+        description: 'Failed to upload image. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -74,7 +100,7 @@ const ImageUpload = ({ currentImageUrl, onImageChange, userId, itemId, disabled 
         
         await deleteItemImage(imagePath);
       } catch (error) {
-        console.error('Failed to delete image:', error);
+        // Silent fail for delete - image may have already been removed
       }
     }
     
@@ -153,7 +179,7 @@ const ImageUpload = ({ currentImageUrl, onImageChange, userId, itemId, disabled 
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept={ALLOWED_TYPES.join(',')}
         onChange={handleFileInputChange}
         className="hidden"
       />
