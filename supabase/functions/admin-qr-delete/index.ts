@@ -27,15 +27,41 @@ serve(async (req) => {
       return new Response('Unauthorized', { status: 401, headers: corsHeaders })
     }
 
-    const { codeId } = await req.json()
+    // Check if user is admin
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError || !profile?.is_admin) {
+      return new Response('Admin access required', { status: 403, headers: corsHeaders })
+    }
+
+    // Parse request body safely
+    let requestBody
+    try {
+      const bodyText = await req.text()
+      if (!bodyText || bodyText.trim() === '') {
+        return new Response('Request body is required', { status: 400, headers: corsHeaders })
+      }
+      requestBody = JSON.parse(bodyText)
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError)
+      return new Response('Invalid JSON in request body', { status: 400, headers: corsHeaders })
+    }
+
+    const { codeId } = requestBody
     
     if (!codeId) {
       return new Response('Code ID is required', { status: 400, headers: corsHeaders })
     }
 
-    // Delete the QR code
+    console.log('Attempting to delete QR code:', codeId)
+
+    // Delete the QR code from qr_codes table (this will cascade to user_qr_claims)
     const { error } = await supabaseClient
-      .from('global_qr_codes')
+      .from('qr_codes')
       .delete()
       .eq('id', codeId)
 
@@ -43,6 +69,8 @@ serve(async (req) => {
       console.error('Error deleting QR code:', error)
       return new Response('Failed to delete code', { status: 500, headers: corsHeaders })
     }
+
+    console.log('Successfully deleted QR code:', codeId)
 
     return new Response(
       JSON.stringify({ success: true }),

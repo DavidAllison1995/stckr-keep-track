@@ -150,15 +150,15 @@ const AdminQrPage = () => {
     
     setDeletingCodes(prev => new Set(prev).add(codeId));
     try {
-      console.log('Deleting QR code via admin-qr-delete function...');
+      console.log('Deleting QR code via admin-qr-delete function...', codeId);
       
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session?.access_token) {
         throw new Error('No valid session token available');
       }
       
-      const { error } = await supabase.functions.invoke('admin-qr-delete', {
-        body: { codeId },
+      const { data, error } = await supabase.functions.invoke('admin-qr-delete', {
+        body: JSON.stringify({ codeId }),
         headers: {
           'Authorization': `Bearer ${sessionData.session.access_token}`,
           'Content-Type': 'application/json',
@@ -170,6 +170,7 @@ const AdminQrPage = () => {
         throw error;
       }
       
+      console.log('Delete response:', data);
       toast({
         title: 'Success',
         description: 'QR code deleted successfully',
