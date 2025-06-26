@@ -45,8 +45,10 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
                 Everything Stored.<br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Nothing Missed.</span>
               </h1>
-              <p className="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                Digitise your items with STCKR, track maintenance, and keep all the important info at your fingertips.
+              <p className="text-xl md:text-2xl text-gray-600 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+                Digitise your items with STCKR,<br />
+                track maintenance, and keep all<br />
+                the important info at your fingertips.
               </p>
             </div>
             
