@@ -51,10 +51,10 @@ const Index = () => {
     <div className="min-h-screen">
       <HeroSection onGetStarted={handleGetStarted} onWatchDemo={handleWatchDemo} />
       <FeaturePillars />
+      <DashboardPreview />
       <div id="how-it-works">
         <HowItWorks />
       </div>
-      <DashboardPreview />
       <FinalCTA onGetStarted={handleGetStarted} />
     </div>
   );
