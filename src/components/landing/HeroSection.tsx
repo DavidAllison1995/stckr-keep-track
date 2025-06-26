@@ -90,7 +90,7 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
                   </div>
                   
                   {/* App Content */}
-                  <div className="p-4 space-y-4">
+                  <div className="p-4 space-y-3">
                     <div className="text-center">
                       <h3 className="font-bold text-lg mb-2">Car - Ford Focus</h3>
                       <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl mx-auto mb-4 flex items-center justify-center">
@@ -109,6 +109,12 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
                         <div className="text-sm font-medium text-gray-600">Documents</div>
                         <div className="text-lg font-semibold text-blue-800">Insurance & V5C</div>
                         <div className="text-sm text-blue-600">Stored securely ✓</div>
+                      </div>
+
+                      <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <div className="text-sm font-medium text-gray-600">Item Info</div>
+                        <div className="text-lg font-semibold text-gray-800">Purchased: Jan 2022</div>
+                        <div className="text-sm text-gray-600">Warranty valid until Jan 2025</div>
                       </div>
                     </div>
                   </div>
