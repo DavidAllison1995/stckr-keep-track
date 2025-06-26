@@ -40,13 +40,13 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Content */}
           <div className="text-center lg:text-left space-y-8 animate-fade-in">
-            <div className="space-y-4">
+            <div className="space-y-6">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                One Scan. 
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600"> Everything You Need.</span>
+                Finally, a Smart Way to 
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600"> Organize Everything You Own.</span>
               </h1>
-              <p className="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto lg:mx-0">
-                The simplest way to keep track of everything you own. Stckr stores the details so you don't have to.
+              <p className="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                Keep all your manuals, warranties, and important dates in one place — from your boiler to your car. No more drawer chaos or inbox digging.
               </p>
             </div>
             
@@ -90,23 +90,23 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
                   {/* App Content */}
                   <div className="p-4 space-y-4">
                     <div className="text-center">
-                      <h3 className="font-bold text-lg mb-2">Kitchen Toaster</h3>
+                      <h3 className="font-bold text-lg mb-2">Car - Ford Focus</h3>
                       <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl mx-auto mb-4 flex items-center justify-center">
-                        <span className="text-2xl">🍞</span>
+                        <span className="text-2xl">🚗</span>
                       </div>
                     </div>
                     
                     <div className="space-y-3">
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <div className="text-sm font-medium text-gray-600">Next Maintenance</div>
-                        <div className="text-lg font-semibold">Clean crumb tray</div>
-                        <div className="text-sm text-blue-600">Due in 2 days</div>
+                      <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                        <div className="text-sm font-medium text-gray-600">Upcoming</div>
+                        <div className="text-lg font-semibold text-yellow-800">MOT Due</div>
+                        <div className="text-sm text-yellow-600">Due in 2 weeks</div>
                       </div>
                       
-                      <div className="bg-green-50 p-3 rounded-lg">
-                        <div className="text-sm font-medium text-gray-600">Warranty</div>
-                        <div className="text-lg font-semibold">Valid until Dec 2025</div>
-                        <div className="text-sm text-green-600">Receipt stored ✓</div>
+                      <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <div className="text-sm font-medium text-gray-600">Documents</div>
+                        <div className="text-lg font-semibold text-blue-800">Insurance & V5C</div>
+                        <div className="text-sm text-blue-600">Stored securely ✓</div>
                       </div>
                     </div>
                   </div>
