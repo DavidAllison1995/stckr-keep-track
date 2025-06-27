@@ -148,21 +148,58 @@ const AdminQrPage = () => {
   const deleteCode = async (codeId: string) => {
     if (!user) return;
     
+    console.log('=== Frontend Delete Request Started ===');
+    console.log('Deleting code ID:', codeId);
+    console.log('Code ID type:', typeof codeId);
+    console.log('Code ID length:', codeId.length);
+    
     setDeletingCodes(prev => new Set(prev).add(codeId));
+    
     try {
-      console.log('Deleting QR code via admin-qr-delete function...', codeId);
+      // Get session with detailed logging
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
-      const { data: sessionData } = await supabase.auth.getSession();
+      console.log('Session check:', {
+        hasSession: !!sessionData.session,
+        hasToken: !!sessionData.session?.access_token,
+        tokenLength: sessionData.session?.access_token?.length,
+        userEmail: sessionData.session?.user?.email,
+        sessionError: sessionError?.message
+      });
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error(`Session error: ${sessionError.message}`);
+      }
+      
       if (!sessionData.session?.access_token) {
+        console.error('No valid session token available');
         throw new Error('No valid session token available');
       }
       
+      // Prepare request body
+      const requestBody = { codeId };
+      const bodyString = JSON.stringify(requestBody);
+      
+      console.log('Request body object:', requestBody);
+      console.log('Request body string:', bodyString);
+      console.log('Request body string length:', bodyString.length);
+      
+      console.log('Calling admin-qr-delete function...');
+      
       const { data, error } = await supabase.functions.invoke('admin-qr-delete', {
-        body: JSON.stringify({ codeId }),
+        body: requestBody, // Pass object directly, not stringified
         headers: {
           'Authorization': `Bearer ${sessionData.session.access_token}`,
           'Content-Type': 'application/json',
         },
+      });
+
+      console.log('Function response:', { 
+        data, 
+        error,
+        hasData: !!data,
+        hasError: !!error 
       });
 
       if (error) {
@@ -170,7 +207,7 @@ const AdminQrPage = () => {
         throw error;
       }
       
-      console.log('Delete response:', data);
+      console.log('Delete successful:', data);
       toast({
         title: 'Success',
         description: 'QR code deleted successfully',
