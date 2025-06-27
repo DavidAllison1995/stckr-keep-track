@@ -178,36 +178,36 @@ const AdminQrPage = () => {
       }
       
       // Prepare request body
-      const requestBody = { codeId };
-      const bodyString = JSON.stringify(requestBody);
-      
+      const requestBody = { codeId: codeId };
       console.log('Request body object:', requestBody);
-      console.log('Request body string:', bodyString);
-      console.log('Request body string length:', bodyString.length);
       
-      console.log('Calling admin-qr-delete function...');
+      // Use direct fetch instead of supabase.functions.invoke
+      const functionUrl = `https://cudftlquaydissmvqjmv.supabase.co/functions/v1/admin-qr-delete`;
       
-      const { data, error } = await supabase.functions.invoke('admin-qr-delete', {
-        body: requestBody, // Pass object directly, not stringified
+      console.log('Making direct fetch request to:', functionUrl);
+      
+      const response = await fetch(functionUrl, {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${sessionData.session.access_token}`,
           'Content-Type': 'application/json',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1ZGZ0bHF1YXlkaXNzbXZxam12Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNzkwNTksImV4cCI6MjA2NTg1NTA1OX0.f6_TmpyKF6VtQJL65deTrEdNnag6sSQw-eYWYUtQgaQ',
         },
+        body: JSON.stringify(requestBody),
       });
-
-      console.log('Function response:', { 
-        data, 
-        error,
-        hasData: !!data,
-        hasError: !!error 
-      });
-
-      if (error) {
-        console.error('Function invocation error:', error);
-        throw error;
+      
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Response error text:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
       
+      const data = await response.json();
       console.log('Delete successful:', data);
+      
       toast({
         title: 'Success',
         description: 'QR code deleted successfully',
