@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -256,72 +257,29 @@ async function sendToPrintful(order: any, items: any[], shippingAddress: any, cu
       throw new Error("Shipping address is incomplete - missing line1 or city");
     }
 
-    // Filter items that have Printful variant IDs and convert to proper numeric format
+    // Filter items that have Printful variant IDs and use them exactly as stored
     const printfulItems = items.filter(item => {
       const variantId = item.printful_variant_id;
-      console.log("🔍 DETAILED VARIANT ID CHECK:", { 
+      console.log("🔍 VARIANT ID CHECK:", { 
         productId: item.product_id, 
-        originalVariantId: variantId,
+        variantId: variantId,
         variantIdType: typeof variantId,
-        variantIdLength: variantId?.length,
-        isString: typeof variantId === 'string',
-        startsWithHash: typeof variantId === 'string' && variantId.startsWith('#')
+        hasVariantId: !!variantId
       });
       
       return variantId && variantId !== null && variantId !== "";
     }).map(item => {
-      let variantId = item.printful_variant_id;
-      const originalVariantId = variantId;
+      const variantId = item.printful_variant_id;
       
-      console.log("🔄 PROCESSING VARIANT ID:", {
-        original: originalVariantId,
-        type: typeof variantId
-      });
-      
-      // Handle different variant ID formats
-      if (typeof variantId === 'string') {
-        // Remove # prefix if present
-        if (variantId.startsWith('#')) {
-          variantId = variantId.substring(1);
-          console.log("✂️ REMOVED # PREFIX:", variantId);
-        }
-        
-        // Check if it's a hex string
-        const isHex = /^[0-9a-fA-F]+$/.test(variantId);
-        console.log("🔍 HEX CHECK:", { value: variantId, isHex });
-        
-        if (isHex) {
-          const hexConverted = parseInt(variantId, 16);
-          console.log("🔄 HEX CONVERSION:", { 
-            hex: variantId, 
-            decimal: hexConverted,
-            success: !isNaN(hexConverted)
-          });
-          variantId = hexConverted;
-        } else {
-          // Try parsing as decimal
-          const decimalConverted = parseInt(variantId, 10);
-          console.log("🔄 DECIMAL CONVERSION:", { 
-            string: variantId, 
-            decimal: decimalConverted,
-            success: !isNaN(decimalConverted)
-          });
-          if (!isNaN(decimalConverted)) {
-            variantId = decimalConverted;
-          }
-        }
-      }
-      
-      console.log("📦 FINAL VARIANT ID MAPPING:", {
-        originalId: originalVariantId,
-        processedId: variantId,
-        finalType: typeof variantId,
-        isNumeric: typeof variantId === 'number',
+      console.log("📦 USING VARIANT ID AS-IS:", {
+        productId: item.product_id,
+        originalVariantId: variantId,
+        finalVariantId: variantId,
         quantity: item.quantity
       });
       
       return {
-        variant_id: variantId,
+        variant_id: variantId, // Use exactly as stored in database
         quantity: item.quantity,
       };
     });
@@ -332,8 +290,7 @@ async function sendToPrintful(order: any, items: any[], shippingAddress: any, cu
       itemsWithVariantId: items.filter(item => item.printful_variant_id).length,
       processedItems: printfulItems.map(item => ({ 
         id: item.variant_id, 
-        type: typeof item.variant_id,
-        isNumber: typeof item.variant_id === 'number'
+        type: typeof item.variant_id
       }))
     });
 
@@ -343,19 +300,6 @@ async function sendToPrintful(order: any, items: any[], shippingAddress: any, cu
         .update({ 
           printful_status: "not_required",
           printful_error: "No items with valid Printful variant IDs found"
-        })
-        .eq("id", order.id);
-      return;
-    }
-
-    // Check if all variant IDs are numeric
-    const hasInvalidVariants = printfulItems.some(item => typeof item.variant_id !== 'number');
-    if (hasInvalidVariants) {
-      console.error("❌ Some variant IDs are not numeric:", printfulItems);
-      await supabaseClient.from("orders")
-        .update({ 
-          printful_status: "error",
-          printful_error: "Invalid Printful variant IDs - must be numeric"
         })
         .eq("id", order.id);
       return;
