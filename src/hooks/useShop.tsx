@@ -85,16 +85,21 @@ export const useShop = () => {
     }
   };
 
-  // Create checkout session - now uses CartContext via useCart hook
+  // Create checkout session - now properly passes user info
   const createCheckoutSession = async () => {
     if (!user) {
       console.log('Cannot create checkout session: no user');
+      toast({
+        title: 'Error',
+        description: 'Please log in to checkout',
+        variant: 'destructive',
+      });
       return null;
     }
 
     setIsLoading(true);
     try {
-      console.log('Creating checkout session...');
+      console.log('Creating checkout session for user:', user.id, user.email);
       
       // Get cart items from database to ensure consistency
       const { data: cartItems, error: cartError } = await supabase
@@ -112,8 +117,15 @@ export const useShop = () => {
 
       if (!cartItems || cartItems.length === 0) {
         console.log('Cannot create checkout session: empty cart');
+        toast({
+          title: 'Error',
+          description: 'Your cart is empty',
+          variant: 'destructive',
+        });
         return null;
       }
+
+      console.log('Creating checkout with cart items:', cartItems);
 
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
@@ -123,6 +135,8 @@ export const useShop = () => {
             price: item.product?.price || 0,
             name: item.product?.name || 'Product',
           })),
+          user_id: user.id, // Add user ID
+          user_email: user.email, // Add user email
         },
       });
 
