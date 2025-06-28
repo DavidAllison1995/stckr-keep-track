@@ -31,6 +31,7 @@ import ManualFulfillmentButton from '@/components/admin/ManualFulfillmentButton'
 import OrderDiagnostics from '@/components/admin/OrderDiagnostics';
 import WebhookDiagnostics from '@/components/admin/WebhookDiagnostics';
 import ValidatePrintfulVariant from '@/components/admin/ValidatePrintfulVariant';
+import PrintfulCatalogBrowser from '@/components/admin/PrintfulCatalogBrowser';
 
 interface Product {
   id: string;
@@ -311,6 +312,7 @@ const AdminShopPage = () => {
           <TabsList>
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="orders">All Orders</TabsTrigger>
+            <TabsTrigger value="catalog">Browse Catalog</TabsTrigger>
             <TabsTrigger value="validation">Variant Validation</TabsTrigger>
             <TabsTrigger value="diagnostics">Diagnostics</TabsTrigger>
             <TabsTrigger value="webhooks">Webhook Setup</TabsTrigger>
@@ -519,6 +521,10 @@ const AdminShopPage = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="catalog" className="space-y-6">
+            <PrintfulCatalogBrowser />
           </TabsContent>
 
           <TabsContent value="validation" className="space-y-6">
