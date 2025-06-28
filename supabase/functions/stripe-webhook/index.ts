@@ -84,7 +84,6 @@ serve(async (req) => {
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabaseClient: any) {
   console.log("💰 PROCESSING SUCCESSFUL PAYMENT:", session.id);
-  console.log("🔍 FULL SESSION DATA:", JSON.stringify(session, null, 2));
 
   try {
     // Parse session metadata
@@ -111,7 +110,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
       return;
     }
 
-    // Extract shipping details with proper fallback handling
+    // Extract shipping details from Stripe session
     let shippingAddress = null;
     let customerName = userEmail.split('@')[0];
     let customerPhone = null;
@@ -132,26 +131,18 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
       hasShippingAddress: !!shippingAddress,
       customerName,
       customerPhone,
-      shippingAddress
+      address: shippingAddress
     });
 
-    // Validate shipping address for physical products
+    // Validate shipping address
     if (!shippingAddress || !shippingAddress.line1 || !shippingAddress.city) {
       console.error("❌ Missing or incomplete shipping address");
-      console.log("Available shipping data:", {
-        sessionShipping: session.shipping,
-        customerDetails: session.customer_details
-      });
-      throw new Error("Shipping address is required for physical products");
+      throw new Error("Shipping address is required for order fulfillment");
     }
 
-    // ⚠️ CRITICAL: Always get FRESH product data from database, ignoring Stripe metadata
-    console.log("🔍 FETCHING CURRENT PRODUCT DATA FROM DATABASE (IGNORING STRIPE METADATA)...");
+    // Get fresh product data from database
+    console.log("🔍 FETCHING PRODUCT DATA FROM DATABASE...");
     const productIds = items.map((item: any) => item.product_id);
-    
-    // Force fresh fetch with timestamp to bust any caching
-    const timestamp = Date.now();
-    console.log("🕐 CACHE BUST TIMESTAMP:", timestamp);
     
     const { data: products, error: productsError } = await supabaseClient
       .from("products")
@@ -163,13 +154,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
       throw productsError;
     }
 
-    console.log("📦 CURRENT PRODUCT DATA FROM DATABASE:", products?.map(p => ({
+    console.log("📦 PRODUCT DATA:", products?.map(p => ({
       id: p.id,
       name: p.name,
       printful_variant_id: p.printful_variant_id,
-      variant_type: typeof p.printful_variant_id,
-      updated_at: p.updated_at,
-      requires_print_file: p.printful_variant_id === '385301201'
+      updated_at: p.updated_at
     })));
 
     // Create order record
@@ -195,17 +184,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
 
     console.log("✅ ORDER CREATED:", order.id);
 
-    // Create order items with fresh product data
-    const orderItems = items.map((item: any) => {
-      const product = products?.find(p => p.id === item.product_id);
-      return {
-        order_id: order.id,
-        product_id: item.product_id,
-        quantity: item.quantity,
-        unit_price: item.price,
-        total_price: item.price * item.quantity,
-      };
-    });
+    // Create order items
+    const orderItems = items.map((item: any) => ({
+      order_id: order.id,
+      product_id: item.product_id,
+      quantity: item.quantity,
+      unit_price: item.price,
+      total_price: item.price * item.quantity,
+    }));
 
     const { error: itemsError } = await supabaseClient
       .from("order_items")
@@ -237,7 +223,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
 
     console.log("✅ SHIPPING ADDRESS STORED");
 
-    // Send to Printful with CURRENT database product data (not Stripe metadata)
+    // Send to Printful with simplified sync variant approach
     await sendToPrintful(order, products, shippingAddress, customerName, customerPhone, supabaseClient);
 
     // Clear user cart
@@ -266,7 +252,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
 
 async function sendToPrintful(order: any, products: any[], shippingAddress: any, customerName: string, customerPhone: string | null, supabaseClient: any) {
   console.log("🖨️ SENDING ORDER TO PRINTFUL:", order.id);
-  console.log("🔍 PRODUCTS BEING SENT TO PRINTFUL:", JSON.stringify(products, null, 2));
+  console.log("📦 PRODUCTS FOR PRINTFUL:", products);
 
   const printfulApiKey = Deno.env.get("PRINTFUL_API_KEY");
   if (!printfulApiKey) {
@@ -281,102 +267,51 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
   }
 
   try {
-    // Validate shipping address again before sending to Printful
-    if (!shippingAddress?.line1 || !shippingAddress?.city) {
-      throw new Error("Shipping address is incomplete - missing line1 or city");
-    }
-
-    // Define which variants require print files (templated products)
-    const TEMPLATED_VARIANTS = ['385301201']; // Add more as needed
-    const TEMPLATE_PRINT_FILE_URL = "https://cudftlquaydissmvqjmv.supabase.co/storage/v1/object/public/product-images/sticker-template.png";
-
-    // Filter products that have valid Printful variant IDs and create items
+    // Filter products that have valid Printful sync variant IDs
     const printfulItems = products.filter(product => {
-      const variantId = product.printful_variant_id;
-      console.log("🔍 VARIANT VALIDATION:", { 
+      const syncVariantId = product.printful_variant_id;
+      console.log("🔍 SYNC VARIANT CHECK:", { 
         productId: product.id,
         productName: product.name, 
-        variantId: variantId,
-        variantIdType: typeof variantId,
-        hasVariantId: !!variantId && variantId !== null && variantId !== "",
-        isTemplated: TEMPLATED_VARIANTS.includes(String(variantId)),
-        updatedAt: product.updated_at
+        syncVariantId: syncVariantId,
+        hasValidId: !!syncVariantId && syncVariantId !== null && syncVariantId !== ""
       });
       
-      return variantId && variantId !== null && variantId !== "";
+      return syncVariantId && syncVariantId !== null && syncVariantId !== "";
     }).map(product => {
-      const variantId = product.printful_variant_id;
+      const syncVariantId = product.printful_variant_id;
       
-      // Convert variant ID to number for Printful API
-      let finalVariantId;
-      if (typeof variantId === 'number') {
-        finalVariantId = variantId;
-      } else if (typeof variantId === 'string' && !isNaN(Number(variantId))) {
-        finalVariantId = parseInt(variantId, 10);
-      } else {
-        console.error("❌ INVALID VARIANT ID FORMAT:", { productId: product.id, variantId, type: typeof variantId });
-        return null;
-      }
-      
-      const isTemplated = TEMPLATED_VARIANTS.includes(String(variantId));
-      
-      console.log("📦 PROCESSING VARIANT:", {
+      // Use sync_variant_id for published catalog products - no print files needed
+      console.log("📦 CREATING PRINTFUL ITEM:", {
         productId: product.id,
         productName: product.name,
-        originalVariantId: variantId,
-        finalVariantId: finalVariantId,
-        finalType: typeof finalVariantId,
-        isTemplated: isTemplated
+        syncVariantId: syncVariantId
       });
       
-      // Base item structure
-      const item: any = {
-        variant_id: finalVariantId,
+      return {
+        sync_variant_id: parseInt(syncVariantId, 10), // Convert to number for API
         quantity: 1, // Default quantity, could be from order items
       };
+    });
 
-      // Only add print files for templated variants
-      if (isTemplated) {
-        console.log("🎨 ADDING PRINT FILES FOR TEMPLATED VARIANT:", finalVariantId);
-        item.files = [
-          {
-            type: "default",
-            placement: "default",
-            url: TEMPLATE_PRINT_FILE_URL
-          }
-        ];
-        console.log("📎 PRINT FILE STRUCTURE:", JSON.stringify(item.files, null, 2));
-      } else {
-        console.log("📦 PHYSICAL PRODUCT - NO PRINT FILES NEEDED:", finalVariantId);
-      }
-      
-      return item;
-    }).filter(item => item !== null);
-
-    console.log("🔍 FINAL PRINTFUL ITEMS SUMMARY:", {
+    console.log("🔍 FINAL PRINTFUL ITEMS:", {
       totalProducts: products.length,
-      printfulItems: printfulItems.length,
-      itemsBreakdown: printfulItems.map(item => ({ 
-        variantId: item.variant_id, 
-        type: typeof item.variant_id,
-        isTemplated: !!item.files,
-        hasFiles: !!item.files,
-        fileCount: item.files?.length || 0
-      }))
+      validItems: printfulItems.length,
+      items: printfulItems
     });
 
     if (printfulItems.length === 0) {
-      console.log("ℹ️ No valid Printful items to fulfill");
+      console.log("ℹ️ No valid Printful sync variants to fulfill");
       await supabaseClient.from("orders")
         .update({ 
           printful_status: "not_required",
-          printful_error: "No items with valid Printful variant IDs found"
+          printful_error: "No items with valid Printful sync variant IDs found"
         })
         .eq("id", order.id);
       return;
     }
 
-    // Prepare Printful order payload with validated shipping address
+    // Prepare Printful order payload using sync variants
     const printfulOrder = {
       recipient: {
         name: customerName,
@@ -393,10 +328,7 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
       external_id: order.id,
     };
 
-    console.log("📦 COMPLETE PRINTFUL PAYLOAD:", JSON.stringify(printfulOrder, null, 2));
-    console.log("🌐 PRINTFUL API ENDPOINT:", "https://api.printful.com/orders");
-    console.log("🔑 PRINTFUL API KEY EXISTS:", !!printfulApiKey);
-    console.log("🔑 PRINTFUL API KEY PREFIX:", printfulApiKey?.substring(0, 10) + "...");
+    console.log("📦 PRINTFUL ORDER PAYLOAD:", JSON.stringify(printfulOrder, null, 2));
 
     // Make API call to Printful
     const response = await fetch("https://api.printful.com/orders", {
@@ -409,10 +341,9 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
     });
 
     console.log("📡 PRINTFUL RESPONSE STATUS:", response.status);
-    console.log("📡 PRINTFUL RESPONSE HEADERS:", JSON.stringify([...response.headers.entries()]));
 
     const result = await response.json();
-    console.log("🖨️ COMPLETE PRINTFUL RESPONSE:", JSON.stringify(result, null, 2));
+    console.log("🖨️ PRINTFUL RESPONSE:", JSON.stringify(result, null, 2));
 
     if (response.ok && result.result) {
       // Success - update order with Printful ID
@@ -427,35 +358,30 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
       
       console.log("✅ PRINTFUL ORDER CREATED SUCCESSFULLY:", result.result.id);
     } else {
-      // Error - log and update status with detailed error information
-      const errorDetails = {
+      // Error - log and update status
+      const errorMsg = result.error?.message || result.result || `HTTP ${response.status}: ${response.statusText}` || "Unknown Printful error";
+      
+      console.error("❌ PRINTFUL API ERROR:", {
         status: response.status,
-        statusText: response.statusText,
         error: result.error,
         result: result.result,
         code: result.code
-      };
-      
-      const errorMsg = result.error?.message || result.result || `HTTP ${response.status}: ${response.statusText}` || "Unknown Printful error";
-      
-      console.error("❌ PRINTFUL API ERROR DETAILS:", errorDetails);
-      console.error("❌ FULL PRINTFUL ERROR RESPONSE:", JSON.stringify(result, null, 2));
+      });
       
       await supabaseClient.from("orders")
         .update({ 
           printful_status: "error",
-          printful_error: `${errorMsg} | Full response: ${JSON.stringify(errorDetails)}`
+          printful_error: errorMsg
         })
         .eq("id", order.id);
     }
   } catch (error) {
     console.error("❌ PRINTFUL API EXCEPTION:", error);
-    console.error("❌ EXCEPTION STACK:", error.stack);
     
     await supabaseClient.from("orders")
       .update({ 
         printful_status: "error",
-        printful_error: `Exception: ${error.message} | Stack: ${error.stack}`
+        printful_error: `Exception: ${error.message}`
       })
       .eq("id", order.id);
   }
