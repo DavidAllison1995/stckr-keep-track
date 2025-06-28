@@ -68,6 +68,7 @@ const AdminShopPage = () => {
   const [showProductDialog, setShowProductDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isTestingPrintful, setIsTestingPrintful] = useState(false);
 
   useEffect(() => {
     loadProducts();
@@ -123,6 +124,49 @@ const AdminShopPage = () => {
         description: 'Failed to load orders',
         variant: 'destructive',
       });
+    }
+  };
+
+  const testPrintfulAPI = async () => {
+    setIsTestingPrintful(true);
+    try {
+      console.log('Testing Printful API...');
+      
+      const { data, error } = await supabase.functions.invoke('test-printful-api');
+      
+      if (error) {
+        console.error('Printful API test error:', error);
+        toast({
+          title: 'Printful API Test Failed',
+          description: `Error: ${error.message}`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      console.log('Printful API test result:', data);
+      
+      if (data.success) {
+        toast({
+          title: 'Printful API Test Successful! ✅',
+          description: `Store connected with ${data.productsCount} products available`,
+        });
+      } else {
+        toast({
+          title: 'Printful API Test Failed',
+          description: data.error || 'Unknown error',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Unexpected error testing Printful API:', error);
+      toast({
+        title: 'Test Error',
+        description: 'Failed to test Printful API connection',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsTestingPrintful(false);
     }
   };
 
@@ -224,9 +268,30 @@ const AdminShopPage = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Shop Management</h1>
-          <p className="text-gray-600">Manage products and orders</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Shop Management</h1>
+            <p className="text-gray-600">Manage products and orders</p>
+          </div>
+          
+          <Button
+            onClick={testPrintfulAPI}
+            disabled={isTestingPrintful}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            {isTestingPrintful ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                Testing...
+              </>
+            ) : (
+              <>
+                <Package className="w-4 h-4" />
+                Test Printful API
+              </>
+            )}
+          </Button>
         </div>
 
         <Tabs defaultValue="products" className="space-y-6">
