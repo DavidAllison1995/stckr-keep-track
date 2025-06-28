@@ -35,11 +35,16 @@ const ValidatePrintfulVariant = () => {
       });
 
       if (error) {
-        console.error('❌ VALIDATION ERROR:', error);
+        console.error('❌ SUPABASE FUNCTION ERROR:', error);
         toast({
-          title: 'Validation Failed',
-          description: `Error: ${error.message}`,
+          title: 'Function Error',
+          description: `Supabase function error: ${error.message}`,
           variant: 'destructive',
+        });
+        setValidationResult({
+          valid: false,
+          error: `Function invocation failed: ${error.message}`,
+          functionError: true
         });
         return;
       }
@@ -47,15 +52,15 @@ const ValidatePrintfulVariant = () => {
       console.log('✅ VALIDATION RESULT:', data);
       setValidationResult(data);
       
-      if (data.valid) {
+      if (data?.valid) {
         toast({
           title: 'Variant ID Valid! ✅',
-          description: `Found: ${data.variant.name}`,
+          description: `Found: ${data.variant?.name || 'Valid variant'}`,
         });
       } else {
         toast({
           title: 'Variant ID Invalid ❌',
-          description: data.error || 'Variant not found in Printful',
+          description: data?.error || 'Variant not found in Printful',
           variant: 'destructive',
         });
       }
@@ -65,6 +70,11 @@ const ValidatePrintfulVariant = () => {
         title: 'Validation Error',
         description: 'Failed to validate variant ID',
         variant: 'destructive',
+      });
+      setValidationResult({
+        valid: false,
+        error: 'Unexpected error occurred',
+        unexpectedError: true
       });
     } finally {
       setIsValidating(false);
@@ -141,10 +151,16 @@ const ValidatePrintfulVariant = () => {
 
             {!validationResult.valid && (
               <div className="bg-red-50 p-3 rounded-lg">
-                <h4 className="font-semibold text-red-800">Error:</h4>
+                <h4 className="font-semibold text-red-800">Error Details:</h4>
                 <p className="text-sm text-red-700">{validationResult.error}</p>
                 {validationResult.status && (
                   <p className="text-xs text-red-600 mt-1">HTTP Status: {validationResult.status}</p>
+                )}
+                {validationResult.functionError && (
+                  <p className="text-xs text-red-600 mt-1">This appears to be a Supabase function configuration issue.</p>
+                )}
+                {validationResult.unexpectedError && (
+                  <p className="text-xs text-red-600 mt-1">Please check the browser console for more details.</p>
                 )}
               </div>
             )}
