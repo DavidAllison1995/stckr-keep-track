@@ -323,12 +323,23 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
         isTemplated: finalVariantId === 385301201
       });
       
-      // For templated variants (like 385301201), we don't need to specify files
-      // The template already contains the design
-      return {
+      // For templated variants, we need to include the print files
+      const item: any = {
         variant_id: finalVariantId,
         quantity: 1, // Default quantity, could be from order items
       };
+
+      // Add print files for templated variant (385301201)
+      if (finalVariantId === 385301201) {
+        console.log("🎨 ADDING PRINT FILES FOR TEMPLATED VARIANT");
+        item.files = [
+          {
+            url: "https://cudftlquaydissmvqjmv.supabase.co/storage/v1/object/public/product-images/sticker-template.png"
+          }
+        ];
+      }
+      
+      return item;
     }).filter(item => item !== null);
 
     console.log("🔍 FINAL PRINTFUL ITEMS SUMMARY:", {
@@ -337,7 +348,8 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
       processedItems: printfulItems.map(item => ({ 
         id: item.variant_id, 
         type: typeof item.variant_id,
-        isTemplated: item.variant_id === 385301201
+        isTemplated: item.variant_id === 385301201,
+        hasFiles: !!item.files
       }))
     });
 
