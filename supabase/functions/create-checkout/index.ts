@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -136,11 +135,7 @@ serve(async (req) => {
       return product?.printful_variant_id;
     }).length);
 
-    // Enable shipping collection for physical products
-    const shippingEnabled = true;
-    console.log("🏠 SHIPPING COLLECTION ENABLED:", shippingEnabled);
-
-    // Create Stripe checkout session
+    // Create Stripe checkout session with required shipping address collection
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: lineItems,
@@ -149,9 +144,10 @@ serve(async (req) => {
       cancel_url: `${req.headers.get("origin")}/shop`,
       customer_email: userEmail,
       metadata: orderMetadata,
-      shipping_address_collection: shippingEnabled ? {
-        allowed_countries: ["GB", "US", "CA", "AU", "DE", "FR", "ES", "IT", "NL", "BE"],
-      } : undefined,
+      // CRITICAL: Enable shipping address collection for physical products
+      shipping_address_collection: {
+        allowed_countries: ["GB", "US", "CA", "AU", "DE", "FR", "ES", "IT", "NL", "BE", "SE", "NO", "DK", "FI"],
+      },
       billing_address_collection: "required",
       phone_number_collection: {
         enabled: true,
@@ -159,6 +155,7 @@ serve(async (req) => {
     });
 
     console.log("✅ STRIPE SESSION CREATED:", session.id);
+    console.log("🏠 SHIPPING ADDRESS COLLECTION ENABLED");
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

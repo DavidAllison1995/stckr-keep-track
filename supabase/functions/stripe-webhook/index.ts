@@ -85,6 +85,7 @@ serve(async (req) => {
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabaseClient: any) {
   console.log("💰 PROCESSING SUCCESSFUL PAYMENT:", session.id);
+  console.log("🔍 FULL SESSION DATA:", JSON.stringify(session, null, 2));
 
   try {
     // Parse session metadata
@@ -111,22 +112,37 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
       return;
     }
 
-    // Extract shipping details with better fallback handling
-    const shippingDetails = session.shipping_details;
-    const customerDetails = session.customer_details;
-    const customerName = shippingDetails?.name || customerDetails?.name || userEmail.split('@')[0];
-    const shippingPhone = customerDetails?.phone;
+    // Extract shipping details with proper fallback handling
+    let shippingAddress = null;
+    let customerName = userEmail.split('@')[0];
+    let customerPhone = null;
+
+    // Try multiple sources for shipping info
+    if (session.shipping?.address) {
+      shippingAddress = session.shipping.address;
+      customerName = session.shipping.name || customerName;
+      console.log("✅ Using session.shipping for address");
+    } else if (session.customer_details?.address) {
+      shippingAddress = session.customer_details.address;
+      customerName = session.customer_details.name || customerName;
+      customerPhone = session.customer_details.phone;
+      console.log("✅ Using session.customer_details for address");
+    }
 
     console.log("🏠 SHIPPING INFO:", {
-      name: customerName,
-      phone: shippingPhone,
-      shippingDetails: shippingDetails,
-      customerDetails: customerDetails
+      hasShippingAddress: !!shippingAddress,
+      customerName,
+      customerPhone,
+      shippingAddress
     });
 
-    // Validate that we have shipping address if required
-    if (!shippingDetails?.address) {
-      console.error("❌ No shipping address provided in session");
+    // Validate shipping address for physical products
+    if (!shippingAddress || !shippingAddress.line1 || !shippingAddress.city) {
+      console.error("❌ Missing or incomplete shipping address");
+      console.log("Available shipping data:", {
+        sessionShipping: session.shipping,
+        customerDetails: session.customer_details
+      });
       throw new Error("Shipping address is required for physical products");
     }
 
@@ -140,7 +156,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
         total_amount: totalAmount,
         stripe_session_id: session.id,
         customer_name: customerName,
-        shipping_phone: shippingPhone,
+        shipping_phone: customerPhone,
         printful_status: "pending",
       })
       .select()
@@ -177,12 +193,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
     const { error: shippingError } = await supabaseClient.from("shipping_addresses").insert({
       order_id: order.id,
       name: customerName,
-      line1: shippingDetails.address.line1 || '',
-      line2: shippingDetails.address.line2 || '',
-      city: shippingDetails.address.city || '',
-      state: shippingDetails.address.state || '',
-      postal_code: shippingDetails.address.postal_code || '',
-      country: shippingDetails.address.country || 'GB',
+      line1: shippingAddress.line1,
+      line2: shippingAddress.line2 || '',
+      city: shippingAddress.city,
+      state: shippingAddress.state || '',
+      postal_code: shippingAddress.postal_code || '',
+      country: shippingAddress.country || 'GB',
     });
 
     if (shippingError) {
@@ -193,7 +209,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
     console.log("✅ SHIPPING ADDRESS STORED");
 
     // Send to Printful
-    await sendToPrintful(order, items, shippingDetails, customerName, shippingPhone, supabaseClient);
+    await sendToPrintful(order, items, shippingAddress, customerName, customerPhone, supabaseClient);
 
     // Clear user cart
     await supabaseClient.from("cart_items").delete().eq("user_id", userId);
@@ -219,7 +235,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
   }
 }
 
-async function sendToPrintful(order: any, items: any[], shippingDetails: any, customerName: string, shippingPhone: string | null, supabaseClient: any) {
+async function sendToPrintful(order: any, items: any[], shippingAddress: any, customerName: string, customerPhone: string | null, supabaseClient: any) {
   console.log("🖨️ SENDING ORDER TO PRINTFUL:", order.id);
 
   const printfulApiKey = Deno.env.get("PRINTFUL_API_KEY");
@@ -235,13 +251,8 @@ async function sendToPrintful(order: any, items: any[], shippingDetails: any, cu
   }
 
   try {
-    // Validate shipping address
-    if (!shippingDetails?.address) {
-      throw new Error("No shipping address provided");
-    }
-
-    const address = shippingDetails.address;
-    if (!address.line1 || !address.city) {
+    // Validate shipping address again before sending to Printful
+    if (!shippingAddress?.line1 || !shippingAddress?.city) {
       throw new Error("Shipping address is incomplete - missing line1 or city");
     }
 
@@ -265,21 +276,21 @@ async function sendToPrintful(order: any, items: any[], shippingDetails: any, cu
       return;
     }
 
-    // Prepare Printful order payload
+    // Prepare Printful order payload with validated shipping address
     const printfulOrder = {
       recipient: {
         name: customerName,
-        address1: address.line1,
-        address2: address.line2 || "",
-        city: address.city,
-        state_code: address.state || "",
-        country_code: address.country || "GB",
-        zip: address.postal_code || "",
-        phone: shippingPhone || "",
+        address1: shippingAddress.line1,
+        address2: shippingAddress.line2 || "",
+        city: shippingAddress.city,
+        state_code: shippingAddress.state || "",
+        country_code: shippingAddress.country || "GB",
+        zip: shippingAddress.postal_code || "",
+        phone: customerPhone || "",
         email: order.user_email,
       },
       items: printfulItems,
-      external_id: order.id, // Link back to our order
+      external_id: order.id,
     };
 
     console.log("📦 PRINTFUL PAYLOAD:", JSON.stringify(printfulOrder, null, 2));
