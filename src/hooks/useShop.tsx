@@ -97,9 +97,21 @@ export const useShop = () => {
       return null;
     }
 
+    // Ensure we have user email - get it from user object or auth session
+    const userEmail = user.email || user.user_metadata?.email;
+    if (!userEmail) {
+      console.error('No user email available:', user);
+      toast({
+        title: 'Error',
+        description: 'User email not available. Please try logging in again.',
+        variant: 'destructive',
+      });
+      return null;
+    }
+
     setIsLoading(true);
     try {
-      console.log('Creating checkout session for user:', user.id, user.email);
+      console.log('Creating checkout session for user:', user.id, userEmail);
       
       // Get cart items from database to ensure consistency
       const { data: cartItems, error: cartError } = await supabase
@@ -126,6 +138,7 @@ export const useShop = () => {
       }
 
       console.log('Creating checkout with cart items:', cartItems);
+      console.log('User data being sent:', { user_id: user.id, user_email: userEmail });
 
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
@@ -135,8 +148,8 @@ export const useShop = () => {
             price: item.product?.price || 0,
             name: item.product?.name || 'Product',
           })),
-          user_id: user.id, // Add user ID
-          user_email: user.email, // Add user email
+          user_id: user.id,
+          user_email: userEmail,
         },
       });
 
