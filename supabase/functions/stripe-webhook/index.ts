@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -329,14 +328,16 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
         quantity: 1, // Default quantity, could be from order items
       };
 
-      // Add print files for templated variant (385301201)
+      // Add print files for templated variant (385301201) with correct Printful structure
       if (finalVariantId === 385301201) {
         console.log("🎨 ADDING PRINT FILES FOR TEMPLATED VARIANT");
         item.files = [
           {
+            type: "default",
             url: "https://cudftlquaydissmvqjmv.supabase.co/storage/v1/object/public/product-images/sticker-template.png"
           }
         ];
+        console.log("📎 PRINT FILE STRUCTURE:", JSON.stringify(item.files, null, 2));
       }
       
       return item;
@@ -349,7 +350,8 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
         id: item.variant_id, 
         type: typeof item.variant_id,
         isTemplated: item.variant_id === 385301201,
-        hasFiles: !!item.files
+        hasFiles: !!item.files,
+        fileCount: item.files?.length || 0
       }))
     });
 
