@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -168,7 +169,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
       printful_variant_id: p.printful_variant_id,
       variant_type: typeof p.printful_variant_id,
       updated_at: p.updated_at,
-      is_templated: p.printful_variant_id === '385301201'
+      requires_print_file: p.printful_variant_id === '385301201'
     })));
 
     // Create order record
@@ -285,24 +286,28 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
       throw new Error("Shipping address is incomplete - missing line1 or city");
     }
 
-    // Filter products that have Printful variant IDs and create items
+    // Define which variants require print files (templated products)
+    const TEMPLATED_VARIANTS = ['385301201']; // Add more as needed
+    const TEMPLATE_PRINT_FILE_URL = "https://cudftlquaydissmvqjmv.supabase.co/storage/v1/object/public/product-images/sticker-template.png";
+
+    // Filter products that have valid Printful variant IDs and create items
     const printfulItems = products.filter(product => {
       const variantId = product.printful_variant_id;
-      console.log("🔍 DETAILED VARIANT ID CHECK:", { 
+      console.log("🔍 VARIANT VALIDATION:", { 
         productId: product.id,
         productName: product.name, 
         variantId: variantId,
         variantIdType: typeof variantId,
         hasVariantId: !!variantId && variantId !== null && variantId !== "",
-        updatedAt: product.updated_at,
-        isTemplated: variantId === '385301201'
+        isTemplated: TEMPLATED_VARIANTS.includes(String(variantId)),
+        updatedAt: product.updated_at
       });
       
       return variantId && variantId !== null && variantId !== "";
     }).map(product => {
       const variantId = product.printful_variant_id;
       
-      // Check if it's already a number or needs conversion
+      // Convert variant ID to number for Printful API
       let finalVariantId;
       if (typeof variantId === 'number') {
         finalVariantId = variantId;
@@ -313,31 +318,36 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
         return null;
       }
       
-      console.log("📦 USING FINAL VARIANT ID:", {
+      const isTemplated = TEMPLATED_VARIANTS.includes(String(variantId));
+      
+      console.log("📦 PROCESSING VARIANT:", {
         productId: product.id,
         productName: product.name,
         originalVariantId: variantId,
         finalVariantId: finalVariantId,
         finalType: typeof finalVariantId,
-        isTemplated: finalVariantId === 385301201
+        isTemplated: isTemplated
       });
       
-      // For templated variants, we need to include the print files
+      // Base item structure
       const item: any = {
         variant_id: finalVariantId,
         quantity: 1, // Default quantity, could be from order items
       };
 
-      // Add print files for templated variant (385301201) with correct Printful structure
-      if (finalVariantId === 385301201) {
-        console.log("🎨 ADDING PRINT FILES FOR TEMPLATED VARIANT");
+      // Only add print files for templated variants
+      if (isTemplated) {
+        console.log("🎨 ADDING PRINT FILES FOR TEMPLATED VARIANT:", finalVariantId);
         item.files = [
           {
             type: "default",
-            url: "https://cudftlquaydissmvqjmv.supabase.co/storage/v1/object/public/product-images/sticker-template.png"
+            placement: "default",
+            url: TEMPLATE_PRINT_FILE_URL
           }
         ];
         console.log("📎 PRINT FILE STRUCTURE:", JSON.stringify(item.files, null, 2));
+      } else {
+        console.log("📦 PHYSICAL PRODUCT - NO PRINT FILES NEEDED:", finalVariantId);
       }
       
       return item;
@@ -346,10 +356,10 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
     console.log("🔍 FINAL PRINTFUL ITEMS SUMMARY:", {
       totalProducts: products.length,
       printfulItems: printfulItems.length,
-      processedItems: printfulItems.map(item => ({ 
-        id: item.variant_id, 
+      itemsBreakdown: printfulItems.map(item => ({ 
+        variantId: item.variant_id, 
         type: typeof item.variant_id,
-        isTemplated: item.variant_id === 385301201,
+        isTemplated: !!item.files,
         hasFiles: !!item.files,
         fileCount: item.files?.length || 0
       }))
@@ -417,20 +427,24 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
       
       console.log("✅ PRINTFUL ORDER CREATED SUCCESSFULLY:", result.result.id);
     } else {
-      // Error - log and update status
-      const errorMsg = result.error?.message || result.result || JSON.stringify(result) || "Unknown Printful error";
-      console.error("❌ PRINTFUL API ERROR DETAILS:", {
+      // Error - log and update status with detailed error information
+      const errorDetails = {
         status: response.status,
         statusText: response.statusText,
         error: result.error,
         result: result.result,
-        fullResponse: result
-      });
+        code: result.code
+      };
+      
+      const errorMsg = result.error?.message || result.result || `HTTP ${response.status}: ${response.statusText}` || "Unknown Printful error";
+      
+      console.error("❌ PRINTFUL API ERROR DETAILS:", errorDetails);
+      console.error("❌ FULL PRINTFUL ERROR RESPONSE:", JSON.stringify(result, null, 2));
       
       await supabaseClient.from("orders")
         .update({ 
           printful_status: "error",
-          printful_error: errorMsg
+          printful_error: `${errorMsg} | Full response: ${JSON.stringify(errorDetails)}`
         })
         .eq("id", order.id);
     }
@@ -441,7 +455,7 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
     await supabaseClient.from("orders")
       .update({ 
         printful_status: "error",
-        printful_error: error.message
+        printful_error: `Exception: ${error.message} | Stack: ${error.stack}`
       })
       .eq("id", order.id);
   }
