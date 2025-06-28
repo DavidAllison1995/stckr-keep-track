@@ -145,8 +145,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
       throw new Error("Shipping address is required for physical products");
     }
 
-    // Get fresh product data from database to ensure we have latest variant IDs
-    console.log("🔍 FETCHING FRESH PRODUCT DATA FROM DATABASE...");
+    // Get fresh product data from database with explicit cache-busting
+    console.log("🔍 FETCHING FRESH PRODUCT DATA FROM DATABASE WITH CACHE BUST...");
     const productIds = items.map((item: any) => item.product_id);
     const { data: products, error: productsError } = await supabaseClient
       .from("products")
@@ -158,11 +158,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
       throw productsError;
     }
 
-    console.log("📦 FRESH PRODUCT DATA:", products?.map(p => ({
+    console.log("📦 FRESH PRODUCT DATA FROM DB:", products?.map(p => ({
       id: p.id,
       name: p.name,
       printful_variant_id: p.printful_variant_id,
-      variant_type: typeof p.printful_variant_id
+      variant_type: typeof p.printful_variant_id,
+      updated_at: p.updated_at
     })));
 
     // Create order record
@@ -259,7 +260,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
 
 async function sendToPrintful(order: any, products: any[], shippingAddress: any, customerName: string, customerPhone: string | null, supabaseClient: any) {
   console.log("🖨️ SENDING ORDER TO PRINTFUL:", order.id);
-  console.log("🔍 FRESH PRODUCTS FOR PRINTFUL:", JSON.stringify(products, null, 2));
+  console.log("🔍 PRODUCTS BEING SENT TO PRINTFUL:", JSON.stringify(products, null, 2));
 
   const printfulApiKey = Deno.env.get("PRINTFUL_API_KEY");
   if (!printfulApiKey) {
@@ -282,12 +283,13 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
     // Filter products that have Printful variant IDs and create items
     const printfulItems = products.filter(product => {
       const variantId = product.printful_variant_id;
-      console.log("🔍 VARIANT ID CHECK:", { 
+      console.log("🔍 DETAILED VARIANT ID CHECK:", { 
         productId: product.id,
         productName: product.name, 
         variantId: variantId,
         variantIdType: typeof variantId,
-        hasVariantId: !!variantId && variantId !== null && variantId !== ""
+        hasVariantId: !!variantId && variantId !== null && variantId !== "",
+        updatedAt: product.updated_at
       });
       
       return variantId && variantId !== null && variantId !== "";
@@ -305,12 +307,13 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
         return null;
       }
       
-      console.log("📦 USING VARIANT ID:", {
+      console.log("📦 USING FINAL VARIANT ID:", {
         productId: product.id,
         productName: product.name,
         originalVariantId: variantId,
         finalVariantId: finalVariantId,
-        finalType: typeof finalVariantId
+        finalType: typeof finalVariantId,
+        isTemplated: finalVariantId === 385301201
       });
       
       // For templated variants (like 385301201), we don't need to specify files
@@ -321,12 +324,13 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
       };
     }).filter(item => item !== null);
 
-    console.log("🔍 PRINTFUL ITEMS SUMMARY:", {
+    console.log("🔍 FINAL PRINTFUL ITEMS SUMMARY:", {
       totalProducts: products.length,
       printfulItems: printfulItems.length,
       processedItems: printfulItems.map(item => ({ 
         id: item.variant_id, 
-        type: typeof item.variant_id
+        type: typeof item.variant_id,
+        isTemplated: item.variant_id === 385301201
       }))
     });
 
