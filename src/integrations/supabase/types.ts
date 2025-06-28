@@ -260,9 +260,14 @@ export type Database = {
       orders: {
         Row: {
           created_at: string | null
+          customer_name: string | null
           fulfillment_error: string | null
           id: string
+          printful_error: string | null
           printful_order_id: string | null
+          printful_status: string | null
+          retry_count: number | null
+          shipping_phone: string | null
           status: string
           stripe_session_id: string | null
           total_amount: number
@@ -272,9 +277,14 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          customer_name?: string | null
           fulfillment_error?: string | null
           id?: string
+          printful_error?: string | null
           printful_order_id?: string | null
+          printful_status?: string | null
+          retry_count?: number | null
+          shipping_phone?: string | null
           status?: string
           stripe_session_id?: string | null
           total_amount: number
@@ -284,9 +294,14 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          customer_name?: string | null
           fulfillment_error?: string | null
           id?: string
+          printful_error?: string | null
           printful_order_id?: string | null
+          printful_status?: string | null
+          retry_count?: number | null
+          shipping_phone?: string | null
           status?: string
           stripe_session_id?: string | null
           total_amount?: number
@@ -561,6 +576,36 @@ export type Database = {
           theme?: string | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_logs: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          event_data: Json | null
+          id: string
+          processing_status: string | null
+          stripe_session_id: string | null
+          webhook_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          event_data?: Json | null
+          id?: string
+          processing_status?: string | null
+          stripe_session_id?: string | null
+          webhook_type: string
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          event_data?: Json | null
+          id?: string
+          processing_status?: string | null
+          stripe_session_id?: string | null
+          webhook_type?: string
         }
         Relationships: []
       }

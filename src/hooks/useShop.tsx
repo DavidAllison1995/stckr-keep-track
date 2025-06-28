@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from './useSupabaseAuth';
@@ -34,6 +35,12 @@ export interface Order {
   status: string;
   total_amount: number;
   stripe_session_id?: string;
+  customer_name?: string;
+  shipping_phone?: string;
+  printful_order_id?: string;
+  printful_status?: string;
+  printful_error?: string;
+  retry_count?: number;
   created_at: string;
   updated_at: string;
   order_items?: OrderItem[];
@@ -84,7 +91,7 @@ export const useShop = () => {
     }
   };
 
-  // Create checkout session - fixed user data handling
+  // Create checkout session with improved error handling
   const createCheckoutSession = async () => {
     if (!user) {
       console.log('Cannot create checkout session: no user');
@@ -149,8 +156,7 @@ export const useShop = () => {
       }
 
       console.log('Creating checkout with cart items:', cartItems);
-      console.log('User data being sent:', { user_id: currentUser.id, user_email: userEmail });
-
+      
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           items: cartItems.map(item => ({
@@ -168,6 +174,7 @@ export const useShop = () => {
         console.error('Error creating checkout session:', error);
         throw error;
       }
+      
       console.log('Checkout session created:', data);
       return data.url;
     } catch (error) {
@@ -183,7 +190,7 @@ export const useShop = () => {
     }
   };
 
-  // Load user orders
+  // Load user orders with enhanced data
   const loadOrders = async () => {
     if (!user) return;
 
@@ -212,56 +219,74 @@ export const useShop = () => {
     }
   };
 
-  // Get order status display info with Printful integration
-  const getOrderStatusInfo = (status: string) => {
+  // Get comprehensive order status info
+  const getOrderStatusInfo = (order: Order) => {
+    const { status, printful_status, printful_error } = order;
+    
+    if (printful_error) {
+      return {
+        label: 'Fulfillment Error',
+        color: 'red',
+        description: printful_error,
+      };
+    }
+    
+    if (printful_status === 'created' || printful_status === 'pending') {
+      return {
+        label: 'Processing',
+        color: 'blue',
+        description: 'Order sent to Printful for production',
+      };
+    }
+    
     switch (status) {
       case 'pending':
-        return { 
-          label: 'Pending Payment', 
-          color: 'yellow', 
-          description: 'Waiting for payment confirmation' 
+        return {
+          label: 'Pending Payment',
+          color: 'yellow',
+          description: 'Waiting for payment confirmation',
         };
       case 'paid':
-        return { 
-          label: 'Payment Confirmed', 
-          color: 'green', 
-          description: 'Payment received, preparing for fulfillment' 
+        return {
+          label: 'Payment Confirmed',
+          color: 'green',
+          description: 'Payment received, preparing for fulfillment',
         };
       case 'processing':
-        return { 
-          label: 'Processing', 
-          color: 'blue', 
-          description: 'Order sent to Printful for production' 
+        return {
+          label: 'Processing',
+          color: 'blue',
+          description: 'Order is being prepared',
         };
       case 'shipped':
-        return { 
-          label: 'Shipped', 
-          color: 'purple', 
-          description: 'Your stickers are on the way!' 
+        return {
+          label: 'Shipped',
+          color: 'purple',
+          description: 'Your order is on the way!',
         };
       case 'delivered':
-        return { 
-          label: 'Delivered', 
-          color: 'green', 
-          description: 'Order has been delivered' 
+        return {
+          label: 'Delivered',
+          color: 'green',
+          description: 'Order has been delivered',
         };
       case 'failed':
-        return { 
-          label: 'Payment Failed', 
-          color: 'red', 
-          description: 'Payment was not successful' 
+        return {
+          label: 'Payment Failed',
+          color: 'red',
+          description: 'Payment was not successful',
         };
       case 'cancelled':
-        return { 
-          label: 'Cancelled', 
-          color: 'gray', 
-          description: 'Order was cancelled' 
+        return {
+          label: 'Cancelled',
+          color: 'gray',
+          description: 'Order was cancelled',
         };
       default:
-        return { 
-          label: status, 
-          color: 'gray', 
-          description: '' 
+        return {
+          label: status,
+          color: 'gray',
+          description: '',
         };
     }
   };
