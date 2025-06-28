@@ -28,57 +28,51 @@ serve(async (req) => {
       });
     }
 
-    console.log('Printful API key found, testing connection...');
+    // Log API key info (first and last 4 characters for security)
+    console.log(`API key found - starts with: ${printfulApiKey.substring(0, 4)}... ends with: ...${printfulApiKey.substring(printfulApiKey.length - 4)}`);
+    console.log(`API key length: ${printfulApiKey.length}`);
 
-    // Test API connection by getting store info
-    const response = await fetch('https://api.printful.com/store', {
+    // Test with a simpler endpoint first - get products instead of store info
+    console.log('Testing with products endpoint...');
+    const response = await fetch('https://api.printful.com/products', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${printfulApiKey}`,
         'Content-Type': 'application/json',
+        'User-Agent': 'Lovable-App/1.0'
       },
     });
 
     const result = await response.json();
     
     console.log('Printful API response status:', response.status);
+    console.log('Printful API response headers:', Object.fromEntries(response.headers.entries()));
     console.log('Printful API response:', JSON.stringify(result, null, 2));
     
     if (!response.ok) {
       console.error('Printful API error:', result);
+      
+      // Try to get more specific error information
+      let errorMessage = 'Unknown error';
+      if (result.error && result.error.message) {
+        errorMessage = result.error.message;
+      } else if (result.result && typeof result.result === 'string') {
+        errorMessage = result.result;
+      }
+      
       return new Response(JSON.stringify({ 
         success: false,
-        error: `Printful API error: ${result.error?.message || 'Unknown error'}`,
-        details: result,
-        status: response.status
+        error: `Printful API error (${response.status}): ${errorMessage}`,
+        details: {
+          status: response.status,
+          statusText: response.statusText,
+          response: result,
+          apiKeyPrefix: printfulApiKey.substring(0, 8) + '...',
+          apiKeyLength: printfulApiKey.length
+        }
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: response.status,
-      });
-    }
-
-    // Test getting products to verify we can access catalog
-    console.log('Testing product catalog access...');
-    const productsResponse = await fetch('https://api.printful.com/products', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${printfulApiKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const productsResult = await productsResponse.json();
-    console.log('Products API response status:', productsResponse.status);
-    
-    if (!productsResponse.ok) {
-      console.error('Products API error:', productsResult);
-      return new Response(JSON.stringify({ 
-        success: false,
-        error: `Products API error: ${productsResult.error?.message || 'Unknown error'}`,
-        details: productsResult
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: productsResponse.status,
       });
     }
 
@@ -87,9 +81,9 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       success: true,
       message: 'Printful API connection successful',
-      storeInfo: result.result,
-      productsCount: productsResult.result?.length || 0,
-      apiKeyStatus: 'Valid',
+      productsCount: result.result?.length || 0,
+      apiKeyStatus: 'Valid and working',
+      apiKeyPrefix: printfulApiKey.substring(0, 8) + '...',
       timestamp: new Date().toISOString()
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -100,7 +94,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       success: false,
       error: error.message,
-      details: 'Unexpected error during API test'
+      details: 'Unexpected error during API test',
+      stack: error.stack
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
