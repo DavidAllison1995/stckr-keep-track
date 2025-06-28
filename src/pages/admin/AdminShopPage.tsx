@@ -27,6 +27,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import AdminLayout from '@/components/admin/AdminLayout';
 import ProductForm from '@/components/admin/ProductForm';
+import ManualFulfillmentButton from '@/components/admin/ManualFulfillmentButton';
+import OrderDiagnostics from '@/components/admin/OrderDiagnostics';
 
 interface Product {
   id: string;
@@ -58,6 +60,7 @@ interface Order {
       name: string;
     };
   }[];
+  fulfillment_error?: string | null;
 }
 
 const AdminShopPage = () => {
@@ -130,12 +133,12 @@ const AdminShopPage = () => {
   const testPrintfulAPI = async () => {
     setIsTestingPrintful(true);
     try {
-      console.log('Testing Printful API...');
+      console.log('🧪 TESTING PRINTFUL API...');
       
       const { data, error } = await supabase.functions.invoke('test-printful-api');
       
       if (error) {
-        console.error('Printful API test error:', error);
+        console.error('❌ PRINTFUL API TEST ERROR:', error);
         toast({
           title: 'Printful API Test Failed',
           description: `Error: ${error.message}`,
@@ -144,7 +147,7 @@ const AdminShopPage = () => {
         return;
       }
 
-      console.log('Printful API test result:', data);
+      console.log('✅ PRINTFUL API TEST RESULT:', data);
       
       if (data.success) {
         toast({
@@ -159,7 +162,7 @@ const AdminShopPage = () => {
         });
       }
     } catch (error) {
-      console.error('Unexpected error testing Printful API:', error);
+      console.error('❌ UNEXPECTED ERROR testing Printful API:', error);
       toast({
         title: 'Test Error',
         description: 'Failed to test Printful API connection',
@@ -298,6 +301,7 @@ const AdminShopPage = () => {
           <TabsList>
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="orders">Orders</TabsTrigger>
+            <TabsTrigger value="diagnostics">Diagnostics</TabsTrigger>
           </TabsList>
 
           <TabsContent value="products" className="space-y-6">
@@ -431,6 +435,7 @@ const AdminShopPage = () => {
                         <TableHead>Total</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Printful</TableHead>
+                        <TableHead>Error</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
@@ -460,16 +465,31 @@ const AdminShopPage = () => {
                             )}
                           </TableCell>
                           <TableCell>
+                            {order.fulfillment_error && (
+                              <Badge variant="destructive" className="text-xs">
+                                Error
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
                             {new Date(order.created_at).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setSelectedOrder(order)}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedOrder(order)}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <ManualFulfillmentButton
+                                orderId={order.id}
+                                orderStatus={order.status}
+                                printfulOrderId={order.printful_order_id}
+                                onSuccess={loadOrders}
+                              />
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -478,6 +498,10 @@ const AdminShopPage = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="diagnostics" className="space-y-6">
+            <OrderDiagnostics />
           </TabsContent>
         </Tabs>
 

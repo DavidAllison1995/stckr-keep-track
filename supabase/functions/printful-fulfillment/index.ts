@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Processing Printful fulfillment request');
+    console.log('🖨️ PRINTFUL FULFILLMENT: Starting request processing');
     
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -23,10 +23,11 @@ serve(async (req) => {
     const { orderId } = await req.json();
     
     if (!orderId) {
+      console.error('❌ PRINTFUL: No order ID provided');
       throw new Error("Order ID is required");
     }
 
-    console.log('Processing order:', orderId);
+    console.log('🔍 PRINTFUL: Processing order:', orderId);
 
     // Get order details with items, products, and shipping address
     const { data: order, error: orderError } = await supabaseClient
@@ -44,21 +45,23 @@ serve(async (req) => {
       .single();
 
     if (orderError || !order) {
-      console.error('Order not found or not paid:', orderError);
+      console.error('❌ PRINTFUL: Order not found or not paid:', orderError);
       throw new Error('Order not found or not paid');
     }
 
-    console.log('Order found:', order);
-    console.log('Order items:', order.order_items);
-    console.log('Shipping addresses:', order.shipping_addresses);
+    console.log('✅ PRINTFUL: Order found:', {
+      orderId: order.id,
+      email: order.user_email,
+      itemCount: order.order_items?.length || 0,
+      hasShipping: !!order.shipping_addresses?.[0]
+    });
 
     // Check if we have a shipping address
     const shippingAddress = order.shipping_addresses?.[0];
     if (!shippingAddress) {
       const errorMessage = 'No shipping address found for order';
-      console.error(errorMessage);
+      console.error('❌ PRINTFUL:', errorMessage);
       
-      // Update order with fulfillment error
       await supabaseClient
         .from('orders')
         .update({ 
@@ -70,16 +73,21 @@ serve(async (req) => {
       throw new Error(errorMessage);
     }
 
+    console.log('🏠 PRINTFUL: Shipping address:', {
+      name: shippingAddress.name,
+      country: shippingAddress.country,
+      city: shippingAddress.city
+    });
+
     // Validate that all products have Printful variant IDs
     const invalidProducts = order.order_items.filter((item: any) => 
       !item.product.printful_variant_id
     );
 
     if (invalidProducts.length > 0) {
-      console.error('Products missing Printful variant IDs:', invalidProducts);
       const errorMessage = `Products missing Printful variant IDs: ${invalidProducts.map((p: any) => p.product.name).join(', ')}`;
+      console.error('❌ PRINTFUL: Invalid products:', errorMessage);
       
-      // Update order with fulfillment error
       await supabaseClient
         .from('orders')
         .update({ 
@@ -98,7 +106,7 @@ serve(async (req) => {
       name: item.product.name,
     }));
 
-    console.log('Printful items prepared:', printfulItems);
+    console.log('📦 PRINTFUL: Items prepared:', printfulItems);
 
     // Enhanced country code mapping for all Printful supported countries
     const getCountryCode = (country: string) => {
@@ -183,15 +191,14 @@ serve(async (req) => {
       items: printfulItems
     };
 
-    console.log('Sending order to Printful:', JSON.stringify(printfulOrder, null, 2));
+    console.log('📤 PRINTFUL: Sending order to API:', JSON.stringify(printfulOrder, null, 2));
 
     // Check if Printful API key is available
     const printfulApiKey = Deno.env.get('PRINTFUL_API_KEY');
     if (!printfulApiKey) {
-      console.error('PRINTFUL_API_KEY not found in environment variables');
       const errorMessage = 'Printful API key not configured';
+      console.error('❌ PRINTFUL:', errorMessage);
       
-      // Update order with fulfillment error
       await supabaseClient
         .from('orders')
         .update({ 
@@ -203,7 +210,7 @@ serve(async (req) => {
       throw new Error(errorMessage);
     }
 
-    console.log('Printful API key found, making request...');
+    console.log('🔑 PRINTFUL: API key found, making request...');
 
     // Send order to Printful
     const printfulResponse = await fetch('https://api.printful.com/orders', {
@@ -217,14 +224,13 @@ serve(async (req) => {
 
     const printfulResult = await printfulResponse.json();
     
-    console.log('Printful response status:', printfulResponse.status);
-    console.log('Printful response:', JSON.stringify(printfulResult, null, 2));
+    console.log('📨 PRINTFUL: API response status:', printfulResponse.status);
+    console.log('📨 PRINTFUL: API response:', JSON.stringify(printfulResult, null, 2));
     
     if (!printfulResponse.ok) {
-      console.error('Printful API error:', printfulResult);
       const errorMessage = `Printful API error: ${printfulResult.error?.message || 'Unknown error'}`;
+      console.error('❌ PRINTFUL: API Error:', errorMessage);
       
-      // Update order with fulfillment error
       await supabaseClient
         .from('orders')
         .update({ 
@@ -236,7 +242,7 @@ serve(async (req) => {
       throw new Error(errorMessage);
     }
 
-    console.log('Printful order created successfully:', printfulResult.result);
+    console.log('✅ PRINTFUL: Order created successfully with ID:', printfulResult.result.id);
 
     // Update order status to processing and store Printful order ID
     const { error: updateError } = await supabaseClient
@@ -244,15 +250,15 @@ serve(async (req) => {
       .update({ 
         status: 'processing',
         printful_order_id: printfulResult.result.id,
-        fulfillment_error: null, // Clear any previous errors
+        fulfillment_error: null,
         updated_at: new Date().toISOString()
       })
       .eq('id', orderId);
 
     if (updateError) {
-      console.error('Error updating order status:', updateError);
+      console.error('❌ PRINTFUL: Error updating order status:', updateError);
     } else {
-      console.log('Order status updated to processing with Printful order ID:', printfulResult.result.id);
+      console.log('✅ PRINTFUL: Order status updated to processing with Printful ID:', printfulResult.result.id);
     }
 
     return new Response(JSON.stringify({ 
@@ -264,7 +270,7 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    console.error("Printful fulfillment error:", error);
+    console.error("❌ PRINTFUL FULFILLMENT ERROR:", error);
     return new Response(JSON.stringify({ 
       error: error.message,
       success: false 

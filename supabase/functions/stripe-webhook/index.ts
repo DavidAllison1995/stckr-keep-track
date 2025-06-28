@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -19,7 +18,7 @@ serve(async (req) => {
     const signature = req.headers.get("stripe-signature");
 
     if (!signature || !endpointSecret) {
-      console.error("Missing signature or webhook secret");
+      console.error("❌ STRIPE WEBHOOK: Missing signature or webhook secret");
       return new Response("Missing signature", { status: 400 });
     }
 
@@ -27,11 +26,11 @@ serve(async (req) => {
     try {
       event = stripe.webhooks.constructEvent(body, signature, endpointSecret);
     } catch (err) {
-      console.error("Webhook signature verification failed:", err);
+      console.error("❌ STRIPE WEBHOOK: Signature verification failed:", err);
       return new Response("Invalid signature", { status: 400 });
     }
 
-    console.log("Received webhook event:", event.type);
+    console.log("✅ STRIPE WEBHOOK: Received event:", event.type, "ID:", event.id);
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -42,7 +41,7 @@ serve(async (req) => {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        console.log("Checkout session completed:", session.id);
+        console.log("💰 PAYMENT SUCCESS: Processing session:", session.id);
 
         try {
           // Parse items from session metadata
@@ -50,19 +49,36 @@ serve(async (req) => {
           const userId = session.metadata?.user_id;
           const userEmail = session.metadata?.user_email;
 
+          console.log("📋 ORDER DATA:", {
+            sessionId: session.id,
+            userId,
+            userEmail,
+            itemsCount: items.length,
+            amountTotal: session.amount_total
+          });
+
           if (!userId || !userEmail || !items.length) {
-            throw new Error("Missing required session metadata");
+            const error = "Missing required session metadata";
+            console.error("❌ VALIDATION ERROR:", error, {
+              userId: !!userId,
+              userEmail: !!userEmail,
+              itemsLength: items.length
+            });
+            throw new Error(error);
           }
 
-          console.log("Processing payment for user:", userEmail, "with items:", items);
-          console.log("Shipping details:", session.shipping_details);
+          console.log("📦 PROCESSING ITEMS:", items);
+          console.log("🏠 SHIPPING DETAILS:", session.shipping_details);
 
           // Calculate total amount
           const totalAmount = items.reduce((total: number, item: any) => {
             return total + (item.price * item.quantity);
           }, 0);
 
-          // First, create the order record
+          console.log("💵 CALCULATED TOTAL:", totalAmount);
+
+          // Create the order record
+          console.log("🗃️ CREATING ORDER in database...");
           const { data: order, error: orderError } = await supabaseClient
             .from("orders")
             .insert({
@@ -76,14 +92,15 @@ serve(async (req) => {
             .single();
 
           if (orderError) {
-            console.error("Error creating order:", orderError);
+            console.error("❌ ORDER CREATION ERROR:", orderError);
             throw orderError;
           }
 
-          console.log("Order created:", order.id);
+          console.log("✅ ORDER CREATED:", order.id);
 
           // Store shipping address if provided
           if (session.shipping_details?.address) {
+            console.log("🏠 STORING SHIPPING ADDRESS...");
             const address = session.shipping_details.address;
             const { error: addressError } = await supabaseClient
               .from("shipping_addresses")
@@ -99,13 +116,16 @@ serve(async (req) => {
               });
 
             if (addressError) {
-              console.error("Error storing shipping address:", addressError);
+              console.error("❌ SHIPPING ADDRESS ERROR:", addressError);
             } else {
-              console.log("Shipping address stored successfully");
+              console.log("✅ SHIPPING ADDRESS STORED");
             }
+          } else {
+            console.warn("⚠️ NO SHIPPING ADDRESS provided in session");
           }
 
           // Create order items
+          console.log("📋 CREATING ORDER ITEMS...");
           const orderItems = items.map((item: any) => ({
             order_id: order.id,
             product_id: item.product_id,
@@ -119,23 +139,29 @@ serve(async (req) => {
             .insert(orderItems);
 
           if (itemsError) {
-            console.error("Error creating order items:", itemsError);
+            console.error("❌ ORDER ITEMS ERROR:", itemsError);
             // Delete the order if items creation fails
             await supabaseClient.from("orders").delete().eq("id", order.id);
             throw itemsError;
           }
 
-          console.log("Order items created successfully");
+          console.log("✅ ORDER ITEMS CREATED:", orderItems.length, "items");
 
-          // Now attempt Printful fulfillment
-          console.log("Triggering Printful fulfillment for order:", order.id);
+          // NOW ATTEMPT PRINTFUL FULFILLMENT
+          console.log("🖨️ TRIGGERING PRINTFUL FULFILLMENT for order:", order.id);
           
           const fulfillmentResponse = await supabaseClient.functions.invoke('printful-fulfillment', {
             body: { orderId: order.id }
           });
 
+          console.log("🖨️ PRINTFUL RESPONSE:", {
+            error: fulfillmentResponse.error,
+            data: fulfillmentResponse.data,
+            status: fulfillmentResponse.status
+          });
+
           if (fulfillmentResponse.error) {
-            console.error("Printful fulfillment failed:", fulfillmentResponse.error);
+            console.error("❌ PRINTFUL FULFILLMENT FAILED:", fulfillmentResponse.error);
             
             // Update order with fulfillment error but keep it as paid
             await supabaseClient
@@ -146,27 +172,34 @@ serve(async (req) => {
               })
               .eq("id", order.id);
               
-            console.log("Order marked with fulfillment error but kept as paid for manual review");
+            console.log("⚠️ ORDER MARKED with fulfillment error but kept as paid for manual review");
           } else {
-            console.log("Printful fulfillment successful:", fulfillmentResponse.data);
+            console.log("✅ PRINTFUL FULFILLMENT SUCCESSFUL:", fulfillmentResponse.data);
           }
 
           // Clear user's cart after successful order creation
+          console.log("🛒 CLEARING USER CART...");
           const { error: cartError } = await supabaseClient
             .from("cart_items")
             .delete()
             .eq("user_id", userId);
 
           if (cartError) {
-            console.error("Error clearing cart:", cartError);
+            console.error("❌ CART CLEAR ERROR:", cartError);
           } else {
-            console.log("Cart cleared for user:", userId);
+            console.log("✅ CART CLEARED for user:", userId);
           }
 
+          console.log("🎉 STRIPE WEBHOOK PROCESSING COMPLETE for session:", session.id);
+
         } catch (error) {
-          console.error("Failed to process completed checkout:", error);
+          console.error("❌ STRIPE WEBHOOK PROCESSING FAILED:", error);
+          console.error("🔍 ERROR DETAILS:", {
+            message: error.message,
+            stack: error.stack,
+            sessionId: session.id
+          });
           // Note: We don't throw here to avoid webhook retry loops
-          // The order creation failure is logged but webhook returns success
         }
         
         break;
@@ -175,13 +208,12 @@ serve(async (req) => {
       case "checkout.session.expired":
       case "payment_intent.payment_failed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        console.log("Payment failed or expired:", session.id);
-        // No order to update since we don't create orders until payment succeeds
+        console.log("❌ PAYMENT FAILED/EXPIRED:", session.id);
         break;
       }
 
       default:
-        console.log("Unhandled event type:", event.type);
+        console.log("ℹ️ UNHANDLED STRIPE EVENT:", event.type);
     }
 
     return new Response(JSON.stringify({ received: true }), {
@@ -189,7 +221,7 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    console.error("Webhook error:", error);
+    console.error("❌ STRIPE WEBHOOK ERROR:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { "Content-Type": "application/json" },
       status: 500,
