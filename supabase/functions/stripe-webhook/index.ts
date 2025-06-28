@@ -256,22 +256,53 @@ async function sendToPrintful(order: any, items: any[], shippingAddress: any, cu
       throw new Error("Shipping address is incomplete - missing line1 or city");
     }
 
-    // Filter items that have Printful variant IDs
-    const printfulItems = items.filter(item => item.printful_variant_id && item.printful_variant_id !== null).map(item => ({
-      variant_id: parseInt(item.printful_variant_id),
-      quantity: item.quantity,
-    }));
+    // Filter items that have Printful variant IDs and handle both string and numeric IDs
+    const printfulItems = items.filter(item => {
+      const variantId = item.printful_variant_id;
+      console.log("🔍 CHECKING ITEM VARIANT ID:", { 
+        productId: item.product_id, 
+        variantId, 
+        type: typeof variantId 
+      });
+      
+      return variantId && variantId !== null && variantId !== "";
+    }).map(item => {
+      let variantId = item.printful_variant_id;
+      
+      // Handle string-based variant IDs (like "#6859d651a3dee3")
+      if (typeof variantId === 'string') {
+        // Remove the # prefix if present
+        if (variantId.startsWith('#')) {
+          variantId = variantId.substring(1);
+        }
+      }
+      
+      console.log("📦 MAPPED PRINTFUL ITEM:", {
+        originalId: item.printful_variant_id,
+        processedId: variantId,
+        quantity: item.quantity
+      });
+      
+      return {
+        variant_id: variantId,
+        quantity: item.quantity,
+      };
+    });
 
     console.log("🔍 PRINTFUL ITEMS CHECK:", {
       totalItems: items.length,
       printfulItems: printfulItems.length,
-      itemsWithVariantId: items.filter(item => item.printful_variant_id).length
+      itemsWithVariantId: items.filter(item => item.printful_variant_id).length,
+      rawVariantIds: items.map(item => ({ id: item.product_id, variant: item.printful_variant_id }))
     });
 
     if (printfulItems.length === 0) {
-      console.log("ℹ️ No Printful items to fulfill");
+      console.log("ℹ️ No valid Printful items to fulfill");
       await supabaseClient.from("orders")
-        .update({ printful_status: "not_required" })
+        .update({ 
+          printful_status: "not_required",
+          printful_error: "No items with valid Printful variant IDs found"
+        })
         .eq("id", order.id);
       return;
     }
