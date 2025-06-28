@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -256,7 +255,7 @@ async function sendToPrintful(order: any, items: any[], shippingAddress: any, cu
       throw new Error("Shipping address is incomplete - missing line1 or city");
     }
 
-    // Filter items that have Printful variant IDs and handle both string and numeric IDs
+    // Filter items that have Printful variant IDs and convert to proper numeric format
     const printfulItems = items.filter(item => {
       const variantId = item.printful_variant_id;
       console.log("🔍 CHECKING ITEM VARIANT ID:", { 
@@ -269,17 +268,29 @@ async function sendToPrintful(order: any, items: any[], shippingAddress: any, cu
     }).map(item => {
       let variantId = item.printful_variant_id;
       
-      // Handle string-based variant IDs (like "#6859d651a3dee3")
+      // Handle different variant ID formats
       if (typeof variantId === 'string') {
-        // Remove the # prefix if present
+        // Remove # prefix if present
         if (variantId.startsWith('#')) {
           variantId = variantId.substring(1);
+        }
+        
+        // Try to convert hex string to number if it's a hex value
+        if (/^[0-9a-fA-F]+$/.test(variantId)) {
+          variantId = parseInt(variantId, 16);
+        } else {
+          // If it's not a valid hex, try parsing as decimal
+          const numericId = parseInt(variantId, 10);
+          if (!isNaN(numericId)) {
+            variantId = numericId;
+          }
         }
       }
       
       console.log("📦 MAPPED PRINTFUL ITEM:", {
         originalId: item.printful_variant_id,
         processedId: variantId,
+        isNumeric: typeof variantId === 'number',
         quantity: item.quantity
       });
       
@@ -293,7 +304,7 @@ async function sendToPrintful(order: any, items: any[], shippingAddress: any, cu
       totalItems: items.length,
       printfulItems: printfulItems.length,
       itemsWithVariantId: items.filter(item => item.printful_variant_id).length,
-      rawVariantIds: items.map(item => ({ id: item.product_id, variant: item.printful_variant_id }))
+      processedItems: printfulItems.map(item => ({ id: item.variant_id, type: typeof item.variant_id }))
     });
 
     if (printfulItems.length === 0) {
@@ -302,6 +313,19 @@ async function sendToPrintful(order: any, items: any[], shippingAddress: any, cu
         .update({ 
           printful_status: "not_required",
           printful_error: "No items with valid Printful variant IDs found"
+        })
+        .eq("id", order.id);
+      return;
+    }
+
+    // Check if all variant IDs are numeric
+    const hasInvalidVariants = printfulItems.some(item => typeof item.variant_id !== 'number');
+    if (hasInvalidVariants) {
+      console.error("❌ Some variant IDs are not numeric:", printfulItems);
+      await supabaseClient.from("orders")
+        .update({ 
+          printful_status: "error",
+          printful_error: "Invalid Printful variant IDs - must be numeric"
         })
         .eq("id", order.id);
       return;
