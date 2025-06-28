@@ -236,6 +236,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
 
 async function sendToPrintful(order: any, items: any[], shippingAddress: any, customerName: string, customerPhone: string | null, supabaseClient: any) {
   console.log("🖨️ SENDING ORDER TO PRINTFUL:", order.id);
+  console.log("🔍 DETAILED PRINTFUL DEBUG - Order Items:", JSON.stringify(items, null, 2));
 
   const printfulApiKey = Deno.env.get("PRINTFUL_API_KEY");
   if (!printfulApiKey) {
@@ -258,38 +259,63 @@ async function sendToPrintful(order: any, items: any[], shippingAddress: any, cu
     // Filter items that have Printful variant IDs and convert to proper numeric format
     const printfulItems = items.filter(item => {
       const variantId = item.printful_variant_id;
-      console.log("🔍 CHECKING ITEM VARIANT ID:", { 
+      console.log("🔍 DETAILED VARIANT ID CHECK:", { 
         productId: item.product_id, 
-        variantId, 
-        type: typeof variantId 
+        originalVariantId: variantId,
+        variantIdType: typeof variantId,
+        variantIdLength: variantId?.length,
+        isString: typeof variantId === 'string',
+        startsWithHash: typeof variantId === 'string' && variantId.startsWith('#')
       });
       
       return variantId && variantId !== null && variantId !== "";
     }).map(item => {
       let variantId = item.printful_variant_id;
+      const originalVariantId = variantId;
+      
+      console.log("🔄 PROCESSING VARIANT ID:", {
+        original: originalVariantId,
+        type: typeof variantId
+      });
       
       // Handle different variant ID formats
       if (typeof variantId === 'string') {
         // Remove # prefix if present
         if (variantId.startsWith('#')) {
           variantId = variantId.substring(1);
+          console.log("✂️ REMOVED # PREFIX:", variantId);
         }
         
-        // Try to convert hex string to number if it's a hex value
-        if (/^[0-9a-fA-F]+$/.test(variantId)) {
-          variantId = parseInt(variantId, 16);
+        // Check if it's a hex string
+        const isHex = /^[0-9a-fA-F]+$/.test(variantId);
+        console.log("🔍 HEX CHECK:", { value: variantId, isHex });
+        
+        if (isHex) {
+          const hexConverted = parseInt(variantId, 16);
+          console.log("🔄 HEX CONVERSION:", { 
+            hex: variantId, 
+            decimal: hexConverted,
+            success: !isNaN(hexConverted)
+          });
+          variantId = hexConverted;
         } else {
-          // If it's not a valid hex, try parsing as decimal
-          const numericId = parseInt(variantId, 10);
-          if (!isNaN(numericId)) {
-            variantId = numericId;
+          // Try parsing as decimal
+          const decimalConverted = parseInt(variantId, 10);
+          console.log("🔄 DECIMAL CONVERSION:", { 
+            string: variantId, 
+            decimal: decimalConverted,
+            success: !isNaN(decimalConverted)
+          });
+          if (!isNaN(decimalConverted)) {
+            variantId = decimalConverted;
           }
         }
       }
       
-      console.log("📦 MAPPED PRINTFUL ITEM:", {
-        originalId: item.printful_variant_id,
+      console.log("📦 FINAL VARIANT ID MAPPING:", {
+        originalId: originalVariantId,
         processedId: variantId,
+        finalType: typeof variantId,
         isNumeric: typeof variantId === 'number',
         quantity: item.quantity
       });
@@ -300,11 +326,15 @@ async function sendToPrintful(order: any, items: any[], shippingAddress: any, cu
       };
     });
 
-    console.log("🔍 PRINTFUL ITEMS CHECK:", {
+    console.log("🔍 PRINTFUL ITEMS SUMMARY:", {
       totalItems: items.length,
       printfulItems: printfulItems.length,
       itemsWithVariantId: items.filter(item => item.printful_variant_id).length,
-      processedItems: printfulItems.map(item => ({ id: item.variant_id, type: typeof item.variant_id }))
+      processedItems: printfulItems.map(item => ({ 
+        id: item.variant_id, 
+        type: typeof item.variant_id,
+        isNumber: typeof item.variant_id === 'number'
+      }))
     });
 
     if (printfulItems.length === 0) {
@@ -348,7 +378,10 @@ async function sendToPrintful(order: any, items: any[], shippingAddress: any, cu
       external_id: order.id,
     };
 
-    console.log("📦 PRINTFUL PAYLOAD:", JSON.stringify(printfulOrder, null, 2));
+    console.log("📦 COMPLETE PRINTFUL PAYLOAD:", JSON.stringify(printfulOrder, null, 2));
+    console.log("🌐 PRINTFUL API ENDPOINT:", "https://api.printful.com/orders");
+    console.log("🔑 PRINTFUL API KEY EXISTS:", !!printfulApiKey);
+    console.log("🔑 PRINTFUL API KEY PREFIX:", printfulApiKey?.substring(0, 10) + "...");
 
     // Make API call to Printful
     const response = await fetch("https://api.printful.com/orders", {
@@ -360,8 +393,11 @@ async function sendToPrintful(order: any, items: any[], shippingAddress: any, cu
       body: JSON.stringify(printfulOrder),
     });
 
+    console.log("📡 PRINTFUL RESPONSE STATUS:", response.status);
+    console.log("📡 PRINTFUL RESPONSE HEADERS:", JSON.stringify([...response.headers.entries()]));
+
     const result = await response.json();
-    console.log("🖨️ PRINTFUL RESPONSE:", JSON.stringify(result, null, 2));
+    console.log("🖨️ COMPLETE PRINTFUL RESPONSE:", JSON.stringify(result, null, 2));
 
     if (response.ok && result.result) {
       // Success - update order with Printful ID
@@ -374,11 +410,17 @@ async function sendToPrintful(order: any, items: any[], shippingAddress: any, cu
         })
         .eq("id", order.id);
       
-      console.log("✅ PRINTFUL ORDER CREATED:", result.result.id);
+      console.log("✅ PRINTFUL ORDER CREATED SUCCESSFULLY:", result.result.id);
     } else {
       // Error - log and update status
-      const errorMsg = result.error?.message || result.result || "Unknown Printful error";
-      console.error("❌ PRINTFUL ERROR:", errorMsg);
+      const errorMsg = result.error?.message || result.result || JSON.stringify(result) || "Unknown Printful error";
+      console.error("❌ PRINTFUL API ERROR DETAILS:", {
+        status: response.status,
+        statusText: response.statusText,
+        error: result.error,
+        result: result.result,
+        fullResponse: result
+      });
       
       await supabaseClient.from("orders")
         .update({ 
@@ -388,7 +430,8 @@ async function sendToPrintful(order: any, items: any[], shippingAddress: any, cu
         .eq("id", order.id);
     }
   } catch (error) {
-    console.error("❌ PRINTFUL API ERROR:", error);
+    console.error("❌ PRINTFUL API EXCEPTION:", error);
+    console.error("❌ EXCEPTION STACK:", error.stack);
     
     await supabaseClient.from("orders")
       .update({ 
