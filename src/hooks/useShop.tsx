@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from './useSupabaseAuth';
@@ -103,33 +102,9 @@ export const useShop = () => {
       return null;
     }
 
-    // Get fresh user data to ensure we have the latest info
-    const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
-    if (userError || !currentUser) {
-      console.error('Error getting current user:', userError);
-      toast({
-        title: 'Error',
-        description: 'Please try logging in again',
-        variant: 'destructive',
-      });
-      return null;
-    }
-
-    // Ensure we have user email
-    const userEmail = currentUser.email;
-    if (!userEmail) {
-      console.error('No user email available:', currentUser);
-      toast({
-        title: 'Error',
-        description: 'User email not available. Please try logging in again.',
-        variant: 'destructive',
-      });
-      return null;
-    }
-
     setIsLoading(true);
     try {
-      console.log('Creating checkout session for user:', currentUser.id, userEmail);
+      console.log('Creating checkout session for user:', user.id, user.email);
       
       // Get cart items from database to ensure consistency
       const { data: cartItems, error: cartError } = await supabase
@@ -138,7 +113,7 @@ export const useShop = () => {
           *,
           product:products (*)
         `)
-        .eq('user_id', currentUser.id);
+        .eq('user_id', user.id);
 
       if (cartError) {
         console.error('Error loading cart for checkout:', cartError);
@@ -157,16 +132,25 @@ export const useShop = () => {
 
       console.log('Creating checkout with cart items:', cartItems);
       
+      // Get current session to ensure we have a valid token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.error('No valid session found:', sessionError);
+        toast({
+          title: 'Error',
+          description: 'Please try logging in again',
+          variant: 'destructive',
+        });
+        return null;
+      }
+
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           items: cartItems.map(item => ({
             product_id: item.product_id,
             quantity: item.quantity,
-            price: item.product?.price || 0,
-            name: item.product?.name || 'Product',
           })),
-          user_id: currentUser.id,
-          user_email: userEmail,
         },
       });
 
@@ -181,7 +165,7 @@ export const useShop = () => {
       console.error('Error creating checkout session:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create checkout session',
+        description: 'Failed to create checkout session. Please try again.',
         variant: 'destructive',
       });
       return null;

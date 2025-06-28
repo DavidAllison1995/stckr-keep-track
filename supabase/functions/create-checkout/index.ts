@@ -20,23 +20,49 @@ serve(async (req) => {
   try {
     console.log("🛒 CREATE CHECKOUT: Starting request processing");
     
-    const { items, user_id, user_email } = await req.json();
+    // Create Supabase client with anon key for user auth
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
+
+    // Get authenticated user
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("No authorization header provided");
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    
+    if (userError || !userData.user) {
+      console.error("❌ Authentication failed:", userError?.message);
+      throw new Error("Authentication failed");
+    }
+
+    const user = userData.user;
+    const userEmail = user.email;
+    
+    if (!userEmail) {
+      throw new Error("User email not available");
+    }
+
+    console.log("✅ User authenticated:", user.id, userEmail);
+
+    const { items } = await req.json();
     
     console.log("📋 CHECKOUT REQUEST:", {
       itemCount: items?.length || 0,
-      userId: user_id,
-      userEmail: user_email
+      userId: user.id,
+      userEmail: userEmail
     });
 
     if (!items || !items.length) {
       throw new Error("No items provided");
     }
 
-    if (!user_id || !user_email) {
-      throw new Error("User ID and email are required");
-    }
-
-    const supabaseClient = createClient(
+    // Use service role to get product details
+    const supabaseService = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
@@ -44,12 +70,13 @@ serve(async (req) => {
 
     // Get product details from database
     const productIds = items.map((item: any) => item.product_id);
-    const { data: products, error: productsError } = await supabaseClient
+    const { data: products, error: productsError } = await supabaseService
       .from("products")
       .select("*")
       .in("id", productIds);
 
     if (productsError) {
+      console.error("❌ Products fetch error:", productsError);
       throw new Error(`Failed to fetch products: ${productsError.message}`);
     }
 
@@ -89,8 +116,8 @@ serve(async (req) => {
 
     // Create detailed metadata for webhook processing
     const orderMetadata = {
-      user_id,
-      user_email,
+      user_id: user.id,
+      user_email: userEmail,
       items: JSON.stringify(items.map((item: any) => {
         const product = products?.find(p => p.id === item.product_id);
         return {
@@ -120,7 +147,7 @@ serve(async (req) => {
       mode: "payment",
       success_url: `${req.headers.get("origin")}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin")}/shop`,
-      customer_email: user_email,
+      customer_email: userEmail,
       metadata: orderMetadata,
       shipping_address_collection: shippingEnabled ? {
         allowed_countries: ["GB", "US", "CA", "AU", "DE", "FR", "ES", "IT", "NL", "BE"],
