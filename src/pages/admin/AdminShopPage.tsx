@@ -51,6 +51,7 @@ interface Order {
   status: string;
   created_at: string;
   printful_order_id?: string | null;
+  stripe_session_id?: string | null;
   order_items?: {
     id: string;
     quantity: number;
@@ -99,7 +100,9 @@ const AdminShopPage = () => {
 
   const loadOrders = async () => {
     try {
-      // Only load orders that are actually paid and have valid Stripe sessions
+      console.log('🔍 LOADING ALL ORDERS (including pending)...');
+      
+      // Load ALL orders, not just paid ones
       const { data, error } = await supabase
         .from('orders')
         .select(`
@@ -114,11 +117,13 @@ const AdminShopPage = () => {
             )
           )
         `)
-        .eq('status', 'paid') // Only paid orders
-        .not('stripe_session_id', 'is', null) // Must have Stripe session
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      
+      console.log('📋 ALL ORDERS LOADED:', data?.length, 'orders');
+      console.log('🕐 RECENT ORDERS:', data?.slice(0, 3));
+      
       setOrders(data || []);
     } catch (error) {
       console.error('Error loading orders:', error);
@@ -250,12 +255,15 @@ const AdminShopPage = () => {
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'paid':
-      case 'shipped':
         return 'default';
       case 'processing':
         return 'secondary';
+      case 'shipped':
+        return 'default';
       case 'cancelled':
         return 'destructive';
+      case 'pending':
+        return 'outline';
       default:
         return 'outline';
     }
@@ -300,7 +308,7 @@ const AdminShopPage = () => {
         <Tabs defaultValue="products" className="space-y-6">
           <TabsList>
             <TabsTrigger value="products">Products</TabsTrigger>
-            <TabsTrigger value="orders">Orders</TabsTrigger>
+            <TabsTrigger value="orders">All Orders</TabsTrigger>
             <TabsTrigger value="diagnostics">Diagnostics</TabsTrigger>
           </TabsList>
 
@@ -411,20 +419,17 @@ const AdminShopPage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <ShoppingCart className="w-5 h-5" />
-                  Order Management
+                  All Orders (Including Pending & Failed)
                 </CardTitle>
                 <p className="text-sm text-gray-600 mt-2">
-                  Showing only confirmed, paid orders. Orders are automatically sent to Printful for fulfillment after payment confirmation.
+                  Showing all orders regardless of payment status. Recent orders that show "pending" may indicate webhook processing issues.
                 </p>
               </CardHeader>
               <CardContent>
                 {orders.length === 0 ? (
                   <div className="text-center py-8">
                     <ShoppingCart className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                    <p className="text-gray-500">No confirmed orders yet</p>
-                    <p className="text-sm text-gray-400 mt-2">
-                      Orders will appear here once customers complete their purchases
-                    </p>
+                    <p className="text-gray-500">No orders found</p>
                   </div>
                 ) : (
                   <Table>
@@ -434,6 +439,7 @@ const AdminShopPage = () => {
                         <TableHead>Customer</TableHead>
                         <TableHead>Total</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Stripe ID</TableHead>
                         <TableHead>Printful</TableHead>
                         <TableHead>Error</TableHead>
                         <TableHead>Date</TableHead>
@@ -452,6 +458,17 @@ const AdminShopPage = () => {
                             <Badge variant={getStatusBadgeVariant(order.status)}>
                               {order.status}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {order.stripe_session_id ? (
+                              <Badge variant="default" className="text-xs">
+                                {order.stripe_session_id.slice(0, 8)}...
+                              </Badge>
+                            ) : (
+                              <Badge variant="destructive" className="text-xs">
+                                No Stripe ID
+                              </Badge>
+                            )}
                           </TableCell>
                           <TableCell>
                             {order.printful_order_id ? (
