@@ -29,6 +29,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import ProductForm from '@/components/admin/ProductForm';
 import ManualFulfillmentButton from '@/components/admin/ManualFulfillmentButton';
 import OrderDiagnostics from '@/components/admin/OrderDiagnostics';
+import WebhookDiagnostics from '@/components/admin/WebhookDiagnostics';
 
 interface Product {
   id: string;
@@ -310,6 +311,7 @@ const AdminShopPage = () => {
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="orders">All Orders</TabsTrigger>
             <TabsTrigger value="diagnostics">Diagnostics</TabsTrigger>
+            <TabsTrigger value="webhooks">Webhook Setup</TabsTrigger>
           </TabsList>
 
           <TabsContent value="products" className="space-y-6">
@@ -519,6 +521,10 @@ const AdminShopPage = () => {
 
           <TabsContent value="diagnostics" className="space-y-6">
             <OrderDiagnostics />
+          </TabsContent>
+
+          <TabsContent value="webhooks" className="space-y-6">
+            <WebhookDiagnostics />
           </TabsContent>
         </Tabs>
 

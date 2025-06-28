@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -13,102 +14,131 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Creating checkout session...');
+    console.log('🛒 CREATE CHECKOUT: Starting request processing');
     
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
-
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
-
-    if (!user?.email) {
-      throw new Error("User not authenticated");
-    }
-
-    console.log('User authenticated:', user.email);
-
-    const { items } = await req.json();
-    console.log('Processing items:', items);
-
-    if (!items || items.length === 0) {
-      throw new Error("No items provided");
-    }
-
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
 
-    // Check for existing customer
-    const customers = await stripe.customers.list({
-      email: user.email,
-      limit: 1,
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
+    );
+
+    const { items, user_id, user_email } = await req.json();
+    
+    console.log('📋 CHECKOUT REQUEST:', {
+      itemCount: items?.length,
+      userId: user_id,
+      userEmail: user_email
     });
 
-    let customerId;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-      console.log('Found existing customer:', customerId);
-    } else {
-      console.log('No existing customer found, will create one in checkout');
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      console.error('❌ CHECKOUT ERROR: No items provided');
+      throw new Error("No items provided for checkout");
     }
 
-    // Calculate total
-    const totalAmount = items.reduce((total: number, item: any) => {
-      return total + (item.price * item.quantity);
-    }, 0);
-    
-    console.log('Total amount:', totalAmount);
+    if (!user_id || !user_email) {
+      console.error('❌ CHECKOUT ERROR: Missing user information');
+      throw new Error("User ID and email are required");
+    }
 
-    // Create Stripe checkout session with shipping address collection for all Printful supported countries
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      line_items: items.map((item: any) => ({
+    // Get product details from database
+    const productIds = items.map(item => item.product_id);
+    const { data: products, error: productsError } = await supabaseClient
+      .from('products')
+      .select('id, name, price, printful_variant_id')
+      .in('id', productIds);
+
+    if (productsError) {
+      console.error('❌ PRODUCTS FETCH ERROR:', productsError);
+      throw new Error(`Failed to fetch products: ${productsError.message}`);
+    }
+
+    if (!products || products.length === 0) {
+      console.error('❌ CHECKOUT ERROR: No products found');
+      throw new Error("No products found");
+    }
+
+    console.log('📦 PRODUCTS FOUND:', products.length);
+
+    // Calculate total and prepare line items
+    let totalAmount = 0;
+    const lineItems = [];
+    const metadataItems = [];
+
+    for (const cartItem of items) {
+      const product = products.find(p => p.id === cartItem.product_id);
+      if (!product) {
+        console.error('❌ PRODUCT NOT FOUND:', cartItem.product_id);
+        continue;
+      }
+
+      const itemTotal = Math.round(product.price * cartItem.quantity * 100); // Convert to cents
+      totalAmount += itemTotal;
+
+      lineItems.push({
         price_data: {
           currency: 'gbp',
           product_data: {
-            name: item.name,
+            name: product.name,
           },
-          unit_amount: Math.round(item.price * 100),
+          unit_amount: Math.round(product.price * 100),
         },
-        quantity: item.quantity,
-      })),
-      mode: 'payment',
+        quantity: cartItem.quantity,
+      });
+
+      // Prepare metadata for Printful
+      if (product.printful_variant_id) {
+        metadataItems.push({
+          product_id: product.id,
+          variant_id: parseInt(product.printful_variant_id),
+          quantity: cartItem.quantity,
+          price: product.price,
+          name: product.name,
+        });
+      } else {
+        console.warn('⚠️ PRODUCT MISSING PRINTFUL ID:', product.name);
+      }
+    }
+
+    console.log('💰 CHECKOUT TOTAL:', totalAmount / 100, 'GBP');
+    console.log('🖨️ PRINTFUL ITEMS:', metadataItems.length);
+
+    // Create Stripe checkout session with proper shipping collection
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: lineItems,
+      mode: "payment",
+      success_url: `${req.headers.get("origin")}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.get("origin")}/shop`,
+      metadata: {
+        user_id: user_id,
+        user_email: user_email,
+        items: JSON.stringify(metadataItems),
+      },
+      // IMPORTANT: Enable shipping address collection
       shipping_address_collection: {
         allowed_countries: [
-          // North America
-          'US', 'CA', 'MX',
-          // Europe
-          'GB', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'CH', 'IE', 'PT', 'LU',
-          'SE', 'NO', 'DK', 'FI', 'PL', 'CZ', 'SK', 'HU', 'SI', 'HR', 'EE', 'LV', 'LT',
-          'RO', 'BG', 'GR', 'CY', 'MT',
-          // Asia-Pacific
-          'AU', 'NZ', 'JP', 'SG', 'HK', 'MY', 'TH', 'KR',
-          // Other regions
-          'BR', 'IL', 'ZA', 'IN', 'PH', 'VN', 'ID', 'TW'
+          'GB', 'US', 'CA', 'AU', 'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 
+          'AT', 'CH', 'IE', 'PT', 'LU', 'SE', 'NO', 'DK', 'FI', 'PL'
         ],
       },
-      success_url: `${req.headers.get('origin')}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get('origin')}/shop`,
-      metadata: {
-        user_id: user.id,
-        user_email: user.email,
-        items: JSON.stringify(items),
+      phone_number_collection: {
+        enabled: true,
       },
     });
 
-    console.log('Stripe session created with shipping collection for all Printful countries:', session.id);
+    console.log('✅ STRIPE SESSION CREATED:', session.id);
+    console.log('🏠 SHIPPING COLLECTION ENABLED:', !!session.shipping_address_collection);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
-    console.error("Checkout error:", error);
+    console.error("❌ CREATE CHECKOUT ERROR:", error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
