@@ -14,20 +14,33 @@ serve(async (req) => {
   }
 
   try {
+    console.log("✅ STRIPE WEBHOOK: Received request");
+    console.log("🔑 WEBHOOK SECRET EXISTS:", !!endpointSecret);
+
     const body = await req.text();
     const signature = req.headers.get("stripe-signature");
 
-    if (!signature || !endpointSecret) {
-      console.error("❌ STRIPE WEBHOOK: Missing signature or webhook secret");
+    console.log("📝 SIGNATURE EXISTS:", !!signature);
+    console.log("📏 BODY LENGTH:", body.length);
+
+    if (!signature) {
+      console.error("❌ STRIPE WEBHOOK: Missing stripe-signature header");
       return new Response("Missing signature", { status: 400 });
+    }
+
+    if (!endpointSecret) {
+      console.error("❌ STRIPE WEBHOOK: Missing webhook secret in environment");
+      return new Response("Missing webhook secret", { status: 500 });
     }
 
     let event;
     try {
+      console.log("🔍 VERIFYING STRIPE SIGNATURE...");
       event = stripe.webhooks.constructEvent(body, signature, endpointSecret);
+      console.log("✅ SIGNATURE VERIFIED SUCCESSFULLY");
     } catch (err) {
-      console.error("❌ STRIPE WEBHOOK: Signature verification failed:", err);
-      return new Response("Invalid signature", { status: 400 });
+      console.error("❌ STRIPE WEBHOOK: Signature verification failed:", err.message);
+      return new Response(`Webhook signature verification failed: ${err.message}`, { status: 400 });
     }
 
     console.log("✅ STRIPE WEBHOOK: Received event:", event.type, "ID:", event.id);
