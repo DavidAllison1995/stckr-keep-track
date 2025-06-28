@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -30,6 +31,7 @@ serve(async (req) => {
     console.log('🔍 PRINTFUL: Processing order:', orderId);
 
     // Get order details with items, products, and shipping address
+    // IMPORTANT: Now accepting both 'paid' AND 'pending' orders to handle webhook timing
     const { data: order, error: orderError } = await supabaseClient
       .from('orders')
       .select(`
@@ -41,20 +43,36 @@ serve(async (req) => {
         shipping_addresses (*)
       `)
       .eq('id', orderId)
-      .eq('status', 'paid')
+      .in('status', ['paid', 'pending']) // Accept both statuses
       .single();
 
     if (orderError || !order) {
-      console.error('❌ PRINTFUL: Order not found or not paid:', orderError);
-      throw new Error('Order not found or not paid');
+      console.error('❌ PRINTFUL: Order not found:', orderError);
+      throw new Error(`Order not found: ${orderError?.message || 'Unknown error'}`);
     }
 
     console.log('✅ PRINTFUL: Order found:', {
       orderId: order.id,
       email: order.user_email,
+      status: order.status,
       itemCount: order.order_items?.length || 0,
-      hasShipping: !!order.shipping_addresses?.[0]
+      hasShipping: !!order.shipping_addresses?.[0],
+      stripeSessionId: order.stripe_session_id
     });
+
+    // Check if already sent to Printful
+    if (order.printful_order_id) {
+      console.log('⚠️ PRINTFUL: Order already sent to Printful:', order.printful_order_id);
+      return new Response(JSON.stringify({ 
+        success: true, 
+        printfulOrderId: order.printful_order_id,
+        message: 'Order already sent to Printful',
+        alreadyProcessed: true
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
 
     // Check if we have a shipping address
     const shippingAddress = order.shipping_addresses?.[0];
@@ -76,16 +94,18 @@ serve(async (req) => {
     console.log('🏠 PRINTFUL: Shipping address:', {
       name: shippingAddress.name,
       country: shippingAddress.country,
-      city: shippingAddress.city
+      city: shippingAddress.city,
+      line1: shippingAddress.line1,
+      postalCode: shippingAddress.postal_code
     });
 
     // Validate that all products have Printful variant IDs
     const invalidProducts = order.order_items.filter((item: any) => 
-      !item.product.printful_variant_id
+      !item.product?.printful_variant_id
     );
 
     if (invalidProducts.length > 0) {
-      const errorMessage = `Products missing Printful variant IDs: ${invalidProducts.map((p: any) => p.product.name).join(', ')}`;
+      const errorMessage = `Products missing Printful variant IDs: ${invalidProducts.map((p: any) => p.product?.name || 'Unknown').join(', ')}`;
       console.error('❌ PRINTFUL: Invalid products:', errorMessage);
       
       await supabaseClient
@@ -212,24 +232,63 @@ serve(async (req) => {
 
     console.log('🔑 PRINTFUL: API key found, making request...');
 
-    // Send order to Printful
-    const printfulResponse = await fetch('https://api.printful.com/orders', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${printfulApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(printfulOrder),
-    });
+    // Send order to Printful with retry logic
+    let printfulResponse: Response;
+    let printfulResult: any;
+    let retryCount = 0;
+    const maxRetries = 3;
 
-    const printfulResult = await printfulResponse.json();
-    
-    console.log('📨 PRINTFUL: API response status:', printfulResponse.status);
-    console.log('📨 PRINTFUL: API response:', JSON.stringify(printfulResult, null, 2));
+    while (retryCount < maxRetries) {
+      try {
+        printfulResponse = await fetch('https://api.printful.com/orders', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${printfulApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(printfulOrder),
+        });
+
+        printfulResult = await printfulResponse.json();
+        
+        console.log('📨 PRINTFUL: API response status:', printfulResponse.status);
+        console.log('📨 PRINTFUL: API response:', JSON.stringify(printfulResult, null, 2));
+        
+        if (printfulResponse.ok) {
+          break; // Success, exit retry loop
+        }
+        
+        // If rate limited, wait and retry
+        if (printfulResponse.status === 429) {
+          retryCount++;
+          if (retryCount < maxRetries) {
+            const waitTime = Math.pow(2, retryCount) * 1000; // Exponential backoff
+            console.log(`⏳ PRINTFUL: Rate limited, retrying in ${waitTime}ms... (attempt ${retryCount}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            continue;
+          }
+        }
+        
+        // For other errors, don't retry
+        break;
+        
+      } catch (fetchError) {
+        console.error('❌ PRINTFUL: Network error:', fetchError);
+        retryCount++;
+        if (retryCount < maxRetries) {
+          const waitTime = Math.pow(2, retryCount) * 1000;
+          console.log(`⏳ PRINTFUL: Network error, retrying in ${waitTime}ms... (attempt ${retryCount}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          continue;
+        }
+        throw fetchError;
+      }
+    }
     
     if (!printfulResponse.ok) {
-      const errorMessage = `Printful API error: ${printfulResult.error?.message || 'Unknown error'}`;
+      const errorMessage = `Printful API error (${printfulResponse.status}): ${printfulResult.error?.message || printfulResult.message || 'Unknown error'}`;
       console.error('❌ PRINTFUL: API Error:', errorMessage);
+      console.error('❌ PRINTFUL: Full response:', printfulResult);
       
       await supabaseClient
         .from('orders')
@@ -250,7 +309,7 @@ serve(async (req) => {
       .update({ 
         status: 'processing',
         printful_order_id: printfulResult.result.id,
-        fulfillment_error: null,
+        fulfillment_error: null, // Clear any previous errors
         updated_at: new Date().toISOString()
       })
       .eq('id', orderId);
@@ -264,7 +323,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       success: true, 
       printfulOrderId: printfulResult.result.id,
-      message: 'Order sent to Printful for fulfillment'
+      message: 'Order sent to Printful for fulfillment',
+      retryCount: retryCount
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

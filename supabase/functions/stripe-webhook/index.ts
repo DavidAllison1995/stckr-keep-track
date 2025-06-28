@@ -54,7 +54,8 @@ serve(async (req) => {
             userId,
             userEmail,
             itemsCount: items.length,
-            amountTotal: session.amount_total
+            amountTotal: session.amount_total,
+            paymentStatus: session.payment_status
           });
 
           if (!userId || !userEmail || !items.length) {
@@ -67,6 +68,16 @@ serve(async (req) => {
             throw new Error(error);
           }
 
+          // Only proceed if payment was successful
+          if (session.payment_status !== 'paid') {
+            console.warn("⚠️ PAYMENT NOT CONFIRMED:", session.payment_status);
+            return new Response(JSON.stringify({ received: true, warning: 'Payment not confirmed' }), {
+              headers: { "Content-Type": "application/json" },
+              status: 200,
+            });
+          }
+
+          console.log("💳 PAYMENT CONFIRMED - Creating order...");
           console.log("📦 PROCESSING ITEMS:", items);
           console.log("🏠 SHIPPING DETAILS:", session.shipping_details);
 
@@ -77,14 +88,14 @@ serve(async (req) => {
 
           console.log("💵 CALCULATED TOTAL:", totalAmount);
 
-          // Create the order record
+          // Create the order record with "paid" status immediately
           console.log("🗃️ CREATING ORDER in database...");
           const { data: order, error: orderError } = await supabaseClient
             .from("orders")
             .insert({
               user_id: userId,
               user_email: userEmail,
-              status: "paid",
+              status: "paid", // Set as paid immediately since Stripe confirmed payment
               total_amount: totalAmount,
               stripe_session_id: session.id,
             })
@@ -96,7 +107,7 @@ serve(async (req) => {
             throw orderError;
           }
 
-          console.log("✅ ORDER CREATED:", order.id);
+          console.log("✅ ORDER CREATED:", order.id, "Status:", order.status);
 
           // Store shipping address if provided
           if (session.shipping_details?.address) {
@@ -147,34 +158,61 @@ serve(async (req) => {
 
           console.log("✅ ORDER ITEMS CREATED:", orderItems.length, "items");
 
-          // NOW ATTEMPT PRINTFUL FULFILLMENT
+          // IMMEDIATE PRINTFUL FULFILLMENT ATTEMPT
           console.log("🖨️ TRIGGERING PRINTFUL FULFILLMENT for order:", order.id);
           
-          const fulfillmentResponse = await supabaseClient.functions.invoke('printful-fulfillment', {
-            body: { orderId: order.id }
-          });
+          try {
+            const fulfillmentResponse = await supabaseClient.functions.invoke('printful-fulfillment', {
+              body: { orderId: order.id }
+            });
 
-          console.log("🖨️ PRINTFUL RESPONSE:", {
-            error: fulfillmentResponse.error,
-            data: fulfillmentResponse.data,
-            status: fulfillmentResponse.status
-          });
+            console.log("🖨️ PRINTFUL RESPONSE:", {
+              error: fulfillmentResponse.error,
+              data: fulfillmentResponse.data,
+              status: fulfillmentResponse.status
+            });
 
-          if (fulfillmentResponse.error) {
-            console.error("❌ PRINTFUL FULFILLMENT FAILED:", fulfillmentResponse.error);
+            if (fulfillmentResponse.error) {
+              console.error("❌ PRINTFUL FULFILLMENT FAILED:", fulfillmentResponse.error);
+              
+              // Update order with fulfillment error but keep it as paid
+              await supabaseClient
+                .from("orders")
+                .update({ 
+                  fulfillment_error: fulfillmentResponse.error.message || 'Printful fulfillment failed',
+                  updated_at: new Date().toISOString()
+                })
+                .eq("id", order.id);
+                
+              console.log("⚠️ ORDER MARKED with fulfillment error but kept as paid for manual review");
+            } else {
+              console.log("✅ PRINTFUL FULFILLMENT SUCCESSFUL:", fulfillmentResponse.data);
+              
+              // Update order with successful Printful order ID if provided
+              if (fulfillmentResponse.data?.printfulOrderId) {
+                await supabaseClient
+                  .from("orders")
+                  .update({ 
+                    printful_order_id: fulfillmentResponse.data.printfulOrderId,
+                    status: 'processing',
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq("id", order.id);
+                  
+                console.log("✅ ORDER UPDATED with Printful ID:", fulfillmentResponse.data.printfulOrderId);
+              }
+            }
+          } catch (printfulError) {
+            console.error("❌ PRINTFUL FULFILLMENT EXCEPTION:", printfulError);
             
-            // Update order with fulfillment error but keep it as paid
+            // Update order with exception error
             await supabaseClient
               .from("orders")
               .update({ 
-                fulfillment_error: fulfillmentResponse.error.message,
+                fulfillment_error: `Printful API error: ${printfulError.message}`,
                 updated_at: new Date().toISOString()
               })
               .eq("id", order.id);
-              
-            console.log("⚠️ ORDER MARKED with fulfillment error but kept as paid for manual review");
-          } else {
-            console.log("✅ PRINTFUL FULFILLMENT SUCCESSFUL:", fulfillmentResponse.data);
           }
 
           // Clear user's cart after successful order creation
