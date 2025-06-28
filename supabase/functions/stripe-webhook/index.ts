@@ -111,16 +111,24 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
       return;
     }
 
-    // Extract shipping details
+    // Extract shipping details with better fallback handling
     const shippingDetails = session.shipping_details;
-    const customerName = shippingDetails?.name || session.customer_details?.name || userEmail.split('@')[0];
-    const shippingPhone = session.customer_details?.phone;
+    const customerDetails = session.customer_details;
+    const customerName = shippingDetails?.name || customerDetails?.name || userEmail.split('@')[0];
+    const shippingPhone = customerDetails?.phone;
 
     console.log("🏠 SHIPPING INFO:", {
       name: customerName,
       phone: shippingPhone,
-      address: shippingDetails?.address
+      shippingDetails: shippingDetails,
+      customerDetails: customerDetails
     });
+
+    // Validate that we have shipping address if required
+    if (!shippingDetails?.address) {
+      console.error("❌ No shipping address provided in session");
+      throw new Error("Shipping address is required for physical products");
+    }
 
     // Create order record
     const { data: order, error: orderError } = await supabaseClient
@@ -165,20 +173,24 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
 
     console.log("✅ ORDER ITEMS CREATED");
 
-    // Store shipping address if provided
-    if (shippingDetails?.address) {
-      await supabaseClient.from("shipping_addresses").insert({
-        order_id: order.id,
-        name: customerName,
-        line1: shippingDetails.address.line1 || '',
-        line2: shippingDetails.address.line2,
-        city: shippingDetails.address.city || '',
-        state: shippingDetails.address.state,
-        postal_code: shippingDetails.address.postal_code || '',
-        country: shippingDetails.address.country || '',
-      });
-      console.log("✅ SHIPPING ADDRESS STORED");
+    // Store shipping address
+    const { error: shippingError } = await supabaseClient.from("shipping_addresses").insert({
+      order_id: order.id,
+      name: customerName,
+      line1: shippingDetails.address.line1 || '',
+      line2: shippingDetails.address.line2 || '',
+      city: shippingDetails.address.city || '',
+      state: shippingDetails.address.state || '',
+      postal_code: shippingDetails.address.postal_code || '',
+      country: shippingDetails.address.country || 'GB',
+    });
+
+    if (shippingError) {
+      console.error("❌ SHIPPING ADDRESS ERROR:", shippingError);
+      throw shippingError;
     }
+
+    console.log("✅ SHIPPING ADDRESS STORED");
 
     // Send to Printful
     await sendToPrintful(order, items, shippingDetails, customerName, shippingPhone, supabaseClient);
@@ -223,11 +235,27 @@ async function sendToPrintful(order: any, items: any[], shippingDetails: any, cu
   }
 
   try {
+    // Validate shipping address
+    if (!shippingDetails?.address) {
+      throw new Error("No shipping address provided");
+    }
+
+    const address = shippingDetails.address;
+    if (!address.line1 || !address.city) {
+      throw new Error("Shipping address is incomplete - missing line1 or city");
+    }
+
     // Filter items that have Printful variant IDs
-    const printfulItems = items.filter(item => item.printful_variant_id).map(item => ({
+    const printfulItems = items.filter(item => item.printful_variant_id && item.printful_variant_id !== null).map(item => ({
       variant_id: parseInt(item.printful_variant_id),
       quantity: item.quantity,
     }));
+
+    console.log("🔍 PRINTFUL ITEMS CHECK:", {
+      totalItems: items.length,
+      printfulItems: printfulItems.length,
+      itemsWithVariantId: items.filter(item => item.printful_variant_id).length
+    });
 
     if (printfulItems.length === 0) {
       console.log("ℹ️ No Printful items to fulfill");
@@ -241,12 +269,12 @@ async function sendToPrintful(order: any, items: any[], shippingDetails: any, cu
     const printfulOrder = {
       recipient: {
         name: customerName,
-        address1: shippingDetails?.address?.line1 || "",
-        address2: shippingDetails?.address?.line2 || "",
-        city: shippingDetails?.address?.city || "",
-        state_code: shippingDetails?.address?.state || "",
-        country_code: shippingDetails?.address?.country || "GB",
-        zip: shippingDetails?.address?.postal_code || "",
+        address1: address.line1,
+        address2: address.line2 || "",
+        city: address.city,
+        state_code: address.state || "",
+        country_code: address.country || "GB",
+        zip: address.postal_code || "",
         phone: shippingPhone || "",
         email: order.user_email,
       },
@@ -267,7 +295,7 @@ async function sendToPrintful(order: any, items: any[], shippingDetails: any, cu
     });
 
     const result = await response.json();
-    console.log("🖨️ PRINTFUL RESPONSE:", result);
+    console.log("🖨️ PRINTFUL RESPONSE:", JSON.stringify(result, null, 2));
 
     if (response.ok && result.result) {
       // Success - update order with Printful ID
@@ -275,14 +303,15 @@ async function sendToPrintful(order: any, items: any[], shippingDetails: any, cu
         .update({ 
           printful_order_id: result.result.id.toString(),
           printful_status: "created",
-          status: "processing"
+          status: "processing",
+          printful_error: null
         })
         .eq("id", order.id);
       
       console.log("✅ PRINTFUL ORDER CREATED:", result.result.id);
     } else {
       // Error - log and update status
-      const errorMsg = result.error?.message || "Unknown Printful error";
+      const errorMsg = result.error?.message || result.result || "Unknown Printful error";
       console.error("❌ PRINTFUL ERROR:", errorMsg);
       
       await supabaseClient.from("orders")
