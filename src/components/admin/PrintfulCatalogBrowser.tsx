@@ -75,6 +75,16 @@ const PrintfulCatalogBrowser = () => {
     });
   };
 
+  // Helper function to get availability status as string
+  const getAvailabilityStatus = (variant: any) => {
+    if (variant.availability_status && Array.isArray(variant.availability_status)) {
+      // Check if any region has 'in_stock' status
+      const inStockRegions = variant.availability_status.filter((status: any) => status.status === 'in_stock');
+      return inStockRegions.length > 0 ? 'in_stock' : 'out_of_stock';
+    }
+    return 'unknown';
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -114,7 +124,7 @@ const PrintfulCatalogBrowser = () => {
           <Input
             value={selectedProductId}
             onChange={(e) => setSelectedProductId(e.target.value)}
-            placeholder="Enter Product ID to see variants (e.g., 71)"
+            placeholder="Enter Product ID to see variants (e.g., 505)"
             className="flex-1"
           />
           <Button
@@ -141,7 +151,7 @@ const PrintfulCatalogBrowser = () => {
                           <h5 className="font-medium">{product.title}</h5>
                           <p className="text-sm text-gray-600">ID: {product.id}</p>
                           {product.description && (
-                            <p className="text-xs text-gray-500 mt-1">{product.description}</p>
+                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">{product.description}</p>
                           )}
                         </div>
                         <Button
@@ -168,32 +178,35 @@ const PrintfulCatalogBrowser = () => {
                   Variants for {catalogData.product?.title} ({catalogData.variants.length})
                 </h4>
                 <div className="grid gap-3 max-h-96 overflow-y-auto">
-                  {catalogData.variants.map((variant: any) => (
-                    <div key={variant.id} className="border rounded-lg p-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h5 className="font-medium">{variant.name}</h5>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="outline">ID: {variant.id}</Badge>
-                            <Badge variant="secondary">{variant.currency} {variant.price}</Badge>
-                            <Badge variant={variant.availability_status === 'active' ? 'default' : 'destructive'}>
-                              {variant.availability_status}
-                            </Badge>
+                  {catalogData.variants.map((variant: any) => {
+                    const availabilityStatus = getAvailabilityStatus(variant);
+                    return (
+                      <div key={variant.id} className="border rounded-lg p-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h5 className="font-medium">{variant.name}</h5>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge variant="outline">ID: {variant.id}</Badge>
+                              <Badge variant="secondary">{variant.currency} {variant.price}</Badge>
+                              <Badge variant={availabilityStatus === 'in_stock' ? 'default' : 'destructive'}>
+                                {availabilityStatus.replace('_', ' ')}
+                              </Badge>
+                            </div>
+                            {variant.color && <p className="text-xs text-gray-500 mt-1">Color: {variant.color}</p>}
+                            {variant.size && <p className="text-xs text-gray-500">Size: {variant.size}</p>}
                           </div>
-                          {variant.color && <p className="text-xs text-gray-500 mt-1">Color: {variant.color}</p>}
-                          {variant.size && <p className="text-xs text-gray-500">Size: {variant.size}</p>}
+                          <Button
+                            size="sm"
+                            onClick={() => copyVariantId(variant.id.toString())}
+                            className="flex items-center gap-1"
+                          >
+                            <Copy className="w-3 h-3" />
+                            Copy ID
+                          </Button>
                         </div>
-                        <Button
-                          size="sm"
-                          onClick={() => copyVariantId(variant.id.toString())}
-                          className="flex items-center gap-1"
-                        >
-                          <Copy className="w-3 h-3" />
-                          Copy ID
-                        </Button>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
