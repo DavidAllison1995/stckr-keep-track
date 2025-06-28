@@ -279,7 +279,7 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
       throw new Error("Shipping address is incomplete - missing line1 or city");
     }
 
-    // Filter products that have Printful variant IDs
+    // Filter products that have Printful variant IDs and create items
     const printfulItems = products.filter(product => {
       const variantId = product.printful_variant_id;
       console.log("🔍 VARIANT ID CHECK:", { 
@@ -313,6 +313,8 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
         finalType: typeof finalVariantId
       });
       
+      // For templated variants (like 385301201), we don't need to specify files
+      // The template already contains the design
       return {
         variant_id: finalVariantId,
         quantity: 1, // Default quantity, could be from order items
