@@ -38,7 +38,6 @@ serve(async (req) => {
 
     let event;
     try {
-      // Use async method for edge environments
       event = await stripe.webhooks.constructEventAsync(body, signature, endpointSecret);
       console.log("✅ Webhook signature verified for event:", event.type);
     } catch (err) {
@@ -146,6 +145,26 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
       throw new Error("Shipping address is required for physical products");
     }
 
+    // Get fresh product data from database to ensure we have latest variant IDs
+    console.log("🔍 FETCHING FRESH PRODUCT DATA FROM DATABASE...");
+    const productIds = items.map((item: any) => item.product_id);
+    const { data: products, error: productsError } = await supabaseClient
+      .from("products")
+      .select("*")
+      .in("id", productIds);
+
+    if (productsError) {
+      console.error("❌ ERROR FETCHING PRODUCTS:", productsError);
+      throw productsError;
+    }
+
+    console.log("📦 FRESH PRODUCT DATA:", products?.map(p => ({
+      id: p.id,
+      name: p.name,
+      printful_variant_id: p.printful_variant_id,
+      variant_type: typeof p.printful_variant_id
+    })));
+
     // Create order record
     const { data: order, error: orderError } = await supabaseClient
       .from("orders")
@@ -169,14 +188,17 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
 
     console.log("✅ ORDER CREATED:", order.id);
 
-    // Create order items
-    const orderItems = items.map((item: any) => ({
-      order_id: order.id,
-      product_id: item.product_id,
-      quantity: item.quantity,
-      unit_price: item.price,
-      total_price: item.price * item.quantity,
-    }));
+    // Create order items with fresh product data
+    const orderItems = items.map((item: any) => {
+      const product = products?.find(p => p.id === item.product_id);
+      return {
+        order_id: order.id,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        unit_price: item.price,
+        total_price: item.price * item.quantity,
+      };
+    });
 
     const { error: itemsError } = await supabaseClient
       .from("order_items")
@@ -208,8 +230,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
 
     console.log("✅ SHIPPING ADDRESS STORED");
 
-    // Send to Printful
-    await sendToPrintful(order, items, shippingAddress, customerName, customerPhone, supabaseClient);
+    // Send to Printful with fresh product data
+    await sendToPrintful(order, products, shippingAddress, customerName, customerPhone, supabaseClient);
 
     // Clear user cart
     await supabaseClient.from("cart_items").delete().eq("user_id", userId);
@@ -235,9 +257,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
   }
 }
 
-async function sendToPrintful(order: any, items: any[], shippingAddress: any, customerName: string, customerPhone: string | null, supabaseClient: any) {
+async function sendToPrintful(order: any, products: any[], shippingAddress: any, customerName: string, customerPhone: string | null, supabaseClient: any) {
   console.log("🖨️ SENDING ORDER TO PRINTFUL:", order.id);
-  console.log("🔍 DETAILED PRINTFUL DEBUG - Order Items:", JSON.stringify(items, null, 2));
+  console.log("🔍 FRESH PRODUCTS FOR PRINTFUL:", JSON.stringify(products, null, 2));
 
   const printfulApiKey = Deno.env.get("PRINTFUL_API_KEY");
   if (!printfulApiKey) {
@@ -257,37 +279,49 @@ async function sendToPrintful(order: any, items: any[], shippingAddress: any, cu
       throw new Error("Shipping address is incomplete - missing line1 or city");
     }
 
-    // Filter items that have Printful variant IDs and use them exactly as stored
-    const printfulItems = items.filter(item => {
-      const variantId = item.printful_variant_id;
+    // Filter products that have Printful variant IDs
+    const printfulItems = products.filter(product => {
+      const variantId = product.printful_variant_id;
       console.log("🔍 VARIANT ID CHECK:", { 
-        productId: item.product_id, 
+        productId: product.id,
+        productName: product.name, 
         variantId: variantId,
         variantIdType: typeof variantId,
-        hasVariantId: !!variantId
+        hasVariantId: !!variantId && variantId !== null && variantId !== ""
       });
       
       return variantId && variantId !== null && variantId !== "";
-    }).map(item => {
-      const variantId = item.printful_variant_id;
+    }).map(product => {
+      const variantId = product.printful_variant_id;
       
-      console.log("📦 USING VARIANT ID AS-IS:", {
-        productId: item.product_id,
+      // Check if it's already a number or needs conversion
+      let finalVariantId;
+      if (typeof variantId === 'number') {
+        finalVariantId = variantId;
+      } else if (typeof variantId === 'string' && !isNaN(Number(variantId))) {
+        finalVariantId = parseInt(variantId, 10);
+      } else {
+        console.error("❌ INVALID VARIANT ID FORMAT:", { productId: product.id, variantId, type: typeof variantId });
+        return null;
+      }
+      
+      console.log("📦 USING VARIANT ID:", {
+        productId: product.id,
+        productName: product.name,
         originalVariantId: variantId,
-        finalVariantId: variantId,
-        quantity: item.quantity
+        finalVariantId: finalVariantId,
+        finalType: typeof finalVariantId
       });
       
       return {
-        variant_id: variantId, // Use exactly as stored in database
-        quantity: item.quantity,
+        variant_id: finalVariantId,
+        quantity: 1, // Default quantity, could be from order items
       };
-    });
+    }).filter(item => item !== null);
 
     console.log("🔍 PRINTFUL ITEMS SUMMARY:", {
-      totalItems: items.length,
+      totalProducts: products.length,
       printfulItems: printfulItems.length,
-      itemsWithVariantId: items.filter(item => item.printful_variant_id).length,
       processedItems: printfulItems.map(item => ({ 
         id: item.variant_id, 
         type: typeof item.variant_id
