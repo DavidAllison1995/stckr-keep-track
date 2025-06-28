@@ -38,7 +38,8 @@ serve(async (req) => {
 
     let event;
     try {
-      event = stripe.webhooks.constructEvent(body, signature, endpointSecret);
+      // Use async method for edge environments
+      event = await stripe.webhooks.constructEventAsync(body, signature, endpointSecret);
       console.log("✅ Webhook signature verified for event:", event.type);
     } catch (err) {
       console.error("❌ Signature verification failed:", err.message);
