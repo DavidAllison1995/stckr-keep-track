@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from './useSupabaseAuth';
@@ -85,7 +84,7 @@ export const useShop = () => {
     }
   };
 
-  // Create checkout session - now properly passes user info
+  // Create checkout session - fixed user data handling
   const createCheckoutSession = async () => {
     if (!user) {
       console.log('Cannot create checkout session: no user');
@@ -97,10 +96,22 @@ export const useShop = () => {
       return null;
     }
 
-    // Ensure we have user email - get it from user object or auth session
-    const userEmail = user.email || user.user_metadata?.email;
+    // Get fresh user data to ensure we have the latest info
+    const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+    if (userError || !currentUser) {
+      console.error('Error getting current user:', userError);
+      toast({
+        title: 'Error',
+        description: 'Please try logging in again',
+        variant: 'destructive',
+      });
+      return null;
+    }
+
+    // Ensure we have user email
+    const userEmail = currentUser.email;
     if (!userEmail) {
-      console.error('No user email available:', user);
+      console.error('No user email available:', currentUser);
       toast({
         title: 'Error',
         description: 'User email not available. Please try logging in again.',
@@ -111,7 +122,7 @@ export const useShop = () => {
 
     setIsLoading(true);
     try {
-      console.log('Creating checkout session for user:', user.id, userEmail);
+      console.log('Creating checkout session for user:', currentUser.id, userEmail);
       
       // Get cart items from database to ensure consistency
       const { data: cartItems, error: cartError } = await supabase
@@ -120,7 +131,7 @@ export const useShop = () => {
           *,
           product:products (*)
         `)
-        .eq('user_id', user.id);
+        .eq('user_id', currentUser.id);
 
       if (cartError) {
         console.error('Error loading cart for checkout:', cartError);
@@ -138,7 +149,7 @@ export const useShop = () => {
       }
 
       console.log('Creating checkout with cart items:', cartItems);
-      console.log('User data being sent:', { user_id: user.id, user_email: userEmail });
+      console.log('User data being sent:', { user_id: currentUser.id, user_email: userEmail });
 
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
@@ -148,7 +159,7 @@ export const useShop = () => {
             price: item.product?.price || 0,
             name: item.product?.name || 'Product',
           })),
-          user_id: user.id,
+          user_id: currentUser.id,
           user_email: userEmail,
         },
       });
