@@ -13,6 +13,7 @@ import {
   Globe
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const WebhookDiagnostics = () => {
   const { toast } = useToast();
@@ -31,36 +32,48 @@ const WebhookDiagnostics = () => {
   const testWebhook = async () => {
     setIsLoading(true);
     try {
-      console.log('🧪 TESTING WEBHOOK ENDPOINT...');
+      console.log('🧪 TESTING WEBHOOK ENDPOINT via Supabase...');
       
-      // Test if the webhook endpoint is reachable
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ test: true }),
+      // Test the webhook by invoking it through Supabase functions
+      // This simulates a basic webhook call to check if the function responds
+      const { data, error } = await supabase.functions.invoke('stripe-webhook', {
+        body: {
+          type: 'test_event',
+          data: {
+            object: {
+              id: 'test_session_123',
+              payment_status: 'paid',
+              metadata: {
+                user_id: 'test_user',
+                user_email: 'test@example.com',
+                items: JSON.stringify([])
+              }
+            }
+          }
+        }
       });
       
-      console.log('📡 WEBHOOK TEST RESPONSE:', response.status);
+      console.log('📡 WEBHOOK TEST RESPONSE:', { data, error });
       
-      if (response.status === 200 || response.status === 400) {
+      if (error) {
+        console.error('❌ WEBHOOK TEST ERROR:', error);
+        toast({
+          title: 'Webhook Test Failed',
+          description: `Error: ${error.message}`,
+          variant: 'destructive',
+        });
+      } else {
+        console.log('✅ WEBHOOK TEST SUCCESS:', data);
         toast({
           title: 'Webhook Endpoint Active ✅',
           description: 'The webhook endpoint is responding correctly',
         });
-      } else {
-        toast({
-          title: 'Webhook Test Failed',
-          description: `Unexpected response: ${response.status}`,
-          variant: 'destructive',
-        });
       }
     } catch (error) {
-      console.error('❌ WEBHOOK TEST ERROR:', error);
+      console.error('❌ WEBHOOK TEST EXCEPTION:', error);
       toast({
         title: 'Webhook Test Failed',
-        description: 'Failed to reach webhook endpoint',
+        description: 'Failed to test webhook endpoint',
         variant: 'destructive',
       });
     } finally {
@@ -110,6 +123,13 @@ const WebhookDiagnostics = () => {
             </AlertDescription>
           </Alert>
 
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Step 3:</strong> Make sure you've added your <code>STRIPE_WEBHOOK_SECRET</code> to the Supabase Edge Function secrets
+            </AlertDescription>
+          </Alert>
+
           <div className="flex items-center gap-4">
             <Button
               onClick={testWebhook}
@@ -147,6 +167,18 @@ const WebhookDiagnostics = () => {
               <li>✅ Event: checkout.session.completed</li>
               <li>✅ HTTP Method: POST</li>
               <li>✅ Content-Type: application/json</li>
+              <li>✅ Webhook Secret: Added to Supabase secrets</li>
+            </ul>
+          </div>
+
+          <div className="bg-yellow-50 p-4 rounded-lg">
+            <h4 className="font-medium mb-2">Troubleshooting Tips:</h4>
+            <ul className="text-sm space-y-1">
+              <li>• Check that your webhook URL exactly matches the one above</li>
+              <li>• Ensure "checkout.session.completed" event is selected</li>
+              <li>• Verify your webhook signing secret is correctly added to Supabase</li>
+              <li>• Check the Stripe webhook logs for delivery attempts</li>
+              <li>• Test with a real order to see if webhook triggers properly</li>
             </ul>
           </div>
         </CardContent>
