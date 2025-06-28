@@ -145,9 +145,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
       throw new Error("Shipping address is required for physical products");
     }
 
-    // Get fresh product data from database with explicit cache-busting
-    console.log("🔍 FETCHING FRESH PRODUCT DATA FROM DATABASE WITH CACHE BUST...");
+    // ⚠️ CRITICAL: Always get FRESH product data from database, ignoring Stripe metadata
+    console.log("🔍 FETCHING CURRENT PRODUCT DATA FROM DATABASE (IGNORING STRIPE METADATA)...");
     const productIds = items.map((item: any) => item.product_id);
+    
+    // Force fresh fetch with timestamp to bust any caching
+    const timestamp = Date.now();
+    console.log("🕐 CACHE BUST TIMESTAMP:", timestamp);
+    
     const { data: products, error: productsError } = await supabaseClient
       .from("products")
       .select("*")
@@ -158,12 +163,13 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
       throw productsError;
     }
 
-    console.log("📦 FRESH PRODUCT DATA FROM DB:", products?.map(p => ({
+    console.log("📦 CURRENT PRODUCT DATA FROM DATABASE:", products?.map(p => ({
       id: p.id,
       name: p.name,
       printful_variant_id: p.printful_variant_id,
       variant_type: typeof p.printful_variant_id,
-      updated_at: p.updated_at
+      updated_at: p.updated_at,
+      is_templated: p.printful_variant_id === '385301201'
     })));
 
     // Create order record
@@ -231,7 +237,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
 
     console.log("✅ SHIPPING ADDRESS STORED");
 
-    // Send to Printful with fresh product data
+    // Send to Printful with CURRENT database product data (not Stripe metadata)
     await sendToPrintful(order, products, shippingAddress, customerName, customerPhone, supabaseClient);
 
     // Clear user cart
@@ -289,7 +295,8 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
         variantId: variantId,
         variantIdType: typeof variantId,
         hasVariantId: !!variantId && variantId !== null && variantId !== "",
-        updatedAt: product.updated_at
+        updatedAt: product.updated_at,
+        isTemplated: variantId === '385301201'
       });
       
       return variantId && variantId !== null && variantId !== "";
