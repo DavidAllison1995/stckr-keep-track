@@ -164,97 +164,86 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
     <>
       <Card 
         variant="elevated"
-        className="cursor-pointer select-none h-full flex flex-col group hover:shadow-large hover:-translate-y-2 transition-all duration-300 border-0 bg-white/90 backdrop-blur-sm" 
+        className="cursor-pointer select-none h-full flex flex-col group" 
         onClick={handleCardClick}
       >
         <CardContent className="p-0 flex flex-col h-full">
           {/* Enhanced Image/Icon Section */}
-          <div className="w-full aspect-[4/3] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center border-b border-gray-100/50 rounded-t-xl relative overflow-hidden">
+          <div className="w-full aspect-[3/2] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center border-b border-gray-100 rounded-t-xl relative overflow-hidden">
             {item.photo_url ? (
               <img 
                 src={item.photo_url} 
                 alt={item.name} 
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" 
                 draggable={false}
               />
             ) : (
-              <div className="p-6 bg-white/60 backdrop-blur-sm rounded-2xl transition-all duration-300 group-hover:scale-110 group-hover:bg-white/80">
-                <IconComponent className="w-10 h-10 text-blue-600" />
+              <div className="p-4 bg-white/50 backdrop-blur-sm rounded-xl transition-transform duration-300 group-hover:scale-110">
+                <IconComponent className="w-8 h-8 text-blue-600" />
               </div>
             )}
             
             {/* QR Status Indicator */}
             {item.qr_code_id && (
-              <div className="absolute top-3 right-3 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-medium">
-                <QrCode className="w-4 h-4 text-white" />
+              <div className="absolute top-2 right-2 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                <QrCode className="w-3 h-3 text-green-600" />
               </div>
             )}
-            
-            {/* Category Badge Overlay */}
-            <div className="absolute top-3 left-3">
-              <Badge 
-                variant="secondary" 
-                className="bg-white/90 text-blue-700 border-blue-200 font-semibold backdrop-blur-sm"
-              >
-                {item.category}
-              </Badge>
-            </div>
           </div>
 
           {/* Enhanced Content Section */}
-          <div className="p-4 flex-1 flex flex-col space-y-4 overflow-hidden">
-            {/* Title and Room */}
-            <div className="space-y-2">
-              <h3 className="font-bold text-lg line-clamp-1 text-gray-900 group-hover:text-blue-700 transition-colors">
-                {item.name}
-              </h3>
-              
-              <div className="flex items-center gap-2 flex-wrap">
-                {item.room && (
-                  <Badge 
-                    variant="secondary" 
-                    className="bg-emerald-100 text-emerald-800 border-emerald-200 font-medium"
-                  >
-                    {item.room}
-                  </Badge>
-                )}
-                <Badge 
-                  variant={item.qr_code_id ? "success" : "secondary"}
-                  className={`font-medium ${
-                    item.qr_code_id 
-                      ? "bg-green-100 text-green-800 border-green-200" 
-                      : "bg-gray-100 text-gray-600 border-gray-200"
-                  }`}
-                >
-                  {item.qr_code_id ? (
-                    <>
-                      <Check className="w-3 h-3 mr-1" />
-                      QR Linked
-                    </>
-                  ) : (
-                    <>
-                      <X className="w-3 h-3 mr-1" />
-                      No QR
-                    </>
-                  )}
+          <div className="p-3 flex-1 flex flex-col space-y-3 overflow-hidden">
+            {/* Title */}
+            <h3 className="font-semibold text-base line-clamp-1 text-gray-900 group-hover:text-blue-600 transition-colors">
+              {item.name}
+            </h3>
+            
+            {/* Enhanced Tags Section */}
+            <div className="flex items-center gap-1.5 flex-wrap min-h-[20px]">
+              <Badge variant="secondary" className="bg-blue-50 text-blue-700 text-xs px-2 py-0.5 h-5 font-medium border border-blue-200">
+                {item.category}
+              </Badge>
+              {item.room && (
+                <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 text-xs px-2 py-0.5 h-5 font-medium border border-emerald-200">
+                  {item.room}
                 </Badge>
-              </div>
+              )}
+              <Badge 
+                variant="secondary" 
+                className={`text-xs px-2 py-0.5 h-5 font-medium border ${
+                  item.qr_code_id 
+                    ? "bg-green-50 text-green-700 border-green-200" 
+                    : "bg-gray-50 text-gray-600 border-gray-200"
+                }`}
+              >
+                {item.qr_code_id ? (
+                  <>
+                    <Check className="w-2.5 h-2.5 mr-1" />
+                    QR
+                  </>
+                ) : (
+                  <>
+                    <X className="w-2.5 h-2.5 mr-1" />
+                    No QR
+                  </>
+                )}
+              </Badge>
             </div>
 
             {/* Description */}
             {item.description && (
-              <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">{item.description}</p>
+              <p className="text-xs text-gray-600 line-clamp-1">{item.description}</p>
             )}
 
             {/* Enhanced Task Status Section */}
             {itemTasks.length > 0 && (
               <div 
-                className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-3 cursor-pointer border border-gray-100/50 hover:border-blue-200 hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 group/tasks"
+                className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg p-2.5 cursor-pointer border border-gray-100 hover:border-blue-200 hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 group/tasks"
                 onClick={handleTasksClick}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-bold text-gray-800 group-hover/tasks:text-blue-800">Maintenance Tasks</span>
-                  <ChevronRight className="w-4 h-4 text-blue-600 group-hover/tasks:translate-x-1 transition-transform" />
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-semibold text-gray-700 group-hover/tasks:text-blue-700">Maintenance</span>
+                  <ChevronRight className="w-3 h-3 text-blue-600 group-hover/tasks:translate-x-0.5 transition-transform" />
                 </div>
                 <div className="flex items-center gap-2 text-xs flex-wrap">
                   {overdueTasks.length > 0 && (
@@ -287,18 +276,18 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
 
             {/* Enhanced Dates Section */}
             {(item.purchase_date || item.warranty_date) && (
-              <div className="bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl p-3 border border-gray-100/50">
-                <div className="text-xs text-gray-600 space-y-1.5">
+              <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg p-2.5 border border-gray-100">
+                <div className="text-xs text-gray-600 space-y-1">
                   {item.purchase_date && (
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold text-gray-700">Purchased:</span>
-                      <span className="font-medium">{new Date(item.purchase_date).toLocaleDateString()}</span>
+                      <span className="font-medium">Purchased:</span>
+                      <span>{new Date(item.purchase_date).toLocaleDateString()}</span>
                     </div>
                   )}
                   {item.warranty_date && (
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold text-gray-700">Warranty:</span>
-                      <span className="font-medium">{new Date(item.warranty_date).toLocaleDateString()}</span>
+                      <span className="font-medium">Warranty:</span>
+                      <span>{new Date(item.warranty_date).toLocaleDateString()}</span>
                     </div>
                   )}
                 </div>
@@ -306,41 +295,41 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
             )}
 
             {/* Enhanced Actions */}
-            <div className="flex gap-2 mt-auto pt-2">
+            <div className="flex gap-1 mt-auto pt-2">
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="flex-1 text-sm h-9 gap-2 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 font-medium"
+                className="flex-1 text-xs h-7 gap-1.5 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(`/items/${item.id}`);
                 }}
               >
-                <Eye className="w-4 h-4" />
+                <Eye className="w-3 h-3" />
                 View
               </Button>
               <Button 
                 variant="ghost" 
                 size="sm"
-                className="text-sm h-9 px-3 hover:bg-gray-100 font-medium"
+                className="text-xs h-7 px-2 hover:bg-gray-100"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsEditModalOpen(true);
                 }}
               >
-                <Edit className="w-4 h-4" />
+                <Edit className="w-3 h-3" />
               </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50 h-9 w-9 font-medium"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1 h-7 w-7"
                     onClick={(e) => {
                       e.stopPropagation();
                     }}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3 h-3" />
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent className="animate-scale-in">
