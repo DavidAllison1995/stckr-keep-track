@@ -14,10 +14,10 @@ const ItemInfoCard = ({ item }: ItemInfoCardProps) => {
   };
 
   return (
-    <Card className="shadow-sm border border-gray-200">
+    <Card variant="elevated" className="shadow-soft border-gray-800">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2 text-gray-900">
-          <Package className="w-5 h-5 text-blue-600" />
+        <CardTitle className="text-lg flex items-center gap-2 text-white">
+          <Package className="w-5 h-5 text-purple-400" />
           Item Information
         </CardTitle>
       </CardHeader>
@@ -26,12 +26,12 @@ const ItemInfoCard = ({ item }: ItemInfoCardProps) => {
         <div className="grid grid-cols-1 gap-4">
           {item.room && (
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                <MapPin className="w-4 h-4 text-gray-600" />
+              <div className="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0 mt-1 border border-gray-700">
+                <MapPin className="w-4 h-4 text-gray-300" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-xs font-medium text-gray-500 mb-1">Room</div>
-                <div className="text-sm font-semibold text-gray-900">{item.room}</div>
+                <div className="text-xs font-medium text-gray-400 mb-1">Room</div>
+                <div className="text-sm font-semibold text-white">{item.room}</div>
               </div>
             </div>
           )}
@@ -41,24 +41,24 @@ const ItemInfoCard = ({ item }: ItemInfoCardProps) => {
         <div className="grid grid-cols-1 gap-4">
           {item.purchase_date && (
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                <Calendar className="w-4 h-4 text-blue-600" />
+              <div className="w-8 h-8 bg-purple-900/50 rounded-lg flex items-center justify-center flex-shrink-0 mt-1 border border-purple-700/50">
+                <Calendar className="w-4 h-4 text-purple-400" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-xs font-medium text-gray-500 mb-1">Purchase Date</div>
-                <div className="text-sm font-semibold text-gray-900">{formatDate(item.purchase_date)}</div>
+                <div className="text-xs font-medium text-gray-400 mb-1">Purchase Date</div>
+                <div className="text-sm font-semibold text-white">{formatDate(item.purchase_date)}</div>
               </div>
             </div>
           )}
 
           {item.warranty_date && (
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
-                <Calendar className="w-4 h-4 text-purple-600" />
+              <div className="w-8 h-8 bg-purple-900/50 rounded-lg flex items-center justify-center flex-shrink-0 mt-1 border border-purple-700/50">
+                <Calendar className="w-4 h-4 text-purple-400" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-xs font-medium text-gray-500 mb-1">Warranty Until</div>
-                <div className="text-sm font-semibold text-gray-900">{formatDate(item.warranty_date)}</div>
+                <div className="text-xs font-medium text-gray-400 mb-1">Warranty Until</div>
+                <div className="text-sm font-semibold text-white">{formatDate(item.warranty_date)}</div>
               </div>
             </div>
           )}

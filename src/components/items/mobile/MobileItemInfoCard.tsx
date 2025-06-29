@@ -14,27 +14,27 @@ const MobileItemInfoCard = ({ item }: MobileItemInfoCardProps) => {
   };
 
   return (
-    <Card className="shadow-sm border border-gray-200">
+    <Card variant="elevated" className="shadow-soft border-gray-800">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base flex items-center gap-2 text-gray-900">
-          <Package className="w-4 h-4 text-blue-600" />
+        <CardTitle className="text-base flex items-center gap-2 text-white">
+          <Package className="w-4 h-4 text-purple-400" />
           Item Information
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">{item.name}</h3>
+          <h3 className="text-lg font-semibold text-white mb-1">{item.name}</h3>
           {item.description && (
-            <p className="text-sm text-gray-600">{item.description}</p>
+            <p className="text-sm text-gray-300">{item.description}</p>
           )}
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Badge variant="secondary" className="text-xs">
+          <Badge variant="secondary" className="text-xs bg-gray-800 text-gray-200 border-gray-700">
             {item.category}
           </Badge>
           {item.room && (
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" className="text-xs text-gray-300 border-gray-600">
               <MapPin className="w-3 h-3 mr-1" />
               {item.room}
             </Badge>
@@ -43,23 +43,23 @@ const MobileItemInfoCard = ({ item }: MobileItemInfoCardProps) => {
 
         <div className="space-y-2 text-sm">
           {item.purchase_date && (
-            <div className="flex items-center gap-2 text-gray-600">
-              <Calendar className="w-4 h-4" />
+            <div className="flex items-center gap-2 text-gray-300">
+              <Calendar className="w-4 h-4 text-purple-400" />
               <span>Purchased: {formatDate(item.purchase_date)}</span>
             </div>
           )}
           
           {item.warranty_date && (
-            <div className="flex items-center gap-2 text-gray-600">
-              <Shield className="w-4 h-4" />
+            <div className="flex items-center gap-2 text-gray-300">
+              <Shield className="w-4 h-4 text-purple-400" />
               <span>Warranty: {formatDate(item.warranty_date)}</span>
             </div>
           )}
         </div>
 
         {item.notes && (
-          <div className="text-sm text-gray-600">
-            <span className="font-medium">Notes:</span> {item.notes}
+          <div className="text-sm text-gray-300">
+            <span className="font-medium text-white">Notes:</span> {item.notes}
           </div>
         )}
       </CardContent>

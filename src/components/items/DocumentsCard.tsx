@@ -21,17 +21,17 @@ const DocumentsCard = ({ item, onTabChange }: DocumentsCardProps) => {
   }
 
   return (
-    <Card className="shadow-sm border border-gray-200">
+    <Card variant="elevated" className="shadow-soft border-gray-800">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2 text-gray-900">
-          <FileText className="w-5 h-5 text-blue-600" />
+        <CardTitle className="text-lg flex items-center gap-2 text-white">
+          <FileText className="w-5 h-5 text-purple-400" />
           Documents
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex space-x-3 mb-4">
           {item.documents.slice(0, 3).map((doc) => (
-            <div key={doc.id} className="w-16 h-16 bg-gradient-to-br from-blue-50 to-gray-50 rounded-lg overflow-hidden flex items-center justify-center border border-gray-100 shadow-sm">
+            <div key={doc.id} className="w-16 h-16 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden flex items-center justify-center border border-gray-700 shadow-sm">
               {doc.type === 'image' ? (
                 <img 
                   src={doc.url} 
@@ -39,7 +39,7 @@ const DocumentsCard = ({ item, onTabChange }: DocumentsCardProps) => {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <FileText className="w-6 h-6 text-blue-600" />
+                <FileText className="w-6 h-6 text-purple-400" />
               )}
             </div>
           ))}
@@ -47,7 +47,7 @@ const DocumentsCard = ({ item, onTabChange }: DocumentsCardProps) => {
         <Button 
           variant="link" 
           size="sm" 
-          className="p-0 h-auto text-blue-600 hover:text-blue-700 font-medium transition-colors duration-150"
+          className="p-0 h-auto text-purple-400 hover:text-purple-300 font-medium transition-colors duration-150"
           onClick={handleViewAllDocuments}
         >
           View All ({item.documents.length})

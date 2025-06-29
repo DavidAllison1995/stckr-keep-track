@@ -11,9 +11,9 @@ const ItemPhotoCard = ({ item }: ItemPhotoCardProps) => {
   const IconComponent = getIconComponent(item.icon_id || 'box');
 
   return (
-    <Card className="shadow-sm border border-gray-200">
+    <Card variant="elevated" className="shadow-soft border-gray-800">
       <CardContent className="p-4">
-        <div className="w-full h-48 bg-gradient-to-br from-blue-50 to-gray-50 rounded-xl flex items-center justify-center border border-gray-100">
+        <div className="w-full h-48 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl flex items-center justify-center border border-gray-700">
           {item.photo_url ? (
             <img 
               src={item.photo_url} 
@@ -21,7 +21,7 @@ const ItemPhotoCard = ({ item }: ItemPhotoCardProps) => {
               className="w-full h-full object-contain rounded-xl" 
             />
           ) : (
-            <IconComponent className="w-16 h-16 text-blue-600" />
+            <IconComponent className="w-16 h-16 text-purple-400" />
           )}
         </div>
       </CardContent>

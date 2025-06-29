@@ -24,10 +24,10 @@ const MaintenanceSummaryCard = ({ nextTask, recentCompleted, onTabChange }: Main
   };
 
   return (
-    <Card className="shadow-sm border border-gray-200">
+    <Card variant="elevated" className="shadow-soft border-gray-800">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2 text-gray-900">
-          <Calendar className="w-5 h-5 text-blue-600" />
+        <CardTitle className="text-lg flex items-center gap-2 text-white">
+          <Calendar className="w-5 h-5 text-purple-400" />
           Maintenance Summary
         </CardTitle>
       </CardHeader>
@@ -39,13 +39,13 @@ const MaintenanceSummaryCard = ({ nextTask, recentCompleted, onTabChange }: Main
             disabled={!nextTask}
             className={`flex items-center justify-between p-3 rounded-xl transition-all duration-200 text-left border ${
               nextTask
-                ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-200 text-yellow-800 hover:from-yellow-100 hover:to-orange-100 hover:border-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-300 cursor-pointer shadow-sm'
-                : 'bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed'
+                ? 'bg-gradient-to-r from-amber-900/30 to-orange-900/30 border-amber-600/50 text-amber-200 hover:from-amber-900/50 hover:to-orange-900/50 hover:border-amber-500/70 focus:outline-none focus:ring-2 focus:ring-amber-400/50 cursor-pointer shadow-sm'
+                : 'bg-gray-800/50 border-gray-700 text-gray-500 cursor-not-allowed'
             }`}
           >
             <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <Clock className="w-4 h-4 text-yellow-600" />
+              <div className="w-8 h-8 bg-amber-900/50 rounded-lg flex items-center justify-center border border-amber-600/50">
+                <Clock className="w-4 h-4 text-amber-400" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-xs font-medium opacity-80 mb-1">Next Task</div>
@@ -58,7 +58,7 @@ const MaintenanceSummaryCard = ({ nextTask, recentCompleted, onTabChange }: Main
               </div>
             </div>
             {nextTask && (
-              <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 shadow-sm">
+              <Badge className="bg-amber-900/50 text-amber-200 border-amber-600/50 shadow-sm">
                 Upcoming
               </Badge>
             )}
@@ -70,13 +70,13 @@ const MaintenanceSummaryCard = ({ nextTask, recentCompleted, onTabChange }: Main
             disabled={!recentCompleted}
             className={`flex items-center justify-between p-3 rounded-xl transition-all duration-200 text-left border ${
               recentCompleted
-                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-800 hover:from-green-100 hover:to-emerald-100 hover:border-green-300 focus:outline-none focus:ring-2 focus:ring-green-300 cursor-pointer shadow-sm'
-                : 'bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed'
+                ? 'bg-gradient-to-r from-green-900/30 to-emerald-900/30 border-green-600/50 text-green-200 hover:from-green-900/50 hover:to-emerald-900/50 hover:border-green-500/70 focus:outline-none focus:ring-2 focus:ring-green-400/50 cursor-pointer shadow-sm'
+                : 'bg-gray-800/50 border-gray-700 text-gray-500 cursor-not-allowed'
             }`}
           >
             <div className="flex items-center gap-3 min-w-0 flex-1">
-              <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                <CheckCircle2 className="w-4 h-4 text-green-600" />
+              <div className="w-8 h-8 bg-green-900/50 rounded-lg flex items-center justify-center border border-green-600/50">
+                <CheckCircle2 className="w-4 h-4 text-green-400" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-xs font-medium opacity-80 mb-1">Recently Completed</div>
@@ -89,7 +89,7 @@ const MaintenanceSummaryCard = ({ nextTask, recentCompleted, onTabChange }: Main
               </div>
             </div>
             {recentCompleted && (
-              <Badge className="bg-green-100 text-green-800 border-green-200 shadow-sm">
+              <Badge className="bg-green-900/50 text-green-200 border-green-600/50 shadow-sm">
                 Completed
               </Badge>
             )}
