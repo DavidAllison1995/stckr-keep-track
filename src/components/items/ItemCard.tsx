@@ -164,12 +164,12 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
     <>
       <Card 
         variant="elevated"
-        className="cursor-pointer select-none h-full flex flex-col group" 
+        className="cursor-pointer select-none h-full flex flex-col group bg-gray-800/50 border-gray-700 shadow-medium hover:shadow-large hover:border-purple-500/30 transition-all duration-200 hover:-translate-y-0.5" 
         onClick={handleCardClick}
       >
         <CardContent className="p-0 flex flex-col h-full">
           {/* Enhanced Image/Icon Section */}
-          <div className="w-full aspect-[3/2] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center border-b border-gray-100 rounded-t-xl relative overflow-hidden">
+          <div className="w-full aspect-[3/2] bg-gradient-to-br from-purple-900/20 via-gray-800 to-gray-900 flex items-center justify-center border-b border-gray-700 rounded-t-xl relative overflow-hidden">
             {item.photo_url ? (
               <img 
                 src={item.photo_url} 
@@ -178,15 +178,15 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                 draggable={false}
               />
             ) : (
-              <div className="p-4 bg-white/50 backdrop-blur-sm rounded-xl transition-transform duration-300 group-hover:scale-110">
-                <IconComponent className="w-8 h-8 text-blue-600" />
+              <div className="p-4 bg-gray-800/50 backdrop-blur-sm rounded-xl transition-transform duration-300 group-hover:scale-110 border border-purple-500/20">
+                <IconComponent className="w-8 h-8 text-purple-400" />
               </div>
             )}
             
             {/* QR Status Indicator */}
             {item.qr_code_id && (
-              <div className="absolute top-2 right-2 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                <QrCode className="w-3 h-3 text-green-600" />
+              <div className="absolute top-2 right-2 w-6 h-6 bg-green-600/20 border border-green-500/50 rounded-full flex items-center justify-center backdrop-blur-sm">
+                <QrCode className="w-3 h-3 text-green-400" />
               </div>
             )}
           </div>
@@ -194,26 +194,26 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
           {/* Enhanced Content Section */}
           <div className="p-3 flex-1 flex flex-col space-y-3 overflow-hidden">
             {/* Title */}
-            <h3 className="font-semibold text-base line-clamp-1 text-gray-900 group-hover:text-blue-600 transition-colors">
+            <h3 className="font-semibold text-base line-clamp-1 text-white group-hover:text-purple-400 transition-colors">
               {item.name}
             </h3>
             
             {/* Enhanced Tags Section */}
             <div className="flex items-center gap-1.5 flex-wrap min-h-[20px]">
-              <Badge variant="secondary" className="bg-blue-50 text-blue-700 text-xs px-2 py-0.5 h-5 font-medium border border-blue-200">
+              <Badge variant="secondary" className="bg-purple-600/20 text-purple-300 text-xs px-2 py-0.5 h-5 font-medium border border-purple-500/30 hover:bg-purple-600/30 transition-colors">
                 {item.category}
               </Badge>
               {item.room && (
-                <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 text-xs px-2 py-0.5 h-5 font-medium border border-emerald-200">
+                <Badge variant="secondary" className="bg-emerald-600/20 text-emerald-300 text-xs px-2 py-0.5 h-5 font-medium border border-emerald-500/30 hover:bg-emerald-600/30 transition-colors">
                   {item.room}
                 </Badge>
               )}
               <Badge 
                 variant="secondary" 
-                className={`text-xs px-2 py-0.5 h-5 font-medium border ${
+                className={`text-xs px-2 py-0.5 h-5 font-medium border transition-colors ${
                   item.qr_code_id 
-                    ? "bg-green-50 text-green-700 border-green-200" 
-                    : "bg-gray-50 text-gray-600 border-gray-200"
+                    ? "bg-green-600/20 text-green-300 border-green-500/30 hover:bg-green-600/30" 
+                    : "bg-gray-700/50 text-gray-400 border-gray-600/50 hover:bg-gray-700/70"
                 }`}
               >
                 {item.qr_code_id ? (
@@ -232,18 +232,18 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
 
             {/* Description */}
             {item.description && (
-              <p className="text-xs text-gray-600 line-clamp-1">{item.description}</p>
+              <p className="text-xs text-gray-400 line-clamp-1">{item.description}</p>
             )}
 
             {/* Enhanced Task Status Section */}
             {itemTasks.length > 0 && (
               <div 
-                className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg p-2.5 cursor-pointer border border-gray-100 hover:border-blue-200 hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 group/tasks"
+                className="bg-gradient-to-r from-gray-800/50 to-gray-700/50 rounded-lg p-2.5 cursor-pointer border border-gray-600/50 hover:border-purple-500/30 hover:from-purple-900/20 hover:to-purple-800/20 transition-all duration-200 group/tasks backdrop-blur-sm"
                 onClick={handleTasksClick}
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-semibold text-gray-700 group-hover/tasks:text-blue-700">Maintenance</span>
-                  <ChevronRight className="w-3 h-3 text-blue-600 group-hover/tasks:translate-x-0.5 transition-transform" />
+                  <span className="text-xs font-semibold text-gray-300 group-hover/tasks:text-purple-400 transition-colors">Maintenance</span>
+                  <ChevronRight className="w-3 h-3 text-purple-400 group-hover/tasks:translate-x-0.5 transition-transform" />
                 </div>
                 <div className="flex items-center gap-2 text-xs flex-wrap">
                   {overdueTasks.length > 0 && (
@@ -276,17 +276,17 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
 
             {/* Enhanced Dates Section */}
             {(item.purchase_date || item.warranty_date) && (
-              <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg p-2.5 border border-gray-100">
-                <div className="text-xs text-gray-600 space-y-1">
+              <div className="bg-gradient-to-r from-gray-800/50 to-gray-700/50 rounded-lg p-2.5 border border-gray-600/50 backdrop-blur-sm">
+                <div className="text-xs text-gray-400 space-y-1">
                   {item.purchase_date && (
                     <div className="flex justify-between items-center">
-                      <span className="font-medium">Purchased:</span>
+                      <span className="font-medium text-gray-300">Purchased:</span>
                       <span>{new Date(item.purchase_date).toLocaleDateString()}</span>
                     </div>
                   )}
                   {item.warranty_date && (
                     <div className="flex justify-between items-center">
-                      <span className="font-medium">Warranty:</span>
+                      <span className="font-medium text-gray-300">Warranty:</span>
                       <span>{new Date(item.warranty_date).toLocaleDateString()}</span>
                     </div>
                   )}
@@ -299,7 +299,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="flex-1 text-xs h-7 gap-1.5 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700"
+                className="flex-1 text-xs h-7 gap-1.5 hover:bg-purple-600/20 hover:border-purple-500/50 hover:text-purple-300 bg-gray-800/50 border-gray-600 text-gray-300 transition-all duration-200"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(`/items/${item.id}`);
@@ -311,7 +311,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
               <Button 
                 variant="ghost" 
                 size="sm"
-                className="text-xs h-7 px-2 hover:bg-gray-100"
+                className="text-xs h-7 px-2 hover:bg-gray-700/50 text-gray-400 hover:text-gray-200 transition-all duration-200"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsEditModalOpen(true);
@@ -324,7 +324,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1 h-7 w-7"
+                    className="text-red-400 hover:text-red-300 hover:bg-red-600/20 p-1 h-7 w-7 transition-all duration-200"
                     onClick={(e) => {
                       e.stopPropagation();
                     }}
@@ -332,19 +332,19 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                     <Trash2 className="w-3 h-3" />
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent className="animate-scale-in">
+                <AlertDialogContent className="animate-scale-in bg-gray-900 border-gray-700">
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Item</AlertDialogTitle>
-                    <AlertDialogDescription>
+                    <AlertDialogTitle className="text-white">Delete Item</AlertDialogTitle>
+                    <AlertDialogDescription className="text-gray-400">
                       Are you sure you want to delete "{item.name}"? This action cannot be undone.
                       All maintenance tasks and documents associated with this item will also be deleted.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700">Cancel</AlertDialogCancel>
                     <AlertDialogAction 
                       onClick={handleDeleteItem}
-                      className="bg-red-600 hover:bg-red-700"
+                      className="bg-red-600 hover:bg-red-700 text-white"
                     >
                       Delete Item
                     </AlertDialogAction>
@@ -358,9 +358,9 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
 
       {/* Enhanced QR Code Modal */}
       <Dialog open={isQrModalOpen} onOpenChange={setIsQrModalOpen}>
-        <DialogContent className="max-w-sm animate-scale-in">
+        <DialogContent className="max-w-sm animate-scale-in bg-gray-900 border-gray-700">
           <DialogHeader>
-            <DialogTitle className="text-center">QR Code for {item.name}</DialogTitle>
+            <DialogTitle className="text-center text-purple-400">QR Code for {item.name}</DialogTitle>
           </DialogHeader>
           <div className="p-4 flex flex-col items-center space-y-4">
             {qrDataUrl && (
@@ -373,12 +373,12 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                   />
                 </div>
                 <div className="text-center">
-                  <div className="font-semibold text-gray-900">Sticker {shortCode}</div>
-                  <div className="text-sm text-gray-500">Scan to view item details</div>
+                  <div className="font-semibold text-white">Sticker {shortCode}</div>
+                  <div className="text-sm text-gray-400">Scan to view item details</div>
                 </div>
                 <Button 
                   onClick={downloadQrCode}
-                  className="w-full gap-2"
+                  className="w-full gap-2 bg-purple-600 hover:bg-purple-700"
                 >
                   <Download className="w-4 h-4" />
                   Download QR Code
@@ -391,9 +391,9 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
 
       {/* Enhanced Detail Modal */}
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto animate-scale-in">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto animate-scale-in bg-gray-900 border-gray-700">
           <DialogHeader>
-            <DialogTitle>{item.name}</DialogTitle>
+            <DialogTitle className="text-purple-400">{item.name}</DialogTitle>
           </DialogHeader>
           <ItemDetail 
             item={item} 
@@ -405,9 +405,9 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
 
       {/* Enhanced Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto animate-scale-in">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto animate-scale-in bg-gray-900 border-gray-700">
           <DialogHeader>
-            <DialogTitle>Edit Item</DialogTitle>
+            <DialogTitle className="text-purple-400">Edit Item</DialogTitle>
           </DialogHeader>
           <ItemForm 
             item={item}

@@ -19,13 +19,15 @@ const CalendarPage = () => {
   };
 
   return (
-    <UserSettingsProvider>
-      <div className="space-y-6">
-        {/* Hide StatusBar on mobile - only show on desktop */}
-        {!isMobile && <StatusBar />}
-        <MaintenanceCalendarWithSettings onNavigateToItem={handleNavigateToItem} />
-      </div>
-    </UserSettingsProvider>
+    <div className="min-h-screen bg-gray-950">
+      <UserSettingsProvider>
+        <div className="space-y-6">
+          {/* Hide StatusBar on mobile - only show on desktop */}
+          {!isMobile && <StatusBar />}
+          <MaintenanceCalendarWithSettings onNavigateToItem={handleNavigateToItem} />
+        </div>
+      </UserSettingsProvider>
+    </div>
   );
 };
 
