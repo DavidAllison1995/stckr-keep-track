@@ -1,3 +1,4 @@
+
 import { useState, useMemo } from 'react';
 import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, addDays, subDays, startOfDay, endOfDay, isToday } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
@@ -153,67 +154,69 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
     
     if (statusCounts.overdue > 0) {
       indicators.push(
-        <div key="overdue" className="w-2 h-2 bg-red-500 rounded-full" title={`${statusCounts.overdue} overdue tasks`} />
+        <div key="overdue" className="w-2 h-2 bg-red-500 rounded-full shadow-lg" title={`${statusCounts.overdue} overdue tasks`} />
       );
     }
     if (statusCounts.due_soon > 0) {
       indicators.push(
-        <div key="due_soon" className="w-2 h-2 bg-yellow-500 rounded-full" title={`${statusCounts.due_soon} due soon tasks`} />
+        <div key="due_soon" className="w-2 h-2 bg-yellow-500 rounded-full shadow-lg" title={`${statusCounts.due_soon} due soon tasks`} />
       );
     }
     if (statusCounts.up_to_date > 0) {
       indicators.push(
-        <div key="up_to_date" className="w-2 h-2 bg-green-500 rounded-full" title={`${statusCounts.up_to_date} up-to-date tasks`} />
+        <div key="up_to_date" className="w-2 h-2 bg-green-500 rounded-full shadow-lg" title={`${statusCounts.up_to_date} up-to-date tasks`} />
       );
     }
     if (statusCounts.completed > 0 && settings.showCompletedTasks) {
       indicators.push(
-        <div key="completed" className="w-2 h-2 bg-gray-400 rounded-full" title={`${statusCounts.completed} completed tasks`} />
+        <div key="completed" className="w-2 h-2 bg-purple-400 rounded-full shadow-lg" title={`${statusCounts.completed} completed tasks`} />
       );
     }
     
     return (
       <div className="flex gap-1 flex-wrap justify-center mt-1">
         {indicators.slice(0, 4)}
-        {indicators.length > 4 && <div className="text-xs text-gray-500">+{indicators.length - 4}</div>}
+        {indicators.length > 4 && <div className="text-xs text-gray-400">+{indicators.length - 4}</div>}
       </div>
     );
   };
 
   const renderMonthView = () => (
-    <div className="bg-white rounded-lg border overflow-hidden w-full">
+    <div className="bg-gray-900 rounded-lg border border-gray-700 overflow-hidden w-full shadow-lg">
       {/* Calendar Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+      <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-800">
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={handlePrevious}
+          className="hover:bg-purple-600/20 hover:text-purple-300 text-gray-300 transition-all duration-200"
         >
           <ChevronLeft className="w-4 h-4" />
         </Button>
-        <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold`}>
+        <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-bold text-white`}>
           {format(currentDate, 'MMMM yyyy')}
         </h3>
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={handleNext}
+          className="hover:bg-purple-600/20 hover:text-purple-300 text-gray-300 transition-all duration-200"
         >
           <ChevronRight className="w-4 h-4" />
         </Button>
       </div>
 
       {/* Days of Week Header */}
-      <div className="grid grid-cols-7 border-b bg-gray-50">
+      <div className="grid grid-cols-7 border-b border-gray-700 bg-gray-800">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} className={`${isMobile ? 'p-2' : 'p-3'} text-center text-sm font-medium text-gray-700 border-r last:border-r-0`}>
+          <div key={day} className={`${isMobile ? 'p-2' : 'p-3'} text-center text-sm font-medium text-gray-300 border-r border-gray-700 last:border-r-0`}>
             {day}
           </div>
         ))}
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7">
+      <div className="grid grid-cols-7 bg-gray-900">
         {calendarDays.map((day, index) => {
           const dateKey = format(day, 'yyyy-MM-dd');
           const dayData = tasksPerDay.get(dateKey);
@@ -225,18 +228,23 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
             <div
               key={index}
               className={`
-                ${isMobile ? 'min-h-[80px] p-2' : 'min-h-[100px] p-2'} border-r border-b last:border-r-0 cursor-pointer hover:bg-gray-50 transition-colors
-                ${isSelected ? 'bg-blue-50 border-blue-300' : ''}
-                ${!isCurrentMonth ? 'text-gray-300 bg-gray-25' : ''}
+                ${isMobile ? 'min-h-[80px] p-2' : 'min-h-[100px] p-2'} 
+                border-r border-b border-gray-700 last:border-r-0 
+                cursor-pointer hover:bg-gray-800/50 transition-all duration-200
+                ${isSelected ? 'bg-purple-900/30 border-purple-500' : ''}
+                ${!isCurrentMonth ? 'text-gray-500 bg-gray-900/50' : 'bg-gray-900'}
+                ${isTodayDate && !isSelected ? 'bg-purple-900/20' : ''}
               `}
               onClick={() => handleDateClick(day)}
             >
               <div className="flex items-center justify-between mb-1">
                 <span
                   className={`
-                    ${isMobile ? 'text-sm' : 'text-sm'} font-medium
-                    ${isTodayDate ? `bg-blue-500 text-white rounded-full ${isMobile ? 'w-6 h-6 text-sm' : 'w-6 h-6'} flex items-center justify-center` : ''}
-                    ${isSelected && !isTodayDate ? 'text-blue-600' : ''}
+                    ${isMobile ? 'text-sm' : 'text-sm'} font-medium transition-all duration-200
+                    ${isTodayDate ? `bg-purple-600 text-white rounded-full ${isMobile ? 'w-6 h-6 text-xs' : 'w-6 h-6'} flex items-center justify-center shadow-lg` : ''}
+                    ${isSelected && !isTodayDate ? 'text-purple-400 font-bold' : ''}
+                    ${!isSelected && !isTodayDate && isCurrentMonth ? 'text-gray-200' : ''}
+                    ${!isCurrentMonth ? 'text-gray-500' : ''}
                   `}
                 >
                   {format(day, 'd')}
@@ -256,11 +264,11 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                       return (
                         <div
                           key={task.id}
-                          className={`${isMobile ? 'text-xs p-1' : 'text-xs p-1'} rounded truncate ${
-                            taskStatus === 'completed' ? 'bg-green-100 text-green-800' :
-                            taskStatus === 'overdue' ? 'bg-red-100 text-red-800' :
-                            taskStatus === 'due_soon' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
+                          className={`${isMobile ? 'text-xs p-1' : 'text-xs p-1'} rounded truncate transition-all duration-200 ${
+                            taskStatus === 'completed' ? 'bg-purple-900/50 text-purple-200 border border-purple-600/30' :
+                            taskStatus === 'overdue' ? 'bg-red-900/50 text-red-200 border border-red-600/30' :
+                            taskStatus === 'due_soon' ? 'bg-yellow-900/50 text-yellow-200 border border-yellow-600/30' :
+                            'bg-gray-800/80 text-gray-200 border border-gray-600/30'
                           }`}
                         >
                           {task.title}
@@ -268,7 +276,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                       );
                     })}
                   {dayData.tasks.length > (isMobile ? 2 : 2) && (
-                    <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-500`}>
+                    <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-400`}>
                       +{dayData.tasks.length - (isMobile ? 2 : 2)} more
                     </div>
                   )}
@@ -282,30 +290,32 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
   );
 
   const renderWeekView = () => (
-    <div className="bg-white rounded-lg border overflow-hidden w-full">
+    <div className="bg-gray-900 rounded-lg border border-gray-700 overflow-hidden w-full shadow-lg">
       {/* Week Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+      <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-800">
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={handlePrevious}
+          className="hover:bg-purple-600/20 hover:text-purple-300 text-gray-300 transition-all duration-200"
         >
           <ChevronLeft className="w-4 h-4" />
         </Button>
-        <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold`}>
+        <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-bold text-white`}>
           Week of {format(startOfWeek(currentDate), 'MMM d, yyyy')}
         </h3>
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={handleNext}
+          className="hover:bg-purple-600/20 hover:text-purple-300 text-gray-300 transition-all duration-200"
         >
           <ChevronRight className="w-4 h-4" />
         </Button>
       </div>
 
       {/* Week Grid */}
-      <div className="grid grid-cols-7 min-h-[500px]">
+      <div className="grid grid-cols-7 min-h-[500px] bg-gray-900">
         {weekDays.map((day, index) => {
           const dateKey = format(day, 'yyyy-MM-dd');
           const dayData = tasksPerDay.get(dateKey);
@@ -316,20 +326,21 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
             <div
               key={index}
               className={`
-                border-r border-b last:border-r-0 cursor-pointer hover:bg-gray-50 transition-colors ${isMobile ? 'p-2' : 'p-3'}
-                ${isSelected ? 'bg-blue-50 border-blue-300' : ''}
+                border-r border-b border-gray-700 last:border-r-0 cursor-pointer hover:bg-gray-800/50 transition-all duration-200 ${isMobile ? 'p-2' : 'p-3'}
+                ${isSelected ? 'bg-purple-900/30 border-purple-500' : 'bg-gray-900'}
+                ${isTodayDate && !isSelected ? 'bg-purple-900/20' : ''}
               `}
               onClick={() => handleDateClick(day)}
             >
               {/* Day Header */}
-              <div className="text-center mb-3 pb-2 border-b">
-                <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-500 uppercase`}>
+              <div className="text-center mb-3 pb-2 border-b border-gray-700">
+                <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-400 uppercase font-medium`}>
                   {format(day, 'EEE')}
                 </div>
                 <div
                   className={`
-                    ${isMobile ? 'text-base' : 'text-lg'} font-medium mt-1
-                    ${isTodayDate ? `bg-blue-500 text-white rounded-full ${isMobile ? 'w-6 h-6' : 'w-8 h-8'} flex items-center justify-center mx-auto` : ''}
+                    ${isMobile ? 'text-base' : 'text-lg'} font-medium mt-1 transition-all duration-200
+                    ${isTodayDate ? `bg-purple-600 text-white rounded-full ${isMobile ? 'w-6 h-6' : 'w-8 h-8'} flex items-center justify-center mx-auto shadow-lg` : 'text-gray-200'}
                   `}
                 >
                   {format(day, 'd')}
@@ -344,12 +355,12 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                     <div
                       key={task.id}
                       className={`
-                        ${isMobile ? 'text-xs p-1' : 'text-xs p-2'} rounded cursor-pointer hover:opacity-80 transition-opacity
+                        ${isMobile ? 'text-xs p-1' : 'text-xs p-2'} rounded cursor-pointer hover:opacity-80 transition-all duration-200
                         ${getTaskStatusBorderColorClass(task)}
-                        ${taskStatus === 'completed' ? 'bg-green-50 text-green-800' :
-                          taskStatus === 'overdue' ? 'bg-red-50 text-red-800' :
-                          taskStatus === 'due_soon' ? 'bg-yellow-50 text-yellow-800' :
-                          'bg-gray-50 text-gray-800'}
+                        ${taskStatus === 'completed' ? 'bg-purple-900/50 text-purple-200 border border-purple-600/30' :
+                          taskStatus === 'overdue' ? 'bg-red-900/50 text-red-200 border border-red-600/30' :
+                          taskStatus === 'due_soon' ? 'bg-yellow-900/50 text-yellow-200 border border-yellow-600/30' :
+                          'bg-gray-800/80 text-gray-200 border border-gray-600/30'}
                       `}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -364,7 +375,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                   );
                 })}
                 {!dayData?.tasks.length && (
-                  <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-400 text-center py-4`}>
+                  <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-500 text-center py-4`}>
                     No tasks
                   </div>
                 )}
@@ -380,33 +391,35 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
     const dayData = tasksPerDay.get(format(currentDate, 'yyyy-MM-dd'));
     
     return (
-      <div className="bg-white rounded-lg border overflow-hidden w-full">
+      <div className="bg-gray-900 rounded-lg border border-gray-700 overflow-hidden w-full shadow-lg">
         {/* Day Header */}
-        <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+        <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-800">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={handlePrevious}
+            className="hover:bg-purple-600/20 hover:text-purple-300 text-gray-300 transition-all duration-200"
           >
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-semibold`}>
+          <h3 className={`${isMobile ? 'text-base' : 'text-lg'} font-bold text-white`}>
             {format(currentDate, 'EEEE, MMMM d, yyyy')}
           </h3>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={handleNext}
+            className="hover:bg-purple-600/20 hover:text-purple-300 text-gray-300 transition-all duration-200"
           >
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
 
         {/* Day Content */}
-        <div className={isMobile ? 'p-3' : 'p-6'}>
+        <div className={`${isMobile ? 'p-3' : 'p-6'} bg-gray-900`}>
           {dayData && dayData.tasks.length > 0 ? (
             <div className="space-y-4">
-              <h4 className={`font-medium text-gray-900 mb-4 ${isMobile ? 'text-sm' : ''}`}>
+              <h4 className={`font-bold text-white mb-4 ${isMobile ? 'text-sm' : 'text-base'}`}>
                 Tasks for {format(currentDate, 'MMMM d, yyyy')} ({dayData.tasks.length})
               </h4>
               
@@ -417,17 +430,17 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                     <div
                       key={task.id}
                       className={`
-                        ${isMobile ? 'p-3' : 'p-4'} rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors
+                        ${isMobile ? 'p-3' : 'p-4'} rounded-lg border cursor-pointer hover:bg-gray-800/50 transition-all duration-200
                         ${getTaskStatusBorderColorClass(task)}
-                        ${taskStatus === 'completed' ? 'border-green-200 bg-green-50' :
-                          taskStatus === 'overdue' ? 'border-red-200 bg-red-50' :
-                          taskStatus === 'due_soon' ? 'border-yellow-200 bg-yellow-50' :
-                          'border-gray-200 bg-gray-50'}
+                        ${taskStatus === 'completed' ? 'border-purple-600/50 bg-purple-900/20' :
+                          taskStatus === 'overdue' ? 'border-red-600/50 bg-red-900/20' :
+                          taskStatus === 'due_soon' ? 'border-yellow-600/50 bg-yellow-900/20' :
+                          'border-gray-600/50 bg-gray-800/30'}
                       `}
                       onClick={() => handleTaskClick(task)}
                     >
                       <div className="flex items-start justify-between mb-2">
-                        <h5 className={`font-medium text-gray-900 ${isMobile ? 'text-sm' : ''}`}>{task.title}</h5>
+                        <h5 className={`font-medium text-white ${isMobile ? 'text-sm' : 'text-base'}`}>{task.title}</h5>
                         <span className={`text-xs px-2 py-1 rounded-full ${getTaskStatusColorClass(task)}`}>
                           {taskStatus === 'completed' ? 'Completed' :
                            taskStatus === 'due_soon' ? 'Soon' : 
@@ -436,10 +449,10 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                       </div>
                       
                       {task.notes && (
-                        <p className={`text-sm text-gray-600 mb-2 ${isMobile ? 'text-xs' : ''}`}>{task.notes}</p>
+                        <p className={`text-sm text-gray-300 mb-2 ${isMobile ? 'text-xs' : 'text-sm'}`}>{task.notes}</p>
                       )}
                       
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-gray-400">
                         {task.recurrence !== 'none' && (
                           <span className="capitalize">Repeats {task.recurrence}</span>
                         )}
@@ -450,14 +463,14 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
               </div>
             </div>
           ) : (
-            <div className={`flex flex-col items-center justify-center ${isMobile ? 'py-8' : 'py-16'} text-gray-500`}>
+            <div className={`flex flex-col items-center justify-center ${isMobile ? 'py-8' : 'py-16'} text-gray-400`}>
               <CalendarIcon className={`${isMobile ? 'w-12 h-12 mb-3' : 'w-16 h-16 mb-4'} opacity-50`} />
-              <h4 className={`${isMobile ? 'text-base' : 'text-lg'} font-medium mb-2`}>No tasks scheduled</h4>
-              <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-400`}>
+              <h4 className={`${isMobile ? 'text-base' : 'text-lg'} font-medium mb-2 text-white`}>No tasks scheduled</h4>
+              <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-500`}>
                 No tasks are scheduled for {format(currentDate, 'MMMM d, yyyy')}
               </p>
               {onAddTask && (
-                <Button onClick={onAddTask} className="mt-4 bg-blue-500 hover:bg-blue-600 text-white">
+                <Button onClick={onAddTask} className="mt-4 bg-purple-600 hover:bg-purple-700 text-white transition-all duration-200">
                   <Plus className="w-4 h-4 mr-2" />
                   Add Task
                 </Button>
@@ -476,9 +489,9 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
         <div className="space-y-1">
           {/* Title and Add Button Row */}
           <div className="flex items-center justify-between">
-            <h1 className="text-lg font-bold">Maintenance Calendar</h1>
+            <h1 className="text-lg font-bold text-purple-400">Maintenance Calendar</h1>
             {onAddTask && (
-              <Button onClick={onAddTask} size="sm" className="bg-blue-500 hover:bg-blue-600 text-white p-1 h-8 w-8">
+              <Button onClick={onAddTask} size="sm" className="bg-purple-600 hover:bg-purple-700 text-white p-1 h-8 w-8 transition-all duration-200">
                 <Plus className="w-4 h-4" />
               </Button>
             )}
@@ -488,34 +501,34 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
           <div className="flex justify-between gap-2 mb-1">
             <button
               onClick={() => handleStatusTileClick('up-to-date')}
-              className="flex flex-col items-center gap-1 bg-green-50 border border-green-200 rounded-lg px-3 py-2 flex-1 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+              className="flex flex-col items-center gap-1 bg-green-900/30 border border-green-600/50 rounded-lg px-3 py-2 flex-1 transition-all duration-200 hover:scale-105 hover:shadow-lg hover:bg-green-900/50 active:scale-95"
             >
-              <CheckCircle className="w-4 h-4 text-green-600" />
-              <span className="text-sm font-semibold text-green-800">{statusCounts.up_to_date}</span>
+              <CheckCircle className="w-4 h-4 text-green-400" />
+              <span className="text-sm font-semibold text-green-300">{statusCounts.up_to_date}</span>
             </button>
             <button
               onClick={() => handleStatusTileClick('due-soon')}
-              className="flex flex-col items-center gap-1 bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 flex-1 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+              className="flex flex-col items-center gap-1 bg-yellow-900/30 border border-yellow-600/50 rounded-lg px-3 py-2 flex-1 transition-all duration-200 hover:scale-105 hover:shadow-lg hover:bg-yellow-900/50 active:scale-95"
             >
-              <Clock className="w-4 h-4 text-yellow-600" />
-              <span className="text-sm font-semibold text-yellow-800">{statusCounts.due_soon}</span>
+              <Clock className="w-4 h-4 text-yellow-400" />
+              <span className="text-sm font-semibold text-yellow-300">{statusCounts.due_soon}</span>
             </button>
             <button
               onClick={() => handleStatusTileClick('overdue')}
-              className="flex flex-col items-center gap-1 bg-red-50 border border-red-200 rounded-lg px-3 py-2 flex-1 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+              className="flex flex-col items-center gap-1 bg-red-900/30 border border-red-600/50 rounded-lg px-3 py-2 flex-1 transition-all duration-200 hover:scale-105 hover:shadow-lg hover:bg-red-900/50 active:scale-95"
             >
-              <AlertTriangle className="w-4 h-4 text-red-600" />
-              <span className="text-sm font-semibold text-red-800">{statusCounts.overdue}</span>
+              <AlertTriangle className="w-4 h-4 text-red-400" />
+              <span className="text-sm font-semibold text-red-300">{statusCounts.overdue}</span>
             </button>
           </div>
           
           {/* View Toggle Row */}
-          <div className="flex bg-gray-100 rounded-lg p-0.5 w-fit">
+          <div className="flex bg-gray-800 rounded-lg p-0.5 w-fit border border-gray-700">
             <Button
               variant={viewMode === 'month' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('month')}
-              className={`text-xs px-3 py-1 h-7 ${viewMode === 'month' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
+              className={`text-xs px-3 py-1 h-7 transition-all duration-200 ${viewMode === 'month' ? 'bg-purple-600 text-white shadow-sm' : 'hover:bg-gray-700 text-gray-300'}`}
             >
               Month
             </Button>
@@ -523,7 +536,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
               variant={viewMode === 'week' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('week')}
-              className={`text-xs px-3 py-1 h-7 ${viewMode === 'week' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
+              className={`text-xs px-3 py-1 h-7 transition-all duration-200 ${viewMode === 'week' ? 'bg-purple-600 text-white shadow-sm' : 'hover:bg-gray-700 text-gray-300'}`}
             >
               Week
             </Button>
@@ -531,7 +544,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
               variant={viewMode === 'day' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('day')}
-              className={`text-xs px-3 py-1 h-7 ${viewMode === 'day' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
+              className={`text-xs px-3 py-1 h-7 transition-all duration-200 ${viewMode === 'day' ? 'bg-purple-600 text-white shadow-sm' : 'hover:bg-gray-700 text-gray-300'}`}
             >
               Day
             </Button>
@@ -539,27 +552,27 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
           
           {/* Search Row */}
           <div className="relative">
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400" />
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-purple-400" />
             <Input
               type="text"
               placeholder="Search tasks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-7 text-xs py-1 h-8"
+              className="pl-7 text-xs py-1 h-8 bg-gray-800 border-gray-600 text-white placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500/20"
             />
           </div>
         </div>
       ) : (
-        // Desktop Header Layout (unchanged)
+        // Desktop Header Layout
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
             {/* View Toggle */}
-            <div className="flex bg-gray-100 rounded-lg p-1">
+            <div className="flex bg-gray-800 rounded-lg p-1 border border-gray-700">
               <Button
                 variant={viewMode === 'month' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('month')}
-                className={`${viewMode === 'month' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
+                className={`transition-all duration-200 ${viewMode === 'month' ? 'bg-purple-600 text-white shadow-sm' : 'hover:bg-gray-700 text-gray-300'}`}
               >
                 Month
               </Button>
@@ -567,7 +580,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                 variant={viewMode === 'week' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('week')}
-                className={`${viewMode === 'week' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
+                className={`transition-all duration-200 ${viewMode === 'week' ? 'bg-purple-600 text-white shadow-sm' : 'hover:bg-gray-700 text-gray-300'}`}
               >
                 Week
               </Button>
@@ -575,7 +588,7 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                 variant={viewMode === 'day' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('day')}
-                className={`${viewMode === 'day' ? 'bg-blue-500 text-white shadow-sm' : 'hover:bg-gray-200'}`}
+                className={`transition-all duration-200 ${viewMode === 'day' ? 'bg-purple-600 text-white shadow-sm' : 'hover:bg-gray-700 text-gray-300'}`}
               >
                 Day
               </Button>
@@ -585,18 +598,18 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
           <div className="flex items-center gap-3 flex-wrap">
             {/* Search Input */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-400" />
               <Input
                 type="text"
                 placeholder="Search tasks..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-64"
+                className="pl-10 w-64 bg-gray-800 border-gray-600 text-white placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500/20"
               />
             </div>
             
             {onAddTask && (
-              <Button onClick={onAddTask} size="sm" className="bg-blue-500 hover:bg-blue-600 text-white">
+              <Button onClick={onAddTask} size="sm" className="bg-purple-600 hover:bg-purple-700 text-white transition-all duration-200">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Task
               </Button>
@@ -618,11 +631,11 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
 
         {/* Task Sidebar */}
         <div className={`${isMobile ? 'col-span-1' : 'lg:col-span-1'}`}>
-          <Card className={`h-fit ${isMobile ? 'max-h-[30vh]' : 'max-h-[600px]'} overflow-hidden`}>
-            <CardContent className={isMobile ? 'p-2' : 'p-6'}>
+          <Card className={`h-fit ${isMobile ? 'max-h-[30vh]' : 'max-h-[600px]'} overflow-hidden bg-gray-900 border-gray-700 shadow-lg`}>
+            <CardContent className={`${isMobile ? 'p-2' : 'p-6'} bg-gray-900`}>
               <div className="space-y-4">
                 <div>
-                  <h3 className={`${isMobile ? 'text-xs' : 'text-lg'} font-semibold mb-2`}>
+                  <h3 className={`${isMobile ? 'text-xs' : 'text-lg'} font-semibold mb-2 text-white`}>
                     {format(selectedDate, isMobile ? 'MMM do' : 'EEEE, MMMM do, yyyy')}
                   </h3>
                 </div>
@@ -634,13 +647,18 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                       return (
                         <div
                           key={task.id}
-                          className={`${isMobile ? 'p-1' : 'p-3'} rounded-lg border cursor-pointer hover:bg-gray-50 transition-colors ${
+                          className={`${isMobile ? 'p-1' : 'p-3'} rounded-lg border cursor-pointer hover:bg-gray-800/50 transition-all duration-200 ${
                             task.status === 'completed' ? 'opacity-60' : ''
+                          } ${
+                            taskStatus === 'completed' ? 'border-purple-600/50 bg-purple-900/20' :
+                            taskStatus === 'overdue' ? 'border-red-600/50 bg-red-900/20' :
+                            taskStatus === 'due_soon' ? 'border-yellow-600/50 bg-yellow-900/20' :
+                            'border-gray-600/50 bg-gray-800/30'
                           }`}
                           onClick={() => handleTaskClick(task)}
                         >
                           <div className="flex items-start justify-between mb-1">
-                            <h4 className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'} truncate`}>{task.title}</h4>
+                            <h4 className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'} truncate text-white`}>{task.title}</h4>
                             <span className={`text-xs px-1 py-0.5 rounded-full ${getTaskStatusColorClass(task)}`}>
                               {taskStatus === 'completed' ? 'Done' :
                                taskStatus === 'due_soon' ? 'Soon' : 
@@ -649,11 +667,11 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                           </div>
                           
                           {task.notes && !isMobile && (
-                            <p className="text-xs text-gray-600 mb-1 line-clamp-1">{task.notes}</p>
+                            <p className="text-xs text-gray-300 mb-1 line-clamp-1">{task.notes}</p>
                           )}
                           
                           {task.recurrence !== 'none' && (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-400">
                               <span className="capitalize">Repeats {task.recurrence}</span>
                             </div>
                           )}
@@ -662,10 +680,10 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
                     })}
                   </div>
                 ) : (
-                  <div className={`flex flex-col items-center justify-center ${isMobile ? 'py-2' : 'py-8'} text-gray-500`}>
-                    <CalendarIcon className={`${isMobile ? 'w-6 h-6 mb-1' : 'w-12 h-12 mb-3'} opacity-50`} />
-                    <p className={`${isMobile ? 'text-xs' : 'text-sm'}`}>No tasks on this date</p>
-                    <p className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-400 mt-1`}>
+                  <div className={`flex flex-col items-center justify-center ${isMobile ? 'py-2' : 'py-8'} text-gray-400`}>
+                    <CalendarIcon className={`${isMobile ? 'w-6 h-6 mb-1' : 'w-12 h-12 mb-3'} opacity-50 text-purple-400`} />
+                    <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-white`}>No tasks on this date</p>
+                    <p className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-500 mt-1`}>
                       Click a day with tasks to see them here
                     </p>
                   </div>

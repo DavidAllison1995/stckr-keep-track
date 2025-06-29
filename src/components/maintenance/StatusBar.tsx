@@ -15,21 +15,27 @@ const StatusBar = () => {
     title: 'Up-to-Date',
     count: statusCounts.up_to_date,
     icon: CheckCircle,
-    color: 'text-green-600 bg-green-100',
+    color: 'text-green-400 bg-green-900/30',
+    borderColor: 'border-green-600/50',
+    hoverColor: 'hover:bg-green-900/50 hover:border-green-500/70',
     route: '/tasks/up-to-date',
     description: 'Tasks due in 14+ days'
   }, {
     title: 'Due Soon',
     count: statusCounts.due_soon,
     icon: Clock,
-    color: 'text-yellow-600 bg-yellow-100',
+    color: 'text-yellow-400 bg-yellow-900/30',
+    borderColor: 'border-yellow-600/50',
+    hoverColor: 'hover:bg-yellow-900/50 hover:border-yellow-500/70',
     route: '/tasks/due-soon',
     description: 'Tasks due within 14 days'
   }, {
     title: 'Overdue',
     count: statusCounts.overdue,
     icon: AlertTriangle,
-    color: 'text-red-600 bg-red-100',
+    color: 'text-red-400 bg-red-900/30',
+    borderColor: 'border-red-600/50',
+    hoverColor: 'hover:bg-red-900/50 hover:border-red-500/70',
     route: '/tasks/overdue',
     description: 'Tasks past due date'
   }];
@@ -41,20 +47,20 @@ const StatusBar = () => {
           const IconComponent = card.icon;
           return (
             <Link key={card.title} to={card.route}>
-              <Card className="cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105">
+              <Card className={`cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg bg-gray-900 border-gray-700 ${card.hoverColor}`}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-full ${card.color}`}>
+                      <div className={`p-2 rounded-full border ${card.color} ${card.borderColor}`}>
                         <IconComponent className="w-5 h-5" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-sm text-gray-700">{card.title}</h3>
-                        <p className="text-xs text-gray-500">{card.description}</p>
+                        <h3 className="font-semibold text-sm text-white">{card.title}</h3>
+                        <p className="text-xs text-gray-400">{card.description}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-gray-900">{card.count}</div>
+                      <div className="text-2xl font-bold text-white">{card.count}</div>
                     </div>
                   </div>
                 </CardContent>
