@@ -223,7 +223,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
 
     console.log("✅ SHIPPING ADDRESS STORED");
 
-    // Send to Printful using catalog variant IDs
+    // Send to Printful using sync variant IDs
     await sendToPrintful(order, products, items, shippingAddress, customerName, customerPhone, supabaseClient);
 
     // Clear user cart
@@ -266,52 +266,59 @@ async function sendToPrintful(order: any, products: any[], items: any[], shippin
   }
 
   try {
-    // Build items array using catalog variant IDs
+    // Build items array using sync variant IDs
     const printfulItems = [];
     
     for (const product of products) {
-      const variantId = product.printful_variant_id;
+      const syncVariantId = product.printful_variant_id;
       const orderItem = items.find((item: any) => item.product_id === product.id);
       
-      if (!variantId) {
-        console.warn(`⚠️ Product ${product.name} has no printful_variant_id`);
-        continue;
-      }
-
-      // Convert to integer if it's a string
-      const parsedVariantId = parseInt(variantId);
-      if (isNaN(parsedVariantId)) {
-        console.error(`❌ INVALID VARIANT ID: ${variantId} for product ${product.name}`);
+      if (!syncVariantId) {
+        console.error(`❌ Product ${product.name} has no printful_variant_id (sync variant ID)`);
         
         await supabaseClient.from("orders")
           .update({ 
             printful_status: "error",
-            printful_error: `Invalid variant ID: ${variantId}. Must be a valid Printful catalog variant ID.`
+            printful_error: `Missing sync variant ID for product: ${product.name}. Please configure printful_variant_id in the database.`
           })
           .eq("id", order.id);
         return;
       }
 
-      console.log(`✅ USING CATALOG VARIANT ID: ${parsedVariantId} for ${product.name}`);
+      // Convert to integer if it's a string
+      const parsedSyncVariantId = parseInt(syncVariantId);
+      if (isNaN(parsedSyncVariantId)) {
+        console.error(`❌ INVALID SYNC VARIANT ID: ${syncVariantId} for product ${product.name}`);
+        
+        await supabaseClient.from("orders")
+          .update({ 
+            printful_status: "error",
+            printful_error: `Invalid sync variant ID: ${syncVariantId} for product ${product.name}. Must be a valid numeric sync variant ID.`
+          })
+          .eq("id", order.id);
+        return;
+      }
+
+      console.log(`✅ USING SYNC VARIANT ID: ${parsedSyncVariantId} for ${product.name}`);
       
       printfulItems.push({
-        variant_id: parsedVariantId,
+        sync_variant_id: parsedSyncVariantId,
         quantity: orderItem?.quantity || 1,
       });
     }
 
     if (printfulItems.length === 0) {
-      console.log("ℹ️ No valid catalog variants to fulfill");
+      console.log("ℹ️ No valid sync variants to fulfill");
       await supabaseClient.from("orders")
         .update({ 
           printful_status: "not_required",
-          printful_error: "No items with valid catalog variant IDs found"
+          printful_error: "No items with valid sync variant IDs found"
         })
         .eq("id", order.id);
       return;
     }
 
-    // Prepare Printful order payload using catalog variant IDs
+    // Prepare Printful order payload using sync variant IDs
     const printfulOrder = {
       recipient: {
         name: customerName,
