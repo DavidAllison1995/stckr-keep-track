@@ -20,7 +20,7 @@ import { Item } from '@/hooks/useSupabaseItems';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { getIconComponent } from '@/components/icons';
-import { QrCode, Download, Clock, AlertTriangle, CheckCircle2, Trash2, ChevronRight, Check, X } from 'lucide-react';
+import { QrCode, Download, Clock, AlertTriangle, CheckCircle2, Trash2, ChevronRight, Check, X, Eye, Edit } from 'lucide-react';
 import ItemDetail from './ItemDetail';
 import ItemForm from './ItemForm';
 import QRCode from 'qrcode';
@@ -39,7 +39,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
   
   const { getTasksByItem, tasks } = useSupabaseMaintenance();
   const { deleteItem } = useSupabaseItems();
-  const itemTasks = getTasksByItem(item.id, false); // Don't include completed tasks
+  const itemTasks = getTasksByItem(item.id, false);
   
   // Properly categorize tasks
   const pendingTasks = itemTasks.filter(task => task.status === 'pending');
@@ -84,7 +84,6 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
   }, [item.qr_code_id]);
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // Prevent click if user is dragging
     e.stopPropagation();
     
     if (onClick) {
@@ -113,7 +112,6 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
     if (!item.qr_code_id || !shortCode) return;
     
     try {
-      // Generate a larger QR code for download
       const downloadDataUrl = await QRCode.toDataURL(`https://stckr.io/qr/${item.qr_code_id}`, { 
         width: 512, 
         margin: 1 
@@ -135,129 +133,160 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
     
     switch (type) {
       case 'overdue':
-        return <AlertTriangle className="w-3 h-3 text-red-500" />;
+        return <AlertTriangle className="w-3 h-3" />;
       case 'due_soon':
-        return <Clock className="w-3 h-3 text-yellow-500" />;
+        return <Clock className="w-3 h-3" />;
       case 'in_progress':
-        return <Clock className="w-3 h-3 text-blue-500" />;
+        return <Clock className="w-3 h-3" />;
       case 'pending':
-        return <CheckCircle2 className="w-3 h-3 text-gray-500" />;
+        return <CheckCircle2 className="w-3 h-3" />;
       default:
         return null;
+    }
+  };
+
+  const getStatusBadgeClass = (type: 'overdue' | 'due_soon' | 'pending' | 'in_progress') => {
+    switch (type) {
+      case 'overdue':
+        return 'status-badge status-overdue';
+      case 'due_soon':
+        return 'status-badge status-due-soon';
+      case 'in_progress':
+        return 'status-badge status-in-progress';
+      case 'pending':
+        return 'status-badge status-pending';
+      default:
+        return 'status-badge status-pending';
     }
   };
 
   return (
     <>
       <Card 
-        className="hover:shadow-md transition-shadow cursor-pointer select-none h-full flex flex-col" 
+        variant="elevated"
+        className="cursor-pointer select-none h-full flex flex-col group" 
         onClick={handleCardClick}
       >
         <CardContent className="p-0 flex flex-col h-full">
-          {/* Reduced Image/Icon Section - changed from square to 3:2 aspect ratio */}
-          <div className="w-full aspect-[3/2] bg-gradient-to-br from-blue-50 to-gray-50 flex items-center justify-center border-b border-gray-100">
+          {/* Enhanced Image/Icon Section */}
+          <div className="w-full aspect-[3/2] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center border-b border-gray-100 rounded-t-xl relative overflow-hidden">
             {item.photo_url ? (
               <img 
                 src={item.photo_url} 
                 alt={item.name} 
-                className="w-full h-full object-contain" 
+                className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" 
                 draggable={false}
               />
             ) : (
-              <IconComponent className="w-10 h-10 text-gray-600" />
+              <div className="p-4 bg-white/50 backdrop-blur-sm rounded-xl transition-transform duration-300 group-hover:scale-110">
+                <IconComponent className="w-8 h-8 text-blue-600" />
+              </div>
+            )}
+            
+            {/* QR Status Indicator */}
+            {item.qr_code_id && (
+              <div className="absolute top-2 right-2 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                <QrCode className="w-3 h-3 text-green-600" />
+              </div>
             )}
           </div>
 
-          {/* Compact Content Section */}
-          <div className="p-3 flex-1 flex flex-col space-y-2 overflow-hidden">
+          {/* Enhanced Content Section */}
+          <div className="p-3 flex-1 flex flex-col space-y-3 overflow-hidden">
             {/* Title */}
-            <h3 className="font-semibold text-base line-clamp-1 text-gray-900">{item.name}</h3>
+            <h3 className="font-semibold text-base line-clamp-1 text-gray-900 group-hover:text-blue-600 transition-colors">
+              {item.name}
+            </h3>
             
-            {/* Tags Section */}
-            <div className="flex items-center gap-1 flex-wrap min-h-[16px]">
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs px-1 py-0 h-5">
+            {/* Enhanced Tags Section */}
+            <div className="flex items-center gap-1.5 flex-wrap min-h-[20px]">
+              <Badge variant="secondary" className="bg-blue-50 text-blue-700 text-xs px-2 py-0.5 h-5 font-medium border border-blue-200">
                 {item.category}
               </Badge>
               {item.room && (
-                <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs px-1 py-0 h-5">
+                <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 text-xs px-2 py-0.5 h-5 font-medium border border-emerald-200">
                   {item.room}
                 </Badge>
               )}
               <Badge 
                 variant="secondary" 
-                className={`text-xs px-1 py-0 h-5 ${item.qr_code_id ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}`}
+                className={`text-xs px-2 py-0.5 h-5 font-medium border ${
+                  item.qr_code_id 
+                    ? "bg-green-50 text-green-700 border-green-200" 
+                    : "bg-gray-50 text-gray-600 border-gray-200"
+                }`}
               >
                 {item.qr_code_id ? (
                   <>
-                    <Check className="w-2 h-2 mr-1" />
+                    <Check className="w-2.5 h-2.5 mr-1" />
                     QR
                   </>
                 ) : (
                   <>
-                    <X className="w-2 h-2 mr-1" />
+                    <X className="w-2.5 h-2.5 mr-1" />
                     No QR
                   </>
                 )}
               </Badge>
             </div>
 
-            {/* Compact Description */}
+            {/* Description */}
             {item.description && (
               <p className="text-xs text-gray-600 line-clamp-1">{item.description}</p>
             )}
 
-            {/* Compact Task Status Section */}
+            {/* Enhanced Task Status Section */}
             {itemTasks.length > 0 && (
               <div 
-                className="bg-gray-50 rounded-md p-2 cursor-pointer hover:bg-gray-100 transition-colors border"
+                className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg p-2.5 cursor-pointer border border-gray-100 hover:border-blue-200 hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 group/tasks"
                 onClick={handleTasksClick}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-medium text-gray-700">Maintenance</span>
-                  <ChevronRight className="w-3 h-3 text-blue-600" />
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-semibold text-gray-700 group-hover/tasks:text-blue-700">Maintenance</span>
+                  <ChevronRight className="w-3 h-3 text-blue-600 group-hover/tasks:translate-x-0.5 transition-transform" />
                 </div>
                 <div className="flex items-center gap-2 text-xs flex-wrap">
                   {overdueTasks.length > 0 && (
-                    <div className="flex items-center gap-1">
+                    <div className={getStatusBadgeClass('overdue')}>
                       {getTaskIcon(overdueTasks.length, 'overdue')}
-                      <span className="text-red-600">{overdueTasks.length}</span>
+                      <span>{overdueTasks.length}</span>
                     </div>
                   )}
                   {dueSoonTasks.length > 0 && (
-                    <div className="flex items-center gap-1">
+                    <div className={getStatusBadgeClass('due_soon')}>
                       {getTaskIcon(dueSoonTasks.length, 'due_soon')}
-                      <span className="text-yellow-600">{dueSoonTasks.length}</span>
+                      <span>{dueSoonTasks.length}</span>
                     </div>
                   )}
                   {inProgressTasks.length > 0 && (
-                    <div className="flex items-center gap-1">
+                    <div className={getStatusBadgeClass('in_progress')}>
                       {getTaskIcon(inProgressTasks.length, 'in_progress')}
-                      <span className="text-blue-600">{inProgressTasks.length}</span>
+                      <span>{inProgressTasks.length}</span>
                     </div>
                   )}
                   {pendingTasks.length > 0 && (
-                    <div className="flex items-center gap-1">
+                    <div className={getStatusBadgeClass('pending')}>
                       {getTaskIcon(pendingTasks.length, 'pending')}
-                      <span className="text-gray-600">{pendingTasks.length}</span>
+                      <span>{pendingTasks.length}</span>
                     </div>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Compact Dates Section */}
+            {/* Enhanced Dates Section */}
             {(item.purchase_date || item.warranty_date) && (
-              <div className="bg-gray-50 rounded-md p-2 border">
-                <div className="text-xs text-gray-500 space-y-1">
+              <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg p-2.5 border border-gray-100">
+                <div className="text-xs text-gray-600 space-y-1">
                   {item.purchase_date && (
-                    <div className="flex justify-between">
-                      <span>Purchased:</span>
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Purchased:</span>
                       <span>{new Date(item.purchase_date).toLocaleDateString()}</span>
                     </div>
                   )}
                   {item.warranty_date && (
-                    <div className="flex justify-between">
-                      <span>Warranty:</span>
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Warranty:</span>
                       <span>{new Date(item.warranty_date).toLocaleDateString()}</span>
                     </div>
                   )}
@@ -265,29 +294,30 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
               </div>
             )}
 
-            {/* Compact Actions */}
+            {/* Enhanced Actions */}
             <div className="flex gap-1 mt-auto pt-2">
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="flex-1 text-xs h-7"
+                className="flex-1 text-xs h-7 gap-1.5 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(`/items/${item.id}`);
                 }}
               >
+                <Eye className="w-3 h-3" />
                 View
               </Button>
               <Button 
                 variant="ghost" 
                 size="sm"
-                className="text-xs h-7 px-2"
+                className="text-xs h-7 px-2 hover:bg-gray-100"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsEditModalOpen(true);
                 }}
               >
-                Edit
+                <Edit className="w-3 h-3" />
               </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -302,7 +332,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                     <Trash2 className="w-3 h-3" />
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent>
+                <AlertDialogContent className="animate-scale-in">
                   <AlertDialogHeader>
                     <AlertDialogTitle>Delete Item</AlertDialogTitle>
                     <AlertDialogDescription>
@@ -326,29 +356,31 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
         </CardContent>
       </Card>
 
-      {/* QR Code Modal */}
+      {/* Enhanced QR Code Modal */}
       <Dialog open={isQrModalOpen} onOpenChange={setIsQrModalOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm animate-scale-in">
           <DialogHeader>
-            <DialogTitle>QR Code for {item.name}</DialogTitle>
+            <DialogTitle className="text-center">QR Code for {item.name}</DialogTitle>
           </DialogHeader>
           <div className="p-4 flex flex-col items-center space-y-4">
             {qrDataUrl && (
               <>
-                <img 
-                  src={qrDataUrl} 
-                  alt="Full QR code" 
-                  className="w-64 h-64 border rounded-lg"
-                />
+                <div className="p-4 bg-white rounded-xl shadow-soft border">
+                  <img 
+                    src={qrDataUrl} 
+                    alt="QR code" 
+                    className="w-48 h-48"
+                  />
+                </div>
                 <div className="text-center">
-                  <div className="font-medium">Sticker {shortCode}</div>
+                  <div className="font-semibold text-gray-900">Sticker {shortCode}</div>
                   <div className="text-sm text-gray-500">Scan to view item details</div>
                 </div>
                 <Button 
                   onClick={downloadQrCode}
-                  className="w-full"
+                  className="w-full gap-2"
                 >
-                  <Download className="w-4 h-4 mr-2" />
+                  <Download className="w-4 h-4" />
                   Download QR Code
                 </Button>
               </>
@@ -357,8 +389,9 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
         </DialogContent>
       </Dialog>
 
+      {/* Enhanced Detail Modal */}
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto animate-scale-in">
           <DialogHeader>
             <DialogTitle>{item.name}</DialogTitle>
           </DialogHeader>
@@ -370,8 +403,9 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
         </DialogContent>
       </Dialog>
 
+      {/* Enhanced Edit Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto animate-scale-in">
           <DialogHeader>
             <DialogTitle>Edit Item</DialogTitle>
           </DialogHeader>
