@@ -5,7 +5,7 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useNavigate } from 'react-router-dom';
-import { Package, Calendar, Wrench } from 'lucide-react';
+import { Package, Calendar, Wrench, QrCode } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns';
 
 interface DashboardProps {
@@ -130,11 +130,27 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-          Welcome back, {userName}!
-        </h1>
+      {/* Enhanced Header */}
+      <div className="text-center mb-12 pt-6">
+        <div className="inline-flex items-center gap-3 mb-4 px-6 py-4 bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-2xl border border-gray-700/50 backdrop-blur-sm shadow-2xl">
+          <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center shadow-lg hover:scale-105 transition-transform duration-200">
+            <QrCode className="w-5 h-5 text-white" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
+            👋 Welcome back,{' '}
+            <span 
+              className="text-purple-400 bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent"
+              style={{
+                textShadow: '0 0 20px rgba(147, 51, 234, 0.3)'
+              }}
+            >
+              {userName}!
+            </span>
+          </h1>
+        </div>
+        <p className="text-gray-400 text-lg font-medium">
+          Ready to stick with it? Let's manage your space.
+        </p>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
