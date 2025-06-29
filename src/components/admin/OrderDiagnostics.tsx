@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import CheckPrintfulOrderButton from './CheckPrintfulOrderButton';
 
 interface OrderData {
   id: string;
@@ -261,6 +261,11 @@ const OrderDiagnostics = () => {
                         {order.stripe_session_id.slice(0, 20)}...
                       </div>
                     )}
+                    {order.printful_order_id && (
+                      <div className="text-gray-600 font-mono text-xs">
+                        Printful: {order.printful_order_id}
+                      </div>
+                    )}
                   </div>
                   
                   <div className="flex flex-col gap-2">
@@ -270,7 +275,12 @@ const OrderDiagnostics = () => {
                       </div>
                     )}
                     
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
+                      <CheckPrintfulOrderButton 
+                        orderId={order.id}
+                        printfulOrderId={order.printful_order_id}
+                      />
+                      
                       {(order.printful_error || order.fulfillment_error) && (
                         <Button 
                           size="sm" 
