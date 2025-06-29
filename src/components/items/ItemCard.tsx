@@ -154,8 +154,8 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
         onClick={handleCardClick}
       >
         <CardContent className="p-0 flex flex-col h-full">
-          {/* Compact Image/Icon Section */}
-          <div className="w-full aspect-square bg-gradient-to-br from-blue-50 to-gray-50 flex items-center justify-center border-b border-gray-100">
+          {/* Reduced Image/Icon Section - changed from square to 3:2 aspect ratio */}
+          <div className="w-full aspect-[3/2] bg-gradient-to-br from-blue-50 to-gray-50 flex items-center justify-center border-b border-gray-100">
             {item.photo_url ? (
               <img 
                 src={item.photo_url} 
@@ -164,7 +164,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                 draggable={false}
               />
             ) : (
-              <IconComponent className="w-12 h-12 text-gray-600" />
+              <IconComponent className="w-10 h-10 text-gray-600" />
             )}
           </div>
 
