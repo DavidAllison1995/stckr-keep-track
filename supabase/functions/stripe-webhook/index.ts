@@ -223,8 +223,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
 
     console.log("✅ SHIPPING ADDRESS STORED");
 
-    // Send to Printful with simplified sync variant approach
-    await sendToPrintful(order, products, shippingAddress, customerName, customerPhone, supabaseClient);
+    // Send to Printful with validated sync variants
+    await sendToPrintful(order, products, items, shippingAddress, customerName, customerPhone, supabaseClient);
 
     // Clear user cart
     await supabaseClient.from("cart_items").delete().eq("user_id", userId);
@@ -250,9 +250,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
   }
 }
 
-async function sendToPrintful(order: any, products: any[], shippingAddress: any, customerName: string, customerPhone: string | null, supabaseClient: any) {
+async function sendToPrintful(order: any, products: any[], items: any[], shippingAddress: any, customerName: string, customerPhone: string | null, supabaseClient: any) {
   console.log("🖨️ SENDING ORDER TO PRINTFUL:", order.id);
-  console.log("📦 PRODUCTS FOR PRINTFUL:", products);
 
   const printfulApiKey = Deno.env.get("PRINTFUL_API_KEY");
   if (!printfulApiKey) {
@@ -267,51 +266,64 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
   }
 
   try {
-    // Filter products that have valid Printful sync variant IDs
-    const printfulItems = products.filter(product => {
-      const syncVariantId = product.printful_variant_id;
-      console.log("🔍 SYNC VARIANT CHECK:", { 
-        productId: product.id,
-        productName: product.name, 
-        syncVariantId: syncVariantId,
-        hasValidId: !!syncVariantId && syncVariantId !== null && syncVariantId !== ""
-      });
-      
-      return syncVariantId && syncVariantId !== null && syncVariantId !== "";
-    }).map(product => {
-      const syncVariantId = product.printful_variant_id;
-      
-      // Use sync_variant_id for published catalog products - no print files needed
-      console.log("📦 CREATING PRINTFUL ITEM:", {
-        productId: product.id,
-        productName: product.name,
-        syncVariantId: syncVariantId
-      });
-      
-      return {
-        sync_variant_id: parseInt(syncVariantId, 10), // Convert to number for API
-        quantity: 1, // Default quantity, could be from order items
-      };
-    });
+    // First, validate sync variants exist in Printful store
+    console.log("🔍 VALIDATING SYNC VARIANTS...");
+    const validSyncVariants = await getValidSyncVariants(printfulApiKey);
+    
+    console.log("📋 AVAILABLE SYNC VARIANTS:", validSyncVariants.slice(0, 5).map(v => ({
+      id: v.id,
+      name: v.name,
+      product: v.product?.name
+    })));
 
-    console.log("🔍 FINAL PRINTFUL ITEMS:", {
-      totalProducts: products.length,
-      validItems: printfulItems.length,
-      items: printfulItems
-    });
+    // Match products with valid sync variants
+    const validPrintfulItems = [];
+    
+    for (const product of products) {
+      const syncVariantId = product.printful_variant_id;
+      const orderItem = items.find((item: any) => item.product_id === product.id);
+      
+      if (!syncVariantId) {
+        console.warn(`⚠️ Product ${product.name} has no printful_variant_id`);
+        continue;
+      }
 
-    if (printfulItems.length === 0) {
-      console.log("ℹ️ No valid Printful sync variants to fulfill");
+      // Find matching sync variant
+      const syncVariant = validSyncVariants.find(v => v.id === parseInt(syncVariantId));
+      
+      if (!syncVariant) {
+        console.error(`❌ SYNC VARIANT NOT FOUND: ${syncVariantId} for product ${product.name}`);
+        console.log(`💡 Available sync variant IDs: ${validSyncVariants.slice(0, 10).map(v => v.id).join(', ')}`);
+        
+        await supabaseClient.from("orders")
+          .update({ 
+            printful_status: "error",
+            printful_error: `Invalid sync variant ID: ${syncVariantId}. Check your Printful dashboard for correct sync variant IDs.`
+          })
+          .eq("id", order.id);
+        return;
+      }
+
+      console.log(`✅ VALID SYNC VARIANT FOUND: ${syncVariantId} - ${syncVariant.name}`);
+      
+      validPrintfulItems.push({
+        sync_variant_id: parseInt(syncVariantId),
+        quantity: orderItem?.quantity || 1,
+      });
+    }
+
+    if (validPrintfulItems.length === 0) {
+      console.log("ℹ️ No valid sync variants to fulfill");
       await supabaseClient.from("orders")
         .update({ 
           printful_status: "not_required",
-          printful_error: "No items with valid Printful sync variant IDs found"
+          printful_error: "No items with valid sync variant IDs found"
         })
         .eq("id", order.id);
       return;
     }
 
-    // Prepare Printful order payload using sync variants
+    // Prepare Printful order payload
     const printfulOrder = {
       recipient: {
         name: customerName,
@@ -324,7 +336,7 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
         phone: customerPhone || "",
         email: order.user_email,
       },
-      items: printfulItems,
+      items: validPrintfulItems,
       external_id: order.id,
     };
 
@@ -384,5 +396,49 @@ async function sendToPrintful(order: any, products: any[], shippingAddress: any,
         printful_error: `Exception: ${error.message}`
       })
       .eq("id", order.id);
+  }
+}
+
+async function getValidSyncVariants(printfulApiKey: string) {
+  console.log("🔍 FETCHING VALID SYNC VARIANTS FROM PRINTFUL...");
+  
+  try {
+    const response = await fetch("https://api.printful.com/sync/products", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${printfulApiKey}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.error("❌ Failed to fetch sync products:", response.status, response.statusText);
+      return [];
+    }
+
+    const result = await response.json();
+    console.log(`📦 FETCHED ${result.result?.length || 0} SYNC PRODUCTS`);
+
+    // Extract all sync variants from all products
+    const syncVariants = [];
+    for (const product of result.result || []) {
+      if (product.sync_variants) {
+        for (const variant of product.sync_variants) {
+          syncVariants.push({
+            id: variant.id,
+            name: variant.name,
+            product: product,
+            sync_product_id: product.id
+          });
+        }
+      }
+    }
+
+    console.log(`✅ FOUND ${syncVariants.length} TOTAL SYNC VARIANTS`);
+    return syncVariants;
+
+  } catch (error) {
+    console.error("❌ ERROR FETCHING SYNC VARIANTS:", error);
+    return [];
   }
 }
