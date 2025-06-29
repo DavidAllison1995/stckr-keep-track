@@ -18,10 +18,14 @@ const CreateSyncProductButton: React.FC<CreateSyncProductButtonProps> = ({ onSuc
     try {
       console.log('🔨 Creating Printful sync product...');
       
+      // Generate unique external_id with timestamp
+      const timestamp = Date.now();
+      const uniqueExternalId = `sticker-sheet-${timestamp}`;
+      
       const { data, error } = await supabase.functions.invoke('create-printful-sync-product', {
         body: {
           name: "Sticker Sheet #1",
-          external_id: "sticker-sheet-001",
+          external_id: uniqueExternalId,
           thumbnail: "https://example.com/images/sticker-sheet-thumb.png",
           retail_price: "5.00",
           variant_id: 12917,
@@ -44,7 +48,7 @@ const CreateSyncProductButton: React.FC<CreateSyncProductButtonProps> = ({ onSuc
       if (data.success) {
         toast({
           title: 'Sync Product Created! ✅',
-          description: `Sync Variant ID: ${data.sync_variant_id}`,
+          description: `External ID: ${uniqueExternalId}, Sync Variant ID: ${data.sync_variant_id}`,
         });
         onSuccess?.();
       } else {
