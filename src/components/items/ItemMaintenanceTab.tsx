@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -113,8 +114,8 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="font-semibold text-lg">Maintenance Tasks</h3>
-        <Button onClick={() => setShowAddForm(true)}>
+        <h3 className="font-semibold text-lg text-white">Maintenance Tasks</h3>
+        <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700 text-white">
           <Plus className="w-4 h-4 mr-2" />
           Add Task
         </Button>
@@ -127,6 +128,7 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
             variant="outline" 
             size="sm"
             onClick={() => setShowCompleted(!showCompleted)}
+            className="border-gray-600 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-500"
           >
             {showCompleted ? 'Hide Completed Tasks' : 'Show Completed Tasks'}
           </Button>
@@ -136,34 +138,34 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
       {/* Active Tasks */}
       {activeTasks.length > 0 && (
         <div>
-          <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-            <Clock className="w-4 h-4" />
+          <h4 className="font-medium text-white mb-3 flex items-center gap-2">
+            <Clock className="w-4 h-4 text-purple-400" />
             Active Tasks ({activeTasks.length})
           </h4>
           <div className="space-y-3">
             {activeTasks.map((task) => (
               <Card 
                 key={task.id} 
-                className={`${highlightTaskId === task.id ? 'ring-2 ring-blue-500' : ''}`}
+                className={`bg-gray-800 border-gray-700 ${highlightTaskId === task.id ? 'ring-2 ring-blue-500' : ''}`}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         {getTaskIcon(task)}
-                        <h5 className="font-medium text-gray-900">{task.title}</h5>
+                        <h5 className="font-medium text-white">{task.title}</h5>
                         {getStatusBadge(task)}
                       </div>
                       {task.notes && (
-                        <p className="text-sm text-gray-600 mt-1">{task.notes}</p>
+                        <p className="text-sm text-gray-300 mt-1">{task.notes}</p>
                       )}
                       <div className="flex items-center gap-2 mt-2">
                         <Calendar className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-gray-400">
                           Due: {new Date(task.date).toLocaleDateString()}
                         </span>
                         {task.recurrence !== 'none' && (
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-xs border-gray-600 text-gray-300">
                             {task.recurrence}
                           </Badge>
                         )}
@@ -175,6 +177,7 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
                         size="sm"
                         onClick={() => handleAddToCalendar(task)}
                         title="Add to Calendar"
+                        className="border-gray-600 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-500"
                       >
                         <CalendarPlus className="w-4 h-4 mr-1" />
                         Add to Calendar
@@ -183,6 +186,7 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
                         variant="outline"
                         size="sm"
                         onClick={() => handleEditTask(task)}
+                        className="border-gray-600 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-500"
                       >
                         <Edit className="w-4 h-4 mr-1" />
                         Edit
@@ -191,25 +195,26 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
                         variant="outline"
                         size="sm"
                         onClick={() => handleTaskComplete(task.id)}
+                        className="border-gray-600 text-gray-300 hover:bg-green-600 hover:text-white hover:border-green-500"
                       >
                         <CheckCircle2 className="w-4 h-4 mr-1" />
                         Complete
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-red-600 hover:text-white hover:border-red-500">
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="bg-gray-900 border-gray-700">
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Task</AlertDialogTitle>
-                            <AlertDialogDescription>
+                            <AlertDialogTitle className="text-white">Delete Task</AlertDialogTitle>
+                            <AlertDialogDescription className="text-gray-400">
                               Are you sure you want to delete this maintenance task? This action cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogCancel className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700">Cancel</AlertDialogCancel>
                             <AlertDialogAction 
                               onClick={() => handleTaskDelete(task.id)}
                               className="bg-red-600 hover:bg-red-700"
@@ -231,46 +236,46 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
       {/* Completed Tasks (conditionally shown) */}
       {showCompleted && completedTasks.length > 0 && (
         <>
-          <Separator />
+          <Separator className="bg-gray-700" />
           <div>
-            <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-green-600" />
+            <h4 className="font-medium text-white mb-3 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-green-400" />
               Completed Tasks ({completedTasks.length})
             </h4>
             <div className="space-y-3">
               {completedTasks.map((task) => (
-                <Card key={task.id} className="opacity-75">
+                <Card key={task.id} className="bg-gray-800 border-gray-700 opacity-75">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h5 className="font-medium text-gray-900">{task.title}</h5>
+                        <h5 className="font-medium text-white">{task.title}</h5>
                         {task.notes && (
-                          <p className="text-sm text-gray-600 mt-1">{task.notes}</p>
+                          <p className="text-sm text-gray-300 mt-1">{task.notes}</p>
                         )}
                         <div className="flex items-center gap-2 mt-2">
                           <Calendar className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm text-gray-500">
+                          <span className="text-sm text-gray-400">
                             Completed: {new Date(task.updated_at).toLocaleDateString()}
                           </span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant="secondary">Completed</Badge>
+                        <Badge variant="secondary" className="bg-green-900/50 text-green-300 border-green-600/50">Completed</Badge>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-red-600 hover:text-white hover:border-red-500">
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </AlertDialogTrigger>
-                          <AlertDialogContent>
+                          <AlertDialogContent className="bg-gray-900 border-gray-700">
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Completed Task</AlertDialogTitle>
-                              <AlertDialogDescription>
+                              <AlertDialogTitle className="text-white">Delete Completed Task</AlertDialogTitle>
+                              <AlertDialogDescription className="text-gray-400">
                                 Are you sure you want to delete this completed maintenance task? This action cannot be undone.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogCancel className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700">Cancel</AlertDialogCancel>
                               <AlertDialogAction 
                                 onClick={() => handleTaskDelete(task.id)}
                                 className="bg-red-600 hover:bg-red-700"
@@ -293,11 +298,11 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
       {itemTasks.length === 0 && (
         <div className="text-center py-8">
           <Clock className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-          <h4 className="font-medium text-gray-900 mb-2">No maintenance tasks yet</h4>
-          <p className="text-gray-600 mb-4">
+          <h4 className="font-medium text-white mb-2">No maintenance tasks yet</h4>
+          <p className="text-gray-400 mb-4">
             Add your first maintenance task to keep track of this item's upkeep.
           </p>
-          <Button onClick={() => setShowAddForm(true)}>
+          <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700 text-white">
             <Plus className="w-4 h-4 mr-2" />
             Add First Task
           </Button>
