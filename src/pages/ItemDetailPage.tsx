@@ -26,15 +26,15 @@ const ItemDetailPage = () => {
   if (!item) {
     console.log('ItemDetailPage - No item found, showing not found message');
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+      <div className="min-h-screen bg-gray-950">
         <div className="px-4 pt-4 pb-20">
-          <div className="bg-white rounded-t-3xl shadow-lg min-h-screen">
+          <div className="bg-gray-900 rounded-t-3xl shadow-xl border border-gray-800 min-h-screen">
             <div className="p-6 pb-8">
               <div className="text-center">
-                <h1 className="text-2xl font-bold mb-4">Item not found</h1>
+                <h1 className="text-2xl font-bold mb-4 text-white">Item not found</h1>
                 <button 
                   onClick={() => navigate('/items')}
-                  className="text-blue-600 hover:underline"
+                  className="text-purple-400 hover:text-purple-300 hover:underline transition-colors"
                 >
                   ← Back to Items
                 </button>
@@ -49,9 +49,9 @@ const ItemDetailPage = () => {
   console.log('ItemDetailPage - Rendering ItemDetail component');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gray-950">
       <div className="px-4 pt-4 pb-20">
-        <div className="bg-white rounded-t-3xl shadow-lg min-h-screen">
+        <div className="bg-gray-900 rounded-t-3xl shadow-xl border border-gray-800 min-h-screen">
           <div className="p-6 pb-8">
             <ItemDetail 
               item={item} 
