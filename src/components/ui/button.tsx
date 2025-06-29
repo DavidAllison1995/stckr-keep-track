@@ -10,15 +10,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-brand-gradient text-white shadow-soft hover:shadow-md hover:scale-[1.02] active:scale-[0.98]",
+        default: "bg-purple-600 text-white shadow-soft hover:bg-purple-700 hover:shadow-md hover:scale-[1.02] active:scale-[0.98]",
         destructive:
-          "bg-gradient-to-r from-red-500 to-red-600 text-destructive-foreground shadow-soft hover:shadow-md hover:scale-[1.02] active:scale-[0.98]",
+          "bg-red-600 text-white shadow-soft hover:bg-red-700 hover:shadow-md hover:scale-[1.02] active:scale-[0.98]",
         outline:
-          "border border-input bg-background shadow-soft hover:bg-accent hover:text-accent-foreground hover:shadow-md hover:scale-[1.02] active:scale-[0.98]",
+          "border border-gray-700 bg-gray-900 text-gray-100 shadow-soft hover:bg-gray-800 hover:text-white hover:shadow-md hover:scale-[1.02] active:scale-[0.98] hover:border-purple-500/50",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-soft hover:bg-secondary/80 hover:shadow-md hover:scale-[1.02] active:scale-[0.98]",
-        ghost: "hover:bg-accent hover:text-accent-foreground hover:scale-[1.02] active:scale-[0.98]",
-        link: "text-primary underline-offset-4 hover:underline hover:scale-[1.02] active:scale-[0.98]",
+          "bg-gray-800 text-gray-100 shadow-soft hover:bg-gray-700 hover:shadow-md hover:scale-[1.02] active:scale-[0.98]",
+        ghost: "text-gray-300 hover:bg-gray-800 hover:text-white hover:scale-[1.02] active:scale-[0.98]",
+        link: "text-purple-400 underline-offset-4 hover:underline hover:scale-[1.02] active:scale-[0.98]",
       },
       size: {
         default: "h-10 px-4 py-2",

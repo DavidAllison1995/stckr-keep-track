@@ -6,100 +6,57 @@
 /* Import Inter font for modern typography */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* Definition of the enhanced design system with STCKR branding */
+/* Dark theme design system with STCKR purple branding */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 0 0% 6%;
+    --foreground: 0 0% 98%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 0 0% 11%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 11%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 213 94% 68%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 270 91% 65%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 250 100% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 0 0% 13%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 250 100% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 0 0% 13%;
+    --muted-foreground: 0 0% 63%;
 
-    --accent: 213 94% 68%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 270 91% 65%;
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 213 27% 84%;
-    --input: 213 27% 84%;
-    --ring: 213 94% 68%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 270 91% 65%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 250 100% 99%;
-    --sidebar-foreground: 222.2 84% 4.9%;
-    --sidebar-primary: 213 94% 68%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 250 100% 96%;
-    --sidebar-accent-foreground: 222.2 84% 4.9%;
-    --sidebar-border: 213 27% 84%;
-    --sidebar-ring: 213 94% 68%;
+    --sidebar-background: 0 0% 8%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 270 91% 65%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 0 0% 13%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 270 91% 65%;
 
-    /* Enhanced STCKR brand tokens */
-    --brand-gradient: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #1d4ed8 100%);
-    --brand-gradient-subtle: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.2);
-    --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-    --shadow-medium: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
-    --shadow-large: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 213 94% 68%;
-    --primary-foreground: 222.2 84% 4.9%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 271 91% 65%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 213 94% 68%;
-    
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 213 94% 68%;
-    --sidebar-primary-foreground: 240 5.9% 10%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 213 94% 68%;
-
-    /* Dark mode adjustments */
+    /* Enhanced STCKR dark brand tokens */
+    --brand-gradient: linear-gradient(135deg, #9333ea 0%, #a855f7 50%, #c084fc 100%);
+    --brand-gradient-subtle: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
     --glass-bg: rgba(0, 0, 0, 0.4);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(147, 51, 234, 0.2);
+    --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --shadow-medium: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    --shadow-large: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -111,23 +68,24 @@
   body {
     @apply bg-background text-foreground font-inter antialiased;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    background: #0f0f0f;
   }
 
-  /* Enhanced typography scale */
+  /* Enhanced typography scale for dark theme */
   h1 {
-    @apply text-2xl font-bold tracking-tight;
+    @apply text-2xl font-bold tracking-tight text-white;
   }
 
   h2 {
-    @apply text-xl font-semibold tracking-tight;
+    @apply text-xl font-semibold tracking-tight text-white;
   }
 
   h3 {
-    @apply text-lg font-semibold;
+    @apply text-lg font-semibold text-white;
   }
 
   h4 {
-    @apply text-base font-semibold;
+    @apply text-base font-semibold text-white;
   }
 
   /* Smooth transitions globally */
@@ -141,59 +99,59 @@
 }
 
 @layer components {
-  /* Enhanced card styles */
+  /* Enhanced card styles for dark theme */
   .card-elevated {
-    @apply bg-white border border-gray-100 rounded-xl shadow-[var(--shadow-soft)] backdrop-blur-sm;
+    @apply bg-gray-900 border border-gray-800 rounded-xl shadow-[var(--shadow-soft)] backdrop-blur-sm;
   }
 
   .card-elevated:hover {
-    @apply shadow-[var(--shadow-medium)] -translate-y-0.5;
+    @apply shadow-[var(--shadow-medium)] -translate-y-0.5 border-purple-500/30;
   }
 
-  /* Premium button styles */
+  /* Premium button styles with purple accent */
   .btn-primary-gradient {
     background: var(--brand-gradient);
     @apply text-white font-medium rounded-lg px-4 py-2 shadow-sm;
     @apply hover:shadow-md hover:scale-[1.02] active:scale-[0.98];
   }
 
-  /* Glass morphism effect */
+  /* Glass morphism effect for dark theme */
   .glass {
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
     @apply backdrop-blur-md rounded-xl;
   }
 
-  /* Status badges with enhanced styling */
+  /* Status badges with enhanced dark styling */
   .status-badge {
     @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
     @apply ring-1 ring-inset;
   }
 
   .status-overdue {
-    @apply bg-red-50 text-red-700 ring-red-600/20;
+    @apply bg-red-900/50 text-red-300 ring-red-600/40;
   }
 
   .status-due-soon {
-    @apply bg-amber-50 text-amber-700 ring-amber-600/20;
+    @apply bg-amber-900/50 text-amber-300 ring-amber-600/40;
   }
 
   .status-in-progress {
-    @apply bg-blue-50 text-blue-700 ring-blue-600/20;
+    @apply bg-purple-900/50 text-purple-300 ring-purple-600/40;
   }
 
   .status-completed {
-    @apply bg-green-50 text-green-700 ring-green-600/20;
+    @apply bg-green-900/50 text-green-300 ring-green-600/40;
   }
 
   .status-pending {
-    @apply bg-gray-50 text-gray-700 ring-gray-600/20;
+    @apply bg-gray-800/50 text-gray-300 ring-gray-600/40;
   }
 
-  /* Enhanced form inputs */
+  /* Enhanced form inputs for dark theme */
   .input-enhanced {
-    @apply w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm;
-    @apply focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20;
+    @apply w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white;
+    @apply focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20;
     @apply placeholder:text-gray-400;
   }
 
@@ -226,7 +184,7 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   }
 
-  /* Brand gradient utilities */
+  /* Brand gradient utilities for dark theme */
   .bg-brand-gradient {
     background: var(--brand-gradient);
   }
@@ -235,7 +193,7 @@
     background: var(--brand-gradient-subtle);
   }
 
-  /* Shadow utilities */
+  /* Shadow utilities for dark theme */
   .shadow-soft {
     box-shadow: var(--shadow-soft);
   }

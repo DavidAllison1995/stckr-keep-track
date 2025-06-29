@@ -21,7 +21,7 @@ const NavBar = () => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 px-4 py-2 z-50">
       <div className="flex w-full h-16">
         {navItems.map((item) => (
           <Link
@@ -30,15 +30,15 @@ const NavBar = () => {
             className={cn(
               "flex-1 flex flex-col items-center justify-center gap-1 h-full transition-colors",
               isActive(item.path) 
-                ? "text-blue-600" 
-                : "text-gray-600 hover:text-gray-800"
+                ? "text-purple-400" 
+                : "text-gray-400 hover:text-gray-200"
             )}
           >
             <div className={cn(
-              "w-6 h-6 rounded-full flex items-center justify-center",
+              "w-6 h-6 rounded-full flex items-center justify-center transition-colors",
               isActive(item.path) 
-                ? "bg-blue-500" 
-                : "bg-gray-400"
+                ? "bg-purple-600" 
+                : "bg-gray-600 hover:bg-gray-500"
             )}>
               <span className="text-white text-xs">{item.icon}</span>
             </div>

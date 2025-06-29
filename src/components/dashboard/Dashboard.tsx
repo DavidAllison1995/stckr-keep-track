@@ -132,7 +132,7 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
     <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
           Welcome back, {userName}!
         </h1>
       </div>
@@ -140,14 +140,14 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Main Content - Items List */}
         <div className="lg:col-span-2">
-          <Card className="shadow-xl border-0">
+          <Card className="shadow-xl border-gray-800 bg-gray-900">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Package className="w-5 h-5 text-blue-600" />
-                  <span>Recent Items</span>
+                  <Package className="w-5 h-5 text-purple-400" />
+                  <span className="text-white">Recent Items</span>
                 </div>
-                <Button variant="ghost" size="sm" onClick={handleItemsClick}>
+                <Button variant="ghost" size="sm" onClick={handleItemsClick} className="text-purple-400 hover:text-purple-300 hover:bg-gray-800">
                   View All
                 </Button>
               </CardTitle>
@@ -156,8 +156,8 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
               {items.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="text-4xl mb-2">📦</div>
-                  <p className="text-gray-600 mb-4">No items yet</p>
-                  <Button onClick={handleItemsClick}>Add Your First Item</Button>
+                  <p className="text-gray-400 mb-4">No items yet</p>
+                  <Button onClick={handleItemsClick} className="bg-purple-600 hover:bg-purple-700">Add Your First Item</Button>
                 </div>
               ) : (
                 items.slice(0, 3).map((item) => {
@@ -175,11 +175,11 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
                   return (
                     <div 
                       key={item.id} 
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                      className="flex items-center justify-between p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors border border-gray-700"
                       onClick={() => handleItemClick(item.id)}
                     >
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-purple-900 to-purple-700 rounded-lg flex items-center justify-center">
                           {item.photo_url ? (
                             <img src={item.photo_url} alt={item.name} className="w-full h-full object-cover rounded-lg" />
                           ) : (
@@ -187,8 +187,8 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
                           )}
                         </div>
                         <div>
-                          <div className="font-medium">{item.name}</div>
-                          <div className="text-sm text-gray-500">Status: Good</div>
+                          <div className="font-medium text-white">{item.name}</div>
+                          <div className="text-sm text-gray-400">Status: Good</div>
                         </div>
                       </div>
                       <Badge 
@@ -196,6 +196,11 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
                           maintenanceStatus === "Overdue" ? "destructive" : 
                           maintenanceStatus === "Due soon" ? "secondary" : 
                           "outline"
+                        }
+                        className={
+                          maintenanceStatus === "Overdue" ? "bg-red-900/50 text-red-300" :
+                          maintenanceStatus === "Due soon" ? "bg-amber-900/50 text-amber-300" :
+                          "bg-gray-800 text-gray-300 border-gray-600"
                         }
                       >
                         {maintenanceStatus}
@@ -212,25 +217,25 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
         <div className="space-y-6">
           {/* Calendar */}
           <Card 
-            className="shadow-xl border-0 cursor-pointer hover:shadow-2xl transition-all duration-300 hover:scale-105"
+            className="shadow-xl border-gray-800 bg-gray-900 cursor-pointer hover:shadow-2xl transition-all duration-300 hover:scale-105 hover:border-purple-500/30"
             onClick={handleCalendarClick}
           >
             <CardHeader>
               <CardTitle className="flex items-center text-lg">
-                <Calendar className="mr-2 h-5 w-5 text-blue-600" />
-                This Week
+                <Calendar className="mr-2 h-5 w-5 text-purple-400" />
+                <span className="text-white">This Week</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {thisWeekTasksData.map((dayData, index) => {
-                const colors = dayData.count > 0 ? getColorForIndex(index) : { bg: 'bg-gray-300', text: 'text-gray-600' };
+                const colors = dayData.count > 0 ? getColorForIndex(index) : { bg: 'bg-gray-700', text: 'text-gray-400' };
                 return (
                   <div 
                     key={dayData.day}
-                    className="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors"
+                    className="flex items-center justify-between cursor-pointer hover:bg-gray-800 p-1 rounded transition-colors"
                     onClick={handleDayClick}
                   >
-                    <span className="text-sm">{dayData.day.slice(0, 3)}</span>
+                    <span className="text-sm text-gray-300">{dayData.day.slice(0, 3)}</span>
                     <div className={`w-6 h-6 ${colors.bg} rounded ${colors.text} text-xs flex items-center justify-center`}>
                       {dayData.count}
                     </div>
@@ -241,34 +246,34 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
           </Card>
 
           {/* Quick Stats */}
-          <Card className="shadow-xl border-0">
+          <Card className="shadow-xl border-gray-800 bg-gray-900">
             <CardHeader>
               <CardTitle className="flex items-center text-lg">
-                <Wrench className="mr-2 h-5 w-5 text-blue-600" />
-                Quick Stats
+                <Wrench className="mr-2 h-5 w-5 text-purple-400" />
+                <span className="text-white">Quick Stats</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div 
-                className="flex justify-between cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+                className="flex justify-between cursor-pointer hover:bg-gray-800 p-2 rounded transition-colors"
                 onClick={handleItemsClick}
               >
-                <span className="text-sm text-gray-600">Total Items</span>
-                <span className="font-medium">{items.length}</span>
+                <span className="text-sm text-gray-400">Total Items</span>
+                <span className="font-medium text-white">{items.length}</span>
               </div>
               <div 
-                className="flex justify-between cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+                className="flex justify-between cursor-pointer hover:bg-gray-800 p-2 rounded transition-colors"
                 onClick={() => handleTaskStatusClick('due-soon')}
               >
-                <span className="text-sm text-gray-600">Due Soon</span>
-                <span className="font-medium text-yellow-600">{dueSoonTasks.length}</span>
+                <span className="text-sm text-gray-400">Due Soon</span>
+                <span className="font-medium text-amber-400">{dueSoonTasks.length}</span>
               </div>
               <div 
-                className="flex justify-between cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+                className="flex justify-between cursor-pointer hover:bg-gray-800 p-2 rounded transition-colors"
                 onClick={() => handleTaskStatusClick('overdue')}
               >
-                <span className="text-sm text-gray-600">Overdue</span>
-                <span className="font-medium text-red-600">{overdueTasks.length}</span>
+                <span className="text-sm text-gray-400">Overdue</span>
+                <span className="font-medium text-red-400">{overdueTasks.length}</span>
               </div>
             </CardContent>
           </Card>

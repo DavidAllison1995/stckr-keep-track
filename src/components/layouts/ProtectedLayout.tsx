@@ -47,11 +47,11 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gray-950">
       {/* Header */}
       <div className="px-2 md:px-4 pt-2 md:pt-4">
-        <div className="bg-white dark:bg-gray-800 rounded-t-3xl shadow-lg">
-          <div className="flex items-center justify-between p-3 md:p-4 border-b dark:border-gray-700">
+        <div className="bg-gray-900 rounded-t-3xl shadow-xl border border-gray-800">
+          <div className="flex items-center justify-between p-3 md:p-4 border-b border-gray-800">
             <div className="flex items-center gap-2 md:gap-3">
               <button 
                 onClick={() => navigate('/dashboard')}
@@ -73,13 +73,13 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
                 variant="ghost"
                 size="sm"
                 onClick={handleCartClick}
-                className="relative p-2"
+                className="relative p-2 text-gray-300 hover:text-purple-400 hover:bg-gray-800"
               >
                 <ShoppingCart className="w-4 md:w-5 h-4 md:h-5" />
                 {newItemsCount > 0 && (
                   <Badge
                     variant="destructive"
-                    className="absolute -top-1 -right-1 h-4 md:h-5 w-4 md:w-5 p-0 flex items-center justify-center text-xs"
+                    className="absolute -top-1 -right-1 h-4 md:h-5 w-4 md:w-5 p-0 flex items-center justify-center text-xs bg-purple-600 hover:bg-purple-700"
                   >
                     {newItemsCount > 9 ? '9+' : newItemsCount}
                   </Badge>
@@ -90,7 +90,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/profile')}
-                className="p-2"
+                className="p-2 text-gray-300 hover:text-purple-400 hover:bg-gray-800"
               >
                 <User className="w-4 md:w-5 h-4 md:h-5" />
               </Button>
@@ -98,7 +98,7 @@ const ProtectedLayout = ({ children }: ProtectedLayoutProps) => {
           </div>
           
           {/* Content */}
-          <main className="p-3 md:p-6 pb-16 md:pb-20">
+          <main className="p-3 md:p-6 pb-16 md:pb-20 bg-gray-950 rounded-b-3xl">
             {children}
           </main>
         </div>
