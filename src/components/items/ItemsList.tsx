@@ -48,19 +48,19 @@ const ItemsList = ({ onItemSelect }: ItemsListProps) => {
   const BoxIcon = getIconComponent('box');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <BoxIcon className="w-8 h-8 text-blue-600" />
+        <div className="flex items-center gap-2">
+          <BoxIcon className="w-6 h-6 text-blue-600" />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">My Items</h1>
-            <p className="text-gray-600">Manage your household inventory</p>
+            <h1 className="text-xl font-bold text-gray-900">My Items</h1>
+            <p className="text-sm text-gray-600">Manage your household inventory</p>
           </div>
         </div>
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700">
-              <span className="mr-2">+</span>
+            <Button size="sm" className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700">
+              <span className="mr-1">+</span>
               Add Item
             </Button>
           </DialogTrigger>
@@ -73,21 +73,22 @@ const ItemsList = ({ onItemSelect }: ItemsListProps) => {
         </Dialog>
       </div>
 
-      {/* Search and Filters */}
+      {/* Compact Search and Filters */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col gap-4 md:flex-row">
+        <CardContent className="p-3">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center">
             <div className="flex-1">
               <Input
                 type="text"
                 placeholder="Search items..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-8"
               />
             </div>
             <div className="flex gap-2">
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-32 h-8">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -98,7 +99,7 @@ const ItemsList = ({ onItemSelect }: ItemsListProps) => {
                 </SelectContent>
               </Select>
               <Select value={roomFilter} onValueChange={setRoomFilter}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-28 h-8">
                   <SelectValue placeholder="Room" />
                 </SelectTrigger>
                 <SelectContent>
@@ -116,16 +117,16 @@ const ItemsList = ({ onItemSelect }: ItemsListProps) => {
       {/* Items Horizontal Scroll */}
       {filteredItems.length === 0 ? (
         <Card>
-          <CardContent className="p-12 text-center">
-            <div className="text-6xl mb-4">📦</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No items found</h3>
-            <p className="text-gray-600 mb-6">
+          <CardContent className="p-8 text-center">
+            <div className="text-4xl mb-3">📦</div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No items found</h3>
+            <p className="text-gray-600 mb-4 text-sm">
               {searchTerm || categoryFilter !== 'all' || roomFilter !== 'all'
                 ? 'Try adjusting your search or filters'
                 : 'Start by adding your first item to track'}
             </p>
             {!searchTerm && categoryFilter === 'all' && roomFilter === 'all' && (
-              <Button onClick={() => setIsAddModalOpen(true)}>Add Your First Item</Button>
+              <Button size="sm" onClick={() => setIsAddModalOpen(true)}>Add Your First Item</Button>
             )}
           </CardContent>
         </Card>
@@ -133,7 +134,7 @@ const ItemsList = ({ onItemSelect }: ItemsListProps) => {
         <div className="relative">
           <div 
             {...getDragProps()}
-            className="flex gap-4 overflow-x-auto scrollbar-hide pb-4"
+            className="flex gap-3 overflow-x-auto scrollbar-hide pb-3"
             style={{ 
               scrollBehavior: 'smooth',
               WebkitOverflowScrolling: 'touch'
@@ -142,7 +143,7 @@ const ItemsList = ({ onItemSelect }: ItemsListProps) => {
             {filteredItems.map(item => (
               <div 
                 key={item.id} 
-                className="w-[calc(33.333%-0.67rem)] min-w-[280px] sm:min-w-[300px] lg:min-w-[320px] flex-shrink-0"
+                className="w-[calc(25%-0.75rem)] min-w-[220px] sm:min-w-[240px] lg:min-w-[260px] flex-shrink-0"
               >
                 <ItemCard 
                   item={item} 

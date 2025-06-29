@@ -135,13 +135,13 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
     
     switch (type) {
       case 'overdue':
-        return <AlertTriangle className="w-4 h-4 text-red-500" />;
+        return <AlertTriangle className="w-3 h-3 text-red-500" />;
       case 'due_soon':
-        return <Clock className="w-4 h-4 text-yellow-500" />;
+        return <Clock className="w-3 h-3 text-yellow-500" />;
       case 'in_progress':
-        return <Clock className="w-4 h-4 text-blue-500" />;
+        return <Clock className="w-3 h-3 text-blue-500" />;
       case 'pending':
-        return <CheckCircle2 className="w-4 h-4 text-gray-500" />;
+        return <CheckCircle2 className="w-3 h-3 text-gray-500" />;
       default:
         return null;
     }
@@ -154,7 +154,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
         onClick={handleCardClick}
       >
         <CardContent className="p-0 flex flex-col h-full">
-          {/* Full-width Image/Icon Section */}
+          {/* Compact Image/Icon Section */}
           <div className="w-full aspect-square bg-gradient-to-br from-blue-50 to-gray-50 flex items-center justify-center border-b border-gray-100">
             {item.photo_url ? (
               <img 
@@ -164,88 +164,88 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                 draggable={false}
               />
             ) : (
-              <IconComponent className="w-16 h-16 text-gray-600" />
+              <IconComponent className="w-12 h-12 text-gray-600" />
             )}
           </div>
 
-          {/* Content Section */}
-          <div className="p-4 flex-1 flex flex-col space-y-3 overflow-hidden">
+          {/* Compact Content Section */}
+          <div className="p-3 flex-1 flex flex-col space-y-2 overflow-hidden">
             {/* Title */}
-            <h3 className="font-semibold text-lg line-clamp-1 text-gray-900">{item.name}</h3>
+            <h3 className="font-semibold text-base line-clamp-1 text-gray-900">{item.name}</h3>
             
             {/* Tags Section */}
-            <div className="flex items-center gap-2 flex-wrap min-h-[20px]">
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
+            <div className="flex items-center gap-1 flex-wrap min-h-[16px]">
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs px-1 py-0 h-5">
                 {item.category}
               </Badge>
               {item.room && (
-                <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs px-1 py-0 h-5">
                   {item.room}
                 </Badge>
               )}
               <Badge 
                 variant="secondary" 
-                className={`text-xs ${item.qr_code_id ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}`}
+                className={`text-xs px-1 py-0 h-5 ${item.qr_code_id ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}`}
               >
                 {item.qr_code_id ? (
                   <>
-                    <Check className="w-3 h-3 mr-1" />
+                    <Check className="w-2 h-2 mr-1" />
                     QR
                   </>
                 ) : (
                   <>
-                    <X className="w-3 h-3 mr-1" />
+                    <X className="w-2 h-2 mr-1" />
                     No QR
                   </>
                 )}
               </Badge>
             </div>
 
-            {/* Description */}
+            {/* Compact Description */}
             {item.description && (
-              <p className="text-sm text-gray-600 line-clamp-2">{item.description}</p>
+              <p className="text-xs text-gray-600 line-clamp-1">{item.description}</p>
             )}
 
-            {/* Task Status Section */}
+            {/* Compact Task Status Section */}
             {itemTasks.length > 0 && (
               <div 
-                className="bg-gray-50 rounded-lg p-2 cursor-pointer hover:bg-gray-100 transition-colors border"
+                className="bg-gray-50 rounded-md p-2 cursor-pointer hover:bg-gray-100 transition-colors border"
                 onClick={handleTasksClick}
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-medium text-gray-700">Maintenance</span>
                   <ChevronRight className="w-3 h-3 text-blue-600" />
                 </div>
-                <div className="flex items-center gap-3 text-xs">
+                <div className="flex items-center gap-2 text-xs flex-wrap">
                   {overdueTasks.length > 0 && (
                     <div className="flex items-center gap-1">
                       {getTaskIcon(overdueTasks.length, 'overdue')}
-                      <span className="text-red-600">{overdueTasks.length} overdue</span>
+                      <span className="text-red-600">{overdueTasks.length}</span>
                     </div>
                   )}
                   {dueSoonTasks.length > 0 && (
                     <div className="flex items-center gap-1">
                       {getTaskIcon(dueSoonTasks.length, 'due_soon')}
-                      <span className="text-yellow-600">{dueSoonTasks.length} due soon</span>
+                      <span className="text-yellow-600">{dueSoonTasks.length}</span>
                     </div>
                   )}
                   {inProgressTasks.length > 0 && (
                     <div className="flex items-center gap-1">
                       {getTaskIcon(inProgressTasks.length, 'in_progress')}
-                      <span className="text-blue-600">{inProgressTasks.length} in progress</span>
+                      <span className="text-blue-600">{inProgressTasks.length}</span>
                     </div>
                   )}
                   {pendingTasks.length > 0 && (
                     <div className="flex items-center gap-1">
                       {getTaskIcon(pendingTasks.length, 'pending')}
-                      <span className="text-gray-600">{pendingTasks.length} pending</span>
+                      <span className="text-gray-600">{pendingTasks.length}</span>
                     </div>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Dates Section */}
+            {/* Compact Dates Section */}
             {(item.purchase_date || item.warranty_date) && (
               <div className="bg-gray-50 rounded-md p-2 border">
                 <div className="text-xs text-gray-500 space-y-1">
@@ -265,23 +265,23 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
               </div>
             )}
 
-            {/* Actions */}
-            <div className="flex gap-2 mt-auto pt-2">
+            {/* Compact Actions */}
+            <div className="flex gap-1 mt-auto pt-2">
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="flex-1 text-xs"
+                className="flex-1 text-xs h-7"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(`/items/${item.id}`);
                 }}
               >
-                View Details
+                View
               </Button>
               <Button 
                 variant="ghost" 
                 size="sm"
-                className="text-xs"
+                className="text-xs h-7 px-2"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsEditModalOpen(true);
@@ -294,12 +294,12 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 p-1 h-7 w-7"
                     onClick={(e) => {
                       e.stopPropagation();
                     }}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3 h-3" />
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
