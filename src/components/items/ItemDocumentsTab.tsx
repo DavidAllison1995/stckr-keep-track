@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,21 +7,14 @@ import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { useToast } from '@/hooks/use-toast';
 import DocumentViewer from './DocumentViewer';
 import { FileText, Upload, Plus, Trash2 } from 'lucide-react';
+
 interface ItemDocumentsTabProps {
   itemId: string;
 }
-const ItemDocumentsTab = ({
-  itemId
-}: ItemDocumentsTabProps) => {
-  const {
-    items,
-    updateItem,
-    uploadDocument,
-    deleteDocument
-  } = useSupabaseItems();
-  const {
-    toast
-  } = useToast();
+
+const ItemDocumentsTab = ({ itemId }: ItemDocumentsTabProps) => {
+  const { items, updateItem, uploadDocument, deleteDocument } = useSupabaseItems();
+  const { toast } = useToast();
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -29,6 +23,7 @@ const ItemDocumentsTab = ({
   // Get the current item and its documents
   const item = items.find(item => item.id === itemId);
   const documents = item?.documents || [];
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -38,6 +33,7 @@ const ItemDocumentsTab = ({
       }
     }
   };
+
   const handleUpload = async () => {
     if (!selectedFile || !item) {
       toast({
@@ -47,6 +43,7 @@ const ItemDocumentsTab = ({
       });
       return;
     }
+
     setUploading(true);
     try {
       console.log('Starting document upload...');
@@ -67,9 +64,7 @@ const ItemDocumentsTab = ({
 
       // Update the item with the new document
       const updatedDocuments = [...documents, newDocument];
-      await updateItem(itemId, {
-        documents: updatedDocuments
-      });
+      await updateItem(itemId, { documents: updatedDocuments });
       console.log('Item updated with new document');
 
       // Reset form
@@ -91,8 +86,10 @@ const ItemDocumentsTab = ({
       setUploading(false);
     }
   };
+
   const handleDeleteDocument = async (documentToDelete: any) => {
     if (!item) return;
+
     try {
       console.log('Deleting document:', documentToDelete);
 
@@ -101,9 +98,8 @@ const ItemDocumentsTab = ({
 
       // Update item by removing the document from the array
       const updatedDocuments = documents.filter(doc => doc.id !== documentToDelete.id);
-      await updateItem(itemId, {
-        documents: updatedDocuments
-      });
+      await updateItem(itemId, { documents: updatedDocuments });
+
       toast({
         title: 'Success',
         description: 'Document deleted successfully'
@@ -117,67 +113,112 @@ const ItemDocumentsTab = ({
       });
     }
   };
-  return <div className="space-y-6">
+
+  return (
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="font-semibold text-lg">Documents & Files</h3>
-        <Button onClick={() => setShowUploadForm(!showUploadForm)}>
+        <h3 className="font-semibold text-lg text-white">Documents & Files</h3>
+        <Button 
+          onClick={() => setShowUploadForm(!showUploadForm)}
+          className="bg-purple-600 hover:bg-purple-700 text-white"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Add Document
         </Button>
       </div>
 
-      {showUploadForm && <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-          <h4 className="font-medium mb-4">Upload Document</h4>
+      {showUploadForm && (
+        <div className="border border-gray-700 rounded-lg p-4 bg-gray-800">
+          <h4 className="font-medium mb-4 text-white">Upload Document</h4>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="document-file">Choose File</Label>
-              <Input id="document-file" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={handleFileSelect} className="mt-1" />
-              {selectedFile && <p className="text-sm text-gray-600 mt-1">
+              <Label htmlFor="document-file" className="text-gray-300">Choose File</Label>
+              <Input 
+                id="document-file" 
+                type="file" 
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" 
+                onChange={handleFileSelect} 
+                className="mt-1 bg-gray-700 border-gray-600 text-white" 
+              />
+              {selectedFile && (
+                <p className="text-sm text-gray-400 mt-1">
                   Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-                </p>}
+                </p>
+              )}
             </div>
             <div>
-              <Label htmlFor="document-name">Document Name</Label>
-              <Input id="document-name" type="text" value={documentName} onChange={e => setDocumentName(e.target.value)} placeholder="e.g., User Manual, Warranty Certificate" className="mt-1" />
+              <Label htmlFor="document-name" className="text-gray-300">Document Name</Label>
+              <Input 
+                id="document-name" 
+                type="text" 
+                value={documentName} 
+                onChange={e => setDocumentName(e.target.value)} 
+                placeholder="e.g., User Manual, Warranty Certificate" 
+                className="mt-1 bg-gray-700 border-gray-600 text-white placeholder:text-gray-400" 
+              />
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleUpload} disabled={!selectedFile || uploading} className="flex-1">
+              <Button 
+                onClick={handleUpload} 
+                disabled={!selectedFile || uploading} 
+                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+              >
                 <Upload className="w-4 h-4 mr-2" />
                 {uploading ? 'Uploading...' : 'Upload'}
               </Button>
-              <Button variant="outline" onClick={() => {
-            setShowUploadForm(false);
-            setSelectedFile(null);
-            setDocumentName('');
-          }}>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowUploadForm(false);
+                  setSelectedFile(null);
+                  setDocumentName('');
+                }}
+                className="border-gray-600 text-gray-300 hover:bg-gray-700"
+              >
                 Cancel
               </Button>
             </div>
           </div>
-        </div>}
+        </div>
+      )}
 
       {/* Documents Grid */}
-      {documents.length > 0 ? <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {documents.map(doc => <div key={doc.id} className="relative">
+      {documents.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {documents.map(doc => (
+            <div key={doc.id} className="relative">
               <DocumentViewer document={doc} />
-              <Button variant="destructive" size="sm" className="absolute top-2 right-2" onClick={() => handleDeleteDocument(doc)}>
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                className="absolute top-2 right-2 bg-red-600 hover:bg-red-700" 
+                onClick={() => handleDeleteDocument(doc)}
+              >
                 <Trash2 className="w-4 h-4" />
               </Button>
-            </div>)}
-        </div> : <div className="text-center py-12">
-          <FileText className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-          <h4 className="font-medium text-gray-900 mb-2">No documents yet</h4>
-          <p className="text-gray-600 mb-6">
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <div className="w-16 h-16 mx-auto mb-4 bg-purple-900/50 rounded-full flex items-center justify-center border border-purple-700/50">
+            <FileText className="w-8 h-8 text-purple-400" />
+          </div>
+          <h4 className="font-medium text-white mb-2">No documents yet</h4>
+          <p className="text-gray-400 mb-6">
             Upload manuals, warranties, receipts, and other important documents for this item.
           </p>
-          <Button onClick={() => setShowUploadForm(true)}>
+          <Button 
+            onClick={() => setShowUploadForm(true)}
+            className="bg-purple-600 hover:bg-purple-700 text-white"
+          >
             <Upload className="w-4 h-4 mr-2" />
             Upload First Document
           </Button>
-        </div>}
-
-      {/* File Type Support Info */}
-      
-    </div>;
+        </div>
+      )}
+    </div>
+  );
 };
+
 export default ItemDocumentsTab;

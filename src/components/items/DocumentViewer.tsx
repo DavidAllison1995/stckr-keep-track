@@ -63,22 +63,22 @@ const DocumentViewer = ({ document, onDownload }: DocumentViewerProps) => {
       }
       
       return (
-        <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center">
-          <FileText className="w-12 h-12 text-gray-400" />
+        <div className="w-full h-32 bg-gray-800 rounded-lg flex items-center justify-center border border-gray-700">
+          <FileText className="w-12 h-12 text-purple-400" />
         </div>
       );
     }
 
     // Fallback for other file types
     return (
-      <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center">
-        <FileText className="w-12 h-12 text-gray-400" />
+      <div className="w-full h-32 bg-gray-800 rounded-lg flex items-center justify-center border border-gray-700">
+        <FileText className="w-12 h-12 text-purple-400" />
       </div>
     );
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow">
+    <div className="bg-gray-900 rounded-lg shadow-soft border border-gray-800 p-4 hover:shadow-medium hover:border-purple-500/30 transition-all duration-200">
       {/* Thumbnail */}
       <div className="mb-3">
         {renderThumbnail()}
@@ -87,10 +87,10 @@ const DocumentViewer = ({ document, onDownload }: DocumentViewerProps) => {
       {/* Document Info */}
       <div className="space-y-3">
         <div>
-          <h4 className="font-medium text-gray-900 truncate" title={document.name}>
+          <h4 className="font-medium text-white truncate" title={document.name}>
             {document.name}
           </h4>
-          <p className="text-sm text-gray-500 capitalize">
+          <p className="text-sm text-gray-400 capitalize">
             {document.type.toUpperCase()} Document
           </p>
         </div>
@@ -101,7 +101,7 @@ const DocumentViewer = ({ document, onDownload }: DocumentViewerProps) => {
             variant="outline"
             size="sm"
             onClick={handleOpenInNewTab}
-            className="flex-1 flex items-center gap-2"
+            className="flex-1 flex items-center gap-2 border-gray-600 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-500"
           >
             <ExternalLink className="w-4 h-4" />
             Open
@@ -110,7 +110,7 @@ const DocumentViewer = ({ document, onDownload }: DocumentViewerProps) => {
             variant="outline"
             size="sm"
             onClick={handleDownload}
-            className="flex-1 flex items-center gap-2"
+            className="flex-1 flex items-center gap-2 border-gray-600 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-500"
           >
             <Download className="w-4 h-4" />
             Download
