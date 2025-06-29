@@ -5,7 +5,8 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useNavigate } from 'react-router-dom';
-import { Package, Calendar, Wrench } from 'lucide-react';
+import { Package, Calendar, Wrench, Clock, AlertTriangle, CheckCircle2, QrCode, Check, X } from 'lucide-react';
+import { getIconComponent } from '@/components/icons';
 import { format, startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns';
 
 interface DashboardProps {
@@ -129,149 +130,273 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-          Welcome back, {userName}!
-        </h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 relative overflow-hidden">
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 opacity-[0.02]">
+        <div className="absolute top-20 left-20 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 right-20 w-80 h-80 bg-purple-500 rounded-full blur-3xl"></div>
       </div>
+      
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-8">
+        {/* Enhanced Header */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-brand-gradient rounded-2xl flex items-center justify-center shadow-medium">
+              <Package className="w-6 h-6 text-white" />
+            </div>
+            <div className="text-left">
+              <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
+                Welcome back, {userName}!
+              </h1>
+              <p className="text-gray-600 text-lg">Manage your items and stay on top of maintenance</p>
+            </div>
+          </div>
+        </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Main Content - Items List */}
-        <div className="lg:col-span-2">
-          <Card className="shadow-xl border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Package className="w-5 h-5 text-blue-600" />
-                  <span>Recent Items</span>
-                </div>
-                <Button variant="ghost" size="sm" onClick={handleItemsClick}>
-                  View All
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        <div className="grid lg:grid-cols-4 gap-8">
+          {/* Main Content - Items Card Wall */}
+          <div className="lg:col-span-3 space-y-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <Package className="w-6 h-6 text-blue-600" />
+                Your Items
+              </h2>
+              <Button variant="outline" onClick={handleItemsClick} className="gap-2">
+                View All Items
+              </Button>
+            </div>
+
+            {/* Items Card Wall */}
+            <div className="space-y-4">
               {items.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-2">📦</div>
-                  <p className="text-gray-600 mb-4">No items yet</p>
-                  <Button onClick={handleItemsClick}>Add Your First Item</Button>
-                </div>
+                <Card variant="elevated" className="p-12 text-center">
+                  <div className="w-20 h-20 mx-auto mb-6 bg-brand-gradient-subtle rounded-3xl flex items-center justify-center">
+                    <Package className="w-10 h-10 text-blue-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">No items yet</h3>
+                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                    Start building your digital inventory by adding your first item
+                  </p>
+                  <Button onClick={handleItemsClick} className="gap-2 shadow-medium">
+                    <Package className="w-4 h-4" />
+                    Add Your First Item
+                  </Button>
+                </Card>
               ) : (
-                items.slice(0, 3).map((item) => {
+                items.slice(0, 6).map((item) => {
                   const itemTasks = tasks.filter(task => task.item_id === item.id && task.status !== 'completed');
-                  const hasOverdue = itemTasks.some(task => new Date(task.date) < new Date() && task.status !== 'completed');
-                  const hasDueSoon = itemTasks.some(task => {
+                  const overdueTasks = itemTasks.filter(task => new Date(task.date) < new Date() && task.status !== 'completed');
+                  const dueSoonTasks = itemTasks.filter(task => {
                     const taskDate = new Date(task.date);
                     const now = new Date();
                     const fourteenDaysFromNow = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
                     return taskDate >= now && taskDate <= fourteenDaysFromNow;
                   });
                   
-                  const maintenanceStatus = hasOverdue ? 'Overdue' : hasDueSoon ? 'Due soon' : 'Up to date';
+                  const IconComponent = getIconComponent(item.icon_id || 'box');
                   
                   return (
-                    <div 
-                      key={item.id} 
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                    <Card 
+                      key={item.id}
+                      variant="elevated"
+                      className="cursor-pointer group hover:shadow-large hover:-translate-y-1 transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm"
                       onClick={() => handleItemClick(item.id)}
                     >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center">
-                          {item.photo_url ? (
-                            <img src={item.photo_url} alt={item.name} className="w-full h-full object-cover rounded-lg" />
-                          ) : (
-                            <span className="text-lg">📦</span>
-                          )}
+                      <CardContent className="p-6">
+                        <div className="flex items-start gap-4">
+                          {/* Item Image/Icon */}
+                          <div className="flex-shrink-0">
+                            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                              {item.photo_url ? (
+                                <img 
+                                  src={item.photo_url} 
+                                  alt={item.name} 
+                                  className="w-full h-full object-cover rounded-xl" 
+                                />
+                              ) : (
+                                <IconComponent className="w-8 h-8 text-blue-600" />
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Main Content */}
+                          <div className="flex-1 min-w-0">
+                            {/* Top Row - Name and Status Pills */}
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="min-w-0 flex-1">
+                                <h3 className="text-xl font-bold text-gray-900 truncate group-hover:text-blue-700 transition-colors">
+                                  {item.name}
+                                </h3>
+                                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                  <Badge 
+                                    variant="secondary" 
+                                    className="bg-blue-100 text-blue-800 border-blue-200 font-medium"
+                                  >
+                                    {item.category}
+                                  </Badge>
+                                  {item.room && (
+                                    <Badge 
+                                      variant="secondary" 
+                                      className="bg-emerald-100 text-emerald-800 border-emerald-200 font-medium"
+                                    >
+                                      {item.room}
+                                    </Badge>
+                                  )}
+                                  <Badge 
+                                    variant={item.qr_code_id ? "success" : "secondary"}
+                                    className={`font-medium ${
+                                      item.qr_code_id 
+                                        ? "bg-green-100 text-green-800 border-green-200" 
+                                        : "bg-gray-100 text-gray-600 border-gray-200"
+                                    }`}
+                                  >
+                                    <QrCode className="w-3 h-3 mr-1.5" />
+                                    {item.qr_code_id ? 'QR Assigned' : 'No QR Code'}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Description */}
+                            {item.description && (
+                              <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                                {item.description}
+                              </p>
+                            )}
+                            
+                            {/* Bottom Row - Maintenance Status */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                {overdueTasks.length > 0 && (
+                                  <Badge variant="error" className="gap-1.5">
+                                    <AlertTriangle className="w-3 h-3" />
+                                    {overdueTasks.length} Overdue
+                                  </Badge>
+                                )}
+                                {dueSoonTasks.length > 0 && (
+                                  <Badge variant="warning" className="gap-1.5">
+                                    <Clock className="w-3 h-3" />
+                                    {dueSoonTasks.length} Due Soon
+                                  </Badge>
+                                )}
+                                {overdueTasks.length === 0 && dueSoonTasks.length === 0 && (
+                                  <Badge variant="success" className="gap-1.5">
+                                    <CheckCircle2 className="w-3 h-3" />
+                                    Up to Date
+                                  </Badge>
+                                )}
+                              </div>
+                              
+                              {/* Dates */}
+                              <div className="text-xs text-gray-500 text-right">
+                                {item.purchase_date && (
+                                  <div>Purchased: {new Date(item.purchase_date).toLocaleDateString()}</div>
+                                )}
+                                {item.warranty_date && (
+                                  <div>Warranty: {new Date(item.warranty_date).toLocaleDateString()}</div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-medium">{item.name}</div>
-                          <div className="text-sm text-gray-500">Status: Good</div>
-                        </div>
-                      </div>
-                      <Badge 
-                        variant={
-                          maintenanceStatus === "Overdue" ? "destructive" : 
-                          maintenanceStatus === "Due soon" ? "secondary" : 
-                          "outline"
-                        }
-                      >
-                        {maintenanceStatus}
-                      </Badge>
-                    </div>
+                      </CardContent>
+                    </Card>
                   );
                 })
               )}
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Calendar */}
-          <Card 
-            className="shadow-xl border-0 cursor-pointer hover:shadow-2xl transition-all duration-300 hover:scale-105"
-            onClick={handleCalendarClick}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center text-lg">
-                <Calendar className="mr-2 h-5 w-5 text-blue-600" />
-                This Week
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {thisWeekTasksData.map((dayData, index) => {
-                const colors = dayData.count > 0 ? getColorForIndex(index) : { bg: 'bg-gray-300', text: 'text-gray-600' };
-                return (
-                  <div 
-                    key={dayData.day}
-                    className="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors"
-                    onClick={handleDayClick}
-                  >
-                    <span className="text-sm">{dayData.day.slice(0, 3)}</span>
-                    <div className={`w-6 h-6 ${colors.bg} rounded ${colors.text} text-xs flex items-center justify-center`}>
-                      {dayData.count}
-                    </div>
+          {/* Enhanced Sidebar */}
+          <div className="space-y-6">
+            {/* This Week Calendar Card */}
+            <Card 
+              variant="elevated"
+              className="cursor-pointer hover:shadow-large hover:-translate-y-1 transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm"
+              onClick={handleCalendarClick}
+            >
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-3 text-lg">
+                  <div className="p-2 bg-brand-gradient-subtle rounded-xl">
+                    <Calendar className="w-5 h-5 text-blue-600" />
                   </div>
-                );
-              })}
-            </CardContent>
-          </Card>
+                  <div>
+                    <div className="font-bold">This Week</div>
+                    <div className="text-sm font-normal text-gray-600">Maintenance schedule</div>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {thisWeekTasksData.map((dayData, index) => {
+                  const colors = dayData.count > 0 ? getColorForIndex(index) : { bg: 'bg-gray-300', text: 'text-gray-600' };
+                  return (
+                    <div 
+                      key={dayData.day}
+                      className="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors"
+                      onClick={handleDayClick}
+                    >
+                      <span className="text-sm">{dayData.day.slice(0, 3)}</span>
+                      <div className={`w-6 h-6 ${colors.bg} rounded ${colors.text} text-xs flex items-center justify-center`}>
+                        {dayData.count}
+                      </div>
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
 
-          {/* Quick Stats */}
-          <Card className="shadow-xl border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center text-lg">
-                <Wrench className="mr-2 h-5 w-5 text-blue-600" />
-                Quick Stats
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div 
-                className="flex justify-between cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
-                onClick={handleItemsClick}
-              >
-                <span className="text-sm text-gray-600">Total Items</span>
-                <span className="font-medium">{items.length}</span>
-              </div>
-              <div 
-                className="flex justify-between cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
-                onClick={() => handleTaskStatusClick('due-soon')}
-              >
-                <span className="text-sm text-gray-600">Due Soon</span>
-                <span className="font-medium text-yellow-600">{dueSoonTasks.length}</span>
-              </div>
-              <div 
-                className="flex justify-between cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
-                onClick={() => handleTaskStatusClick('overdue')}
-              >
-                <span className="text-sm text-gray-600">Overdue</span>
-                <span className="font-medium text-red-600">{overdueTasks.length}</span>
-              </div>
-            </CardContent>
-          </Card>
+            {/* Enhanced Quick Stats */}
+            <Card 
+              variant="elevated" 
+              className="border-0 bg-white/80 backdrop-blur-sm"
+            >
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-3 text-lg">
+                  <div className="p-2 bg-brand-gradient-subtle rounded-xl">
+                    <Wrench className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <div className="font-bold">Quick Stats</div>
+                    <div className="text-sm font-normal text-gray-600">Overview</div>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div 
+                  className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl cursor-pointer hover:from-blue-100 hover:to-indigo-100 transition-all duration-200 border border-blue-100"
+                  onClick={handleItemsClick}
+                >
+                  <div className="flex items-center gap-3">
+                    <Package className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-medium text-gray-700">Total Items</span>
+                  </div>
+                  <span className="font-bold text-blue-700 text-lg">{items.length}</span>
+                </div>
+                
+                <div 
+                  className="flex justify-between items-center p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl cursor-pointer hover:from-yellow-100 hover:to-orange-100 transition-all duration-200 border border-yellow-100"
+                  onClick={() => handleTaskStatusClick('due-soon')}
+                >
+                  <div className="flex items-center gap-3">
+                    <Clock className="w-4 h-4 text-yellow-600" />
+                    <span className="text-sm font-medium text-gray-700">Due Soon</span>
+                  </div>
+                  <span className="font-bold text-yellow-700 text-lg">{dueSoonTasks.length}</span>
+                </div>
+                
+                <div 
+                  className="flex justify-between items-center p-3 bg-gradient-to-r from-red-50 to-pink-50 rounded-xl cursor-pointer hover:from-red-100 hover:to-pink-100 transition-all duration-200 border border-red-100"
+                  onClick={() => handleTaskStatusClick('overdue')}
+                >
+                  <div className="flex items-center gap-3">
+                    <AlertTriangle className="w-4 h-4 text-red-600" />
+                    <span className="text-sm font-medium text-gray-700">Overdue</span>
+                  </div>
+                  <span className="font-bold text-red-700 text-lg">{overdueTasks.length}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
