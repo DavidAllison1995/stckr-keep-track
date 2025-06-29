@@ -101,25 +101,40 @@ serve(async (req) => {
     console.log('🖨️ PRINTFUL RESPONSE:', JSON.stringify(result, null, 2));
 
     if (response.ok && result.result) {
-      // Success - extract the sync variant ID
-      const syncProduct = result.result;
-      const syncVariant = syncProduct.sync_variants?.[0];
-      const syncVariantId = syncVariant?.id;
-
+      // Success - need to get the sync variants from a separate API call since they're not included in the initial response
+      const syncProductId = result.result.id;
       console.log('✅ PRINTFUL SYNC PRODUCT CREATED SUCCESSFULLY');
-      console.log('🔗 SYNC PRODUCT ID:', syncProduct.id);
-      console.log('🔗 SYNC VARIANT ID:', syncVariantId);
+      console.log('🔗 SYNC PRODUCT ID:', syncProductId);
+
+      // Get the sync variants to extract sync_variant_id
+      const variantsResponse = await fetch(`https://api.printful.com/store/products/${syncProductId}`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${printfulApiKey}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const variantsResult = await variantsResponse.json();
+      console.log('📊 SYNC VARIANTS RESPONSE:', JSON.stringify(variantsResult, null, 2));
+
+      let syncVariantId = null;
+      if (variantsResult.result && variantsResult.result.sync_variants && variantsResult.result.sync_variants.length > 0) {
+        syncVariantId = variantsResult.result.sync_variants[0].id;
+        console.log('🔗 SYNC VARIANT ID:', syncVariantId);
+      }
 
       return new Response(JSON.stringify({ 
         success: true,
         message: 'Sync product created successfully',
-        sync_product_id: syncProduct.id,
+        sync_product_id: syncProductId,
         sync_variant_id: syncVariantId,
-        external_id: syncProduct.external_id,
-        name: syncProduct.name,
-        thumbnail: syncProduct.thumbnail_url,
-        retail_price: syncVariant?.retail_price,
-        full_response: result.result
+        external_id: result.result.external_id,
+        name: result.result.name,
+        thumbnail: result.result.thumbnail_url,
+        retail_price: requestData.retail_price || "5.00",
+        full_response: result.result,
+        variants_response: variantsResult.result
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
