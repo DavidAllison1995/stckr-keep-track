@@ -223,7 +223,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, supabas
 
     console.log("✅ SHIPPING ADDRESS STORED");
 
-    // Send to Printful with validated sync variants
+    // Send to Printful using catalog variant IDs
     await sendToPrintful(order, products, items, shippingAddress, customerName, customerPhone, supabaseClient);
 
     // Clear user cart
@@ -266,64 +266,52 @@ async function sendToPrintful(order: any, products: any[], items: any[], shippin
   }
 
   try {
-    // First, validate sync variants exist in Printful store
-    console.log("🔍 VALIDATING SYNC VARIANTS...");
-    const validSyncVariants = await getValidSyncVariants(printfulApiKey);
-    
-    console.log("📋 AVAILABLE SYNC VARIANTS:", validSyncVariants.slice(0, 5).map(v => ({
-      id: v.id,
-      name: v.name,
-      product: v.product?.name
-    })));
-
-    // Match products with valid sync variants
-    const validPrintfulItems = [];
+    // Build items array using catalog variant IDs
+    const printfulItems = [];
     
     for (const product of products) {
-      const syncVariantId = product.printful_variant_id;
+      const variantId = product.printful_variant_id;
       const orderItem = items.find((item: any) => item.product_id === product.id);
       
-      if (!syncVariantId) {
+      if (!variantId) {
         console.warn(`⚠️ Product ${product.name} has no printful_variant_id`);
         continue;
       }
 
-      // Find matching sync variant
-      const syncVariant = validSyncVariants.find(v => v.id === parseInt(syncVariantId));
-      
-      if (!syncVariant) {
-        console.error(`❌ SYNC VARIANT NOT FOUND: ${syncVariantId} for product ${product.name}`);
-        console.log(`💡 Available sync variant IDs: ${validSyncVariants.slice(0, 10).map(v => v.id).join(', ')}`);
+      // Convert to integer if it's a string
+      const parsedVariantId = parseInt(variantId);
+      if (isNaN(parsedVariantId)) {
+        console.error(`❌ INVALID VARIANT ID: ${variantId} for product ${product.name}`);
         
         await supabaseClient.from("orders")
           .update({ 
             printful_status: "error",
-            printful_error: `Invalid sync variant ID: ${syncVariantId}. Check your Printful dashboard for correct sync variant IDs.`
+            printful_error: `Invalid variant ID: ${variantId}. Must be a valid Printful catalog variant ID.`
           })
           .eq("id", order.id);
         return;
       }
 
-      console.log(`✅ VALID SYNC VARIANT FOUND: ${syncVariantId} - ${syncVariant.name}`);
+      console.log(`✅ USING CATALOG VARIANT ID: ${parsedVariantId} for ${product.name}`);
       
-      validPrintfulItems.push({
-        sync_variant_id: parseInt(syncVariantId),
+      printfulItems.push({
+        variant_id: parsedVariantId,
         quantity: orderItem?.quantity || 1,
       });
     }
 
-    if (validPrintfulItems.length === 0) {
-      console.log("ℹ️ No valid sync variants to fulfill");
+    if (printfulItems.length === 0) {
+      console.log("ℹ️ No valid catalog variants to fulfill");
       await supabaseClient.from("orders")
         .update({ 
           printful_status: "not_required",
-          printful_error: "No items with valid sync variant IDs found"
+          printful_error: "No items with valid catalog variant IDs found"
         })
         .eq("id", order.id);
       return;
     }
 
-    // Prepare Printful order payload
+    // Prepare Printful order payload using catalog variant IDs
     const printfulOrder = {
       recipient: {
         name: customerName,
@@ -336,7 +324,8 @@ async function sendToPrintful(order: any, products: any[], items: any[], shippin
         phone: customerPhone || "",
         email: order.user_email,
       },
-      items: validPrintfulItems,
+      items: printfulItems,
+      shipping: "STANDARD",
       external_id: order.id,
     };
 
@@ -362,7 +351,7 @@ async function sendToPrintful(order: any, products: any[], items: any[], shippin
       await supabaseClient.from("orders")
         .update({ 
           printful_order_id: result.result.id.toString(),
-          printful_status: "created",
+          printful_status: "sent",
           status: "processing",
           printful_error: null
         })
@@ -370,20 +359,23 @@ async function sendToPrintful(order: any, products: any[], items: any[], shippin
       
       console.log("✅ PRINTFUL ORDER CREATED SUCCESSFULLY:", result.result.id);
     } else {
-      // Error - log and update status
+      // Error - log detailed information and update status
       const errorMsg = result.error?.message || result.result || `HTTP ${response.status}: ${response.statusText}` || "Unknown Printful error";
       
       console.error("❌ PRINTFUL API ERROR:", {
         status: response.status,
+        statusText: response.statusText,
         error: result.error,
         result: result.result,
-        code: result.code
+        code: result.code,
+        requestPayload: printfulOrder,
+        fullResponse: result
       });
       
       await supabaseClient.from("orders")
         .update({ 
           printful_status: "error",
-          printful_error: errorMsg
+          printful_error: `${errorMsg} | Request: ${JSON.stringify(printfulOrder)} | Response: ${JSON.stringify(result)}`
         })
         .eq("id", order.id);
     }
@@ -396,49 +388,5 @@ async function sendToPrintful(order: any, products: any[], items: any[], shippin
         printful_error: `Exception: ${error.message}`
       })
       .eq("id", order.id);
-  }
-}
-
-async function getValidSyncVariants(printfulApiKey: string) {
-  console.log("🔍 FETCHING VALID SYNC VARIANTS FROM PRINTFUL...");
-  
-  try {
-    const response = await fetch("https://api.printful.com/sync/products", {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${printfulApiKey}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      console.error("❌ Failed to fetch sync products:", response.status, response.statusText);
-      return [];
-    }
-
-    const result = await response.json();
-    console.log(`📦 FETCHED ${result.result?.length || 0} SYNC PRODUCTS`);
-
-    // Extract all sync variants from all products
-    const syncVariants = [];
-    for (const product of result.result || []) {
-      if (product.sync_variants) {
-        for (const variant of product.sync_variants) {
-          syncVariants.push({
-            id: variant.id,
-            name: variant.name,
-            product: product,
-            sync_product_id: product.id
-          });
-        }
-      }
-    }
-
-    console.log(`✅ FOUND ${syncVariants.length} TOTAL SYNC VARIANTS`);
-    return syncVariants;
-
-  } catch (error) {
-    console.error("❌ ERROR FETCHING SYNC VARIANTS:", error);
-    return [];
   }
 }
