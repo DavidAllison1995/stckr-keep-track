@@ -32,6 +32,7 @@ import OrderDiagnostics from '@/components/admin/OrderDiagnostics';
 import WebhookDiagnostics from '@/components/admin/WebhookDiagnostics';
 import ValidatePrintfulVariant from '@/components/admin/ValidatePrintfulVariant';
 import PrintfulCatalogBrowser from '@/components/admin/PrintfulCatalogBrowser';
+import CreateSyncProductButton from '@/components/admin/CreateSyncProductButton';
 
 interface Product {
   id: string;
@@ -288,24 +289,27 @@ const AdminShopPage = () => {
             <p className="text-gray-600">Manage products and orders</p>
           </div>
           
-          <Button
-            onClick={testPrintfulAPI}
-            disabled={isTestingPrintful}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            {isTestingPrintful ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                Testing...
-              </>
-            ) : (
-              <>
-                <Package className="w-4 h-4" />
-                Test Printful API
-              </>
-            )}
-          </Button>
+          <div className="flex items-center gap-4">
+            <CreateSyncProductButton onSuccess={loadProducts} />
+            <Button
+              onClick={testPrintfulAPI}
+              disabled={isTestingPrintful}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              {isTestingPrintful ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  Testing...
+                </>
+              ) : (
+                <>
+                  <Package className="w-4 h-4" />
+                  Test Printful API
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="products" className="space-y-6">
