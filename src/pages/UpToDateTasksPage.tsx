@@ -1,6 +1,6 @@
 
 import TaskStatusPage from '@/components/tasks/TaskStatusPage';
-import { CheckCircle } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { filterTasksByStatus } from '@/utils/taskStatus';
 
 const UpToDateTasksPage = () => {
@@ -17,9 +17,11 @@ const UpToDateTasksPage = () => {
     <TaskStatusPage
       title="Up-to-Date Tasks"
       description="Tasks due in 14+ days"
-      icon={CheckCircle}
+      icon={Check}
       color="text-green-600"
       filterTasks={filterUpToDateTasks}
+      emptyStateMessage="All caught up! No up-to-date tasks 🎉"
+      emptyStateEmoji="✅"
     />
   );
 };

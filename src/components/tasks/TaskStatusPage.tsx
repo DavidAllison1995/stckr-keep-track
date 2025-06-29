@@ -16,9 +16,19 @@ interface TaskStatusPageProps {
   icon: LucideIcon;
   color: string;
   filterTasks: (tasks: any[]) => any[];
+  emptyStateMessage: string;
+  emptyStateEmoji: string;
 }
 
-const TaskStatusPage = ({ title, description, icon: Icon, color, filterTasks }: TaskStatusPageProps) => {
+const TaskStatusPage = ({ 
+  title, 
+  description, 
+  icon: Icon, 
+  color, 
+  filterTasks, 
+  emptyStateMessage, 
+  emptyStateEmoji 
+}: TaskStatusPageProps) => {
   const navigate = useNavigate();
   const { tasks, isLoading } = useSupabaseMaintenance();
   const { getItemById } = useSupabaseItems();
@@ -53,12 +63,12 @@ const TaskStatusPage = ({ title, description, icon: Icon, color, filterTasks }: 
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+      <div className="min-h-screen bg-gray-950">
         <div className="px-4 pt-4 pb-20">
-          <div className="bg-white rounded-t-3xl shadow-lg min-h-screen">
+          <div className="bg-gray-900 rounded-t-3xl shadow-lg min-h-screen border border-gray-800">
             <div className="p-6 pb-8">
               <div className="flex items-center justify-center h-64">
-                <div className="text-gray-500">Loading tasks...</div>
+                <div className="text-gray-400">Loading tasks...</div>
               </div>
             </div>
           </div>
@@ -68,22 +78,24 @@ const TaskStatusPage = ({ title, description, icon: Icon, color, filterTasks }: 
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gray-950">
       <div className="px-4 pt-4 pb-20">
-        <div className="bg-white rounded-t-3xl shadow-lg min-h-screen">
+        <div className="bg-gray-900 rounded-t-3xl shadow-large min-h-screen border border-gray-800">
           <div className="p-6 pb-8">
             {/* Header */}
             <div className="flex items-center gap-4 mb-6">
               <Link to="/calendar">
-                <Button variant="ghost" size="sm" className="p-2">
+                <Button variant="ghost" size="sm" className="p-2 text-gray-300 hover:text-white hover:bg-gray-800">
                   <ArrowLeft className="w-4 h-4" />
                 </Button>
               </Link>
               <div className="flex items-center gap-3">
-                <Icon className={`w-6 h-6 ${color}`} />
+                <div className="p-2 rounded-full bg-purple-600/20 border border-purple-500/30">
+                  <Icon className={`w-6 h-6 text-purple-400`} />
+                </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-                  <p className="text-gray-600">{description} ({filteredTasks.length} tasks)</p>
+                  <h1 className="text-2xl font-bold text-white">{title}</h1>
+                  <p className="text-gray-400">{description} ({filteredTasks.length} tasks)</p>
                 </div>
               </div>
             </div>
@@ -91,10 +103,31 @@ const TaskStatusPage = ({ title, description, icon: Icon, color, filterTasks }: 
             {/* Tasks List */}
             <div className="space-y-4">
               {filteredTasks.length === 0 ? (
-                <Card>
+                <Card className="bg-gray-800 border-gray-700 shadow-soft">
                   <CardContent className="p-8 text-center">
-                    <Icon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500">No tasks found for this category</p>
+                    <div className="text-6xl mb-4 animate-pulse">
+                      {emptyStateEmoji}
+                    </div>
+                    <h3 className="text-xl font-semibold text-white mb-2">
+                      {emptyStateMessage}
+                    </h3>
+                    <p className="text-gray-400 mb-6">
+                      {filteredTasks.length === 0 && title.includes('Up-to-Date') && "Great job staying on top of your maintenance!"}
+                      {filteredTasks.length === 0 && title.includes('Due Soon') && "Check back soon to stay ahead of upcoming tasks."}
+                      {filteredTasks.length === 0 && title.includes('Overdue') && "All your tasks are on track!"}
+                    </p>
+                    <div className="flex gap-3 justify-center">
+                      <Link to="/calendar">
+                        <Button className="bg-purple-600 hover:bg-purple-700 text-white shadow-soft hover:shadow-md transition-all duration-200">
+                          Back to Calendar
+                        </Button>
+                      </Link>
+                      <Link to="/items">
+                        <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-500">
+                          View All Items
+                        </Button>
+                      </Link>
+                    </div>
                   </CardContent>
                 </Card>
               ) : (
@@ -103,25 +136,26 @@ const TaskStatusPage = ({ title, description, icon: Icon, color, filterTasks }: 
                   return (
                     <Card 
                       key={task.id} 
-                      className="hover:shadow-md transition-shadow cursor-pointer"
+                      className="bg-gray-800 border-gray-700 hover:shadow-medium hover:border-purple-500/30 transition-all duration-200 cursor-pointer hover:-translate-y-0.5"
                       onClick={() => handleTaskClick(task)}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-2">
-                          <h3 className="font-semibold text-lg">{task.title}</h3>
+                          <h3 className="font-semibold text-lg text-white">{task.title}</h3>
                           <div className="flex items-center gap-2">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={(e) => handleAddToCalendar(task, e)}
                               title="Add to Calendar"
+                              className="border-gray-600 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-500 transition-all duration-200"
                             >
                               <CalendarPlus className="w-4 h-4 mr-1" />
                               Add to Calendar
                             </Button>
                             <Badge
                               variant="secondary"
-                              className={getTaskStatusColor(task)}
+                              className={`${getTaskStatusColor(task)} transition-all duration-200`}
                             >
                               {getTaskStatusLabel(task)}
                             </Badge>
@@ -129,14 +163,14 @@ const TaskStatusPage = ({ title, description, icon: Icon, color, filterTasks }: 
                         </div>
                         
                         {task.notes && (
-                          <p className="text-gray-600 mb-3">{task.notes}</p>
+                          <p className="text-gray-300 mb-3">{task.notes}</p>
                         )}
                         
-                        <div className="flex items-center justify-between text-sm text-gray-500">
+                        <div className="flex items-center justify-between text-sm text-gray-400">
                           <div className="flex items-center gap-4">
                             <span>Due: {new Date(task.date).toLocaleDateString()}</span>
                             {assignedItem && (
-                              <span>Item: {assignedItem.name}</span>
+                              <span>Item: <span className="text-purple-400">{assignedItem.name}</span></span>
                             )}
                           </div>
                           <span className="capitalize">

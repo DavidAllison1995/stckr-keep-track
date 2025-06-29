@@ -20,6 +20,8 @@ const OverdueTasksPage = () => {
       icon={AlertTriangle}
       color="text-red-600"
       filterTasks={filterOverdueTasks}
+      emptyStateMessage="Some tasks need your attention ⚠️"
+      emptyStateEmoji="⚠️"
     />
   );
 };

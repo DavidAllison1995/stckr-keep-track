@@ -20,6 +20,8 @@ const DueSoonTasksPage = () => {
       icon={Clock}
       color="text-yellow-600"
       filterTasks={filterDueSoonTasks}
+      emptyStateMessage="Heads-up! You have tasks due soon ⏳"
+      emptyStateEmoji="⏳"
     />
   );
 };
