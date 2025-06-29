@@ -318,6 +318,13 @@ async function sendToPrintful(order: any, products: any[], items: any[], shippin
       return;
     }
 
+    // Create Printful-compatible external ID using timestamp and order prefix
+    const timestamp = Date.now();
+    const shortOrderId = order.id.substring(0, 8);
+    const printfulExternalId = `order-${timestamp}-${shortOrderId}`;
+    
+    console.log("🏷️ USING PRINTFUL EXTERNAL ID:", printfulExternalId);
+
     // Prepare Printful order payload using sync variant IDs
     const printfulOrder = {
       recipient: {
@@ -333,7 +340,7 @@ async function sendToPrintful(order: any, products: any[], items: any[], shippin
       },
       items: printfulItems,
       shipping: "STANDARD",
-      external_id: order.id,
+      external_id: printfulExternalId,
     };
 
     console.log("📦 PRINTFUL ORDER PAYLOAD:", JSON.stringify(printfulOrder, null, 2));
