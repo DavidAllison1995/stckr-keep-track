@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/sheet';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Plus, Minus, Trash2, ExternalLink } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Trash2, ExternalLink, ArrowLeft } from 'lucide-react';
 import { useShop } from '@/hooks/useShop';
 import { useCart } from '@/contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
@@ -47,13 +47,13 @@ const CartDrawer = ({ open, onClose }: CartDrawerProps) => {
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-lg">
+      <SheetContent className="w-full sm:max-w-lg bg-gray-900 border-gray-800">
         <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
+          <SheetTitle className="flex items-center gap-2 text-white">
             <ShoppingCart className="w-5 h-5" />
             Shopping Cart
           </SheetTitle>
-          <SheetDescription>
+          <SheetDescription className="text-gray-400">
             {cartItems.length === 0 
               ? "Your cart is empty"
               : `${cartItems.length} item${cartItems.length > 1 ? 's' : ''} in your cart`
@@ -64,20 +64,26 @@ const CartDrawer = ({ open, onClose }: CartDrawerProps) => {
         <div className="mt-6 space-y-4">
           {cartItems.length === 0 ? (
             <div className="text-center py-8">
-              <ShoppingCart className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-600 mb-2">Your cart is empty</h3>
-              <p className="text-gray-500 mb-4">Add some products to get started!</p>
-              <Button onClick={handleContinueShopping}>Continue Shopping</Button>
+              <ShoppingCart className="w-16 h-16 mx-auto text-gray-600 mb-4" />
+              <h3 className="text-lg font-semibold text-white mb-2">Your cart is empty</h3>
+              <p className="text-gray-400 mb-4">Add some products to get started!</p>
+              <Button 
+                onClick={handleContinueShopping}
+                className="bg-gray-800 text-white hover:bg-purple-600 border border-gray-700 hover:border-purple-500"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Shop
+              </Button>
             </div>
           ) : (
             <>
               {/* Cart Items */}
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {cartItems.map((item) => (
-                  <Card key={item.id}>
+                  <Card key={item.id} className="bg-gray-800 border-gray-700">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
-                        <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <div className="w-16 h-16 bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0">
                           {item.product?.image_url ? (
                             <img 
                               src={item.product.image_url} 
@@ -90,31 +96,31 @@ const CartDrawer = ({ open, onClose }: CartDrawerProps) => {
                         </div>
                         
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm truncate">
+                          <h4 className="font-medium text-sm truncate text-white">
                             {item.product?.name || 'Product'}
                           </h4>
-                          <p className="text-sm text-gray-600 mb-2">
+                          <p className="text-sm text-gray-400 mb-2">
                             £{item.product?.price?.toFixed(2) || '0.00'} each
                           </p>
                           
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center border rounded-lg">
+                            <div className="flex items-center border border-gray-600 rounded-lg bg-gray-700">
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
-                                className="h-8 w-8 p-0"
+                                className="h-8 w-8 p-0 text-gray-300 hover:text-white hover:bg-gray-600"
                               >
                                 <Minus className="w-3 h-3" />
                               </Button>
-                              <span className="px-3 text-sm font-medium">
+                              <span className="px-3 text-sm font-medium text-white">
                                 {item.quantity}
                               </span>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
-                                className="h-8 w-8 p-0"
+                                className="h-8 w-8 p-0 text-gray-300 hover:text-white hover:bg-gray-600"
                               >
                                 <Plus className="w-3 h-3" />
                               </Button>
@@ -124,7 +130,7 @@ const CartDrawer = ({ open, onClose }: CartDrawerProps) => {
                               variant="ghost"
                               size="sm"
                               onClick={() => removeFromCart(item.id)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              className="text-red-400 hover:text-red-300 hover:bg-red-900/30"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -132,7 +138,7 @@ const CartDrawer = ({ open, onClose }: CartDrawerProps) => {
                         </div>
                         
                         <div className="text-right">
-                          <Badge variant="secondary" className="text-sm font-medium">
+                          <Badge variant="secondary" className="text-sm font-medium bg-purple-900/50 text-purple-200">
                             £{((item.product?.price || 0) * item.quantity).toFixed(2)}
                           </Badge>
                         </div>
@@ -142,9 +148,21 @@ const CartDrawer = ({ open, onClose }: CartDrawerProps) => {
                 ))}
               </div>
 
+              {/* Continue Shopping Button */}
+              <div className="pt-2">
+                <Button
+                  onClick={handleContinueShopping}
+                  variant="outline"
+                  className="w-full bg-gray-800 text-white border-gray-700 hover:bg-purple-600 hover:border-purple-500"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Shop
+                </Button>
+              </div>
+
               {/* Cart Total & Checkout */}
-              <div className="border-t pt-4 space-y-4">
-                <div className="flex items-center justify-between text-lg font-semibold">
+              <div className="border-t border-gray-700 pt-4 space-y-4">
+                <div className="flex items-center justify-between text-lg font-semibold text-white">
                   <span>Total</span>
                   <span>£{cartTotal.toFixed(2)}</span>
                 </div>
@@ -152,7 +170,7 @@ const CartDrawer = ({ open, onClose }: CartDrawerProps) => {
                 <Button
                   onClick={handleCheckout}
                   disabled={isLoading || cartItems.length === 0}
-                  className="w-full"
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                   size="lg"
                 >
                   {isLoading ? (

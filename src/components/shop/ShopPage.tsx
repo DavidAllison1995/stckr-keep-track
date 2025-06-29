@@ -31,27 +31,27 @@ const ShopPage = () => {
   };
 
   return (
-    <div>
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gray-950">
+      <div className="max-w-6xl mx-auto p-6">
         {/* Header Section */}
         <div className="flex items-start justify-between mb-8">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <Package className="w-8 h-8 text-blue-600" />
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <Package className="w-8 h-8 text-purple-500" />
+              <h1 className="text-4xl font-bold text-white">
                 Shop
               </h1>
             </div>
-            <p className="text-gray-600 text-lg leading-relaxed">
+            <p className="text-gray-400 text-lg leading-relaxed">
               Get your QR code stickers and Stckr-branded products
             </p>
-            <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mt-3"></div>
+            <div className="w-24 h-1 bg-purple-500 rounded-full mt-3"></div>
           </div>
           
           {/* Cart Button */}
           <Button
             onClick={() => setIsCartOpen(true)}
-            className="bg-white border-2 border-blue-200 text-blue-700 hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white hover:border-transparent transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+            className="bg-gray-900 border border-gray-700 text-white hover:bg-purple-600 hover:border-purple-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
             size="lg"
           >
             <ShoppingCart className="w-5 h-5 mr-2" />
@@ -61,13 +61,13 @@ const ShopPage = () => {
 
         {/* Products Grid */}
         {products.length === 0 ? (
-          <Card className="p-12 text-center bg-white/80 backdrop-blur-sm border-blue-100 shadow-xl">
+          <Card className="p-12 text-center bg-gray-900 border-gray-800 shadow-xl">
             <CardContent>
-              <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
-                <Package className="w-10 h-10 text-blue-500" />
+              <div className="w-20 h-20 mx-auto mb-6 bg-purple-600 rounded-full flex items-center justify-center">
+                <Package className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-2xl font-semibold text-gray-700 mb-3">No Products Available</h3>
-              <p className="text-gray-500 text-lg">
+              <h3 className="text-2xl font-semibold text-white mb-3">No Products Available</h3>
+              <p className="text-gray-400 text-lg">
                 Products will appear here once they're added by administrators.
               </p>
             </CardContent>
@@ -77,17 +77,18 @@ const ShopPage = () => {
             {products.map((product) => (
               <Card 
                 key={product.id} 
-                className="group overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white/90 backdrop-blur-sm border-blue-100 hover:border-blue-200"
+                className="group overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-gray-900 border-gray-800 hover:border-purple-500/50 relative"
               >
+                {/* Purple accent bar */}
+                <div className="absolute top-0 left-0 w-full h-1 bg-purple-500"></div>
+                
                 {/* Product Image Area */}
-                <div className="aspect-square bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-500"></div>
-                  
+                <div className="aspect-square bg-gray-800 flex items-center justify-center relative overflow-hidden p-4">
                   {product.image_url ? (
                     <img 
                       src={product.image_url} 
                       alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      className="w-full h-full object-cover rounded-lg group-hover:scale-110 transition-transform duration-300 shadow-lg"
                       onError={(e) => {
                         // Fallback to default icon if image fails to load
                         e.currentTarget.style.display = 'none';
@@ -97,31 +98,31 @@ const ShopPage = () => {
                   ) : null}
                   
                   {/* Fallback icon - shown when no image or image fails to load */}
-                  <div className={`w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 ${product.image_url ? 'hidden' : ''}`}>
-                    <Package className="w-16 h-16 text-blue-500" />
+                  <div className={`w-32 h-32 bg-purple-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300 ${product.image_url ? 'hidden' : ''}`}>
+                    <Package className="w-16 h-16 text-white" />
                   </div>
                 </div>
                 
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
+                <CardHeader className="pb-3 pt-6">
+                  <CardTitle className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors mb-2">
                     {product.name}
                   </CardTitle>
                   {product.description && (
-                    <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
+                    <p className="text-sm text-gray-400 leading-relaxed">{product.description}</p>
                   )}
                 </CardHeader>
                 
-                <CardContent className="pt-0 space-y-6">
+                <CardContent className="pt-0 space-y-6 pb-6">
                   {/* Price */}
                   <div className="flex items-center justify-center">
-                    <span className="text-3xl font-bold text-green-600 bg-green-50 px-4 py-2 rounded-xl">
+                    <span className="text-3xl font-bold text-green-400 bg-green-900/30 px-4 py-2 rounded-xl border border-green-700/50">
                       £{product.price.toFixed(2)}
                     </span>
                   </div>
                   
                   {/* Quantity Selector */}
-                  <div className="space-y-3">
-                    <label className="text-sm font-medium text-gray-700 block text-center">
+                  <div className="space-y-4">
+                    <label className="text-sm font-medium text-gray-300 block text-center">
                       Quantity
                     </label>
                     <div className="flex items-center justify-center gap-3">
@@ -129,7 +130,7 @@ const ShopPage = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => updateQuantity(product.id, getQuantity(product.id) - 1)}
-                        className="h-10 w-10 p-0 rounded-full border-blue-200 hover:bg-blue-50 hover:border-blue-300"
+                        className="h-10 w-10 p-0 rounded-full border-gray-600 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:border-purple-500"
                       >
                         <Minus className="w-4 h-4" />
                       </Button>
@@ -138,13 +139,13 @@ const ShopPage = () => {
                         min="1"
                         value={getQuantity(product.id)}
                         onChange={(e) => updateQuantity(product.id, parseInt(e.target.value) || 1)}
-                        className="w-20 h-10 text-center border-blue-200 focus:border-blue-400 focus:ring-blue-300 rounded-xl font-semibold"
+                        className="w-20 h-10 text-center border-gray-600 bg-gray-800 text-white focus:border-purple-500 focus:ring-purple-500/20 rounded-xl font-semibold"
                       />
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => updateQuantity(product.id, getQuantity(product.id) + 1)}
-                        className="h-10 w-10 p-0 rounded-full border-blue-200 hover:bg-blue-50 hover:border-blue-300"
+                        className="h-10 w-10 p-0 rounded-full border-gray-600 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:border-purple-500"
                       >
                         <Plus className="w-4 h-4" />
                       </Button>
@@ -154,7 +155,7 @@ const ShopPage = () => {
                   {/* Add to Cart Button */}
                   <Button
                     onClick={() => handleAddToCart(product.id)}
-                    className="w-full py-3 text-white rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
+                    className="w-full py-3 text-white rounded-xl bg-purple-600 hover:bg-purple-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
                     size="lg"
                   >
                     <ShoppingCart className="w-5 h-5 mr-2" />
