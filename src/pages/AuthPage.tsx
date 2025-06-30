@@ -146,7 +146,7 @@ const AuthPage = () => {
             </div>
 
             {/* Trust indicators */}
-            <div className="text-left text-sm text-gray-500 space-y-2">
+            <div className="text-center text-sm text-gray-500 space-y-2">
               <p>✓ Available on mobile and desktop</p>
               <p>✓ Free to start, no credit card required</p>
               <p>✓ Built for busy households and smart storage</p>
