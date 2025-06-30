@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
-import { Mail, Lock, User, Star, Shield, Clock, QrCode } from 'lucide-react';
+import { Mail, Lock, User, Shield, Clock, QrCode } from 'lucide-react';
 
 const AuthPage = () => {
   const {
@@ -96,17 +96,14 @@ const AuthPage = () => {
       <div className="w-full max-w-6xl flex items-center justify-center gap-12">
         {/* Side Content - Use Cases */}
         <div className="hidden lg:block flex-1 max-w-md">
-          <div className="space-y-8">
+          <div className="space-y-8 pt-16">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Join the organised living revolution
+                Stay on top of your household. Effortlessly.
               </h2>
-              <div className="flex items-center justify-center gap-1 mb-2">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 text-yellow-500 fill-current" />
-                ))}
-                <span className="ml-2 text-gray-600 font-medium">Rated 4.9★ by early users</span>
-              </div>
+              <p className="text-lg text-gray-600 leading-relaxed">
+                Get peace of mind knowing your documents and maintenance are always in order.
+              </p>
             </div>
 
             {/* Use Cases */}
@@ -149,16 +146,16 @@ const AuthPage = () => {
             </div>
 
             {/* Trust indicators */}
-            <div className="text-center text-sm text-gray-500 space-y-2">
-              <p>✓ Works on mobile & desktop</p>
+            <div className="text-left text-sm text-gray-500 space-y-2">
+              <p>✓ Available on mobile and desktop</p>
               <p>✓ Free to start, no credit card required</p>
-              <p>✓ Your data is encrypted and secure</p>
+              <p>✓ Built for busy households and smart storage</p>
             </div>
           </div>
         </div>
 
         {/* Main Auth Form */}
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md pt-16">
           {/* Logo and Branding */}
           <div className="text-center mb-8">
             <div className="mb-6">
