@@ -13,7 +13,7 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center px-4 pt-16 pb-20 bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100">
+    <section className="relative min-h-screen flex items-center justify-center px-4 pt-16 pb-20 bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Logo in top left */}
       <div className="absolute top-6 left-6 z-10">
         <img 
@@ -29,7 +29,7 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
         <Button 
           variant="outline" 
           onClick={handleLogin}
-          className="bg-white/80 backdrop-blur-sm border-white/20 hover:bg-white/90"
+          className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm"
         >
           <LogIn className="mr-2 h-4 w-4" />
           Log In
@@ -55,7 +55,7 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Button 
                 size="lg" 
-                className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
                 onClick={onGetStarted}
               >
                 Get Started Free
@@ -64,7 +64,7 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="text-lg px-8 py-6 border-2"
+                className="text-lg px-8 py-6 border-2 border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105"
                 onClick={onWatchDemo}
               >
                 <Play className="mr-2 h-5 w-5" />
@@ -73,14 +73,14 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
             </div>
           </div>
 
-          {/* Phone Mockup */}
+          {/* Phone Mockup - Dark App UI */}
           <div className="relative flex justify-center lg:justify-end animate-scale-in">
             <div className="relative">
-              {/* Phone Frame */}
-              <div className="w-72 h-[600px] bg-gray-900 rounded-[3rem] p-4 shadow-2xl">
-                <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden relative">
+              {/* Phone Frame with glassmorphism effect */}
+              <div className="w-72 h-[600px] bg-gray-100 rounded-[3rem] p-4 shadow-2xl backdrop-blur-sm">
+                <div className="w-full h-full bg-gray-900 rounded-[2.5rem] overflow-hidden relative shadow-inner">
                   {/* Status Bar */}
-                  <div className="bg-gray-100 h-8 flex items-center justify-between px-6 text-xs font-medium">
+                  <div className="bg-gray-800 h-8 flex items-center justify-between px-6 text-xs font-medium text-white">
                     <span>9:41</span>
                     <div className="flex space-x-1">
                       <div className="w-4 h-2 bg-green-500 rounded-sm"></div>
@@ -89,32 +89,32 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
                     </div>
                   </div>
                   
-                  {/* App Content */}
-                  <div className="p-4 space-y-3">
+                  {/* Dark App Content */}
+                  <div className="p-4 space-y-3 bg-gray-900">
                     <div className="text-center">
-                      <h3 className="font-bold text-lg mb-2">Car - Ford Focus</h3>
-                      <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl mx-auto mb-4 flex items-center justify-center">
+                      <h3 className="font-bold text-lg mb-2 text-white">Car - Ford Focus</h3>
+                      <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl mx-auto mb-4 flex items-center justify-center shadow-lg">
                         <span className="text-2xl">🚗</span>
                       </div>
                     </div>
                     
                     <div className="space-y-3">
-                      <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                        <div className="text-sm font-medium text-gray-600">Upcoming</div>
-                        <div className="text-lg font-semibold text-yellow-800">MOT Due</div>
-                        <div className="text-sm text-yellow-600">Due in 2 weeks</div>
+                      <div className="bg-amber-900/30 p-3 rounded-lg border border-amber-600/20 backdrop-blur-sm">
+                        <div className="text-sm font-medium text-gray-400">Upcoming</div>
+                        <div className="text-lg font-semibold text-amber-300">MOT Due</div>
+                        <div className="text-sm text-amber-400">Due in 2 weeks</div>
                       </div>
                       
-                      <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                        <div className="text-sm font-medium text-gray-600">Documents</div>
-                        <div className="text-lg font-semibold text-blue-800">Insurance & V5C</div>
-                        <div className="text-sm text-blue-600">Stored securely ✓</div>
+                      <div className="bg-blue-900/30 p-3 rounded-lg border border-blue-600/20 backdrop-blur-sm">
+                        <div className="text-sm font-medium text-gray-400">Documents</div>
+                        <div className="text-lg font-semibold text-blue-300">Insurance & V5C</div>
+                        <div className="text-sm text-blue-400">Stored securely ✓</div>
                       </div>
 
-                      <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                        <div className="text-sm font-medium text-gray-600">Item Info</div>
-                        <div className="text-lg font-semibold text-gray-800">Purchased: Jan 2022</div>
-                        <div className="text-sm text-gray-600">Warranty valid until Jan 2025</div>
+                      <div className="bg-gray-800/50 p-3 rounded-lg border border-gray-700/30 backdrop-blur-sm">
+                        <div className="text-sm font-medium text-gray-400">Item Info</div>
+                        <div className="text-lg font-semibold text-gray-200">Purchased: Jan 2022</div>
+                        <div className="text-sm text-gray-400">Warranty valid until Jan 2025</div>
                       </div>
                     </div>
                   </div>

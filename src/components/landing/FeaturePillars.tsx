@@ -7,7 +7,7 @@ const FeaturePillars = () => {
     {
       icon: FileText,
       title: "Store What Matters",
-      description: "Digitize and organize all your important item documents — warranties, insurance, manuals and receipts.",
+      description: "Digitise and organise all your important item documents — warranties, insurance, manuals and receipts.",
       gradient: "from-blue-500 to-blue-600"
     },
     {
@@ -32,7 +32,7 @@ const FeaturePillars = () => {
             Transform chaos into control
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            From your boiler manual to your car insurance, keep everything organized and accessible. 
+            From your boiler manual to your car insurance, keep everything organised and accessible. 
             Never lose important documents or miss critical deadlines again.
           </p>
         </div>
@@ -41,10 +41,10 @@ const FeaturePillars = () => {
           {features.map((feature, index) => (
             <Card 
               key={index} 
-              className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-lg h-full"
+              className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-lg h-full bg-white"
             >
               <CardContent className="p-8 text-center h-full flex flex-col">
-                <div className={`w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-r ${feature.gradient} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                <div className={`w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-r ${feature.gradient} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
                   <feature.icon className="h-8 w-8 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-4">

@@ -31,17 +31,17 @@ const HowItWorks = () => {
             How It Works
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Get organized in three simple steps — from physical items to digital peace of mind
+            Get organised in three simple steps — from physical items to digital peace of mind
           </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 md:gap-12">
           {steps.map((step, index) => (
             <div key={index} className="relative">
-              <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 h-full">
+              <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full bg-white">
                 <CardContent className="p-8">
                   {/* Step Number */}
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-6 shadow-lg">
                     {step.number}
                   </div>
                   
@@ -69,7 +69,7 @@ const HowItWorks = () => {
         </div>
 
         {/* Additional context section */}
-        <div className="mt-16 bg-white rounded-2xl p-8 shadow-sm border">
+        <div className="mt-16 bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
           <div className="text-center">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">
               Perfect for everything you own

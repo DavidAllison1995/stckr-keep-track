@@ -6,6 +6,7 @@ import HeroSection from '@/components/landing/HeroSection';
 import FeaturePillars from '@/components/landing/FeaturePillars';
 import HowItWorks from '@/components/landing/HowItWorks';
 import DashboardPreview from '@/components/landing/DashboardPreview';
+import Testimonials from '@/components/landing/Testimonials';
 import FinalCTA from '@/components/landing/FinalCTA';
 
 const Index = () => {
@@ -32,10 +33,10 @@ const Index = () => {
   // Show loading state while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p>Loading...</p>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
@@ -48,13 +49,14 @@ const Index = () => {
 
   // Show landing page for non-authenticated users
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white">
       <HeroSection onGetStarted={handleGetStarted} onWatchDemo={handleWatchDemo} />
       <FeaturePillars />
       <DashboardPreview />
       <div id="how-it-works">
         <HowItWorks />
       </div>
+      <Testimonials />
       <FinalCTA onGetStarted={handleGetStarted} />
     </div>
   );
