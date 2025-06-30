@@ -3,15 +3,21 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'app.lovable.4823056e21ba46289925ad01b2666856',
-  appName: 'stckr-keep-track',
+  appName: 'STCKR - Keep Track',
   webDir: 'dist',
-  server: {
-    url: 'https://4823056e-21ba-4628-9925-ad01b2666856.lovableproject.com?forceHideBadge=true',
-    cleartext: true
-  },
+  // Remove server config for production builds
   plugins: {
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"]
+    },
+    SplashScreen: {
+      launchShowDuration: 2000,
+      backgroundColor: "#ffffff",
+      showSpinner: false
+    },
+    StatusBar: {
+      style: "default",
+      backgroundColor: "#ffffff"
     }
   }
 };
