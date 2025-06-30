@@ -2,7 +2,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.4823056e21ba46289925ad01b2666856',
+  appId: 'com.stckr.keeptrack',
   appName: 'STCKR - Keep Track',
   webDir: 'dist',
   // Remove server config for production builds
