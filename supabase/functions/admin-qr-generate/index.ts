@@ -100,15 +100,15 @@ serve(async (req) => {
       const codeId = generateCodeId()
       const token = crypto.randomUUID()
       
-      // Use branded deep link format
-      const qrUrl = `https://stckr.io/qr/${codeId}`
+      // Use functioning deep link URL
+      const qrUrl = `https://stckr.app/qr/${codeId}`
       
-      // Generate QR code with white foreground and transparent background
-      const qrDataUrl = await generateBrandedQRCode(qrUrl, codeId)
+      // Generate high-quality white QR code with transparent background
+      const qrDataUrl = await generateHighQualityQRCode(qrUrl)
       
       codes.push({ 
-        id: crypto.randomUUID(), // Generate proper UUID for the database id field
-        code: codeId, // Use the generated code for the code field
+        id: crypto.randomUUID(),
+        code: codeId,
         token,
         image_url: qrDataUrl
       })
@@ -118,8 +118,8 @@ serve(async (req) => {
     const { data, error } = await serviceClient
       .from('qr_codes')
       .insert(codes.map(code => ({
-        id: code.id, // This is now a proper UUID
-        code: code.code // This is the readable code like "ABC123"
+        id: code.id,
+        code: code.code
       })))
       .select()
 
@@ -161,19 +161,19 @@ function generateCodeId(): string {
   return result
 }
 
-async function generateBrandedQRCode(url: string, codeId: string): Promise<string> {
+async function generateHighQualityQRCode(url: string): Promise<string> {
   try {
-    // Generate QR code with white foreground and transparent background
-    // Using external service with custom parameters for white-on-transparent branding
+    // Generate high-quality white QR code with transparent background
+    // Using external service optimized for white-on-transparent output
     const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?` +
       `size=512x512&` + // High resolution for print quality
       `data=${encodeURIComponent(url)}&` +
       `format=png&` +
-      `ecc=H&` + // High error correction for larger logo space
-      `color=FFFFFF&` + // White foreground modules
-      `bgcolor=00000000&` + // Transparent background (RGBA format)
-      `margin=30&` + // Larger quiet zone padding for print safety
-      `qzone=6` // Additional quiet zone for larger logo area
+      `ecc=H&` + // High error correction for logo space
+      `color=FFFFFF&` + // Pure white foreground
+      `bgcolor=00000000&` + // Fully transparent background
+      `margin=25&` + // Safe cutting margin
+      `qzone=8` // Extra quiet zone for logo area
     
     const response = await fetch(qrApiUrl)
     if (!response.ok) {
@@ -186,6 +186,7 @@ async function generateBrandedQRCode(url: string, codeId: string): Promise<strin
     
     return dataUrl
   } catch (error) {
+    console.error('QR code generation failed:', error)
     throw new Error('QR code generation failed')
   }
 }

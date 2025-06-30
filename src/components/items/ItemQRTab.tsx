@@ -82,8 +82,8 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
   };
 
   const generateQRCodeImageUrl = (code: string) => {
-    // Use the branded deep link format with white foreground and transparent background
-    const qrUrl = `https://stckr.io/qr/${code}`;
+    // Generate high-quality white QR code with transparent background for functioning deep links
+    const qrUrl = `https://stckr.app/qr/${code}`;
     return `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(qrUrl)}&ecc=H&color=FFFFFF&bgcolor=00000000&margin=25`;
   };
 
@@ -126,42 +126,47 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
       <Card className="border border-gray-200">
         <CardHeader className="pb-4">
           <CardTitle className="text-lg flex items-center gap-2">
-            <QrCode className="w-5 h-5 text-blue-600" />
+            <QrCode className="w-5 h-5 text-[#9333ea]" />
             QR Code
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* QR Code Display */}
+          {/* QR Code Display with Sticker Preview */}
           <div className="text-center">
-            <div className="inline-block p-4 bg-gray-800 rounded-lg border-2 border-gray-200 shadow-sm">
-              <div className="relative">
-                <img
-                  src={generateQRCodeImageUrl(item.qr_code_id)}
-                  alt="QR Code"
-                  className="w-48 h-48 mx-auto"
-                  onError={(e) => {
-                    // Fallback to a simple QR code placeholder
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                  }}
-                />
-                {/* Larger square logo space indicator */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-12 h-12 bg-white bg-opacity-95 border-2 border-gray-300 border-dashed flex items-center justify-center">
-                    <span className="text-xs text-gray-500 font-bold">LOGO</span>
+            {/* Sticker Preview */}
+            <div className="relative inline-block">
+              {/* Sticker background */}
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-600 to-slate-700 rounded-lg shadow-lg transform rotate-1"></div>
+              <div className="relative bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-6 shadow-inner border border-slate-600">
+                <div className="relative">
+                  <img
+                    src={generateQRCodeImageUrl(item.qr_code_id)}
+                    alt="QR Code"
+                    className="w-48 h-48 mx-auto opacity-95"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
+                  {/* Logo Space Indicator */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-12 h-12 bg-white bg-opacity-90 rounded-sm border-2 border-dashed border-slate-300 flex items-center justify-center">
+                      <span className="text-xs text-slate-500 font-bold">LOGO</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
+            
             <div className="mt-4 space-y-2">
-              <Badge variant="secondary" className="text-sm font-mono">
+              <Badge variant="secondary" className="text-sm font-mono bg-[#9333ea] text-white">
                 {item.qr_code_id}
               </Badge>
               <div className="text-xs text-gray-500">
-                Points to: https://stckr.io/qr/{item.qr_code_id}
+                Deep link: https://stckr.app/qr/{item.qr_code_id}
               </div>
-              <div className="text-xs text-blue-600 font-medium">
-                White QR code with transparent background - optimized for dark stickers
+              <div className="text-xs text-[#9333ea] font-medium bg-purple-50 p-2 rounded">
+                ✨ White QR code on dark sticker - optimized for maximum scannability
               </div>
             </div>
           </div>
@@ -170,7 +175,7 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
           <div className="space-y-3">
             <Button 
               onClick={() => setShowScanner(true)} 
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full bg-[#9333ea] hover:bg-[#a855f7] text-white rounded-full font-medium"
               disabled={isAssigning}
             >
               <Scan className="w-4 h-4 mr-2" />
@@ -181,7 +186,7 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
               <AlertDialogTrigger asChild>
                 <Button 
                   variant="outline" 
-                  className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                  className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 rounded-full"
                   disabled={isDeleting}
                 >
                   <Trash2 className="w-4 h-4 mr-2" />

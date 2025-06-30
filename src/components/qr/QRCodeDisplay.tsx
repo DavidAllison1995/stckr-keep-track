@@ -24,15 +24,16 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
       
       for (const code of codes) {
         try {
-          const url = `https://stckr.io/qr/${code.code}`;
+          // Generate functioning deep link URL
+          const url = `https://stckr.app/qr/${code.code}`;
           const qrDataUrl = await QRCode.toDataURL(url, {
             width: 512,
             margin: 3,
             color: {
-              dark: '#FFFFFF', // White foreground
-              light: '#00000000' // Transparent background
+              dark: '#FFFFFF', // Pure white foreground
+              light: '#00000000' // Fully transparent background
             },
-            errorCorrectionLevel: 'H',
+            errorCorrectionLevel: 'H', // High error correction for logo space
             type: 'image/png',
             quality: 1.0,
             rendererOpts: {
@@ -153,52 +154,66 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-center">
-        <Button onClick={downloadPDF} variant="outline" className="flex items-center gap-2">
-          <Download className="w-4 h-4" />
-          Download Print Sheet
+        <Button 
+          onClick={downloadPDF} 
+          className="bg-[#9333ea] hover:bg-[#a855f7] text-white rounded-full px-6 py-2 font-medium transition-all duration-200 hover:shadow-lg"
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Download Sticker Sheet
         </Button>
       </div>
       
-      <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
-        {codes.slice(0, 9).map((code) => (
-          <div key={code.id} className="text-center">
-            <div className="border rounded-lg p-4 bg-gray-800 shadow-sm">
-              {qrImages[code.code] ? (
-                <div className="relative">
-                  <img 
-                    src={qrImages[code.code]} 
-                    alt={`QR Code ${code.code}`}
-                    className="w-full h-auto max-w-[180px] mx-auto"
-                  />
-                  {/* Larger square Stckr icon overlay for preview */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-12 h-12 bg-white rounded-sm flex items-center justify-center shadow-sm border border-gray-200">
+      {/* 3x3 Sticker Sheet Preview */}
+      <div className="bg-gradient-to-br from-slate-100 to-slate-200 p-8 rounded-2xl shadow-lg">
+        <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto">
+          {codes.slice(0, 9).map((code) => (
+            <div key={code.id} className="text-center">
+              {/* Sticker Preview with Branded Background */}
+              <div className="relative">
+                {/* Sticker background with subtle gradient and shadow */}
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-600 to-slate-700 rounded-lg shadow-lg transform rotate-1"></div>
+                <div className="relative bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 shadow-inner border border-slate-600">
+                  {qrImages[code.code] ? (
+                    <div className="relative">
+                      {/* White QR Code */}
                       <img 
-                        src="/stckr-icon.png" 
-                        alt="Stckr" 
-                        className="w-10 h-10"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                        }}
+                        src={qrImages[code.code]} 
+                        alt={`QR Code ${code.code}`}
+                        className="w-full h-auto max-w-[150px] mx-auto opacity-95"
                       />
+                      {/* Logo Space Indicator */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-10 h-10 bg-white bg-opacity-90 rounded-sm border-2 border-dashed border-slate-300 flex items-center justify-center">
+                          <span className="text-xs text-slate-500 font-bold">LOGO</span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="w-full h-32 bg-slate-600 rounded flex items-center justify-center text-slate-400 text-sm">
+                      Generating QR...
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="w-full h-32 bg-gray-100 flex items-center justify-center text-gray-500 text-sm">
-                  Generating QR...
+                {/* Code Label */}
+                <div className="mt-2 text-xs font-mono text-slate-600">
+                  {code.code}
                 </div>
-              )}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
       
-      <div className="text-center text-sm text-gray-600 mt-4 bg-blue-50 p-3 rounded-lg">
-        <strong>Print Ready:</strong> White QR codes with transparent backgrounds - optimized for dark stickers
+      <div className="text-center text-sm text-slate-600 bg-slate-50 p-4 rounded-lg border border-slate-200">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <div className="w-3 h-3 bg-white border border-slate-300 rounded-sm"></div>
+          <strong>Print Ready Stickers:</strong>
+        </div>
+        <div className="text-xs">
+          White QR codes on dark grey stickers • High contrast for maximum scannability • Logo space preserved in center
+        </div>
       </div>
     </div>
   );
