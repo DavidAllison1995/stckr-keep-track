@@ -18,7 +18,7 @@ const FinalCTA = ({ onGetStarted }: FinalCTAProps) => {
           </h2>
           
           <p className="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto">
-            Start organizing your space and never lose track of your belongings again.
+            Start organising your space and never lose track of your belongings again.
           </p>
 
           <div className="flex flex-wrap justify-center gap-6 my-8">
