@@ -103,7 +103,7 @@ serve(async (req) => {
       // Use branded deep link format
       const qrUrl = `https://stckr.io/qr/${codeId}`
       
-      // Generate QR code with larger square logo space
+      // Generate QR code with white foreground and transparent background
       const qrDataUrl = await generateBrandedQRCode(qrUrl, codeId)
       
       codes.push({ 
@@ -163,16 +163,16 @@ function generateCodeId(): string {
 
 async function generateBrandedQRCode(url: string, codeId: string): Promise<string> {
   try {
-    // Generate QR code with high error correction and larger square logo space
-    // Using external service with custom parameters for branding
+    // Generate QR code with white foreground and transparent background
+    // Using external service with custom parameters for white-on-transparent branding
     const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?` +
-      `size=500x500&` + // Larger size for better quality
+      `size=512x512&` + // High resolution for print quality
       `data=${encodeURIComponent(url)}&` +
       `format=png&` +
       `ecc=H&` + // High error correction for larger logo space
-      `color=000000&` + // Black modules
-      `bgcolor=FFFFFF&` + // White background
-      `margin=30&` + // Larger quiet zone padding
+      `color=FFFFFF&` + // White foreground modules
+      `bgcolor=00000000&` + // Transparent background (RGBA format)
+      `margin=30&` + // Larger quiet zone padding for print safety
       `qzone=6` // Additional quiet zone for larger logo area
     
     const response = await fetch(qrApiUrl)

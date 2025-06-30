@@ -82,9 +82,9 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
   };
 
   const generateQRCodeImageUrl = (code: string) => {
-    // Use the branded deep link format with high quality settings and larger logo space
+    // Use the branded deep link format with white foreground and transparent background
     const qrUrl = `https://stckr.io/qr/${code}`;
-    return `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrUrl)}&ecc=H&color=000000&bgcolor=FFFFFF&margin=25`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(qrUrl)}&ecc=H&color=FFFFFF&bgcolor=00000000&margin=25`;
   };
 
   if (!item.qr_code_id) {
@@ -133,7 +133,7 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
         <CardContent className="space-y-6">
           {/* QR Code Display */}
           <div className="text-center">
-            <div className="inline-block p-4 bg-white rounded-lg border-2 border-gray-200 shadow-sm">
+            <div className="inline-block p-4 bg-gray-800 rounded-lg border-2 border-gray-200 shadow-sm">
               <div className="relative">
                 <img
                   src={generateQRCodeImageUrl(item.qr_code_id)}
@@ -159,6 +159,9 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
               </Badge>
               <div className="text-xs text-gray-500">
                 Points to: https://stckr.io/qr/{item.qr_code_id}
+              </div>
+              <div className="text-xs text-blue-600 font-medium">
+                White QR code with transparent background - optimized for dark stickers
               </div>
             </div>
           </div>

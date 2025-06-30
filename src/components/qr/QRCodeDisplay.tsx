@@ -26,11 +26,11 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
         try {
           const url = `https://stckr.io/qr/${code.code}`;
           const qrDataUrl = await QRCode.toDataURL(url, {
-            width: 500,
+            width: 512,
             margin: 3,
             color: {
-              dark: '#000000',
-              light: '#FFFFFF'
+              dark: '#FFFFFF', // White foreground
+              light: '#00000000' // Transparent background
             },
             errorCorrectionLevel: 'H',
             type: 'image/png',
@@ -99,7 +99,7 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
       console.error('Error loading Stckr icon:', error);
     }
     
-    // Generate clean 3x3 grid of QR codes
+    // Generate clean 3x3 grid of QR codes with dark background for print
     for (let i = 0; i < Math.min(codes.length, 9); i++) {
       const code = codes[i];
       const qrImage = qrImages[code.code];
@@ -112,19 +112,28 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
       const y = startY + row * (qrSize + margin);
       
       try {
-        // Add QR code image
+        // Add dark background for the QR code (for print on dark stickers)
+        pdf.setFillColor(45, 45, 45); // Dark gray background
+        pdf.rect(x - 5, y - 5, qrSize + 10, qrSize + 10, 'F');
+        
+        // Add QR code image (white on transparent)
         pdf.addImage(qrImage, 'PNG', x, y, qrSize, qrSize);
         
-        // Add Stckr icon in center of QR code with bigger square space
+        // Add Stckr icon in center of QR code with white background
         if (iconImg) {
-          const iconSize = qrSize * 0.28; // Increased from 0.22 to 0.28 (28% of QR code size)
+          const iconSize = qrSize * 0.28; // 28% of QR code size
           const centerX = x + qrSize / 2;
           const centerY = y + qrSize / 2;
           
           // Add larger white square background for better contrast
-          const bgSize = iconSize * 1.1; // Square background slightly larger than icon
+          const bgSize = iconSize * 1.2; // Square background larger than icon
           pdf.setFillColor(255, 255, 255);
           pdf.rect(centerX - bgSize/2, centerY - bgSize/2, bgSize, bgSize, 'F');
+          
+          // Add thin border around white background
+          pdf.setDrawColor(220, 220, 220);
+          pdf.setLineWidth(0.5);
+          pdf.rect(centerX - bgSize/2, centerY - bgSize/2, bgSize, bgSize, 'S');
           
           // Add the Stckr icon
           pdf.addImage(iconImg, 'PNG', 
@@ -155,7 +164,7 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
       <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
         {codes.slice(0, 9).map((code) => (
           <div key={code.id} className="text-center">
-            <div className="border rounded-lg p-2 bg-white shadow-sm">
+            <div className="border rounded-lg p-4 bg-gray-800 shadow-sm">
               {qrImages[code.code] ? (
                 <div className="relative">
                   <img 
@@ -189,7 +198,7 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
       </div>
       
       <div className="text-center text-sm text-gray-600 mt-4 bg-blue-50 p-3 rounded-lg">
-        <strong>Print Ready:</strong> Clean branded QR sheet with Stckr logo - ready for Printful
+        <strong>Print Ready:</strong> White QR codes with transparent backgrounds - optimized for dark stickers
       </div>
     </div>
   );
