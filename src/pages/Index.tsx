@@ -6,7 +6,6 @@ import HeroSection from '@/components/landing/HeroSection';
 import FeaturePillars from '@/components/landing/FeaturePillars';
 import HowItWorks from '@/components/landing/HowItWorks';
 import DashboardPreview from '@/components/landing/DashboardPreview';
-import Testimonials from '@/components/landing/Testimonials';
 import FinalCTA from '@/components/landing/FinalCTA';
 
 const Index = () => {
@@ -56,7 +55,6 @@ const Index = () => {
       <div id="how-it-works">
         <HowItWorks />
       </div>
-      <Testimonials />
       <FinalCTA onGetStarted={handleGetStarted} />
     </div>
   );

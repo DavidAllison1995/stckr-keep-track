@@ -31,11 +31,9 @@ const Testimonials = () => {
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             What Our Users Say
           </h2>
-          <div className="flex items-center justify-center space-x-4 text-lg text-gray-600">
-            <span>Over</span>
-            <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">5,000</span>
-            <span>items organised and counting</span>
-          </div>
+          <p className="text-lg text-gray-600">
+            Join the organized living revolution
+          </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
