@@ -93,7 +93,7 @@ serve(async (req) => {
 
     const { quantity = 9 } = requestBody
 
-    // Generate unique codes with white QR on black background
+    // Generate unique codes with white QR on dark background
     const codes = []
     
     for (let i = 0; i < quantity; i++) {
@@ -103,8 +103,8 @@ serve(async (req) => {
       // Use functioning deep link URL
       const qrUrl = `https://stckr.app/qr/${codeId}`
       
-      // Generate high-quality white QR code on black background
-      const qrDataUrl = await generatePrintReadyQRCode(qrUrl)
+      // Generate white QR code on dark transparent background - no white fill/padding
+      const qrDataUrl = await generateDarkOptimizedQRCode(qrUrl)
       
       codes.push({ 
         id: crypto.randomUUID(),
@@ -161,18 +161,18 @@ function generateCodeId(): string {
   return result
 }
 
-async function generatePrintReadyQRCode(url: string): Promise<string> {
+async function generateDarkOptimizedQRCode(url: string): Promise<string> {
   try {
-    // Generate high-quality white QR code on solid black background for maximum visibility
+    // Generate white QR code with transparent/dark background - NO white padding or fill
     const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?` +
-      `size=512x512&` + // High resolution for print quality (300+ DPI equivalent)
+      `size=512x512&` + // High resolution for print quality
       `data=${encodeURIComponent(url)}&` +
       `format=png&` +
       `ecc=H&` + // High error correction for logo space
-      `color=FFFFFF&` + // Pure white foreground
-      `bgcolor=000000&` + // Solid black background for visibility
-      `margin=30&` + // Safe cutting margin for printing
-      `qzone=12` // Extra quiet zone for logo area
+      `color=FFFFFF&` + // Pure white QR modules/foreground
+      `bgcolor=1E1E2F&` + // Dark grey background (no transparency to ensure visibility)
+      `margin=0&` + // NO margin/padding - remove white space
+      `qzone=1` // Minimal quiet zone to preserve logo space but no white fill
     
     const response = await fetch(qrApiUrl)
     if (!response.ok) {

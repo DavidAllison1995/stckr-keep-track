@@ -82,9 +82,9 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
   };
 
   const generateQRCodeImageUrl = (code: string) => {
-    // Generate high-quality white QR code on black background for print visibility
+    // Generate white QR code on dark background with no white padding/fill
     const qrUrl = `https://stckr.app/qr/${code}`;
-    return `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(qrUrl)}&ecc=H&color=FFFFFF&bgcolor=000000&margin=30`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(qrUrl)}&ecc=H&color=FFFFFF&bgcolor=1E1E2F&margin=0&qzone=1`;
   };
 
   if (!item.qr_code_id) {
@@ -131,12 +131,12 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* QR Code Display with Print-Ready Sticker Preview */}
+          {/* QR Code Display with Dark Sticker Preview */}
           <div className="text-center">
-            {/* Print-Ready Sticker Preview */}
+            {/* Dark Sticker Preview - Optimized for Dark Backgrounds */}
             <div className="relative inline-block">
-              {/* Sticker background (dark grey for print simulation) */}
-              <div className="bg-gradient-to-br from-gray-600 to-gray-700 rounded-lg p-6 shadow-lg border border-gray-500">
+              {/* Dark sticker background matching generated QR background */}
+              <div className="bg-[#1e1e2f] rounded-xl p-6 shadow-lg border-2 border-gray-600">
                 <div className="relative">
                   <img
                     src={generateQRCodeImageUrl(item.qr_code_id)}
@@ -158,8 +158,8 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
               <div className="text-xs text-gray-500">
                 Deep link: https://stckr.app/qr/{item.qr_code_id}
               </div>
-              <div className="text-xs text-[#9333ea] font-medium bg-purple-50 p-2 rounded">
-                ✨ White QR code on black background - Print ready for maximum scannability
+              <div className="text-xs text-[#9333ea] font-medium bg-purple-50 p-3 rounded">
+                ✨ White QR modules on dark background - No white padding, optimized for dark sticker printing
               </div>
             </div>
           </div>

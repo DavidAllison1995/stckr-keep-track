@@ -28,10 +28,10 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
           const url = `https://stckr.app/qr/${code.code}`;
           const qrDataUrl = await QRCode.toDataURL(url, {
             width: 512,
-            margin: 3,
+            margin: 0, // No margin/padding - remove white space
             color: {
-              dark: '#FFFFFF', // Pure white foreground
-              light: '#000000' // Solid black background for visibility
+              dark: '#FFFFFF', // Pure white QR modules
+              light: '#1E1E2F' // Dark grey background
             },
             errorCorrectionLevel: 'H', // High error correction for logo space
             type: 'image/png',
@@ -63,7 +63,7 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
     
     // Professional print layout
     const margin = 20;
-    const titleSpace = 35;
+    const titleSpace = 40;
     const qrSize = (pageWidth - margin * 4) / 3;
     const spacing = 15;
     
@@ -72,9 +72,13 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
     pdf.rect(0, 0, pageWidth, titleSpace, 'F');
     
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(18);
+    pdf.setFontSize(20);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('STCKR QR Code Sheet', pageWidth / 2, titleSpace / 2 + 3, { align: 'center' });
+    pdf.text('STCKR QR Code Sheet', pageWidth / 2, titleSpace / 2, { align: 'center' });
+    
+    pdf.setFontSize(11);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('White QR Codes for Dark Sticker Backgrounds', pageWidth / 2, titleSpace / 2 + 10, { align: 'center' });
     
     // Generate clean 3x3 grid
     const startY = titleSpace + margin;
@@ -88,28 +92,28 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
       const row = Math.floor(i / 3);
       const col = i % 3;
       const x = margin + col * (qrSize + spacing);
-      const y = startY + row * (qrSize + spacing + 15);
+      const y = startY + row * (qrSize + spacing + 20);
       
       try {
-        // Add sticker background
-        pdf.setFillColor(45, 45, 45);
-        pdf.roundedRect(x - 5, y - 5, qrSize + 10, qrSize + 10, 3, 3, 'F');
+        // Add dark sticker background
+        pdf.setFillColor(30, 30, 47);
+        pdf.roundedRect(x - 8, y - 8, qrSize + 16, qrSize + 16, 4, 4, 'F');
         
-        // Add QR code (white on black background)
+        // Add QR code (white modules on dark background)
         pdf.addImage(qrImage, 'PNG', x, y, qrSize, qrSize);
         
         // Add code label
-        pdf.setTextColor(60, 60, 60);
-        pdf.setFontSize(9);
-        pdf.setFont('courier', 'bold');
-        pdf.text(code.code, x + qrSize/2, y + qrSize + 12, { align: 'center' });
+        pdf.setTextColor(220, 220, 220);
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(code.code, x + qrSize/2, y + qrSize + 14, { align: 'center' });
         
       } catch (error) {
         console.error(`Error adding QR code ${code.code} to PDF:`, error);
       }
     }
     
-    pdf.save('stckr-qr-print-sheet.pdf');
+    pdf.save('stckr-white-qr-print-sheet.pdf');
   };
 
   return (
@@ -127,36 +131,36 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
       {/* Print-Ready 3x3 Sticker Sheet Preview */}
       <div className="bg-white p-8 rounded-2xl shadow-lg border">
         {/* Header */}
-        <div className="bg-[#1e1e2f] text-white p-4 rounded-lg mb-6 text-center">
-          <h3 className="text-lg font-bold">STCKR QR Code Sheet</h3>
-          <p className="text-sm text-gray-300 mt-1">White QR codes on black background - Print ready</p>
+        <div className="bg-[#1e1e2f] text-white p-6 rounded-lg mb-8 text-center">
+          <h3 className="text-xl font-bold">STCKR QR Code Sheet</h3>
+          <p className="text-sm text-gray-300 mt-2">White QR Codes for Dark Sticker Backgrounds</p>
         </div>
         
         {/* 3x3 Grid */}
-        <div className="grid grid-cols-3 gap-6 max-w-3xl mx-auto">
+        <div className="grid grid-cols-3 gap-8 max-w-4xl mx-auto">
           {codes.slice(0, 9).map((code) => (
             <div key={code.id} className="text-center">
-              {/* Print-Ready Sticker Preview */}
+              {/* Dark Sticker Preview */}
               <div className="relative">
-                {/* Sticker background (dark grey) */}
-                <div className="bg-gradient-to-br from-gray-600 to-gray-700 rounded-lg p-3 shadow-md border border-gray-500">
+                {/* Dark sticker background */}
+                <div className="bg-[#1e1e2f] rounded-xl p-4 shadow-lg border-2 border-gray-600">
                   {qrImages[code.code] ? (
                     <div className="relative">
-                      {/* QR Code with black background and white foreground */}
+                      {/* QR Code with white modules on dark background */}
                       <img 
                         src={qrImages[code.code]} 
                         alt={`QR Code ${code.code}`}
-                        className="w-full h-auto max-w-[160px] mx-auto rounded"
+                        className="w-full h-auto max-w-[180px] mx-auto rounded"
                       />
                     </div>
                   ) : (
-                    <div className="w-full h-32 bg-gray-800 rounded flex items-center justify-center text-gray-400 text-sm">
+                    <div className="w-full h-40 bg-gray-700 rounded flex items-center justify-center text-gray-400 text-sm">
                       Generating QR...
                     </div>
                   )}
                 </div>
                 {/* Code Label */}
-                <div className="mt-2 text-xs font-mono text-gray-700 font-semibold">
+                <div className="mt-3 text-sm font-mono text-gray-700 font-bold">
                   {code.code}
                 </div>
               </div>
@@ -165,16 +169,16 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
         </div>
         
         {/* Print Instructions */}
-        <div className="mt-6 text-center text-sm text-gray-600 bg-gray-50 p-4 rounded-lg border">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <div className="w-3 h-3 bg-black border border-gray-300 rounded-sm"></div>
-            <strong>Print Instructions:</strong>
+        <div className="mt-8 text-center text-sm text-gray-600 bg-gray-50 p-6 rounded-lg border">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <div className="w-4 h-4 bg-[#1e1e2f] border border-gray-300 rounded-sm"></div>
+            <strong>Optimized for Dark Sticker Printing:</strong>
           </div>
-          <div className="text-xs space-y-1">
-            <div>• Print at 300 DPI or higher for best quality</div>
-            <div>• White QR codes on black background for maximum contrast</div>
-            <div>• Cut along grey guides for individual stickers</div>
-            <div>• Logo space preserved in center of each QR code</div>
+          <div className="text-xs space-y-2">
+            <div>• White QR modules (#FFFFFF) on dark background (#1E1E2F)</div>
+            <div>• No white padding or fill - only the QR pattern is white</div>
+            <div>• Logo space preserved in center of each code</div>
+            <div>• Print at 300 DPI or higher for best scannability</div>
           </div>
         </div>
       </div>
