@@ -93,7 +93,7 @@ serve(async (req) => {
 
     const { quantity = 9 } = requestBody
 
-    // Generate unique codes with branded QR images
+    // Generate unique codes with white QR on black background
     const codes = []
     
     for (let i = 0; i < quantity; i++) {
@@ -103,8 +103,8 @@ serve(async (req) => {
       // Use functioning deep link URL
       const qrUrl = `https://stckr.app/qr/${codeId}`
       
-      // Generate high-quality white QR code with transparent background
-      const qrDataUrl = await generateHighQualityQRCode(qrUrl)
+      // Generate high-quality white QR code on black background
+      const qrDataUrl = await generatePrintReadyQRCode(qrUrl)
       
       codes.push({ 
         id: crypto.randomUUID(),
@@ -161,19 +161,18 @@ function generateCodeId(): string {
   return result
 }
 
-async function generateHighQualityQRCode(url: string): Promise<string> {
+async function generatePrintReadyQRCode(url: string): Promise<string> {
   try {
-    // Generate high-quality white QR code with transparent background
-    // Using external service optimized for white-on-transparent output
+    // Generate high-quality white QR code on solid black background for maximum visibility
     const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?` +
-      `size=512x512&` + // High resolution for print quality
+      `size=512x512&` + // High resolution for print quality (300+ DPI equivalent)
       `data=${encodeURIComponent(url)}&` +
       `format=png&` +
       `ecc=H&` + // High error correction for logo space
       `color=FFFFFF&` + // Pure white foreground
-      `bgcolor=00000000&` + // Fully transparent background
-      `margin=25&` + // Safe cutting margin
-      `qzone=8` // Extra quiet zone for logo area
+      `bgcolor=000000&` + // Solid black background for visibility
+      `margin=30&` + // Safe cutting margin for printing
+      `qzone=12` // Extra quiet zone for logo area
     
     const response = await fetch(qrApiUrl)
     if (!response.ok) {

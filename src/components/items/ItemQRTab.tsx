@@ -82,9 +82,9 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
   };
 
   const generateQRCodeImageUrl = (code: string) => {
-    // Generate high-quality white QR code with transparent background for functioning deep links
+    // Generate high-quality white QR code on black background for print visibility
     const qrUrl = `https://stckr.app/qr/${code}`;
-    return `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(qrUrl)}&ecc=H&color=FFFFFF&bgcolor=00000000&margin=25`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(qrUrl)}&ecc=H&color=FFFFFF&bgcolor=000000&margin=30`;
   };
 
   if (!item.qr_code_id) {
@@ -131,29 +131,22 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* QR Code Display with Sticker Preview */}
+          {/* QR Code Display with Print-Ready Sticker Preview */}
           <div className="text-center">
-            {/* Sticker Preview */}
+            {/* Print-Ready Sticker Preview */}
             <div className="relative inline-block">
-              {/* Sticker background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-600 to-slate-700 rounded-lg shadow-lg transform rotate-1"></div>
-              <div className="relative bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-6 shadow-inner border border-slate-600">
+              {/* Sticker background (dark grey for print simulation) */}
+              <div className="bg-gradient-to-br from-gray-600 to-gray-700 rounded-lg p-6 shadow-lg border border-gray-500">
                 <div className="relative">
                   <img
                     src={generateQRCodeImageUrl(item.qr_code_id)}
                     alt="QR Code"
-                    className="w-48 h-48 mx-auto opacity-95"
+                    className="w-48 h-48 mx-auto rounded"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.style.display = 'none';
                     }}
                   />
-                  {/* Logo Space Indicator */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-12 h-12 bg-white bg-opacity-90 rounded-sm border-2 border-dashed border-slate-300 flex items-center justify-center">
-                      <span className="text-xs text-slate-500 font-bold">LOGO</span>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -166,7 +159,7 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
                 Deep link: https://stckr.app/qr/{item.qr_code_id}
               </div>
               <div className="text-xs text-[#9333ea] font-medium bg-purple-50 p-2 rounded">
-                ✨ White QR code on dark sticker - optimized for maximum scannability
+                ✨ White QR code on black background - Print ready for maximum scannability
               </div>
             </div>
           </div>
