@@ -1,6 +1,6 @@
 
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, FileText, Bell, Wrench } from 'lucide-react';
+import { Calendar, FileText, Bell, Wrench, Package, QrCode } from 'lucide-react';
 
 const DashboardPreview = () => {
   return (
@@ -32,116 +32,145 @@ const DashboardPreview = () => {
 
             {/* Dashboard content */}
             <div className="p-8 bg-gray-900">
-              {/* Header */}
-              <div className="mb-8">
-                <h1 className="text-2xl font-bold text-white mb-2">Dashboard</h1>
-                <p className="text-gray-400">Welcome back! Here's what needs your attention.</p>
+              {/* Enhanced Header with brand styling */}
+              <div className="text-center mb-12 pt-6">
+                <div className="inline-flex items-center gap-3 mb-4 px-6 py-4 bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-2xl border border-gray-700/50 backdrop-blur-sm shadow-2xl">
+                  <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center shadow-lg">
+                    <QrCode className="w-5 h-5 text-white" />
+                  </div>
+                  <h1 className="text-4xl font-extrabold text-white tracking-tight">
+                    👋 Welcome back,{' '}
+                    <span className="text-purple-400 bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent">
+                      Sarah!
+                    </span>
+                  </h1>
+                </div>
+                <p className="text-gray-400 text-lg font-medium">
+                  Ready to stick with it? Let's manage your space.
+                </p>
               </div>
 
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <Card className="bg-amber-900/30 border-amber-600/20">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-amber-300 text-sm font-medium">Due Soon</p>
-                        <p className="text-2xl font-bold text-white">3</p>
+              {/* Main Grid Layout */}
+              <div className="grid lg:grid-cols-3 gap-6">
+                {/* Main Content - Recent Items */}
+                <div className="lg:col-span-2">
+                  <Card className="shadow-xl border-gray-800 bg-gray-900">
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                          <Package className="w-5 h-5 text-purple-400" />
+                          <span className="text-white text-xl font-semibold">Recent Items</span>
+                        </div>
+                        <button className="text-purple-400 hover:text-purple-300 text-sm">
+                          View All
+                        </button>
                       </div>
-                      <Bell className="h-8 w-8 text-amber-400" />
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg border border-gray-700">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-500 rounded-lg flex items-center justify-center">
+                              <span className="text-lg">🚗</span>
+                            </div>
+                            <div>
+                              <div className="font-medium text-white">Ford Focus</div>
+                              <div className="text-sm text-gray-400">Status: Good</div>
+                            </div>
+                          </div>
+                          <div className="px-3 py-1 bg-amber-900/50 text-amber-300 rounded-full text-xs">
+                            Due soon
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg border border-gray-700">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-green-600 to-green-500 rounded-lg flex items-center justify-center">
+                              <span className="text-lg">🔧</span>
+                            </div>
+                            <div>
+                              <div className="font-medium text-white">Bosch Drill</div>
+                              <div className="text-sm text-gray-400">Status: Good</div>
+                            </div>
+                          </div>
+                          <div className="px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-xs border border-gray-600">
+                            Up to date
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg border border-gray-700">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-500 rounded-lg flex items-center justify-center">
+                              <span className="text-lg">🏠</span>
+                            </div>
+                            <div>
+                              <div className="font-medium text-white">Boiler</div>
+                              <div className="text-sm text-gray-400">Status: Good</div>
+                            </div>
+                          </div>
+                          <div className="px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-xs border border-gray-600">
+                            Up to date
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </Card>
+                </div>
 
-                <Card className="bg-blue-900/30 border-blue-600/20">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-blue-300 text-sm font-medium">Documents</p>
-                        <p className="text-2xl font-bold text-white">47</p>
+                {/* Sidebar */}
+                <div className="space-y-6">
+                  {/* This Week Calendar */}
+                  <Card className="shadow-xl border-gray-800 bg-gray-900">
+                    <div className="p-6">
+                      <div className="flex items-center text-lg mb-4">
+                        <Calendar className="mr-2 h-5 w-5 text-purple-400" />
+                        <span className="text-white">This Week</span>
                       </div>
-                      <FileText className="h-8 w-8 text-blue-400" />
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-300">Mon</span>
+                          <div className="w-6 h-6 bg-blue-500 rounded text-white text-xs flex items-center justify-center">2</div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-300">Tue</span>
+                          <div className="w-6 h-6 bg-gray-700 rounded text-gray-400 text-xs flex items-center justify-center">0</div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-300">Wed</span>
+                          <div className="w-6 h-6 bg-purple-500 rounded text-white text-xs flex items-center justify-center">1</div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-300">Thu</span>
+                          <div className="w-6 h-6 bg-gray-700 rounded text-gray-400 text-xs flex items-center justify-center">0</div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-300">Fri</span>
+                          <div className="w-6 h-6 bg-green-500 rounded text-white text-xs flex items-center justify-center">1</div>
+                        </div>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </Card>
 
-                <Card className="bg-purple-900/30 border-purple-600/20">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-purple-300 text-sm font-medium">Tasks</p>
-                        <p className="text-2xl font-bold text-white">12</p>
+                  {/* Quick Stats */}
+                  <Card className="shadow-xl border-gray-800 bg-gray-900">
+                    <div className="p-6">
+                      <div className="flex items-center text-lg mb-4">
+                        <Wrench className="mr-2 h-5 w-5 text-purple-400" />
+                        <span className="text-white">Quick Stats</span>
                       </div>
-                      <Wrench className="h-8 w-8 text-purple-400" />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-green-900/30 border-green-600/20">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-green-300 text-sm font-medium">Up to Date</p>
-                        <p className="text-2xl font-bold text-white">84</p>
-                      </div>
-                      <Calendar className="h-8 w-8 text-green-400" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Recent Items */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <Card className="bg-gray-800 border-gray-700">
-                  <CardContent className="p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Recent Items</h3>
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                          <span className="text-lg">🚗</span>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-400">Total Items</span>
+                          <span className="font-medium text-white">23</span>
                         </div>
-                        <div>
-                          <p className="text-white font-medium">Ford Focus</p>
-                          <p className="text-gray-400 text-sm">Added 2 days ago</p>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-400">Due Soon</span>
+                          <span className="font-medium text-amber-400">3</span>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
-                          <span className="text-lg">🔧</span>
-                        </div>
-                        <div>
-                          <p className="text-white font-medium">Bosch Drill</p>
-                          <p className="text-gray-400 text-sm">Added 1 week ago</p>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-400">Overdue</span>
+                          <span className="font-medium text-red-400">1</span>
                         </div>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gray-800 border-gray-700">
-                  <CardContent className="p-6">
-                    <h3 className="text-lg font-semibold text-white mb-4">Upcoming Tasks</h3>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-white font-medium">Car MOT</p>
-                          <p className="text-amber-400 text-sm">Due in 2 weeks</p>
-                        </div>
-                        <div className="px-3 py-1 bg-amber-900/50 text-amber-300 rounded-full text-xs">
-                          Due Soon
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-white font-medium">Home Insurance</p>
-                          <p className="text-gray-400 text-sm">Due in 3 months</p>
-                        </div>
-                        <div className="px-3 py-1 bg-gray-700 text-gray-300 rounded-full text-xs">
-                          Pending
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                  </Card>
+                </div>
               </div>
             </div>
           </div>
