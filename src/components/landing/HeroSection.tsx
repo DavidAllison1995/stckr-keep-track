@@ -64,7 +64,7 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="text-lg px-8 py-6 border-2 border-purple-600 text-purple-600 hover:bg-purple-50 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105"
+                className="text-lg px-8 py-6 border-2 border-white text-white hover:bg-white hover:text-purple-600 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105"
                 onClick={onWatchDemo}
               >
                 <Play className="mr-2 h-5 w-5" />
