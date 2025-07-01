@@ -19,7 +19,7 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
         <img 
           src="/lovable-uploads/b040bcf1-975f-4316-8744-a19b2453d26e.png" 
           alt="STCKR Logo" 
-          className="h-12 cursor-pointer hover:opacity-80 transition-opacity"
+          className="h-12 cursor-pointer hover:opacity-80 transition-opacity max-[768px]:h-8"
           onClick={() => window.location.href = '/'}
         />
       </div>
@@ -29,45 +29,45 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
         <Button 
           variant="outline" 
           onClick={handleLogin}
-          className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm"
+          className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm max-[768px]:text-sm max-[768px]:px-3 max-[768px]:py-2"
         >
-          <LogIn className="mr-2 h-4 w-4" />
+          <LogIn className="mr-2 h-4 w-4 max-[768px]:h-3 max-[768px]:w-3" />
           Log In
         </Button>
       </div>
 
       <div className="container mx-auto max-w-7xl">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-2 gap-12 items-center max-[768px]:gap-6">
           {/* Content */}
-          <div className="text-center lg:text-left space-y-8 animate-fade-in">
-            <div className="space-y-6">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+          <div className="text-center lg:text-left space-y-8 animate-fade-in max-[768px]:space-y-4">
+            <div className="space-y-6 max-[768px]:space-y-3">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight max-[768px]:text-2xl max-[768px]:leading-tight">
                 Everything Stored.<br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Nothing Missed.</span>
               </h1>
-              <p className="text-xl md:text-2xl text-gray-600 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+              <p className="text-xl md:text-2xl text-gray-600 max-w-lg mx-auto lg:mx-0 leading-relaxed max-[768px]:text-base max-[768px]:leading-normal">
                 Digitise your items with STCKR,<br />
                 track maintenance, and keep all<br />
                 the important info at your fingertips.
               </p>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start max-[768px]:gap-3">
               <Button 
                 size="lg" 
-                className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                className="text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 max-[768px]:text-base max-[768px]:px-6 max-[768px]:py-4"
                 onClick={onGetStarted}
               >
                 Get Started Free
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ml-2 h-5 w-5 max-[768px]:h-4 max-[768px]:w-4" />
               </Button>
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="text-lg px-8 py-6 border-2 border-white text-white hover:bg-white hover:text-purple-600 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105"
+                className="text-lg px-8 py-6 border-2 border-white text-white hover:bg-white hover:text-purple-600 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 max-[768px]:text-base max-[768px]:px-6 max-[768px]:py-4"
                 onClick={onWatchDemo}
               >
-                <Play className="mr-2 h-5 w-5" />
+                <Play className="mr-2 h-5 w-5 max-[768px]:h-4 max-[768px]:w-4" />
                 See How It Works
               </Button>
             </div>
@@ -77,44 +77,44 @@ const HeroSection = ({ onGetStarted, onWatchDemo }: HeroSectionProps) => {
           <div className="relative flex justify-center lg:justify-end animate-scale-in">
             <div className="relative">
               {/* Phone Frame with glassmorphism effect */}
-              <div className="w-72 h-[600px] bg-gray-100 rounded-[3rem] p-4 shadow-2xl backdrop-blur-sm">
-                <div className="w-full h-full bg-gray-900 rounded-[2.5rem] overflow-hidden relative shadow-inner">
+              <div className="w-72 h-[600px] bg-gray-100 rounded-[3rem] p-4 shadow-2xl backdrop-blur-sm max-[768px]:w-56 max-[768px]:h-[480px] max-[768px]:p-3">
+                <div className="w-full h-full bg-gray-900 rounded-[2.5rem] overflow-hidden relative shadow-inner max-[768px]:rounded-[2rem]">
                   {/* Status Bar */}
-                  <div className="bg-gray-800 h-8 flex items-center justify-between px-6 text-xs font-medium text-white">
+                  <div className="bg-gray-800 h-8 flex items-center justify-between px-6 text-xs font-medium text-white max-[768px]:h-6 max-[768px]:px-4 max-[768px]:text-[10px]">
                     <span>9:41</span>
                     <div className="flex space-x-1">
-                      <div className="w-4 h-2 bg-green-500 rounded-sm"></div>
-                      <div className="w-4 h-2 bg-green-500 rounded-sm"></div>
-                      <div className="w-4 h-2 bg-green-500 rounded-sm"></div>
+                      <div className="w-4 h-2 bg-green-500 rounded-sm max-[768px]:w-3 max-[768px]:h-1.5"></div>
+                      <div className="w-4 h-2 bg-green-500 rounded-sm max-[768px]:w-3 max-[768px]:h-1.5"></div>
+                      <div className="w-4 h-2 bg-green-500 rounded-sm max-[768px]:w-3 max-[768px]:h-1.5"></div>
                     </div>
                   </div>
                   
                   {/* Dark App Content */}
-                  <div className="p-4 space-y-3 bg-gray-900">
+                  <div className="p-4 space-y-3 bg-gray-900 max-[768px]:p-3 max-[768px]:space-y-2">
                     <div className="text-center">
-                      <h3 className="font-bold text-lg mb-2 text-white">Car - Ford Focus</h3>
-                      <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl mx-auto mb-4 flex items-center justify-center shadow-lg">
-                        <span className="text-2xl">🚗</span>
+                      <h3 className="font-bold text-lg mb-2 text-white max-[768px]:text-base max-[768px]:mb-1">Car - Ford Focus</h3>
+                      <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl mx-auto mb-4 flex items-center justify-center shadow-lg max-[768px]:w-16 max-[768px]:h-16 max-[768px]:mb-3">
+                        <span className="text-2xl max-[768px]:text-xl">🚗</span>
                       </div>
                     </div>
                     
-                    <div className="space-y-3">
-                      <div className="bg-amber-900/30 p-3 rounded-lg border border-amber-600/20 backdrop-blur-sm">
-                        <div className="text-sm font-medium text-gray-400">Upcoming</div>
-                        <div className="text-lg font-semibold text-amber-300">MOT Due</div>
-                        <div className="text-sm text-amber-400">Due in 2 weeks</div>
+                    <div className="space-y-3 max-[768px]:space-y-2">
+                      <div className="bg-amber-900/30 p-3 rounded-lg border border-amber-600/20 backdrop-blur-sm max-[768px]:p-2">
+                        <div className="text-sm font-medium text-gray-400 max-[768px]:text-xs">Upcoming</div>
+                        <div className="text-lg font-semibold text-amber-300 max-[768px]:text-base">MOT Due</div>
+                        <div className="text-sm text-amber-400 max-[768px]:text-xs">Due in 2 weeks</div>
                       </div>
                       
-                      <div className="bg-blue-900/30 p-3 rounded-lg border border-blue-600/20 backdrop-blur-sm">
-                        <div className="text-sm font-medium text-gray-400">Documents</div>
-                        <div className="text-lg font-semibold text-blue-300">Insurance & V5C</div>
-                        <div className="text-sm text-blue-400">Stored securely ✓</div>
+                      <div className="bg-blue-900/30 p-3 rounded-lg border border-blue-600/20 backdrop-blur-sm max-[768px]:p-2">
+                        <div className="text-sm font-medium text-gray-400 max-[768px]:text-xs">Documents</div>
+                        <div className="text-lg font-semibold text-blue-300 max-[768px]:text-base">Insurance & V5C</div>
+                        <div className="text-sm text-blue-400 max-[768px]:text-xs">Stored securely ✓</div>
                       </div>
 
-                      <div className="bg-gray-800/50 p-3 rounded-lg border border-gray-700/30 backdrop-blur-sm">
-                        <div className="text-sm font-medium text-gray-400">Item Info</div>
-                        <div className="text-lg font-semibold text-gray-200">Purchased: Jan 2022</div>
-                        <div className="text-sm text-gray-400">Warranty valid until Jan 2025</div>
+                      <div className="bg-gray-800/50 p-3 rounded-lg border border-gray-700/30 backdrop-blur-sm max-[768px]:p-2">
+                        <div className="text-sm font-medium text-gray-400 max-[768px]:text-xs">Item Info</div>
+                        <div className="text-lg font-semibold text-gray-200 max-[768px]:text-base">Purchased: Jan 2022</div>
+                        <div className="text-sm text-gray-400 max-[768px]:text-xs">Warranty valid until Jan 2025</div>
                       </div>
                     </div>
                   </div>
