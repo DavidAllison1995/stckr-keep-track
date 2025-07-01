@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { useDragScroll } from '@/hooks/useDragScroll';
 import { getIconComponent } from '@/components/icons';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, Home } from 'lucide-react';
 import ItemCard from './ItemCard';
 import ItemForm from './ItemForm';
 
@@ -46,15 +46,13 @@ const ItemsList = ({ onItemSelect }: ItemsListProps) => {
     }
   };
 
-  const BoxIcon = getIconComponent('box');
-
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Enhanced Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-purple-600/20 rounded-xl border border-purple-500/30 shadow-soft">
-            <BoxIcon className="w-6 h-6 text-purple-400" />
+            <Home className="w-6 h-6 text-purple-400" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-purple-400 drop-shadow-sm">My Items</h1>
@@ -127,7 +125,7 @@ const ItemsList = ({ onItemSelect }: ItemsListProps) => {
         <Card variant="elevated" className="bg-gray-800/50 border-gray-700 shadow-medium">
           <CardContent className="p-8 text-center">
             <div className="w-16 h-16 mx-auto mb-4 bg-purple-600/20 rounded-2xl flex items-center justify-center border border-purple-500/30">
-              <BoxIcon className="w-8 h-8 text-purple-400" />
+              <Home className="w-8 h-8 text-purple-400" />
             </div>
             <h3 className="text-lg font-semibold text-white mb-2">No items found</h3>
             <p className="text-gray-400 mb-4 text-sm">
