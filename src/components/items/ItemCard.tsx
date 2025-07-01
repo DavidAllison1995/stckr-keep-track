@@ -19,7 +19,7 @@ import {
 import { Item } from '@/hooks/useSupabaseItems';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
-import { getIconComponent } from '@/components/icons';
+import TwemojiIcon from '@/components/icons/TwemojiIcon';
 import { QrCode, Download, Clock, AlertTriangle, CheckCircle2, Trash2, ChevronRight, Check, X, Eye, Edit } from 'lucide-react';
 import ItemDetail from './ItemDetail';
 import ItemForm from './ItemForm';
@@ -60,7 +60,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
     });
   }, [tasks, itemTasks, item.name, item.id, pendingTasks.length, dueSoonTasks.length, overdueTasks.length, inProgressTasks.length]);
 
-  const IconComponent = getIconComponent(item.icon_id || 'box');
+  const iconEmoji = item.icon_id || '📦';
   
   // Generate short code from QR code ID
   const shortCode = item.qr_code_id ? `B${item.qr_code_id.slice(-4).toUpperCase()}` : null;
@@ -179,7 +179,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
               />
             ) : (
               <div className="p-4 bg-gray-800/50 backdrop-blur-sm rounded-xl transition-transform duration-300 group-hover:scale-110 border border-purple-500/20">
-                <IconComponent className="w-8 h-8 text-purple-400" />
+                <TwemojiIcon emoji={iconEmoji} className="w-8 h-8" size={32} alt={`${item.name} icon`} />
               </div>
             )}
             
