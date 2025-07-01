@@ -23,6 +23,7 @@ import SettingsPage from "./pages/SettingsPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 import QRRedirectPage from "./pages/QRRedirectPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 
 // Route components
 import PublicRoutes from "./routes/PublicRoutes";
@@ -58,6 +59,7 @@ function App() {
                     {/* Public routes */}
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                     
                     {/* Universal QR code route - publicly accessible */}
                     <Route 
