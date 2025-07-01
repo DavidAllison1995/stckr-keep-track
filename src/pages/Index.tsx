@@ -7,7 +7,6 @@ import FeaturePillars from '@/components/landing/FeaturePillars';
 import HowItWorks from '@/components/landing/HowItWorks';
 import DashboardPreview from '@/components/landing/DashboardPreview';
 import FinalCTA from '@/components/landing/FinalCTA';
-import Footer from '@/components/landing/Footer';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -57,7 +56,6 @@ const Index = () => {
         <HowItWorks />
       </div>
       <FinalCTA onGetStarted={handleGetStarted} />
-      <Footer />
     </div>
   );
 };
