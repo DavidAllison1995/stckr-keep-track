@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +11,7 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { Mail, Lock, User, QrCode, Eye, EyeOff, Info } from 'lucide-react';
 
 const AuthPage = () => {
+  const navigate = useNavigate();
   const {
     isAuthenticated,
     isLoading,
@@ -110,11 +110,16 @@ const AuthPage = () => {
         {/* Centered Content */}
         <div className="w-full max-w-md">
           {/* Logo and Branding - Centered */}
-          <div className="text-center mb-6">
-            <div className="mb-4">
-              <img src="/lovable-uploads/b040bcf1-975f-4316-8744-a19b2453d26e.png" alt="STCKR Logo" className="h-12 mx-auto" />
+          <div className="text-center mb-4">
+            <div className="mb-3">
+              <img 
+                src="/lovable-uploads/b040bcf1-975f-4316-8744-a19b2453d26e.png" 
+                alt="STCKR Logo" 
+                className="h-10 mx-auto cursor-pointer hover:opacity-80 transition-opacity" 
+                onClick={() => navigate('/')}
+              />
             </div>
-            <p className="text-gray-600 text-base font-medium">Track. Organise. Simplify.</p>
+            <p className="text-gray-600 text-sm font-medium">Track. Organise. Simplify.</p>
           </div>
 
           {/* Main Form Card with enhanced styling */}
