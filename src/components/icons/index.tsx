@@ -1,3 +1,4 @@
+
 export { default as FridgeIcon } from './FridgeIcon';
 export { default as OvenIcon } from './OvenIcon';
 export { default as WasherIcon } from './WasherIcon';
@@ -51,7 +52,28 @@ export { default as PassportIcon } from './PassportIcon';
 export { default as StorageBoxIcon } from './StorageBoxIcon';
 export { default as FileCabinetIcon } from './FileCabinetIcon';
 
-// Import all the new emoji-style icons
+// Import all the icons
+import FridgeIcon from './FridgeIcon';
+import OvenIcon from './OvenIcon';
+import WasherIcon from './WasherIcon';
+import DryerIcon from './DryerIcon';
+import TvIcon from './TvIcon';
+import LampIcon from './LampIcon';
+import BoilerIcon from './BoilerIcon';
+import BikeIcon from './BikeIcon';
+import CarIcon from './CarIcon';
+import VacuumIcon from './VacuumIcon';
+import LaptopIcon from './LaptopIcon';
+import PhoneIcon from './PhoneIcon';
+import ToolIcon from './ToolIcon';
+import SofaIcon from './SofaIcon';
+import BedIcon from './BedIcon';
+import TableIcon from './TableIcon';
+import ChairIcon from './ChairIcon';
+import PlantIcon from './PlantIcon';
+import BookIcon from './BookIcon';
+import ToolboxIcon from './ToolboxIcon';
+import BoxIcon from './BoxIcon';
 import DrillIcon from './DrillIcon';
 import ScrewdriverIcon from './ScrewdriverIcon';
 import WrenchIcon from './WrenchIcon';
