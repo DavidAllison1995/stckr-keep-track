@@ -1,150 +1,131 @@
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { iconRegistry, getIconById } from '@/components/icons';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { iconRegistry, getIconsByCategory, searchIcons, getAllCategories, getIconComponent } from '@/components/icons';
+import { Search, Package } from 'lucide-react';
 
 interface IconPickerProps {
-  selectedIconId?: string;
+  selectedIconId: string;
   onChange: (iconId: string) => void;
 }
 
-const IconPicker = ({ selectedIconId = 'box', onChange }: IconPickerProps) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isOpen, setIsOpen] = useState(false);
-  const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const filteredIcons = iconRegistry.filter(icon =>
-    icon.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Show "Default" option if no matches
-  const displayIcons = filteredIcons.length > 0 ? filteredIcons : [
-    { id: 'box', name: 'Default', component: getIconById('box')?.component, category: 'Other' }
-  ];
-
-  const selectedIcon = getIconById(selectedIconId);
-
-  useEffect(() => {
-    setHighlightedIndex(0);
-  }, [searchTerm]);
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!isOpen) return;
-
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setHighlightedIndex(prev => 
-          prev < displayIcons.length - 1 ? prev + 1 : 0
-        );
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setHighlightedIndex(prev => 
-          prev > 0 ? prev - 1 : displayIcons.length - 1
-        );
-        break;
-      case 'Enter':
-        e.preventDefault();
-        if (displayIcons[highlightedIndex]) {
-          handleSelect(displayIcons[highlightedIndex].id);
-        }
-        break;
-      case 'Escape':
-        e.preventDefault();
-        setIsOpen(false);
-        inputRef.current?.blur();
-        break;
+const IconPicker = ({ selectedIconId, onChange }: IconPickerProps) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  
+  const categories = getAllCategories();
+  const SelectedIcon = getIconComponent(selectedIconId);
+  
+  const getDisplayedIcons = () => {
+    if (searchQuery.trim()) {
+      return searchIcons(searchQuery);
     }
-  };
-
-  const handleSelect = (iconId: string) => {
-    onChange(iconId);
-    setIsOpen(false);
-    setSearchTerm('');
-    inputRef.current?.blur();
-  };
-
-  const handleFocus = () => {
-    setIsOpen(true);
-  };
-
-  const handleBlur = (e: React.FocusEvent) => {
-    // Don't close if clicking inside dropdown
-    if (dropdownRef.current?.contains(e.relatedTarget as Node)) {
-      return;
+    
+    if (selectedCategory === 'all') {
+      return iconRegistry;
     }
-    setIsOpen(false);
-    setSearchTerm('');
+    
+    return getIconsByCategory(selectedCategory);
   };
+
+  const displayedIcons = getDisplayedIcons();
 
   return (
-    <div className="space-y-2">
-      <Label>Item Icon</Label>
-      
-      <div className="relative">
-        {/* Selected Icon + Search Input Bar */}
-        <div className="flex items-center gap-3 p-3 border rounded-md bg-background">
-          {/* Selected Icon Display */}
-          <div className="flex items-center gap-2 min-w-0">
-            {selectedIcon && (
-              <selectedIcon.component className="w-6 h-6 flex-shrink-0" />
-            )}
-            <span className="text-sm font-medium truncate">
-              {selectedIcon ? selectedIcon.name : 'Select an icon'}
-            </span>
-          </div>
-          
-          {/* Search Input */}
-          <div className="flex-1 min-w-0">
-            <Input
-              ref={inputRef}
-              type="text"
-              placeholder="Search icons..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              onKeyDown={handleKeyDown}
-              className="border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-            />
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="iconPicker" className="text-gray-100">Choose an Icon</Label>
+        <div className="mt-2 p-4 bg-gray-800 border border-gray-700 rounded-lg">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-purple-600/20 border border-purple-500/30 rounded-lg">
+              <SelectedIcon className="w-8 h-8 text-purple-400" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-100">Selected Icon</p>
+              <p className="text-xs text-gray-400">
+                {iconRegistry.find(icon => icon.id === selectedIconId)?.name || 'Generic Item'}
+              </p>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Dropdown */}
-        {isOpen && (
-          <div 
-            ref={dropdownRef}
-            className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border rounded-md shadow-md max-h-48 overflow-y-auto"
-          >
-            {displayIcons.map((icon, index) => {
-              const IconComponent = icon.component;
-              const isHighlighted = index === highlightedIndex;
-              
-              return (
-                <div
-                  key={icon.id}
-                  className={`flex items-center gap-3 px-3 py-2 cursor-pointer transition-colors ${
-                    isHighlighted 
-                      ? 'bg-accent text-accent-foreground' 
-                      : 'hover:bg-accent hover:text-accent-foreground'
-                  }`}
-                  onMouseDown={(e) => {
-                    e.preventDefault(); // Prevent input blur
-                    handleSelect(icon.id);
-                  }}
-                  onMouseEnter={() => setHighlightedIndex(index)}
-                >
-                  {IconComponent && <IconComponent className="w-6 h-6 flex-shrink-0" />}
-                  <span className="text-sm">{icon.name}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
+      <div className="space-y-3">
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Input
+            placeholder="Search icons (e.g., 'drill', 'kitchen', 'car')..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-gray-800 border-gray-700 text-gray-100 placeholder:text-gray-500"
+          />
+        </div>
+
+        {/* Category Tabs */}
+        <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-6 bg-gray-800 border-gray-700">
+            <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
+            {categories.slice(0, 5).map(category => (
+              <TabsTrigger key={category} value={category} className="text-xs">
+                {category.length > 8 ? category.slice(0, 6) + '...' : category}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          <TabsContent value={selectedCategory} className="mt-3">
+            <ScrollArea className="h-64 border border-gray-700 rounded-lg bg-gray-800/50">
+              <div className="p-3">
+                {displayedIcons.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Package className="w-12 h-12 text-gray-500 mb-2" />
+                    <p className="text-gray-400">No icons found</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Try a different search term or category
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {searchQuery && (
+                      <p className="text-xs text-gray-400 mb-3">
+                        Found {displayedIcons.length} icon{displayedIcons.length !== 1 ? 's' : ''}
+                      </p>
+                    )}
+                    <div className="grid grid-cols-6 sm:grid-cols-8 gap-2">
+                      {displayedIcons.map((icon) => {
+                        const IconComponent = icon.component;
+                        const isSelected = selectedIconId === icon.id;
+                        
+                        return (
+                          <Button
+                            key={icon.id}
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onChange(icon.id)}
+                            className={`p-3 h-auto flex flex-col gap-1 transition-all duration-200 hover:bg-purple-600/20 hover:border-purple-500/30 ${
+                              isSelected 
+                                ? 'bg-purple-600/30 border border-purple-500/50 shadow-md' 
+                                : 'bg-gray-700/50 border border-gray-600/50 hover:bg-purple-600/20'
+                            }`}
+                            title={`${icon.name} (${icon.category})`}
+                          >
+                            <IconComponent className="w-6 h-6" />
+                            <span className="text-[10px] text-center leading-tight text-gray-300 group-hover:text-white">
+                              {icon.name.length > 8 ? icon.name.slice(0, 6) + '...' : icon.name}
+                            </span>
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
