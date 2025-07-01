@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { DatePicker } from '@/components/ui/date-picker';
 import { useSupabaseMaintenance, MaintenanceTask } from '@/hooks/useSupabaseMaintenance';
 import { useToast } from '@/hooks/use-toast';
 
@@ -34,6 +35,13 @@ const TaskEditDialog = ({ task, open, onOpenChange, onSuccess }: TaskEditDialogP
       });
     }
   }, [task]);
+
+  const handleDateChange = (date: Date | undefined) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      date: date ? date.toISOString().split('T')[0] : '' 
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,12 +108,11 @@ const TaskEditDialog = ({ task, open, onOpenChange, onSuccess }: TaskEditDialogP
 
           <div>
             <Label htmlFor="date">Due Date *</Label>
-            <Input
+            <DatePicker
               id="date"
-              type="date"
-              value={formData.date}
-              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-              required
+              date={formData.date}
+              onDateChange={handleDateChange}
+              placeholder="Select due date"
             />
           </div>
 

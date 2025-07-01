@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
 import SecureInput from '@/components/forms/SecureInput';
 import TwemojiIconPicker from '@/components/forms/TwemojiIconPicker';
 import { validateDateInput, sanitizeInput } from '@/utils/inputValidation';
@@ -30,6 +31,30 @@ const SecureItemForm = ({ onSubmit, initialData, isLoading = false }: SecureItem
   
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const { toast } = useToast();
+
+  const handlePurchaseDateChange = (date: Date | undefined) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      purchaseDate: date ? date.toISOString().split('T')[0] : '' 
+    }));
+    
+    // Clear error when user selects a date
+    if (errors.purchaseDate) {
+      setErrors(prev => ({ ...prev, purchaseDate: '' }));
+    }
+  };
+
+  const handleWarrantyDateChange = (date: Date | undefined) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      warrantyDate: date ? date.toISOString().split('T')[0] : '' 
+    }));
+    
+    // Clear error when user selects a date
+    if (errors.warrantyDate) {
+      setErrors(prev => ({ ...prev, warrantyDate: '' }));
+    }
+  };
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -181,12 +206,11 @@ const SecureItemForm = ({ onSubmit, initialData, isLoading = false }: SecureItem
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="purchaseDate">Purchase Date</Label>
-              <SecureInput
+              <DatePicker
                 id="purchaseDate"
-                type="date"
-                value={formData.purchaseDate}
-                onChange={(e) => handleInputChange('purchaseDate', e.target.value)}
-                sanitize={false}
+                date={formData.purchaseDate}
+                onDateChange={handlePurchaseDateChange}
+                placeholder="Select purchase date"
               />
               {errors.purchaseDate && (
                 <p className="text-sm text-red-600">{errors.purchaseDate}</p>
@@ -195,12 +219,11 @@ const SecureItemForm = ({ onSubmit, initialData, isLoading = false }: SecureItem
 
             <div className="space-y-2">
               <Label htmlFor="warrantyDate">Warranty Expiration</Label>
-              <SecureInput
+              <DatePicker
                 id="warrantyDate"
-                type="date"
-                value={formData.warrantyDate}
-                onChange={(e) => handleInputChange('warrantyDate', e.target.value)}
-                sanitize={false}
+                date={formData.warrantyDate}
+                onDateChange={handleWarrantyDateChange}
+                placeholder="Select warranty date"
               />
               {errors.warrantyDate && (
                 <p className="text-sm text-red-600">{errors.warrantyDate}</p>

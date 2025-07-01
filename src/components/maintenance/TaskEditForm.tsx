@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { DatePicker } from '@/components/ui/date-picker';
 import { useMaintenance, MaintenanceTask } from '@/hooks/useMaintenance';
 
 interface TaskEditFormProps {
@@ -22,6 +23,13 @@ const TaskEditForm = ({ task, onSuccess, onCancel }: TaskEditFormProps) => {
     date: task.date,
     recurrence: task.recurrence,
   });
+
+  const handleDateChange = (date: Date | undefined) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      date: date ? date.toISOString().split('T')[0] : '' 
+    }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,12 +69,11 @@ const TaskEditForm = ({ task, onSuccess, onCancel }: TaskEditFormProps) => {
 
       <div>
         <Label htmlFor="date">Due Date *</Label>
-        <Input
+        <DatePicker
           id="date"
-          type="date"
-          value={formData.date}
-          onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-          required
+          date={formData.date}
+          onDateChange={handleDateChange}
+          placeholder="Select due date"
         />
       </div>
 

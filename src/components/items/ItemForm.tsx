@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
 import { useSupabaseItems, Item } from '@/hooks/useSupabaseItems';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import NotoEmojiIconPicker from '@/components/forms/NotoEmojiIconPicker';
@@ -60,6 +61,20 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
 
   const handleImageChange = (url: string | null) => {
     setFormData(prev => ({ ...prev, photo_url: url || '' }));
+  };
+
+  const handlePurchaseDateChange = (date: Date | undefined) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      purchase_date: date ? date.toISOString().split('T')[0] : '' 
+    }));
+  };
+
+  const handleWarrantyDateChange = (date: Date | undefined) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      warranty_date: date ? date.toISOString().split('T')[0] : '' 
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -192,21 +207,21 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="purchaseDate">Purchase Date</Label>
-            <Input
+            <DatePicker
               id="purchaseDate"
-              type="date"
-              value={formData.purchase_date}
-              onChange={(e) => setFormData(prev => ({ ...prev, purchase_date: e.target.value }))}
+              date={formData.purchase_date}
+              onDateChange={handlePurchaseDateChange}
+              placeholder="Select purchase date"
             />
           </div>
           
           <div>
             <Label htmlFor="warrantyDate">Warranty Until</Label>
-            <Input
+            <DatePicker
               id="warrantyDate"
-              type="date"
-              value={formData.warranty_date}
-              onChange={(e) => setFormData(prev => ({ ...prev, warranty_date: e.target.value }))}
+              date={formData.warranty_date}
+              onDateChange={handleWarrantyDateChange}
+              placeholder="Select warranty date"
             />
           </div>
         </div>

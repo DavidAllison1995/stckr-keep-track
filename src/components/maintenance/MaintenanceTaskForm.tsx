@@ -1,10 +1,10 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 
@@ -22,6 +22,13 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
     date: '',
     selectedItemId: itemId || '',
   });
+
+  const handleDateChange = (date: Date | undefined) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      date: date ? date.toISOString().split('T')[0] : '' 
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,12 +111,11 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
 
       <div>
         <Label htmlFor="date">Due Date *</Label>
-        <Input
+        <DatePicker
           id="date"
-          type="date"
-          value={formData.date}
-          onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-          required
+          date={formData.date}
+          onDateChange={handleDateChange}
+          placeholder="Select due date"
         />
       </div>
 
