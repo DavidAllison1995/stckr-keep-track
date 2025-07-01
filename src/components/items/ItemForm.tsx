@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSupabaseItems, Item } from '@/hooks/useSupabaseItems';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
-import IconPicker from '@/components/IconPicker';
+import TwemojiIconPicker from '@/components/forms/TwemojiIconPicker';
 import ImageUpload from '@/components/forms/ImageUpload';
 
 interface ItemFormProps {
@@ -25,7 +25,7 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
   const [formData, setFormData] = useState({
     name: '',
     category: '',
-    icon_id: 'box',
+    icon_id: '📦', // Default to package emoji
     room: '',
     description: '',
     purchase_date: '',
@@ -43,7 +43,7 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
       setFormData({
         name: item.name,
         category: item.category,
-        icon_id: item.icon_id || 'box',
+        icon_id: item.icon_id || '📦',
         room: item.room || '',
         description: item.description || '',
         purchase_date: item.purchase_date || '',
@@ -145,9 +145,10 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
           />
         )}
 
-        <IconPicker
-          selectedIconId={formData.icon_id}
-          onChange={(iconId) => setFormData(prev => ({ ...prev, icon_id: iconId }))}
+        {/* Twemoji Icon Picker */}
+        <TwemojiIconPicker
+          selectedEmoji={formData.icon_id}
+          onChange={(emoji) => setFormData(prev => ({ ...prev, icon_id: emoji }))}
         />
 
         <div>

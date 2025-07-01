@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SecureInput from '@/components/forms/SecureInput';
+import TwemojiIconPicker from '@/components/forms/TwemojiIconPicker';
 import { validateDateInput, sanitizeInput } from '@/utils/inputValidation';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,6 +20,7 @@ const SecureItemForm = ({ onSubmit, initialData, isLoading = false }: SecureItem
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
     category: initialData?.category || '',
+    iconId: initialData?.icon_id || '📦',
     room: initialData?.room || '',
     description: initialData?.description || '',
     notes: initialData?.notes || '',
@@ -84,6 +86,7 @@ const SecureItemForm = ({ onSubmit, initialData, isLoading = false }: SecureItem
       room: sanitizeInput(formData.room),
       description: sanitizeInput(formData.description),
       notes: sanitizeInput(formData.notes),
+      icon_id: formData.iconId, // Map iconId to icon_id for consistency
     };
 
     onSubmit(sanitizedData);
@@ -118,6 +121,12 @@ const SecureItemForm = ({ onSubmit, initialData, isLoading = false }: SecureItem
               <p className="text-sm text-red-600">{errors.name}</p>
             )}
           </div>
+
+          {/* Icon Picker */}
+          <TwemojiIconPicker
+            selectedEmoji={formData.iconId}
+            onChange={(emoji) => handleInputChange('iconId', emoji)}
+          />
 
           <div className="space-y-2">
             <Label htmlFor="category">Category *</Label>

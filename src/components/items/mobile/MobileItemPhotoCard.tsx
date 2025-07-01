@@ -1,14 +1,14 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Item } from '@/hooks/useSupabaseItems';
-import { getIconComponent } from '@/components/icons';
+import TwemojiIcon from '@/components/icons/TwemojiIcon';
 
 interface MobileItemPhotoCardProps {
   item: Item;
 }
 
 const MobileItemPhotoCard = ({ item }: MobileItemPhotoCardProps) => {
-  const IconComponent = getIconComponent(item.icon_id || 'box');
+  const iconEmoji = item.icon_id || '📦';
 
   return (
     <Card variant="elevated" className="shadow-soft border-gray-800">
@@ -22,7 +22,7 @@ const MobileItemPhotoCard = ({ item }: MobileItemPhotoCardProps) => {
             />
           ) : (
             <div className="p-3 bg-gray-800/50 backdrop-blur-sm rounded-xl border border-purple-500/20">
-              <IconComponent className="w-12 h-12" />
+              <TwemojiIcon emoji={iconEmoji} className="w-12 h-12" size={48} alt={`${item.name} icon`} />
             </div>
           )}
         </div>
