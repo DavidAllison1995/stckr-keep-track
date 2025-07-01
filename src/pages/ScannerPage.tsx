@@ -2,14 +2,18 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, QrCode, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, QrCode, ShoppingCart, Printer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import QRScannerOverlay from '@/components/qr/QRScannerOverlay';
+import { downloadPrintableStickers } from '@/utils/printableStickers';
+import { useToast } from '@/hooks/use-toast';
 
 const ScannerPage = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [showScanner, setShowScanner] = useState(false);
   const [scannedCode, setScannedCode] = useState<string | null>(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   const handleScan = (result: string) => {
     console.log('QR Code scanned:', result);
@@ -27,9 +31,29 @@ const ScannerPage = () => {
     setScannedCode(null);
   };
 
+  const handlePrintAtHome = async () => {
+    setIsGeneratingPDF(true);
+    try {
+      await downloadPrintableStickers();
+      toast({
+        title: "Download Started",
+        description: "Your printable sticker sheet is downloading now!",
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Download Failed",
+        description: "Unable to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0b0b12] p-6 pb-20 space-y-8">
-      {/* Header with Buy Stickers Button */}
+      {/* Header with Action Buttons */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button 
@@ -48,13 +72,58 @@ const ScannerPage = () => {
           </div>
         </div>
         
-        <Button 
-          onClick={() => navigate('/shop')} 
-          className="bg-[#9333ea] text-white font-semibold rounded-full px-6 py-2 hover:bg-[#a855f7] transition-colors duration-200 shadow-lg"
-        >
-          <ShoppingCart className="w-4 h-4 mr-2" />
-          Buy Stickers
-        </Button>
+        {/* Action Buttons Container */}
+        <div className="flex gap-3">
+          <div className="text-center">
+            <Button 
+              onClick={handlePrintAtHome}
+              disabled={isGeneratingPDF}
+              className="bg-gray-700 text-white font-semibold rounded-full px-6 py-2 hover:bg-gray-600 transition-colors duration-200 shadow-lg"
+            >
+              <Printer className="w-4 h-4 mr-2" />
+              {isGeneratingPDF ? 'Generating...' : 'Print at Home'}
+            </Button>
+            <p className="text-xs text-gray-400 mt-1">Download printable sticker sheet (PDF)</p>
+          </div>
+          
+          <div className="text-center">
+            <Button 
+              onClick={() => navigate('/shop')} 
+              className="bg-[#9333ea] text-white font-semibold rounded-full px-6 py-2 hover:bg-[#a855f7] transition-colors duration-200 shadow-lg"
+            >
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              Buy Stickers
+            </Button>
+            <p className="text-xs text-gray-400 mt-1">Ready-made stickers delivered</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Value Proposition Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Print at Home Value */}
+        <Card className="bg-gray-800 border-gray-700 rounded-2xl shadow-2xl">
+          <CardContent className="p-6 text-center">
+            <div className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Printer className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-2">Print at Home</h3>
+            <p className="text-gray-300 text-sm mb-4">Print them at home in minutes</p>
+            <p className="text-xs text-gray-400">Compatible with standard home printers and label sheets</p>
+          </CardContent>
+        </Card>
+
+        {/* Buy Stickers Value */}
+        <Card className="bg-gray-800 border-gray-700 rounded-2xl shadow-2xl">
+          <CardContent className="p-6 text-center">
+            <div className="w-12 h-12 bg-[#9333ea] rounded-full flex items-center justify-center mx-auto mb-4">
+              <ShoppingCart className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-2">Buy Stickers</h3>
+            <p className="text-gray-300 text-sm mb-4">No printer? No problem</p>
+            <p className="text-xs text-gray-400">We'll send you ready-made stickers</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Scanner Card */}
