@@ -6,27 +6,27 @@
 /* Import Inter font for modern typography */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* Dark theme design system with STCKR purple branding */
+/* Enhanced dark theme design system with STCKR purple branding */
 
 @layer base {
   :root {
-    --background: 0 0% 6%;
-    --foreground: 0 0% 98%;
+    --background: 0 0% 7%;
+    --foreground: 0 0% 88%;
 
-    --card: 0 0% 11%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 88%;
 
-    --popover: 0 0% 11%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 88%;
 
     --primary: 270 91% 65%;
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 0 0% 13%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 0 0% 88%;
 
-    --muted: 0 0% 13%;
-    --muted-foreground: 0 0% 63%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 60%;
 
     --accent: 270 91% 65%;
     --accent-foreground: 0 0% 98%;
@@ -34,19 +34,19 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 20%;
+    --border: 0 0% 24%;
     --input: 0 0% 20%;
     --ring: 270 91% 65%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 8%;
-    --sidebar-foreground: 0 0% 98%;
+    --sidebar-background: 0 0% 9%;
+    --sidebar-foreground: 0 0% 88%;
     --sidebar-primary: 270 91% 65%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 0 0% 13%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 20%;
+    --sidebar-accent: 0 0% 16%;
+    --sidebar-accent-foreground: 0 0% 88%;
+    --sidebar-border: 0 0% 24%;
     --sidebar-ring: 270 91% 65%;
 
     /* Enhanced STCKR dark brand tokens */
@@ -68,24 +68,24 @@
   body {
     @apply bg-background text-foreground font-inter antialiased;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-    background: #0f0f0f;
+    background: #121212;
   }
 
   /* Enhanced typography scale for dark theme */
   h1 {
-    @apply text-2xl font-bold tracking-tight text-white;
+    @apply text-2xl font-bold tracking-tight text-gray-100;
   }
 
   h2 {
-    @apply text-xl font-semibold tracking-tight text-white;
+    @apply text-xl font-semibold tracking-tight text-gray-100;
   }
 
   h3 {
-    @apply text-lg font-semibold text-white;
+    @apply text-lg font-semibold text-gray-100;
   }
 
   h4 {
-    @apply text-base font-semibold text-white;
+    @apply text-base font-semibold text-gray-100;
   }
 
   /* Smooth transitions globally */
@@ -101,7 +101,7 @@
 @layer components {
   /* Enhanced card styles for dark theme */
   .card-elevated {
-    @apply bg-gray-900 border border-gray-800 rounded-xl shadow-[var(--shadow-soft)] backdrop-blur-sm;
+    @apply bg-gray-900 border border-gray-700 rounded-xl shadow-[var(--shadow-soft)] backdrop-blur-sm;
   }
 
   .card-elevated:hover {
@@ -150,9 +150,37 @@
 
   /* Enhanced form inputs for dark theme */
   .input-enhanced {
-    @apply w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white;
+    @apply w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100;
     @apply focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20;
-    @apply placeholder:text-gray-400;
+    @apply placeholder:text-gray-500;
+  }
+
+  /* Admin-specific styling */
+  .admin-panel {
+    @apply min-h-screen bg-gray-950;
+  }
+
+  .admin-card {
+    @apply bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-soft;
+  }
+
+  .admin-header {
+    @apply text-gray-100 font-semibold text-lg mb-2;
+  }
+
+  .admin-subtext {
+    @apply text-gray-400 text-sm;
+  }
+
+  /* File upload areas */
+  .upload-zone {
+    @apply border-2 border-dashed border-gray-700 rounded-lg p-6 text-center;
+    @apply hover:border-purple-500/50 hover:bg-gray-900/50 transition-all duration-200;
+  }
+
+  /* Table improvements */
+  .admin-table {
+    @apply bg-gray-900 border border-gray-800 rounded-lg overflow-hidden;
   }
 
   /* Microinteraction animations */
