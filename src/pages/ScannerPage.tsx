@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, QrCode, ShoppingCart, Printer } from 'lucide-react';
@@ -7,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import QRScannerOverlay from '@/components/qr/QRScannerOverlay';
 import { downloadPrintableStickers } from '@/utils/printableStickers';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const ScannerPage = () => {
   const navigate = useNavigate();
@@ -14,6 +14,26 @@ const ScannerPage = () => {
   const [showScanner, setShowScanner] = useState(false);
   const [scannedCode, setScannedCode] = useState<string | null>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [hasPrintableFile, setHasPrintableFile] = useState(true);
+
+  useEffect(() => {
+    checkPrintableFileAvailability();
+  }, []);
+
+  const checkPrintableFileAvailability = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('printable_files')
+        .select('id')
+        .limit(1)
+        .maybeSingle();
+
+      setHasPrintableFile(!!data);
+    } catch (error) {
+      console.error('Error checking printable file availability:', error);
+      setHasPrintableFile(false);
+    }
+  };
 
   const handleScan = (result: string) => {
     console.log('QR Code scanned:', result);
@@ -32,6 +52,15 @@ const ScannerPage = () => {
   };
 
   const handlePrintAtHome = async () => {
+    if (!hasPrintableFile) {
+      toast({
+        title: "File Unavailable",
+        description: "Print file currently unavailable. Please check back soon.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsGeneratingPDF(true);
     try {
       await downloadPrintableStickers();
@@ -40,10 +69,10 @@ const ScannerPage = () => {
         description: "Your printable sticker sheet is downloading now!",
       });
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error('Error downloading PDF:', error);
       toast({
         title: "Download Failed",
-        description: "Unable to generate PDF. Please try again.",
+        description: error instanceof Error ? error.message : "Unable to download PDF. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -74,17 +103,30 @@ const ScannerPage = () => {
         
         {/* Action Buttons Container */}
         <div className="flex gap-3">
-          <div className="text-center">
-            <Button 
-              onClick={handlePrintAtHome}
-              disabled={isGeneratingPDF}
-              className="bg-gray-700 text-white font-semibold rounded-full px-6 py-2 hover:bg-gray-600 transition-colors duration-200 shadow-lg"
-            >
-              <Printer className="w-4 h-4 mr-2" />
-              {isGeneratingPDF ? 'Generating...' : 'Print at Home'}
-            </Button>
-            <p className="text-xs text-gray-400 mt-1">Download printable sticker sheet (PDF)</p>
-          </div>
+          {hasPrintableFile ? (
+            <div className="text-center">
+              <Button 
+                onClick={handlePrintAtHome}
+                disabled={isGeneratingPDF}
+                className="bg-gray-700 text-white font-semibold rounded-full px-6 py-2 hover:bg-gray-600 transition-colors duration-200 shadow-lg"
+              >
+                <Printer className="w-4 h-4 mr-2" />
+                {isGeneratingPDF ? 'Downloading...' : 'Print at Home'}
+              </Button>
+              <p className="text-xs text-gray-400 mt-1">Download printable sticker sheet (PDF)</p>
+            </div>
+          ) : (
+            <div className="text-center">
+              <Button 
+                disabled
+                className="bg-gray-600 text-gray-400 font-semibold rounded-full px-6 py-2 cursor-not-allowed"
+              >
+                <Printer className="w-4 h-4 mr-2" />
+                Print at Home
+              </Button>
+              <p className="text-xs text-red-400 mt-1">Print file currently unavailable</p>
+            </div>
+          )}
           
           <div className="text-center">
             <Button 
@@ -108,8 +150,15 @@ const ScannerPage = () => {
               <Printer className="w-6 h-6 text-white" />
             </div>
             <h3 className="text-lg font-semibold text-white mb-2">Print at Home</h3>
-            <p className="text-gray-300 text-sm mb-4">Print them at home in minutes</p>
-            <p className="text-xs text-gray-400">Compatible with standard home printers and label sheets</p>
+            <p className="text-gray-300 text-sm mb-4">
+              {hasPrintableFile ? 'Print them at home in minutes' : 'Currently unavailable'}
+            </p>
+            <p className="text-xs text-gray-400">
+              {hasPrintableFile 
+                ? 'Compatible with standard home printers and label sheets'
+                : 'Check back soon for print files'
+              }
+            </p>
           </CardContent>
         </Card>
 

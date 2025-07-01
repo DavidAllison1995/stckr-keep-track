@@ -33,6 +33,7 @@ import WebhookDiagnostics from '@/components/admin/WebhookDiagnostics';
 import ValidatePrintfulVariant from '@/components/admin/ValidatePrintfulVariant';
 import PrintfulCatalogBrowser from '@/components/admin/PrintfulCatalogBrowser';
 import CreateSyncProductButton from '@/components/admin/CreateSyncProductButton';
+import PrintableFileUpload from '@/components/admin/PrintableFileUpload';
 
 interface Product {
   id: string;
@@ -316,6 +317,7 @@ const AdminShopPage = () => {
           <TabsList>
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="orders">All Orders</TabsTrigger>
+            <TabsTrigger value="printable">Printable Files</TabsTrigger>
             <TabsTrigger value="catalog">Browse Catalog</TabsTrigger>
             <TabsTrigger value="validation">Variant Validation</TabsTrigger>
             <TabsTrigger value="diagnostics">Diagnostics</TabsTrigger>
@@ -525,6 +527,10 @@ const AdminShopPage = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="printable" className="space-y-6">
+            <PrintableFileUpload />
           </TabsContent>
 
           <TabsContent value="catalog" className="space-y-6">

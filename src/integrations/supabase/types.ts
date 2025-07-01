@@ -311,6 +311,36 @@ export type Database = {
         }
         Relationships: []
       }
+      printable_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number
+          file_url: string
+          id: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size: number
+          file_url: string
+          id?: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number
+          file_url?: string
+          id?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           created_at: string | null
