@@ -6,11 +6,14 @@ import { Input } from '@/components/ui/input';
 import { ShoppingCart, Plus, Minus, Package } from 'lucide-react';
 import { useShop } from '@/hooks/useShop';
 import { useCart } from '@/contexts/CartContext';
+import { downloadPrintableStickers } from '@/utils/printableStickers';
+import { useToast } from '@/hooks/use-toast';
 import CartDrawer from './CartDrawer';
 
 const ShopPage = () => {
   const { products } = useShop();
   const { addToCart } = useCart();
+  const { toast } = useToast();
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const [isCartOpen, setIsCartOpen] = useState(false);
 
@@ -28,6 +31,23 @@ const ShopPage = () => {
     
     // Auto-open cart drawer after adding item
     setIsCartOpen(true);
+  };
+
+  const handlePrintAtHome = async () => {
+    try {
+      await downloadPrintableStickers();
+      toast({
+        title: 'Download Started',
+        description: 'Your printable sticker sheet is downloading.',
+      });
+    } catch (error) {
+      console.error('Error downloading printable stickers:', error);
+      toast({
+        title: 'Download Failed',
+        description: 'Unable to download printable stickers. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -48,15 +68,26 @@ const ShopPage = () => {
             <div className="w-24 h-1 bg-purple-500 rounded-full mt-3"></div>
           </div>
           
-          {/* Cart Button */}
-          <Button
-            onClick={() => setIsCartOpen(true)}
-            className="bg-gray-900 border border-gray-700 text-white hover:bg-purple-600 hover:border-purple-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-            size="lg"
-          >
-            <ShoppingCart className="w-5 h-5 mr-2" />
-            Cart
-          </Button>
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <Button
+              onClick={handlePrintAtHome}
+              className="bg-gray-900 border border-gray-700 text-white hover:bg-green-600 hover:border-green-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+              size="lg"
+            >
+              <Package className="w-5 h-5 mr-2" />
+              Print at Home
+            </Button>
+            
+            <Button
+              onClick={() => setIsCartOpen(true)}
+              className="bg-gray-900 border border-gray-700 text-white hover:bg-purple-600 hover:border-purple-500 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+              size="lg"
+            >
+              <ShoppingCart className="w-5 h-5 mr-2" />
+              Cart
+            </Button>
+          </div>
         </div>
 
         {/* Products Grid */}
