@@ -110,11 +110,11 @@ const AuthPage = () => {
         {/* Centered Content */}
         <div className="w-full max-w-md">
           {/* Logo and Branding - Centered */}
-          <div className="text-center mb-8">
-            <div className="mb-6">
-              <img src="/lovable-uploads/b040bcf1-975f-4316-8744-a19b2453d26e.png" alt="STCKR Logo" className="h-16 mx-auto" />
+          <div className="text-center mb-6">
+            <div className="mb-4">
+              <img src="/lovable-uploads/b040bcf1-975f-4316-8744-a19b2453d26e.png" alt="STCKR Logo" className="h-12 mx-auto" />
             </div>
-            <p className="text-gray-600 text-lg font-medium">Track. Organise. Simplify.</p>
+            <p className="text-gray-600 text-base font-medium">Track. Organise. Simplify.</p>
           </div>
 
           {/* Main Form Card with enhanced styling */}
@@ -124,15 +124,15 @@ const AuthPage = () => {
               <QrCode className="w-full h-full text-purple-600" />
             </div>
             
-            <CardHeader className="text-center pb-6 relative">
-              <CardTitle className="text-2xl font-bold text-gray-900">Get Started</CardTitle>
+            <CardHeader className="text-center pb-4 relative">
+              <CardTitle className="text-xl font-bold text-gray-900">Get Started</CardTitle>
             </CardHeader>
-            <CardContent className="relative">
+            <CardContent className="relative px-6 pb-6">
               {/* Social Login Buttons - Fixed styling */}
-              <div className="grid grid-cols-2 gap-3 mb-6">
+              <div className="grid grid-cols-2 gap-3 mb-4">
                 <Button 
                   variant="outline" 
-                  className="w-full h-12 bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-sm"
+                  className="w-full h-10 bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-sm"
                   onClick={handleGoogleSignIn}
                   disabled={isSubmitting}
                 >
@@ -146,7 +146,7 @@ const AuthPage = () => {
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="w-full h-12 bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-sm"
+                  className="w-full h-10 bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-sm"
                   onClick={handleAppleSignIn}
                   disabled={isSubmitting}
                 >
@@ -157,7 +157,7 @@ const AuthPage = () => {
                 </Button>
               </div>
 
-              <div className="relative mb-6">
+              <div className="relative mb-4">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t border-gray-200" />
                 </div>
@@ -168,17 +168,17 @@ const AuthPage = () => {
 
               <Tabs defaultValue="signup" className="w-full">
                 {/* Enhanced Tab Pills */}
-                <div className="bg-gray-50 p-1 rounded-xl mb-8 shadow-inner">
+                <div className="bg-gray-50 p-1 rounded-xl mb-6 shadow-inner">
                   <TabsList className="grid w-full grid-cols-2 bg-transparent p-0 h-auto">
                     <TabsTrigger 
                       value="signup" 
-                      className="rounded-lg py-3 px-6 text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 text-gray-600 transition-all data-[state=active]:border data-[state=active]:border-purple-100"
+                      className="rounded-lg py-2 px-4 text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 text-gray-600 transition-all data-[state=active]:border data-[state=active]:border-purple-100"
                     >
                       Sign Up
                     </TabsTrigger>
                     <TabsTrigger 
                       value="login" 
-                      className="rounded-lg py-3 px-6 text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 text-gray-600 transition-all data-[state=active]:border data-[state=active]:border-purple-100"
+                      className="rounded-lg py-2 px-4 text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-gray-900 text-gray-600 transition-all data-[state=active]:border data-[state=active]:border-purple-100"
                     >
                       Log In
                     </TabsTrigger>
@@ -186,9 +186,9 @@ const AuthPage = () => {
                 </div>
                 
                 <TabsContent value="signup" className="mt-0">
-                  <form onSubmit={handleSignup} className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
+                  <form onSubmit={handleSignup} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
                         <Label htmlFor="firstName" className="text-sm font-medium text-gray-700">First Name</Label>
                         <div className="relative">
                           <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -196,12 +196,12 @@ const AuthPage = () => {
                             id="firstName" 
                             name="firstName" 
                             placeholder="First name" 
-                            className="pl-10 h-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500 rounded-xl transition-all shadow-sm" 
+                            className="pl-10 h-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500 rounded-xl transition-all shadow-sm" 
                             required 
                           />
                         </div>
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-1">
                         <Label htmlFor="lastName" className="text-sm font-medium text-gray-700">Last Name</Label>
                         <div className="relative">
                           <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -209,13 +209,13 @@ const AuthPage = () => {
                             id="lastName" 
                             name="lastName" 
                             placeholder="Last name" 
-                            className="pl-10 h-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500 rounded-xl transition-all shadow-sm" 
+                            className="pl-10 h-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500 rounded-xl transition-all shadow-sm" 
                             required 
                           />
                         </div>
                       </div>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <Label htmlFor="signup-email" className="text-sm font-medium text-gray-700">Email</Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -224,12 +224,12 @@ const AuthPage = () => {
                           name="email" 
                           type="email" 
                           placeholder="Enter your email" 
-                          className="pl-10 h-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500 rounded-xl transition-all shadow-sm" 
+                          className="pl-10 h-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500 rounded-xl transition-all shadow-sm" 
                           required 
                         />
                       </div>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <Label htmlFor="signup-password" className="text-sm font-medium text-gray-700">Password</Label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -238,7 +238,7 @@ const AuthPage = () => {
                           name="password" 
                           type={showSignupPassword ? "text" : "password"}
                           placeholder="Create a password" 
-                          className="pl-10 pr-12 h-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500 rounded-xl transition-all shadow-sm" 
+                          className="pl-10 pr-12 h-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500 rounded-xl transition-all shadow-sm" 
                           required 
                           minLength={6} 
                         />
@@ -260,7 +260,7 @@ const AuthPage = () => {
                     </div>
                     <Button 
                       type="submit" 
-                      className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]" 
+                      className="w-full h-10 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]" 
                       disabled={isSubmitting}
                     >
                       {isSubmitting ? 'Creating account...' : 'Start for Free'}
@@ -269,8 +269,8 @@ const AuthPage = () => {
                 </TabsContent>
                 
                 <TabsContent value="login" className="mt-0">
-                  <form onSubmit={handleLogin} className="space-y-6">
-                    <div className="space-y-2">
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-1">
                       <Label htmlFor="login-email" className="text-sm font-medium text-gray-700">Email</Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -279,13 +279,13 @@ const AuthPage = () => {
                           name="email" 
                           type="email" 
                           placeholder="Enter your email" 
-                          className="pl-10 h-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500 rounded-xl transition-all shadow-sm" 
+                          className="pl-10 h-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500 rounded-xl transition-all shadow-sm" 
                           required 
                           defaultValue={localStorage.getItem('stckr_remember_user') || ''}
                         />
                       </div>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <Label htmlFor="login-password" className="text-sm font-medium text-gray-700">Password</Label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -294,7 +294,7 @@ const AuthPage = () => {
                           name="password" 
                           type={showPassword ? "text" : "password"}
                           placeholder="Enter your password" 
-                          className="pl-10 pr-12 h-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500 rounded-xl transition-all shadow-sm" 
+                          className="pl-10 pr-12 h-10 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:ring-purple-500 rounded-xl transition-all shadow-sm" 
                           required 
                         />
                         <Tooltip>
@@ -342,7 +342,7 @@ const AuthPage = () => {
                     
                     <Button 
                       type="submit" 
-                      className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]" 
+                      className="w-full h-10 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]" 
                       disabled={isSubmitting}
                     >
                       {isSubmitting ? 'Logging in...' : 'Log In'}
@@ -352,7 +352,7 @@ const AuthPage = () => {
               </Tabs>
 
               {/* Trust indicators - Repositioned below the forms */}
-              <div className="text-center text-sm text-gray-500 space-y-2 mt-8 pt-6 border-t border-gray-100">
+              <div className="text-center text-sm text-gray-500 space-y-1 mt-6 pt-4 border-t border-gray-100">
                 <p>✓ Available on mobile and desktop</p>
                 <p>✓ Free to start, no credit card required</p>
                 <p>✓ Built for busy households and smart storage</p>
