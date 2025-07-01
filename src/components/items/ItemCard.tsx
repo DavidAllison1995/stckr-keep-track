@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,6 +19,7 @@ import { Item } from '@/hooks/useSupabaseItems';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import TwemojiIcon from '@/components/icons/TwemojiIcon';
+import NotoEmojiIcon from '@/components/icons/NotoEmojiIcon';
 import { QrCode, Download, Clock, AlertTriangle, CheckCircle2, Trash2, ChevronRight, Check, X, Eye, Edit } from 'lucide-react';
 import ItemDetail from './ItemDetail';
 import ItemForm from './ItemForm';
@@ -179,7 +179,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
               />
             ) : (
               <div className="p-4 bg-gray-800/50 backdrop-blur-sm rounded-xl transition-transform duration-300 group-hover:scale-110 border border-purple-500/20">
-                <TwemojiIcon emoji={iconEmoji} className="w-8 h-8" size={32} alt={`${item.name} icon`} />
+                <NotoEmojiIcon emoji={iconEmoji} className="w-8 h-8" size={32} alt={`${item.name} icon`} />
               </div>
             )}
             

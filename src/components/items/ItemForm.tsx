@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSupabaseItems, Item } from '@/hooks/useSupabaseItems';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
-import TwemojiIconPicker from '@/components/forms/TwemojiIconPicker';
+import NotoEmojiIconPicker from '@/components/forms/NotoEmojiIconPicker';
 import ImageUpload from '@/components/forms/ImageUpload';
 
 interface ItemFormProps {
@@ -145,8 +144,8 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
           />
         )}
 
-        {/* Twemoji Icon Picker */}
-        <TwemojiIconPicker
+        {/* Noto Emoji Icon Picker */}
+        <NotoEmojiIconPicker
           selectedEmoji={formData.icon_id}
           onChange={(emoji) => setFormData(prev => ({ ...prev, icon_id: emoji }))}
         />
