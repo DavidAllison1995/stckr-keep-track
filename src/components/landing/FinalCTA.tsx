@@ -12,8 +12,8 @@ const FinalCTA = ({ onGetStarted }: FinalCTAProps) => {
   return (
     <section className="py-20 px-4 bg-gradient-to-br from-blue-50 via-white to-purple-50 max-[768px]:py-12 max-[768px]:px-3">
       <div className="container mx-auto max-w-4xl text-center">
-        <div className="space-y-8 text-gray-900 max-[768px]:space-y-4">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight max-[768px]:text-2xl max-[768px]:leading-tight">
+        <div className="space-y-8 max-[768px]:space-y-4">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight text-gray-800 max-[768px]:text-2xl max-[768px]:leading-tight">
             Ready to bring order to your home?
           </h2>
           
