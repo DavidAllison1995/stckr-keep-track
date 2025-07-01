@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -178,7 +179,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                 draggable={false}
               />
             ) : (
-              <div className="p-4 bg-gray-800/50 backdrop-blur-sm rounded-xl transition-transform duration-300 group-hover:scale-110 border border-purple-500/20">
+              <div className="flex items-center justify-center p-4 bg-gray-800/50 backdrop-blur-sm rounded-xl transition-transform duration-300 group-hover:scale-110 border border-purple-500/20">
                 <NotoEmojiIcon emoji={iconEmoji} className="w-12 h-12" size={48} alt={`${item.name} icon`} />
               </div>
             )}
