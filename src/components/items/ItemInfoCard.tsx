@@ -15,13 +15,13 @@ const ItemInfoCard = ({ item }: ItemInfoCardProps) => {
 
   return (
     <Card variant="elevated" className="shadow-soft border-gray-800">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2 text-white">
-          <Package className="w-5 h-5 text-purple-400" />
+      <CardHeader className="pb-3 mobile-compact-p">
+        <CardTitle className="text-lg mobile-text-sm flex items-center mobile-tight-gap gap-2 text-white">
+          <Package className="w-5 h-5 mobile-icon-md text-purple-400" />
           Item Information
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 mobile-tight-space mobile-compact-p">
         {/* Basic Info */}
         <div className="grid grid-cols-1 gap-4">
           {item.room && (

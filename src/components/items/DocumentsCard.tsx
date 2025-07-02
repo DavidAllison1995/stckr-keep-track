@@ -22,13 +22,13 @@ const DocumentsCard = ({ item, onTabChange }: DocumentsCardProps) => {
 
   return (
     <Card variant="elevated" className="shadow-soft border-gray-800">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2 text-white">
-          <FileText className="w-5 h-5 text-purple-400" />
+      <CardHeader className="pb-3 mobile-compact-p">
+        <CardTitle className="text-lg mobile-text-sm flex items-center mobile-tight-gap gap-2 text-white">
+          <FileText className="w-5 h-5 mobile-icon-md text-purple-400" />
           Documents
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="mobile-compact-p">
         <div className="flex space-x-3 mb-4">
           {item.documents.slice(0, 3).map((doc) => (
             <div key={doc.id} className="w-16 h-16 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg overflow-hidden flex items-center justify-center border border-gray-700 shadow-sm">

@@ -180,28 +180,28 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
                 draggable={false}
               />
             ) : (
-              <div className="flex items-center justify-center p-4 bg-gray-800/50 backdrop-blur-sm rounded-xl transition-transform duration-300 group-hover:scale-110 border border-purple-500/20">
-                <NotoEmojiIcon emoji={iconEmoji} className="w-12 h-12" size={48} alt={`${item.name} icon`} />
+              <div className="flex items-center justify-center p-4 mobile-compact-py bg-gray-800/50 backdrop-blur-sm rounded-xl transition-transform duration-300 group-hover:scale-110 border border-purple-500/20">
+                <NotoEmojiIcon emoji={iconEmoji} className="w-12 h-12 mobile-icon-md" size={48} alt={`${item.name} icon`} />
               </div>
             )}
             
             {/* QR Status Indicator */}
             {item.qr_code_id && (
-              <div className="absolute top-2 right-2 w-6 h-6 bg-green-600/20 border border-green-500/50 rounded-full flex items-center justify-center backdrop-blur-sm">
-                <QrCode className="w-3 h-3 text-green-400" />
+              <div className="absolute top-2 right-2 w-6 h-6 mobile-icon-md bg-green-600/20 border border-green-500/50 rounded-full flex items-center justify-center backdrop-blur-sm">
+                <QrCode className="w-3 h-3 mobile-icon-sm text-green-400" />
               </div>
             )}
           </div>
 
           {/* Enhanced Content Section */}
-          <div className="p-3 flex-1 flex flex-col space-y-3 overflow-hidden">
+          <div className="p-3 mobile-compact-p flex-1 flex flex-col space-y-3 mobile-tight-space overflow-hidden">
             {/* Title */}
-            <h3 className="font-semibold text-base line-clamp-1 text-white group-hover:text-purple-400 transition-colors">
+            <h3 className="font-semibold text-base mobile-text-sm line-clamp-1 text-white group-hover:text-purple-400 transition-colors">
               {item.name}
             </h3>
             
             {/* Enhanced Tags Section */}
-            <div className="flex items-center gap-1.5 flex-wrap min-h-[20px]">
+            <div className="flex items-center gap-1.5 mobile-tight-gap flex-wrap min-h-[20px]">
               <Badge variant="secondary" className="bg-purple-600/20 text-purple-300 text-xs px-2 py-0.5 h-5 font-medium border border-purple-500/30 hover:bg-purple-600/30 transition-colors">
                 {item.category}
               </Badge>

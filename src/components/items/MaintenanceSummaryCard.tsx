@@ -25,13 +25,13 @@ const MaintenanceSummaryCard = ({ nextTask, recentCompleted, onTabChange }: Main
 
   return (
     <Card variant="elevated" className="shadow-soft border-gray-800">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2 text-white">
-          <Calendar className="w-5 h-5 text-purple-400" />
+      <CardHeader className="pb-3 mobile-compact-p">
+        <CardTitle className="text-lg mobile-text-sm flex items-center mobile-tight-gap gap-2 text-white">
+          <Calendar className="w-5 h-5 mobile-icon-md text-purple-400" />
           Maintenance Summary
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-3 mobile-tight-space mobile-compact-p">
         <div className="flex flex-col space-y-3">
           {/* Next Task Button */}
           <button

@@ -131,12 +131,12 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Enhanced Header */}
-      <div className="text-center mb-12 pt-6">
-        <div className="inline-flex items-center gap-3 mb-4 px-6 py-4 bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-2xl border border-gray-700/50 backdrop-blur-sm shadow-2xl">
-          <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center shadow-lg hover:scale-105 transition-transform duration-200">
-            <QrCode className="w-5 h-5 text-white" />
+      <div className="text-center mb-12 mobile-tight-space pt-6 mobile-compact-py">
+        <div className="inline-flex items-center mobile-tight-gap gap-3 mb-4 px-6 mobile-compact-px py-4 mobile-compact-py bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-2xl border border-gray-700/50 backdrop-blur-sm shadow-2xl">
+          <div className="w-8 h-8 mobile-icon-md bg-purple-600 rounded-lg flex items-center justify-center shadow-lg hover:scale-105 transition-transform duration-200">
+            <QrCode className="w-5 h-5 mobile-icon-sm text-white" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
+          <h1 className="text-4xl md:text-5xl mobile-text-sm font-extrabold text-white tracking-tight">
             👋 Welcome back,{' '}
             <span 
               className="text-purple-400 bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent"
@@ -148,27 +148,27 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
             </span>
           </h1>
         </div>
-        <p className="text-gray-400 text-lg font-medium">
+        <p className="text-gray-400 text-lg mobile-text-xs font-medium">
           Ready to stick with it? Let's manage your space.
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid lg:grid-cols-3 mobile-tight-gap gap-6">
         {/* Main Content - Items List */}
         <div className="lg:col-span-2">
           <Card className="shadow-xl border-gray-800 bg-gray-900">
-            <CardHeader>
+            <CardHeader className="mobile-compact-p">
               <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Package className="w-5 h-5 text-purple-400" />
-                  <span className="text-white">Recent Items</span>
+                <div className="flex items-center mobile-tight-gap gap-3">
+                  <Package className="w-5 h-5 mobile-icon-md text-purple-400" />
+                  <span className="text-white mobile-text-sm">Recent Items</span>
                 </div>
-                <Button variant="ghost" size="sm" onClick={handleItemsClick} className="text-purple-400 hover:text-purple-300 hover:bg-gray-800">
+                <Button variant="ghost" size="sm" onClick={handleItemsClick} className="text-purple-400 hover:text-purple-300 hover:bg-gray-800 mobile-compact-px">
                   View All
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 mobile-tight-space mobile-compact-p">
               {items.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="text-4xl mb-2">📦</div>
@@ -230,19 +230,19 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-6 mobile-tight-space">
           {/* Calendar */}
           <Card 
             className="shadow-xl border-gray-800 bg-gray-900 cursor-pointer hover:shadow-2xl transition-all duration-300 hover:scale-105 hover:border-purple-500/30"
             onClick={handleCalendarClick}
           >
-            <CardHeader>
-              <CardTitle className="flex items-center text-lg">
-                <Calendar className="mr-2 h-5 w-5 text-purple-400" />
+            <CardHeader className="mobile-compact-p">
+              <CardTitle className="flex items-center text-lg mobile-text-sm mobile-tight-gap">
+                <Calendar className="mr-2 h-5 w-5 mobile-icon-md text-purple-400" />
                 <span className="text-white">This Week</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 mobile-tight-space mobile-compact-p">
               {thisWeekTasksData.map((dayData, index) => {
                 const colors = dayData.count > 0 ? getColorForIndex(index) : { bg: 'bg-gray-700', text: 'text-gray-400' };
                 return (
@@ -263,13 +263,13 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
 
           {/* Quick Stats */}
           <Card className="shadow-xl border-gray-800 bg-gray-900">
-            <CardHeader>
-              <CardTitle className="flex items-center text-lg">
-                <Wrench className="mr-2 h-5 w-5 text-purple-400" />
+            <CardHeader className="mobile-compact-p">
+              <CardTitle className="flex items-center text-lg mobile-text-sm mobile-tight-gap">
+                <Wrench className="mr-2 h-5 w-5 mobile-icon-md text-purple-400" />
                 <span className="text-white">Quick Stats</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 mobile-tight-space mobile-compact-p">
               <div 
                 className="flex justify-between cursor-pointer hover:bg-gray-800 p-2 rounded transition-colors"
                 onClick={handleItemsClick}

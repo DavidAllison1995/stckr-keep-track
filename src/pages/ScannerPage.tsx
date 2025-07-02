@@ -81,7 +81,7 @@ const ScannerPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0b12] p-6 pb-20 space-y-8">
+    <div className="min-h-screen bg-[#0b0b12] p-6 mobile-compact-p pb-20 space-y-8 mobile-tight-space">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 md:mb-0">
         <div className="flex items-center gap-4">
@@ -183,15 +183,15 @@ const ScannerPage = () => {
 
       {/* Scanner Card */}
       <Card className="bg-gray-900 border-gray-800 rounded-2xl shadow-2xl">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3 text-xl font-semibold text-white">
-            <div className="w-6 h-6 bg-purple-600 rounded flex items-center justify-center">
-              <QrCode className="w-4 h-4 text-white" />
+        <CardHeader className="mobile-compact-p">
+          <CardTitle className="flex items-center mobile-tight-gap gap-3 text-xl mobile-text-sm font-semibold text-white">
+            <div className="w-6 h-6 mobile-icon-md bg-purple-600 rounded flex items-center justify-center">
+              <QrCode className="w-4 h-4 mobile-icon-sm text-white" />
             </div>
             Scan QR Code
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent className="p-6 mobile-compact-p">
           <div className="space-y-6">
             <p className="text-zinc-300 text-base leading-relaxed">
               Point your camera at a QR code to scan it. This will help you assign QR codes to your items and access maintenance records instantly.
@@ -213,13 +213,13 @@ const ScannerPage = () => {
 
       {/* Instructions */}
       <Card className="bg-gray-900 border-gray-800 rounded-2xl shadow-2xl">
-        <CardContent className="p-6">
-          <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-              <div className="w-2 h-6 bg-[#9333ea] rounded-full"></div>
+        <CardContent className="p-6 mobile-compact-p">
+          <div className="space-y-6 mobile-tight-space">
+            <h3 className="text-xl mobile-text-sm font-semibold text-white flex items-center mobile-tight-gap gap-2">
+              <div className="w-2 h-6 mobile-icon-sm bg-[#9333ea] rounded-full"></div>
               How to use
             </h3>
-            <ul className="space-y-4 pl-6">
+            <ul className="space-y-4 mobile-tight-space pl-6 mobile-compact-px">
               <li className="flex gap-4 items-start">
                 <div className="w-8 h-8 bg-[#9333ea] text-white rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0 mt-0.5">
                   1

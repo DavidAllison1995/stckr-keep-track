@@ -233,6 +233,55 @@
   .shadow-large {
     box-shadow: var(--shadow-large);
   }
+
+  /* Mobile-first responsive utilities for ≤480px */
+  @media (max-width: 480px) {
+    .mobile-compact-p {
+      padding: 0.75rem; /* 12px - reduced from default 16px+ */
+    }
+    
+    .mobile-compact-px {
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+    
+    .mobile-compact-py {
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+    
+    .mobile-tight-gap {
+      gap: 0.5rem; /* 8px - reduced gap */
+    }
+    
+    .mobile-tight-space > * + * {
+      margin-top: 0.5rem;
+    }
+    
+    .mobile-text-sm {
+      font-size: 0.875rem; /* 14px */
+      line-height: 1.25rem;
+    }
+    
+    .mobile-text-xs {
+      font-size: 0.75rem; /* 12px */
+      line-height: 1rem;
+    }
+    
+    .mobile-h-compact {
+      min-height: auto;
+    }
+    
+    .mobile-icon-sm {
+      width: 1rem;
+      height: 1rem;
+    }
+    
+    .mobile-icon-md {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+  }
 }
 
 /* Keyframe animations */
