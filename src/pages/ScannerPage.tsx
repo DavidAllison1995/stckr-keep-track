@@ -141,39 +141,6 @@ const ScannerPage = () => {
         </div>
       </div>
 
-      {/* Value Proposition Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Print at Home Value */}
-        <Card className="bg-gray-800 border-gray-700 rounded-2xl shadow-2xl">
-          <CardContent className="p-6 text-center">
-            <div className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Printer className="w-6 h-6 text-white" />
-            </div>
-            <h3 className="text-lg font-semibold text-white mb-2">Print at Home</h3>
-            <p className="text-gray-300 text-sm mb-4">
-              {hasPrintableFile ? 'Print them at home in minutes' : 'Currently unavailable'}
-            </p>
-            <p className="text-xs text-gray-400">
-              {hasPrintableFile 
-                ? 'Compatible with standard home printers and label sheets'
-                : 'Check back soon for print files'
-              }
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Buy Stickers Value */}
-        <Card className="bg-gray-800 border-gray-700 rounded-2xl shadow-2xl">
-          <CardContent className="p-6 text-center">
-            <div className="w-12 h-12 bg-[#9333ea] rounded-full flex items-center justify-center mx-auto mb-4">
-              <ShoppingCart className="w-6 h-6 text-white" />
-            </div>
-            <h3 className="text-lg font-semibold text-white mb-2">Buy Stickers</h3>
-            <p className="text-gray-300 text-sm mb-4">No printer? No problem</p>
-            <p className="text-xs text-gray-400">We'll send you ready-made stickers</p>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Scanner Card */}
       <Card className="bg-gray-900 border-gray-800 rounded-2xl shadow-2xl">
