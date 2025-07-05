@@ -132,24 +132,26 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Enhanced Header */}
-      <div className="text-center mb-16 mobile-tight-space pt-8 mobile-compact-py">
-        <div className="inline-flex items-center mobile-tight-gap gap-4 mb-6 px-8 mobile-compact-px py-6 mobile-compact-py bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-3xl border border-gray-700/50 backdrop-blur-sm shadow-2xl">
-          <div className="w-12 h-12 mobile-icon-md bg-purple-600 rounded-xl flex items-center justify-center shadow-lg hover:scale-105 transition-transform duration-200">
-            <QrCode className="w-7 h-7 mobile-icon-sm text-white" />
+      <div className="text-center mb-8 pt-4 px-4 md:mb-16 md:pt-8 md:px-0">
+        <div className="inline-flex items-center gap-3 mb-3 px-4 py-3 md:gap-4 md:mb-6 md:px-8 md:py-6 bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-2xl md:rounded-3xl border border-gray-700/50 backdrop-blur-sm shadow-2xl max-w-full">
+          <div className="w-8 h-8 md:w-12 md:h-12 bg-purple-600 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg hover:scale-105 transition-transform duration-200 flex-shrink-0">
+            <QrCode className="w-4 h-4 md:w-7 md:h-7 text-white" />
           </div>
-          <h1 className="text-5xl md:text-7xl mobile-text-sm font-extrabold text-white tracking-tight">
-            👋 Welcome back,{' '}
-            <span 
-              className="text-purple-400 bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent"
-              style={{
-                textShadow: '0 0 20px rgba(147, 51, 234, 0.3)'
-              }}
-            >
-              {userName}!
-            </span>
-          </h1>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl md:text-7xl font-extrabold text-white tracking-tight leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
+              <span className="inline-block">👋 Welcome back,{' '}</span>
+              <span 
+                className="text-purple-400 bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent inline-block"
+                style={{
+                  textShadow: '0 0 20px rgba(147, 51, 234, 0.3)'
+                }}
+              >
+                {userName}!
+              </span>
+            </h1>
+          </div>
         </div>
-        <p className="text-gray-400 text-xl mobile-text-xs font-medium">
+        <p className="text-gray-400 text-sm md:text-xl font-medium opacity-80">
           Let's manage your space.
         </p>
       </div>
