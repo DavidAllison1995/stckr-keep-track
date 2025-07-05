@@ -7,6 +7,7 @@ import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useNavigate } from 'react-router-dom';
 import { Package, Calendar, Wrench, QrCode } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns';
+import NotoEmojiIcon from '@/components/icons/NotoEmojiIcon';
 
 interface DashboardProps {
   onTabChange?: (tab: string) => void;
@@ -199,7 +200,12 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
                           {item.photo_url ? (
                             <img src={item.photo_url} alt={item.name} className="w-full h-full object-cover rounded-lg" />
                           ) : (
-                            <span className="text-lg">📦</span>
+                            <NotoEmojiIcon 
+                              emoji={item.icon_id || '📦'} 
+                              className="w-6 h-6" 
+                              size={24} 
+                              alt={`${item.name} icon`} 
+                            />
                           )}
                         </div>
                         <div>
