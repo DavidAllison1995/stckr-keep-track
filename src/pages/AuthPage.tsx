@@ -168,7 +168,11 @@ const AuthPage = () => {
                 className="w-full h-10 mb-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200 text-emerald-700 hover:bg-gradient-to-r hover:from-emerald-100 hover:to-teal-100 hover:border-emerald-300 font-medium shadow-sm"
                 onClick={async () => {
                   setIsSubmitting(true);
-                  await login('demo@stckr.app', 'demo123');
+                  const result = await login('demo@stckr.app', 'demo123');
+                  if (result.error && result.error.includes('Invalid login credentials')) {
+                    // If demo user doesn't exist, try to sign up
+                    await signup('demo@stckr.app', 'demo123', 'Demo', 'User');
+                  }
                   setIsSubmitting(false);
                 }}
                 disabled={isSubmitting}
