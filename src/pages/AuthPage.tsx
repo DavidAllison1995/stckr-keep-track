@@ -162,24 +162,6 @@ const AuthPage = () => {
                 </Button>
               </div>
 
-              {/* Demo Login for Reviewers */}
-              <Button 
-                variant="outline" 
-                className="w-full h-10 mb-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200 text-emerald-700 hover:bg-gradient-to-r hover:from-emerald-100 hover:to-teal-100 hover:border-emerald-300 font-medium shadow-sm"
-                onClick={async () => {
-                  setIsSubmitting(true);
-                  const result = await login('demo@stckr.app', 'demo123');
-                  if (result.error && result.error.includes('Invalid login credentials')) {
-                    // If demo user doesn't exist, try to sign up
-                    await signup('demo@stckr.app', 'demo123', 'Demo', 'User');
-                  }
-                  setIsSubmitting(false);
-                }}
-                disabled={isSubmitting}
-              >
-                🎯 Demo Login (For Reviewers)
-              </Button>
-
               <div className="relative mb-4">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t border-gray-200" />
