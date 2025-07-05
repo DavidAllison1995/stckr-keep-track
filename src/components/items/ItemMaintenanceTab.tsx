@@ -150,22 +150,12 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
               >
                 <CardContent className="p-3 md:p-4">
                   <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start gap-2 mb-2">
-                          <div className="flex-shrink-0 mt-0.5">
-                            {getTaskIcon(task)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h5 className={`font-medium text-white leading-tight ${
-                              task.title.length > 20 ? 'text-sm md:text-base' : 'text-base'
-                            } line-clamp-2`}>
-                              {task.title}
-                            </h5>
-                          </div>
-                          <div className="flex-shrink-0">
-                            {getStatusBadge(task)}
-                          </div>
-                        </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        {getTaskIcon(task)}
+                        <h5 className="font-medium text-white">{task.title}</h5>
+                        {getStatusBadge(task)}
+                      </div>
                       {task.notes && (
                         <p className="text-sm text-gray-300 mt-1">{task.notes}</p>
                       )}
