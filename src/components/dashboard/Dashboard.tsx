@@ -132,12 +132,12 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Enhanced Header */}
-      <div className="text-center mb-12 mobile-tight-space pt-6 mobile-compact-py">
-        <div className="inline-flex items-center mobile-tight-gap gap-3 mb-4 px-6 mobile-compact-px py-4 mobile-compact-py bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-2xl border border-gray-700/50 backdrop-blur-sm shadow-2xl">
-          <div className="w-8 h-8 mobile-icon-md bg-purple-600 rounded-lg flex items-center justify-center shadow-lg hover:scale-105 transition-transform duration-200">
-            <QrCode className="w-5 h-5 mobile-icon-sm text-white" />
+      <div className="text-center mb-16 mobile-tight-space pt-8 mobile-compact-py">
+        <div className="inline-flex items-center mobile-tight-gap gap-4 mb-6 px-8 mobile-compact-px py-6 mobile-compact-py bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-3xl border border-gray-700/50 backdrop-blur-sm shadow-2xl">
+          <div className="w-12 h-12 mobile-icon-md bg-purple-600 rounded-xl flex items-center justify-center shadow-lg hover:scale-105 transition-transform duration-200">
+            <QrCode className="w-7 h-7 mobile-icon-sm text-white" />
           </div>
-          <h1 className="text-4xl md:text-5xl mobile-text-sm font-extrabold text-white tracking-tight">
+          <h1 className="text-5xl md:text-7xl mobile-text-sm font-extrabold text-white tracking-tight">
             👋 Welcome back,{' '}
             <span 
               className="text-purple-400 bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent"
@@ -149,7 +149,7 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
             </span>
           </h1>
         </div>
-        <p className="text-gray-400 text-lg mobile-text-xs font-medium">
+        <p className="text-gray-400 text-xl mobile-text-xs font-medium">
           Let's manage your space.
         </p>
       </div>
