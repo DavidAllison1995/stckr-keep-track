@@ -149,7 +149,7 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
           </h1>
         </div>
         <p className="text-gray-400 text-lg mobile-text-xs font-medium">
-          Ready to stick with it? Let's manage your space.
+          Let's manage your space.
         </p>
       </div>
 
