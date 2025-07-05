@@ -133,15 +133,15 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
     <div className="max-w-6xl mx-auto">
       {/* Enhanced Header */}
       <div className="text-center mb-8 pt-4 px-4 md:mb-16 md:pt-8 md:px-0">
-        <div className="inline-flex items-center gap-3 mb-3 px-4 py-3 md:gap-4 md:mb-6 md:px-8 md:py-6 bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-2xl md:rounded-3xl border border-gray-700/50 backdrop-blur-sm shadow-2xl max-w-full">
+        <div className="inline-flex items-center gap-3 mb-3 px-4 py-3 md:gap-4 md:mb-6 md:px-8 md:py-6 bg-gradient-to-r from-gray-900/50 to-gray-800/50 rounded-2xl md:rounded-3xl border border-gray-700/50 backdrop-blur-sm shadow-2xl max-w-[95%] md:max-w-full">
           <div className="w-8 h-8 md:w-12 md:h-12 bg-purple-600 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg hover:scale-105 transition-transform duration-200 flex-shrink-0">
             <QrCode className="w-4 h-4 md:w-7 md:h-7 text-white" />
           </div>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-2xl md:text-7xl font-extrabold text-white tracking-tight leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
-              <span className="inline-block">👋 Welcome back,{' '}</span>
+          <div className="min-w-0 flex-1 text-center">
+            <h1 className="text-2xl md:text-7xl font-extrabold text-white tracking-tight leading-tight">
+              <span className="inline">👋 Welcome back, </span>
               <span 
-                className="text-purple-400 bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent inline-block"
+                className="text-purple-400 bg-gradient-to-r from-purple-400 to-purple-300 bg-clip-text text-transparent inline"
                 style={{
                   textShadow: '0 0 20px rgba(147, 51, 234, 0.3)'
                 }}
