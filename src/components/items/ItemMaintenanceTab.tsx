@@ -87,7 +87,7 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
     const label = getStatusLabel(status);
     const colorClass = getStatusColor(status);
     
-    return <Badge className={colorClass}>{label}</Badge>;
+    return <Badge className={`${colorClass} text-xs px-2 py-0.5 h-5 whitespace-nowrap`}>{label}</Badge>;
   };
 
   const getTaskStatusColorClass = (task: any) => {
@@ -148,7 +148,7 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
                 key={task.id} 
                 className={`bg-gray-800 border-gray-700 ${highlightTaskId === task.id ? 'ring-2 ring-blue-500' : ''}`}
               >
-                <CardContent className="p-4">
+                <CardContent className="p-3 md:p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
@@ -171,39 +171,39 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="flex gap-1 md:gap-2 flex-wrap justify-end">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleAddToCalendar(task)}
                         title="Add to Calendar"
-                        className="border-gray-600 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-500"
+                        className="border-gray-600 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-500 text-xs md:text-sm px-2 md:px-3 h-8 md:h-9"
                       >
-                        <CalendarPlus className="w-4 h-4 mr-1" />
-                        Add to Calendar
+                        <CalendarPlus className="w-3 h-3 md:w-4 md:h-4 md:mr-1" />
+                        <span className="hidden sm:inline">Add to Calendar</span>
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleEditTask(task)}
-                        className="border-gray-600 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-500"
+                        className="border-gray-600 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-500 text-xs md:text-sm px-2 md:px-3 h-8 md:h-9"
                       >
-                        <Edit className="w-4 h-4 mr-1" />
-                        Edit
+                        <Edit className="w-3 h-3 md:w-4 md:h-4 md:mr-1" />
+                        <span className="hidden sm:inline">Edit</span>
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleTaskComplete(task.id)}
-                        className="border-gray-600 text-gray-300 hover:bg-green-600 hover:text-white hover:border-green-500"
+                        className="border-gray-600 text-gray-300 hover:bg-green-600 hover:text-white hover:border-green-500 text-xs md:text-sm px-2 md:px-3 h-8 md:h-9"
                       >
-                        <CheckCircle2 className="w-4 h-4 mr-1" />
-                        Complete
+                        <CheckCircle2 className="w-3 h-3 md:w-4 md:h-4 md:mr-1" />
+                        <span className="hidden sm:inline">Complete</span>
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-red-600 hover:text-white hover:border-red-500">
-                            <Trash2 className="w-4 h-4" />
+                          <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-red-600 hover:text-white hover:border-red-500 px-2 h-8 md:h-9">
+                            <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent className="bg-gray-900 border-gray-700">
@@ -245,7 +245,7 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
             <div className="space-y-3">
               {completedTasks.map((task) => (
                 <Card key={task.id} className="bg-gray-800 border-gray-700 opacity-75">
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 md:p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h5 className="font-medium text-white">{task.title}</h5>
@@ -260,7 +260,7 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="bg-green-900/50 text-green-300 border-green-600/50">Completed</Badge>
+                        <Badge variant="secondary" className="bg-green-900/50 text-green-300 border-green-600/50 text-xs px-2 py-0.5 h-5 whitespace-nowrap">Completed</Badge>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-red-600 hover:text-white hover:border-red-500">
