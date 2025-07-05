@@ -148,19 +148,41 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
                 key={task.id} 
                 className={`bg-gray-800 border-gray-700 ${highlightTaskId === task.id ? 'ring-2 ring-blue-500' : ''}`}
               >
-                <CardContent className="p-3 md:p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        {getTaskIcon(task)}
-                        <h5 className="font-medium text-white">{task.title}</h5>
-                        {getStatusBadge(task)}
+                <CardContent className="p-2 sm:p-3 md:p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                    <div className="flex-1 min-w-0">
+                      {/* Task Title with Icon - Mobile Optimized */}
+                      <div className="flex items-start gap-2 mb-2">
+                        <div className="flex-shrink-0 mt-0.5">
+                          {getTaskIcon(task)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h5 className={`font-medium text-white leading-tight ${
+                            task.title.length > 20 
+                              ? 'text-sm sm:text-base line-clamp-2' 
+                              : 'text-base'
+                          }`}>
+                            {task.title}
+                          </h5>
+                          {/* Status Badge - Below title on mobile, inline on larger screens */}
+                          <div className="mt-1 sm:mt-0 sm:hidden">
+                            {getStatusBadge(task)}
+                          </div>
+                        </div>
+                        {/* Status Badge - Hidden on mobile, shown on larger screens */}
+                        <div className="hidden sm:flex flex-shrink-0">
+                          {getStatusBadge(task)}
+                        </div>
                       </div>
+                      
+                      {/* Task Notes */}
                       {task.notes && (
-                        <p className="text-sm text-gray-300 mt-1">{task.notes}</p>
+                        <p className="text-sm text-gray-300 mt-1 leading-relaxed">{task.notes}</p>
                       )}
-                      <div className="flex items-center gap-2 mt-2">
-                        <Calendar className="w-4 h-4 text-gray-400" />
+                      
+                      {/* Task Date and Recurrence */}
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
                         <span className="text-sm text-gray-400">
                           Due: {new Date(task.date).toLocaleDateString()}
                         </span>
@@ -171,39 +193,41 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-1 md:gap-2 flex-wrap justify-end">
+                    
+                    {/* Action Buttons - Consistent sizing and better mobile layout */}
+                    <div className="flex gap-1.5 sm:gap-2 justify-end sm:justify-start flex-shrink-0">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleAddToCalendar(task)}
                         title="Add to Calendar"
-                        className="border-gray-600 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-500 text-xs md:text-sm px-2 md:px-3 h-8 md:h-9"
+                        className="border-gray-600 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-500 h-8 w-8 sm:w-auto sm:px-3 p-0 sm:p-2"
                       >
-                        <CalendarPlus className="w-3 h-3 md:w-4 md:h-4 md:mr-1" />
-                        <span className="hidden sm:inline">Add to Calendar</span>
+                        <CalendarPlus className="w-4 h-4 sm:mr-1" />
+                        <span className="hidden sm:inline ml-1">Add to Calendar</span>
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleEditTask(task)}
-                        className="border-gray-600 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-500 text-xs md:text-sm px-2 md:px-3 h-8 md:h-9"
+                        className="border-gray-600 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-500 h-8 w-8 sm:w-auto sm:px-3 p-0 sm:p-2"
                       >
-                        <Edit className="w-3 h-3 md:w-4 md:h-4 md:mr-1" />
-                        <span className="hidden sm:inline">Edit</span>
+                        <Edit className="w-4 h-4 sm:mr-1" />
+                        <span className="hidden sm:inline ml-1">Edit</span>
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleTaskComplete(task.id)}
-                        className="border-gray-600 text-gray-300 hover:bg-green-600 hover:text-white hover:border-green-500 text-xs md:text-sm px-2 md:px-3 h-8 md:h-9"
+                        className="border-gray-600 text-gray-300 hover:bg-green-600 hover:text-white hover:border-green-500 h-8 w-8 sm:w-auto sm:px-3 p-0 sm:p-2"
                       >
-                        <CheckCircle2 className="w-3 h-3 md:w-4 md:h-4 md:mr-1" />
-                        <span className="hidden sm:inline">Complete</span>
+                        <CheckCircle2 className="w-4 h-4 sm:mr-1" />
+                        <span className="hidden sm:inline ml-1">Complete</span>
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-red-600 hover:text-white hover:border-red-500 px-2 h-8 md:h-9">
-                            <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
+                          <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-red-600 hover:text-white hover:border-red-500 h-8 w-8 p-0">
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent className="bg-gray-900 border-gray-700">
@@ -245,25 +269,31 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
             <div className="space-y-3">
               {completedTasks.map((task) => (
                 <Card key={task.id} className="bg-gray-800 border-gray-700 opacity-75">
-                  <CardContent className="p-3 md:p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h5 className="font-medium text-white">{task.title}</h5>
+                  <CardContent className="p-2 sm:p-3 md:p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                      <div className="flex-1 min-w-0">
+                        <h5 className={`font-medium text-white leading-tight ${
+                          task.title.length > 20 
+                            ? 'text-sm sm:text-base line-clamp-2' 
+                            : 'text-base'
+                        }`}>
+                          {task.title}
+                        </h5>
                         {task.notes && (
-                          <p className="text-sm text-gray-300 mt-1">{task.notes}</p>
+                          <p className="text-sm text-gray-300 mt-1 leading-relaxed">{task.notes}</p>
                         )}
-                        <div className="flex items-center gap-2 mt-2">
-                          <Calendar className="w-4 h-4 text-gray-400" />
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
                           <span className="text-sm text-gray-400">
                             Completed: {new Date(task.updated_at).toLocaleDateString()}
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-shrink-0">
                         <Badge variant="secondary" className="bg-green-900/50 text-green-300 border-green-600/50 text-xs px-2 py-0.5 h-5 whitespace-nowrap">Completed</Badge>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-red-600 hover:text-white hover:border-red-500">
+                            <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-red-600 hover:text-white hover:border-red-500 h-8 w-8 p-0">
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </AlertDialogTrigger>
