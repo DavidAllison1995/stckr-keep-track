@@ -2,6 +2,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
+import { Capacitor } from "@capacitor/core";
 import { AuthProvider } from "./hooks/useSupabaseAuth";
 import { AdminAuthProvider } from "./hooks/useAdminAuth";
 import { UserSettingsProvider } from "./contexts/UserSettingsContext";
@@ -40,6 +41,19 @@ import { useShop } from "./hooks/useShop";
 
 const queryClient = new QueryClient();
 
+// Create a platform-aware root component
+const PlatformAwareRoot = () => {
+  const isNative = Capacitor.isNativePlatform();
+  
+  // On native platforms, redirect directly to auth page
+  if (isNative) {
+    return <Navigate to="/auth" replace />;
+  }
+  
+  // On web platforms, show the landing page
+  return <Index />;
+};
+
 // Create a wrapper component to access useShop hook
 const CartProviderWrapper = ({ children }: { children: React.ReactNode }) => {
   const { products } = useShop();
@@ -57,7 +71,7 @@ function App() {
                 <div className="min-h-screen bg-gray-50">
                   <Routes>
                     {/* Public routes */}
-                    <Route path="/" element={<Index />} />
+                    <Route path="/" element={<PlatformAwareRoot />} />
                     <Route path="/auth" element={<AuthPage />} />
                     <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                     
