@@ -63,10 +63,10 @@ const FinalCTA = ({ onGetStarted }: FinalCTAProps) => {
                 Privacy Policy
               </a>
               <a 
-                href="mailto:support@stckr.io" 
+                href="/support" 
                 className="text-gray-600 hover:text-purple-600 transition-colors duration-200 text-sm"
               >
-                Contact
+                Support
               </a>
             </div>
           </div>
