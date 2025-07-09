@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Camera, Upload, X, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { uploadItemImage, deleteItemImage } from '@/services/imageUploadService';
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 
 interface ImageUploadProps {
   currentImageUrl?: string;
@@ -90,6 +92,80 @@ const ImageUpload = ({ currentImageUrl, onImageChange, userId, itemId, disabled 
     }
   };
 
+  // Convert base64 to File object
+  const base64ToFile = (base64: string, filename: string): File => {
+    const arr = base64.split(',');
+    const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  };
+
+  // Handle camera capture using Capacitor Camera API
+  const handleTakePhoto = async () => {
+    try {
+      // Check if running on a mobile device with Capacitor
+      if (!Capacitor.isNativePlatform()) {
+        // Fallback to file input for web
+        if (fileInputRef.current) {
+          fileInputRef.current.setAttribute('capture', 'environment');
+          fileInputRef.current.click();
+        }
+        return;
+      }
+
+      // Use Capacitor Camera API for mobile devices
+      const image = await CapacitorCamera.getPhoto({
+        quality: 80,
+        allowEditing: false,
+        resultType: CameraResultType.Base64,
+        source: CameraSource.Camera,
+      });
+
+      if (image.base64String) {
+        // Convert base64 to File
+        const file = base64ToFile(
+          `data:${image.format === 'jpeg' ? 'image/jpeg' : 'image/png'};base64,${image.base64String}`,
+          `photo_${Date.now()}.${image.format || 'jpg'}`
+        );
+
+        // Process the file
+        await handleFileSelect(file);
+      }
+    } catch (error) {
+      console.error('Camera error:', error);
+      
+      // Handle specific error cases
+      if (error && typeof error === 'object' && 'message' in error) {
+        const errorMessage = (error as { message: string }).message;
+        
+        if (errorMessage.includes('cancelled') || errorMessage.includes('cancelled')) {
+          // User cancelled, no need to show error
+          return;
+        }
+        
+        if (errorMessage.includes('permission')) {
+          toast({
+            title: 'Camera permission required',
+            description: 'Please allow camera access to take photos',
+            variant: 'destructive',
+          });
+          return;
+        }
+      }
+      
+      toast({
+        title: 'Camera error',
+        description: 'Failed to take photo. Please try again or choose from gallery.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleRemoveImage = async () => {
     if (currentImageUrl) {
       try {
@@ -160,12 +236,7 @@ const ImageUpload = ({ currentImageUrl, onImageChange, userId, itemId, disabled 
           <Button
             type="button"
             variant="outline"
-            onClick={() => {
-              if (fileInputRef.current) {
-                fileInputRef.current.setAttribute('capture', 'environment');
-                fileInputRef.current.click();
-              }
-            }}
+            onClick={handleTakePhoto}
             disabled={isUploading}
             className="flex-1"
           >
