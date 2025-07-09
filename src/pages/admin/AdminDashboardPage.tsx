@@ -242,7 +242,7 @@ const AdminDashboardPage = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <p className="text-gray-600 mb-4">{link.description}</p>
+                    <div className="text-gray-600 mb-4">{link.description}</div>
                     <Button asChild variant="outline" className="w-full">
                       <Link to={link.href} className="flex items-center justify-center gap-2">
                         Go to {link.title}
