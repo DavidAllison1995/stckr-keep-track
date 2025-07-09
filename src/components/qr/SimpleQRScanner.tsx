@@ -3,6 +3,8 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Camera, X, RotateCcw, Loader2 } from 'lucide-react';
 import jsQR from 'jsqr';
+import { Capacitor } from '@capacitor/core';
+import CapacitorQRScanner from './CapacitorQRScanner';
 
 interface SimpleQRScannerProps {
   onScan: (code: string) => void;
@@ -10,6 +12,12 @@ interface SimpleQRScannerProps {
 }
 
 const SimpleQRScanner = ({ onScan, onClose }: SimpleQRScannerProps) => {
+  // Use Capacitor camera for mobile devices to avoid iPad WebView crashes
+  if (Capacitor.isNativePlatform()) {
+    return <CapacitorQRScanner onScan={onScan} onClose={onClose} />;
+  }
+
+  // Web-based scanner for desktop/development
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);

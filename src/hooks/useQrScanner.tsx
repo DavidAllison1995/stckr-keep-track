@@ -1,6 +1,7 @@
 
 import { useRef, useEffect, useState, useCallback } from 'react';
 import QrScanner from 'qr-scanner';
+import { Capacitor } from '@capacitor/core';
 
 interface UseQrScannerProps {
   onScan: (result: string) => void;
@@ -8,6 +9,10 @@ interface UseQrScannerProps {
 }
 
 export const useQrScanner = ({ onScan, onError }: UseQrScannerProps) => {
+  // WARNING: This hook is primarily for web development and testing.
+  // For mobile devices, use the Capacitor-based SimpleQRScanner component
+  // to avoid iPadOS WebView crashes and other mobile-specific issues.
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const scannerRef = useRef<QrScanner | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -16,6 +21,13 @@ export const useQrScanner = ({ onScan, onError }: UseQrScannerProps) => {
   const [retryCount, setRetryCount] = useState(0);
   const lastScanRef = useRef<string>('');
   const lastScanTimeRef = useRef<number>(0);
+
+  // Add mobile device detection warning
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      console.warn('🚨 useQrScanner: This hook is not recommended for mobile devices. Use SimpleQRScanner component instead to avoid crashes.');
+    }
+  }, []);
 
   const checkCameraPermission = async () => {
     try {
