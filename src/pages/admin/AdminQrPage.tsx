@@ -488,7 +488,10 @@ const AdminQrPage = () => {
                       id="packName"
                       placeholder="e.g., Sticker Pack 001"
                       value={packName}
-                      onChange={(e) => setPackName(e.target.value)}
+                      onChange={(e) => {
+                        console.log('Pack name changed:', e.target.value);
+                        setPackName(e.target.value);
+                      }}
                     />
                   </div>
                 </div>
@@ -499,7 +502,10 @@ const AdminQrPage = () => {
                     id="packDescription"
                     placeholder="e.g., Vinyl stickers for box labels"
                     value={packDescription}
-                    onChange={(e) => setPackDescription(e.target.value)}
+                    onChange={(e) => {
+                      console.log('Pack description changed:', e.target.value);
+                      setPackDescription(e.target.value);
+                    }}
                   />
                 </div>
                 
@@ -509,7 +515,10 @@ const AdminQrPage = () => {
                     id="physicalProductInfo"
                     placeholder="e.g., Material: Vinyl, Size: 2x2 inches, Color: White on black"
                     value={physicalProductInfo}
-                    onChange={(e) => setPhysicalProductInfo(e.target.value)}
+                    onChange={(e) => {
+                      console.log('Physical product info changed:', e.target.value);
+                      setPhysicalProductInfo(e.target.value);
+                    }}
                   />
                 </div>
                 
