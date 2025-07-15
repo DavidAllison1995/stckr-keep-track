@@ -136,6 +136,8 @@ const AdminQrPage = () => {
   };
 
   const generateCodes = async () => {
+    console.log('=== BUTTON CLICKED ===');
+    console.log('User:', user);
     if (!user) return;
     
     setIsGenerating(true);
