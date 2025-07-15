@@ -482,18 +482,21 @@ const AdminQrPage = () => {
                     />
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="packName">Pack Name (Optional)</Label>
-                    <Input
-                      id="packName"
-                      placeholder="e.g., Sticker Pack 001"
-                      value={packName}
-                      onChange={(e) => {
-                        console.log('Pack name changed:', e.target.value);
-                        setPackName(e.target.value);
-                      }}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="packName">Pack Name (Required to create pack)</Label>
+                  <Input
+                    id="packName"
+                    placeholder="e.g., Sticker Pack 001"
+                    value={packName}
+                    onChange={(e) => {
+                      console.log('Pack name changed:', e.target.value);
+                      setPackName(e.target.value);
+                    }}
+                  />
+                  <p className="text-xs text-gray-500">
+                    Leave empty to create loose QR codes without a pack
+                  </p>
+                </div>
                 </div>
                 
                 <div className="space-y-2">
