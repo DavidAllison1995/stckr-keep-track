@@ -164,18 +164,25 @@ const AdminQrPage = () => {
       
       console.log('Request body being sent:', requestBody);
       
-      const { data, error } = await supabase.functions.invoke('admin-qr-generate', {
-        body: requestBody,
+      // Use direct fetch instead of supabase.functions.invoke
+      const functionUrl = `https://cudftlquaydissmvqjmv.supabase.co/functions/v1/admin-qr-generate`;
+      
+      const response = await fetch(functionUrl, {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${sessionData.session.access_token}`,
           'Content-Type': 'application/json',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1ZGZ0bHF1YXlkaXNzbXZxam12Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNzkwNTksImV4cCI6MjA2NTg1NTA1OX0.f6_TmpyKF6VtQJL65deTrEdNnag6sSQw-eYWYUtQgaQ',
         },
+        body: JSON.stringify(requestBody),
       });
 
-      if (error) {
-        console.error('Function invocation error:', error);
-        throw error;
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
+      
+      const data = await response.json();
       
       console.log('Successfully generated QR codes:', data);
       
