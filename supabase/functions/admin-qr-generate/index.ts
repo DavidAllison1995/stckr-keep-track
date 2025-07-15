@@ -102,13 +102,14 @@ serve(async (req) => {
     let packId = null
 
     // Create pack if pack name is provided
-    if (packName) {
+    if (packName && packName.trim()) {
+      console.log('Creating pack with name:', packName)
       const { data: pack, error: packError } = await serviceClient
         .from('qr_code_packs')
         .insert({
-          name: packName,
-          description: packDescription,
-          physical_product_info: physicalProductInfo,
+          name: packName.trim(),
+          description: packDescription?.trim() || null,
+          physical_product_info: physicalProductInfo?.trim() || null,
           created_by: user.id
         })
         .select()
@@ -117,13 +118,15 @@ serve(async (req) => {
       if (packError) {
         console.error('Error creating pack:', packError)
         return new Response(
-          JSON.stringify({ error: 'Failed to create pack' }), 
+          JSON.stringify({ error: 'Failed to create pack', details: packError.message }), 
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
       packId = pack.id
-      console.log('Created pack with ID:', packId)
+      console.log('Successfully created pack with ID:', packId)
+    } else {
+      console.log('No pack name provided, creating QR codes without pack')
     }
 
     // Generate unique codes with white QR on dark background
