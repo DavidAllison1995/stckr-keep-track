@@ -17,24 +17,47 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const authHeader = req.headers.get('Authorization')!
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - No auth header' }), 
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     const token = authHeader.replace('Bearer ', '')
     
     // Verify user is authenticated and is admin
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
     if (authError || !user) {
-      return new Response('Unauthorized', { status: 401, headers: corsHeaders })
+      console.error('Auth error:', authError)
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Invalid token' }), 
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     // Check if user is admin
     const { data: isAdmin, error: adminError } = await supabaseClient
       .rpc('is_user_admin', { user_id: user.id })
 
-    if (adminError || !isAdmin) {
-      return new Response('Forbidden - Admin access required', { status: 403, headers: corsHeaders })
+    if (adminError) {
+      console.error('Admin check error:', adminError)
+      return new Response(
+        JSON.stringify({ error: 'Failed to verify admin status' }), 
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (!isAdmin) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden - Admin access required' }), 
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     if (req.method === 'GET') {
+      console.log('Fetching packs from qr_pack_stats view...')
       // Get all packs with statistics
       const { data: packs, error } = await supabaseClient
         .from('qr_pack_stats')
@@ -43,11 +66,15 @@ serve(async (req) => {
 
       if (error) {
         console.error('Error fetching packs:', error)
-        return new Response('Failed to fetch packs', { status: 500, headers: corsHeaders })
+        return new Response(
+          JSON.stringify({ error: 'Failed to fetch packs', details: error.message }), 
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
       }
 
+      console.log('Successfully fetched packs:', packs)
       return new Response(
-        JSON.stringify({ packs }),
+        JSON.stringify({ packs: packs || [] }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
