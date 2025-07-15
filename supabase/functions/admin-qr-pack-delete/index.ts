@@ -124,8 +124,8 @@ serve(async (req) => {
       )
     }
 
-    const qrCodeIds = qrCodes?.map(code => code.id) || []
-    console.log(`Found ${qrCodeIds.length} QR codes to delete`)
+    const qrCodeIds = Array.isArray(qrCodes) ? qrCodes.map(code => code.id) : []
+    console.log(`Found ${qrCodeIds.length} QR codes to delete`, qrCodes)
 
     // Delete user claims for QR codes in this pack
     if (qrCodeIds.length > 0) {
