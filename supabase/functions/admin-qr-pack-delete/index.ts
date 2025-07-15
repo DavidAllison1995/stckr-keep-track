@@ -96,7 +96,7 @@ serve(async (req) => {
     // Get pack details first (for logging and validation)
     const { data: pack, error: packError } = await serviceClient
       .from('qr_code_packs')
-      .select('id, name, qr_code_count:qr_codes!pack_id(count)')
+      .select('id, name')
       .eq('id', packId)
       .single()
 
@@ -108,49 +108,58 @@ serve(async (req) => {
       )
     }
 
-    console.log(`Found pack "${pack.name}" with ${pack.qr_code_count || 0} codes`)
+    console.log(`Found pack "${pack.name}", starting deletion process`)
 
-    // First, delete all user claims for QR codes in this pack
-    const { error: claimsError } = await serviceClient
-      .from('user_qr_claims')
-      .delete()
-      .in('qr_code_id', 
-        serviceClient
-          .from('qr_codes')
-          .select('id')
-          .eq('pack_id', packId)
-      )
+    // Get all QR code IDs in this pack first
+    const { data: qrCodes, error: qrCodesError } = await serviceClient
+      .from('qr_codes')
+      .select('id')
+      .eq('pack_id', packId)
 
-    if (claimsError) {
-      console.error('Error deleting user claims:', claimsError)
+    if (qrCodesError) {
+      console.error('Error fetching QR codes:', qrCodesError)
       return new Response(
-        JSON.stringify({ error: 'Failed to delete user claims' }), 
+        JSON.stringify({ error: 'Failed to fetch QR codes for pack' }), 
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    console.log('User claims deleted successfully')
+    const qrCodeIds = qrCodes?.map(code => code.id) || []
+    console.log(`Found ${qrCodeIds.length} QR codes to delete`)
 
-    // Delete scan history for QR codes in this pack
-    const { error: scanError } = await serviceClient
-      .from('scan_history')
-      .delete()
-      .in('qr_code_id', 
-        serviceClient
-          .from('qr_codes')
-          .select('id')
-          .eq('pack_id', packId)
-      )
+    // Delete user claims for QR codes in this pack
+    if (qrCodeIds.length > 0) {
+      const { error: claimsError } = await serviceClient
+        .from('user_qr_claims')
+        .delete()
+        .in('qr_code_id', qrCodeIds)
 
-    if (scanError) {
-      console.error('Error deleting scan history:', scanError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to delete scan history' }), 
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      if (claimsError) {
+        console.error('Error deleting user claims:', claimsError)
+        return new Response(
+          JSON.stringify({ error: 'Failed to delete user claims' }), 
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      console.log('User claims deleted successfully')
+
+      // Delete scan history for QR codes in this pack
+      const { error: scanError } = await serviceClient
+        .from('scan_history')
+        .delete()
+        .in('qr_code_id', qrCodeIds)
+
+      if (scanError) {
+        console.error('Error deleting scan history:', scanError)
+        return new Response(
+          JSON.stringify({ error: 'Failed to delete scan history' }), 
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      console.log('Scan history deleted successfully')
     }
-
-    console.log('Scan history deleted successfully')
 
     // Delete all QR codes in the pack
     const { error: codesError } = await serviceClient
@@ -187,7 +196,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: `Pack "${pack.name}" and all ${pack.qr_code_count || 0} QR codes deleted successfully`,
+        message: `Pack "${pack.name}" and all ${qrCodeIds.length} QR codes deleted successfully`,
         deletedPackId: packId,
         deletedPackName: pack.name
       }),
