@@ -4,7 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { QrCode, Plus, Trash2, Users } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { QrCode, Plus, Trash2, Users, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
@@ -28,6 +39,7 @@ const AdminQrPage = () => {
   const [quantity, setQuantity] = useState(9);
   const [latestBatch, setLatestBatch] = useState<QRCodeData[]>([]);
   const [deletingCodes, setDeletingCodes] = useState<Set<string>>(new Set());
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
 
   const loadCodes = async () => {
     if (!user) {
@@ -231,6 +243,76 @@ const AdminQrPage = () => {
     }
   };
 
+  const deleteAllCodes = async () => {
+    if (!user) return;
+    
+    setIsDeletingAll(true);
+    
+    try {
+      console.log('Deleting all QR codes...');
+      
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error(`Session error: ${sessionError.message}`);
+      }
+      
+      if (!sessionData.session?.access_token) {
+        console.error('No valid session token available');
+        throw new Error('No valid session token available');
+      }
+      
+      const functionUrl = `https://cudftlquaydissmvqjmv.supabase.co/functions/v1/admin-qr-delete-all`;
+      
+      console.log('Making delete all request to:', functionUrl);
+      
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
+          'Content-Type': 'application/json',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1ZGZ0bHF1YXlkaXNzbXZxam12Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNzkwNTksImV4cCI6MjA2NTg1NTA1OX0.f6_TmpyKF6VtQJL65deTrEdNnag6sSQw-eYWYUtQgaQ',
+        },
+        body: JSON.stringify({}),
+      });
+      
+      console.log('Delete all response status:', response.status);
+      console.log('Delete all response ok:', response.ok);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Delete all response error:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Delete all successful:', data);
+      
+      toast({
+        title: 'Success',
+        description: data.message || 'All QR codes deleted successfully',
+      });
+      
+      // Clear local state
+      setCodes([]);
+      setLatestBatch([]);
+      
+      // Reload to ensure consistency
+      await loadCodes();
+      
+    } catch (error) {
+      console.error('Error deleting all codes:', error);
+      toast({
+        title: 'Error',
+        description: `Failed to delete all QR codes: ${error.message || 'Unknown error'}`,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeletingAll(false);
+    }
+  };
+
   useEffect(() => {
     loadCodes();
   }, [user]);
@@ -295,7 +377,54 @@ const AdminQrPage = () => {
         {/* QR Codes Table */}
         <Card>
           <CardHeader>
-            <CardTitle>All QR Codes ({codes.length})</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>All QR Codes ({codes.length})</CardTitle>
+              {codes.length > 0 && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isDeletingAll}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      {isDeletingAll ? 'Deleting All...' : 'Delete All QR Codes'}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="flex items-center gap-2">
+                        <AlertTriangle className="w-5 h-5 text-red-600" />
+                        Delete All QR Codes
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete all {codes.length} QR codes? This action cannot be undone.
+                        <br /><br />
+                        This will also delete:
+                        <ul className="mt-2 list-disc list-inside text-sm">
+                          <li>All user claims associated with these codes</li>
+                          <li>All scan history records</li>
+                          <li>All generated QR code images</li>
+                        </ul>
+                        <br />
+                        <strong>This action is permanent and cannot be reversed.</strong>
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={deleteAllCodes}
+                        className="bg-red-600 hover:bg-red-700"
+                        disabled={isDeletingAll}
+                      >
+                        {isDeletingAll ? 'Deleting...' : 'Delete All QR Codes'}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
