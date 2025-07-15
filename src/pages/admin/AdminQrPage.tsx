@@ -157,9 +157,9 @@ const AdminQrPage = () => {
       
       const requestBody = { 
         quantity,
-        packName: packName.trim() || undefined,
-        packDescription: packDescription.trim() || undefined,
-        physicalProductInfo: physicalProductInfo.trim() || undefined
+        packName: packName && packName.trim() ? packName.trim() : undefined,
+        packDescription: packDescription && packDescription.trim() ? packDescription.trim() : undefined,
+        physicalProductInfo: physicalProductInfo && physicalProductInfo.trim() ? physicalProductInfo.trim() : undefined
       };
       
       console.log('Request body being sent:', requestBody);
