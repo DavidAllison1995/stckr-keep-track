@@ -456,18 +456,21 @@ export type Database = {
           code: string
           created_at: string
           id: string
+          image_url: string | null
           pack_id: string | null
         }
         Insert: {
           code: string
           created_at?: string
           id?: string
+          image_url?: string | null
           pack_id?: string | null
         }
         Update: {
           code?: string
           created_at?: string
           id?: string
+          image_url?: string | null
           pack_id?: string | null
         }
         Relationships: [

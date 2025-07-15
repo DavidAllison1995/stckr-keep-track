@@ -1,7 +1,5 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import QRCode from 'https://esm.sh/qrcode@1.5.4'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -75,134 +73,73 @@ serve(async (req) => {
       )
     }
 
-    // Parse request body with error handling
-    let requestBody
-    try {
-      const bodyText = await req.text()
-      
-      if (!bodyText || bodyText.trim() === '') {
-        requestBody = {}
-      } else {
-        requestBody = JSON.parse(bodyText)
-      }
-    } catch (parseError) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid JSON in request body' }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    const { quantity = 9, packName, packDescription, physicalProductInfo } = requestBody
-
-    console.log('=== QR Code Generation Request ===')
-    console.log('Quantity:', quantity)
-    console.log('Pack Name:', packName)
-    console.log('Pack Description:', packDescription)
-    console.log('Physical Product Info:', physicalProductInfo)
-
-    let packId = null
-
-    // Create pack if pack name is provided
-    if (packName && packName.trim()) {
-      console.log('Creating pack with name:', packName)
-      const { data: pack, error: packError } = await serviceClient
-        .from('qr_code_packs')
-        .insert({
-          name: packName.trim(),
-          description: packDescription?.trim() || null,
-          physical_product_info: physicalProductInfo?.trim() || null,
-          created_by: user.id
-        })
-        .select()
-        .single()
-
-      if (packError) {
-        console.error('Error creating pack:', packError)
-        return new Response(
-          JSON.stringify({ error: 'Failed to create pack', details: packError.message }), 
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-
-      packId = pack.id
-      console.log('Successfully created pack with ID:', packId)
-    } else {
-      console.log('No pack name provided, creating QR codes without pack')
-    }
-
-    // Generate unique codes with white QR on dark background
-    const codes = []
-    
-    for (let i = 0; i < quantity; i++) {
-      const codeId = generateCodeId()
-      const token = crypto.randomUUID()
-      
-      // Use functioning deep link URL
-      const qrUrl = `https://stckr.app/qr/${codeId}`
-      
-      // Generate white QR code on dark transparent background - no white fill/padding
-      const qrDataUrl = await generateDarkOptimizedQRCode(qrUrl)
-      
-      codes.push({ 
-        id: crypto.randomUUID(),
-        code: codeId,
-        token,
-        image_url: qrDataUrl,
-        pack_id: packId
-      })
-    }
-
-    // Insert codes using service role client to bypass RLS
-    const { data, error } = await serviceClient
+    // Get all QR codes that don't have image_url
+    const { data: qrCodes, error: fetchError } = await serviceClient
       .from('qr_codes')
-      .insert(codes.map(code => ({
-        id: code.id,
-        code: code.code,
-        pack_id: code.pack_id,
-        image_url: code.image_url
-      })))
-      .select()
+      .select('id, code')
+      .is('image_url', null)
 
-    if (error) {
+    if (fetchError) {
+      console.error('Error fetching QR codes:', fetchError)
       return new Response(
-        JSON.stringify({ error: 'Failed to generate codes' }), 
+        JSON.stringify({ error: 'Failed to fetch QR codes' }), 
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Return codes with image URLs for frontend display
-    const returnCodes = codes.map((code, index) => ({
-      id: code.id,
-      code: code.code,
-      created_at: new Date().toISOString(),
-      is_active: true,
-      image_url: code.image_url
-    }))
+    console.log(`Found ${qrCodes?.length || 0} QR codes without images`)
+
+    if (!qrCodes || qrCodes.length === 0) {
+      return new Response(
+        JSON.stringify({ message: 'No QR codes need image generation' }), 
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Generate images for each QR code
+    const updates = []
+    for (const qrCode of qrCodes) {
+      try {
+        const qrUrl = `https://stckr.app/qr/${qrCode.code}`
+        const qrDataUrl = await generateDarkOptimizedQRCode(qrUrl)
+        
+        updates.push({
+          id: qrCode.id,
+          image_url: qrDataUrl
+        })
+      } catch (error) {
+        console.error(`Failed to generate image for code ${qrCode.code}:`, error)
+      }
+    }
+
+    // Update QR codes with images
+    for (const update of updates) {
+      const { error: updateError } = await serviceClient
+        .from('qr_codes')
+        .update({ image_url: update.image_url })
+        .eq('id', update.id)
+
+      if (updateError) {
+        console.error(`Failed to update QR code ${update.id}:`, updateError)
+      }
+    }
 
     return new Response(
       JSON.stringify({ 
-        codes: returnCodes,
-        pack: packId ? { id: packId, name: packName } : null
+        message: `Successfully generated images for ${updates.length} QR codes`,
+        updated: updates.length
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
+    console.error('Error in regenerate images function:', error)
     return new Response(
       JSON.stringify({ error: 'Internal server error' }), 
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 })
-
-function generateCodeId(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  let result = ''
-  for (let i = 0; i < 6; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return result
-}
 
 async function generateDarkOptimizedQRCode(url: string): Promise<string> {
   try {

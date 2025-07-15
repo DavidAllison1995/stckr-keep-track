@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { QrCode, Plus, Trash2, Users, AlertTriangle, Package, FolderOpen, Edit, Eye } from 'lucide-react';
+import { QrCode, Plus, Trash2, Users, AlertTriangle, Package, FolderOpen, Edit, Eye, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
@@ -209,6 +209,55 @@ const AdminQrPage = () => {
       toast({
         title: 'Error',
         description: `Failed to generate QR codes: ${error.message || 'Unknown error'}`,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleRegenerateImages = async () => {
+    if (!user) return;
+    
+    try {
+      setIsGenerating(true);
+      
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session?.access_token) {
+        throw new Error('No valid session token available');
+      }
+      
+      const functionUrl = `https://cudftlquaydissmvqjmv.supabase.co/functions/v1/admin-qr-regenerate-images`;
+      
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
+          'Content-Type': 'application/json',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1ZGZ0bHF1YXlkaXNzbXZxam12Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNzkwNTksImV4cCI6MjA2NTg1NTA1OX0.f6_TmpyKF6VtQJL65deTrEdNnag6sSQw-eYWYUtQgaQ',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      
+      toast({
+        title: 'Success',
+        description: data.message || 'QR code images regenerated successfully',
+      });
+      
+      await loadCodes();
+      await loadPacks();
+      
+    } catch (error) {
+      console.error('Error regenerating images:', error);
+      toast({
+        title: 'Error',
+        description: `Failed to regenerate images: ${error.message || 'Unknown error'}`,
         variant: 'destructive',
       });
     } finally {
@@ -532,13 +581,24 @@ const AdminQrPage = () => {
                   />
                 </div>
                 
-                <Button 
-                  onClick={generateCodes}
-                  disabled={isGenerating}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  {isGenerating ? `Generating ${quantity} Codes...` : `Generate ${quantity} QR Codes`}
-                </Button>
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={generateCodes}
+                    disabled={isGenerating}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {isGenerating ? `Generating ${quantity} Codes...` : `Generate ${quantity} QR Codes`}
+                  </Button>
+                  <Button 
+                    onClick={handleRegenerateImages}
+                    disabled={isGenerating}
+                    variant="outline"
+                    className="border-[#9333ea] text-[#9333ea] hover:bg-[#9333ea] hover:text-white"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Fix Missing Images
+                  </Button>
+                </div>
                 
                 <p className="text-sm text-gray-600">
                   Each QR code can be claimed by multiple users independently. Deep link: https://stckr.io/qr/[code]
