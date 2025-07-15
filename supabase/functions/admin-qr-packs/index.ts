@@ -4,20 +4,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 }
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
     const authHeader = req.headers.get('Authorization')
+    
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized - No auth header' }), 
@@ -26,30 +23,51 @@ serve(async (req) => {
     }
 
     const token = authHeader.replace('Bearer ', '')
+
+    // Create service role client for database operations
+    const serviceClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
     
-    // Verify user is authenticated and is admin
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
+    // Create anon client for user verification
+    const anonClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: {
+            Authorization: authHeader,
+          },
+        },
+      }
+    )
+    
+    // Verify user with the token
+    const { data: { user }, error: authError } = await anonClient.auth.getUser()
+    
     if (authError || !user) {
-      console.error('Auth error:', authError)
       return new Response(
         JSON.stringify({ error: 'Unauthorized - Invalid token' }), 
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Check if user is admin
-    const { data: isAdmin, error: adminError } = await supabaseClient
-      .rpc('is_user_admin', { user_id: user.id })
+    // Check if user is admin using service client
+    const { data: profile, error: profileError } = await serviceClient
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single()
 
-    if (adminError) {
-      console.error('Admin check error:', adminError)
+    if (profileError) {
       return new Response(
         JSON.stringify({ error: 'Failed to verify admin status' }), 
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    if (!isAdmin) {
+    if (!profile?.is_admin) {
       return new Response(
         JSON.stringify({ error: 'Forbidden - Admin access required' }), 
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -59,7 +77,7 @@ serve(async (req) => {
     if (req.method === 'GET') {
       console.log('Fetching packs from qr_pack_stats view...')
       // Get all packs with statistics
-      const { data: packs, error } = await supabaseClient
+      const { data: packs, error } = await serviceClient
         .from('qr_pack_stats')
         .select('*')
         .order('created_at', { ascending: false })
@@ -87,7 +105,7 @@ serve(async (req) => {
       }
 
       // Create new pack
-      const { data: pack, error } = await supabaseClient
+      const { data: pack, error } = await serviceClient
         .from('qr_code_packs')
         .insert({
           name,
@@ -117,7 +135,7 @@ serve(async (req) => {
       }
 
       // Update pack
-      const { data: pack, error } = await supabaseClient
+      const { data: pack, error } = await serviceClient
         .from('qr_code_packs')
         .update({
           name,
@@ -148,7 +166,7 @@ serve(async (req) => {
       }
 
       // Delete pack (this will set pack_id to null for associated QR codes)
-      const { error } = await supabaseClient
+      const { error } = await serviceClient
         .from('qr_code_packs')
         .delete()
         .eq('id', packId)
