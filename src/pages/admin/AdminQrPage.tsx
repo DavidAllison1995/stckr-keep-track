@@ -31,6 +31,11 @@ interface QRCodeData {
   code?: string;
   image_url?: string;
   pack_id?: string;
+  pack?: {
+    id: string;
+    name: string;
+    description?: string;
+  };
 }
 
 interface QRCodePack {
@@ -813,15 +818,19 @@ const AdminQrPage = () => {
                                 </div>
                               </div>
                             </td>
-                            <td className="py-3 px-4">
-                              {code.pack_id ? (
-                                <Badge variant="secondary" className="text-xs">
-                                  {packs.find(p => p.id === code.pack_id)?.name || 'Unknown Pack'}
-                                </Badge>
-                              ) : (
-                                <span className="text-gray-400 text-xs">No pack</span>
-                              )}
-                            </td>
+                             <td className="py-3 px-4">
+                               {code.pack ? (
+                                 <Badge variant="secondary" className="text-xs">
+                                   {code.pack.name}
+                                 </Badge>
+                               ) : code.pack_id ? (
+                                 <Badge variant="secondary" className="text-xs">
+                                   {packs.find(p => p.id === code.pack_id)?.name || 'Unknown Pack'}
+                                 </Badge>
+                               ) : (
+                                 <span className="text-gray-400 text-xs">No pack</span>
+                               )}
+                             </td>
                             <td className="py-3 px-4">
                               {new Date(code.created_at).toLocaleDateString()}
                             </td>

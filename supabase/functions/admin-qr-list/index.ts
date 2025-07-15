@@ -92,11 +92,22 @@ serve(async (req) => {
 
     console.log('Admin access confirmed for user:', user.email)
 
-    // Get all QR codes using service role client to bypass RLS
+    // Get all QR codes with pack information using service role client to bypass RLS
     console.log('Fetching QR codes from qr_codes table...')
     const { data, error } = await serviceClient
       .from('qr_codes')
-      .select('id, code, created_at')
+      .select(`
+        id, 
+        code, 
+        created_at, 
+        pack_id,
+        image_url,
+        pack:qr_code_packs(
+          id,
+          name,
+          description
+        )
+      `)
       .order('created_at', { ascending: false })
 
     console.log('QR codes query result:', { 
@@ -120,7 +131,10 @@ serve(async (req) => {
       id: code.id,
       created_at: code.created_at,
       is_active: true, // All QR codes are active by default
-      code: code.code
+      code: code.code,
+      pack_id: code.pack_id,
+      image_url: code.image_url,
+      pack: code.pack // Include pack information
     }))
 
     console.log('Returning formatted codes:', formattedCodes.length)
