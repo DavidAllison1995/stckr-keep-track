@@ -91,7 +91,40 @@ serve(async (req) => {
       )
     }
 
-    const { quantity = 9 } = requestBody
+    const { quantity = 9, packName, packDescription, physicalProductInfo } = requestBody
+
+    console.log('=== QR Code Generation Request ===')
+    console.log('Quantity:', quantity)
+    console.log('Pack Name:', packName)
+    console.log('Pack Description:', packDescription)
+    console.log('Physical Product Info:', physicalProductInfo)
+
+    let packId = null
+
+    // Create pack if pack name is provided
+    if (packName) {
+      const { data: pack, error: packError } = await serviceClient
+        .from('qr_code_packs')
+        .insert({
+          name: packName,
+          description: packDescription,
+          physical_product_info: physicalProductInfo,
+          created_by: user.id
+        })
+        .select()
+        .single()
+
+      if (packError) {
+        console.error('Error creating pack:', packError)
+        return new Response(
+          JSON.stringify({ error: 'Failed to create pack' }), 
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      packId = pack.id
+      console.log('Created pack with ID:', packId)
+    }
 
     // Generate unique codes with white QR on dark background
     const codes = []
@@ -110,7 +143,8 @@ serve(async (req) => {
         id: crypto.randomUUID(),
         code: codeId,
         token,
-        image_url: qrDataUrl
+        image_url: qrDataUrl,
+        pack_id: packId
       })
     }
 
@@ -119,7 +153,8 @@ serve(async (req) => {
       .from('qr_codes')
       .insert(codes.map(code => ({
         id: code.id,
-        code: code.code
+        code: code.code,
+        pack_id: code.pack_id
       })))
       .select()
 
@@ -140,7 +175,10 @@ serve(async (req) => {
     }))
 
     return new Response(
-      JSON.stringify({ codes: returnCodes }),
+      JSON.stringify({ 
+        codes: returnCodes,
+        pack: packId ? { id: packId, name: packName } : null
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 

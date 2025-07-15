@@ -418,23 +418,74 @@ export type Database = {
         }
         Relationships: []
       }
+      qr_code_packs: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          physical_product_info: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          physical_product_info?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          physical_product_info?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       qr_codes: {
         Row: {
           code: string
           created_at: string
           id: string
+          pack_id: string | null
         }
         Insert: {
           code: string
           created_at?: string
           id?: string
+          pack_id?: string | null
         }
         Update: {
           code?: string
           created_at?: string
           id?: string
+          pack_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "qr_codes_pack_id_fkey"
+            columns: ["pack_id"]
+            isOneToOne: false
+            referencedRelation: "qr_code_packs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qr_codes_pack_id_fkey"
+            columns: ["pack_id"]
+            isOneToOne: false
+            referencedRelation: "qr_pack_stats"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scan_history: {
         Row: {
@@ -646,7 +697,21 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      qr_pack_stats: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string | null
+          is_active: boolean | null
+          name: string | null
+          physical_product_info: string | null
+          qr_code_count: number | null
+          recent_codes: number | null
+          updated_at: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       claim_qr: {
