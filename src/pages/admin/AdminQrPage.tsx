@@ -519,9 +519,9 @@ const AdminQrPage = () => {
                   {isGenerating ? `Generating ${quantity} Codes...` : `Generate ${quantity} QR Codes`}
                 </Button>
                 
-                <div className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600">
                   Each QR code can be claimed by multiple users independently. Deep link: https://stckr.io/qr/[code]
-                </div>
+                </p>
               </CardContent>
             </Card>
 
