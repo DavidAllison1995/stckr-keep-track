@@ -89,7 +89,7 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
 
   const generateQRCodeImageUrl = (code: string) => {
     // Generate white QR code on dark background with no white padding/fill
-    const qrUrl = `https://stckr.app/qr/${code}`;
+    const qrUrl = `https://stckr.io/qr/${code}`;
     return `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(qrUrl)}&ecc=H&color=FFFFFF&bgcolor=1E1E2F&margin=0&qzone=1`;
   };
 

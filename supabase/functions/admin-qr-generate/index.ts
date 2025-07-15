@@ -138,7 +138,7 @@ serve(async (req) => {
       const token = crypto.randomUUID()
       
       // Use functioning deep link URL
-      const qrUrl = `https://stckr.app/qr/${codeId}`
+      const qrUrl = `https://stckr.io/qr/${codeId}`
       
       // Generate white QR code on dark transparent background - no white fill/padding
       const qrDataUrl = await generateDarkOptimizedQRCode(qrUrl)

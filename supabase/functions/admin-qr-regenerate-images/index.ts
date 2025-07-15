@@ -100,7 +100,7 @@ serve(async (req) => {
     const updates = []
     for (const qrCode of qrCodes) {
       try {
-        const qrUrl = `https://stckr.app/qr/${qrCode.code}`
+        const qrUrl = `https://stckr.io/qr/${qrCode.code}`
         const qrDataUrl = await generateDarkOptimizedQRCode(qrUrl)
         
         updates.push({

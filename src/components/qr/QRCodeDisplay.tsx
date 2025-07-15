@@ -25,7 +25,7 @@ const QRCodeDisplay = ({ codes }: QRCodeDisplayProps) => {
       for (const code of codes) {
         try {
           // Generate functioning deep link URL
-          const url = `https://stckr.app/qr/${code.code}`;
+          const url = `https://stckr.io/qr/${code.code}`;
           const qrDataUrl = await QRCode.toDataURL(url, {
             width: 512,
             margin: 0, // No margin/padding - remove white space
