@@ -10,7 +10,18 @@ const PublicRoutes = () => (
   <Routes>
     <Route path="/" element={<Index />} />
     <Route path="/auth" element={<AuthPage />} />
-    {/* Universal QR code route - publicly accessible */}
+    {/* New direct QR code route with query parameters */}
+    <Route 
+      path="/qr" 
+      element={
+        <ItemsProvider>
+          <MaintenanceProvider>
+            <QRRedirectPage />
+          </MaintenanceProvider>
+        </ItemsProvider>
+      } 
+    />
+    {/* Legacy QR code route for backward compatibility */}
     <Route 
       path="/qr/:code" 
       element={

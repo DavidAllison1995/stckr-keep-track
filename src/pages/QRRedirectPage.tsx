@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -10,12 +10,14 @@ import { QrCode, Smartphone, Monitor } from 'lucide-react';
 
 const QRRedirectPage = () => {
   const { code } = useParams<{ code: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { items } = useSupabaseItems();
+  const { items, getItemById } = useSupabaseItems();
   const { isAuthenticated, isLoading, user } = useSupabaseAuth();
   const { toast } = useToast();
   const [isChecking, setIsChecking] = useState(true);
   const [assignedItem, setAssignedItem] = useState<any>(null);
+  const [linkType, setLinkType] = useState<'legacy' | 'direct'>('legacy');
 
   // Detect device type for future deep linking
   const detectDevice = () => {
@@ -28,11 +30,6 @@ const QRRedirectPage = () => {
   const device = detectDevice();
 
   useEffect(() => {
-    if (!code) {
-      navigate('/');
-      return;
-    }
-
     const checkQRCodeAssignment = async () => {
       setIsChecking(true);
       
@@ -41,31 +38,79 @@ const QRRedirectPage = () => {
         return;
       }
 
-      // If user is not authenticated, redirect to auth with the code
-      if (!isAuthenticated) {
-        navigate(`/auth?redirect=${encodeURIComponent(`/qr/${code}`)}`);
-        return;
-      }
-
-      // Check if this QR code is already assigned to an item
-      const existingItem = items.find(item => item.qr_code_id === code);
+      // Check if this is a direct link format (userID + itemID)
+      const userID = searchParams.get('userID');
+      const itemID = searchParams.get('itemID');
       
-      if (existingItem) {
-        setAssignedItem(existingItem);
-        // Show assigned item info briefly, then navigate
-        setTimeout(() => {
-          navigate(`/items/${existingItem.id}`);
-        }, 2000);
+      if (userID && itemID) {
+        // Direct link format: https://stckr.io/qr?userID={userID}&itemID={itemID}
+        setLinkType('direct');
+        
+        if (!isAuthenticated) {
+          navigate(`/auth?redirect=${encodeURIComponent(`/qr?userID=${userID}&itemID=${itemID}`)}`);
+          return;
+        }
+
+        // Check if current user matches the userID and owns the item
+        if (user?.id !== userID) {
+          toast({
+            title: "Access Denied",
+            description: "This QR code belongs to a different user.",
+            variant: "destructive",
+          });
+          navigate('/');
+          return;
+        }
+
+        // Find the item by ID
+        const targetItem = getItemById(itemID);
+        if (targetItem && targetItem.user_id === userID) {
+          setAssignedItem(targetItem);
+          // Show assigned item info briefly, then navigate
+          setTimeout(() => {
+            navigate(`/items/${targetItem.id}`);
+          }, 2000);
+        } else {
+          toast({
+            title: "Item Not Found",
+            description: "The item linked to this QR code could not be found.",
+            variant: "destructive",
+          });
+          navigate('/items');
+        }
+      } else if (code) {
+        // Legacy format: https://stckr.io/qr/{code}
+        setLinkType('legacy');
+        
+        if (!isAuthenticated) {
+          navigate(`/auth?redirect=${encodeURIComponent(`/qr/${code}`)}`);
+          return;
+        }
+
+        // Check if this QR code is already assigned to an item
+        const existingItem = items.find(item => item.qr_code_id === code);
+        
+        if (existingItem) {
+          setAssignedItem(existingItem);
+          // Show assigned item info briefly, then navigate
+          setTimeout(() => {
+            navigate(`/items/${existingItem.id}`);
+          }, 2000);
+        } else {
+          // QR code not assigned, show assignment UI
+          setAssignedItem(null);
+        }
       } else {
-        // QR code not assigned, show assignment UI
-        setAssignedItem(null);
+        // No valid parameters, redirect to home
+        navigate('/');
+        return;
       }
       
       setIsChecking(false);
     };
 
     checkQRCodeAssignment();
-  }, [code, items, navigate, toast, isAuthenticated, isLoading, user]);
+  }, [code, searchParams, items, navigate, toast, isAuthenticated, isLoading, user, getItemById]);
 
   const handleAssignQRCode = () => {
     // Navigate to scanner with the scanned code

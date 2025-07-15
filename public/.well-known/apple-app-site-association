@@ -5,7 +5,7 @@
     "details": [
       {
         "appID": "TEAM_ID.com.upkeep.app",
-        "paths": ["/qr/*"]
+        "paths": ["/qr/*", "/qr"]
       }
     ]
   }
