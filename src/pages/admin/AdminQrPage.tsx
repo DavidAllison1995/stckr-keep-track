@@ -60,6 +60,7 @@ const AdminQrPage = () => {
   const [quantity, setQuantity] = useState(9);
   const [latestBatch, setLatestBatch] = useState<QRCodeData[]>([]);
   const [deletingCodes, setDeletingCodes] = useState<Set<string>>(new Set());
+  const [deletingPacks, setDeletingPacks] = useState<Set<string>>(new Set());
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [packs, setPacks] = useState<QRCodePack[]>([]);
   const [selectedPack, setSelectedPack] = useState<QRCodePack | null>(null);
@@ -499,6 +500,67 @@ const AdminQrPage = () => {
     }
   };
 
+  const deletePack = async (packId: string) => {
+    if (!user) return;
+    
+    setDeletingPacks(prev => new Set(prev).add(packId));
+    
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session?.access_token) {
+        throw new Error('No valid session token available');
+      }
+      
+      const functionUrl = `https://cudftlquaydissmvqjmv.supabase.co/functions/v1/admin-qr-pack-delete`;
+      
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
+          'Content-Type': 'application/json',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1ZGZ0bHF1YXlkaXNzbXZxam12Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNzkwNTksImV4cCI6MjA2NTg1NTA1OX0.f6_TmpyKF6VtQJL65deTrEdNnag6sSQw-eYWYUtQgaQ',
+        },
+        body: JSON.stringify({ packId }),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      
+      toast({
+        title: 'Success',
+        description: data.message || 'Pack and all QR codes deleted successfully',
+      });
+      
+      // Clear selected pack if it was the one deleted
+      if (selectedPack?.id === packId) {
+        setSelectedPack(null);
+        setPackCodes([]);
+      }
+      
+      // Reload data
+      await loadCodes();
+      await loadPacks();
+      
+    } catch (error) {
+      console.error('Error deleting pack:', error);
+      toast({
+        title: 'Error',
+        description: `Failed to delete pack: ${error.message || 'Unknown error'}`,
+        variant: 'destructive',
+      });
+    } finally {
+      setDeletingPacks(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(packId);
+        return newSet;
+      });
+    }
+  };
+
   useEffect(() => {
     loadCodes();
     loadPacks();
@@ -661,16 +723,60 @@ const AdminQrPage = () => {
                                 <span>Created: {new Date(pack.created_at).toLocaleDateString()}</span>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => viewPackDetails(pack)}
-                              >
-                                <Eye className="w-4 h-4 mr-1" />
-                                View Codes
-                              </Button>
-                            </div>
+                             <div className="flex items-center gap-2">
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => viewPackDetails(pack)}
+                               >
+                                 <Eye className="w-4 h-4 mr-1" />
+                                 View Codes
+                               </Button>
+                               <AlertDialog>
+                                 <AlertDialogTrigger asChild>
+                                   <Button
+                                     variant="outline"
+                                     size="sm"
+                                     disabled={deletingPacks.has(pack.id)}
+                                     className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                                   >
+                                     <Trash2 className="w-4 h-4 mr-1" />
+                                     {deletingPacks.has(pack.id) ? 'Deleting...' : 'Delete Pack'}
+                                   </Button>
+                                 </AlertDialogTrigger>
+                                 <AlertDialogContent>
+                                   <AlertDialogHeader>
+                                     <AlertDialogTitle className="flex items-center gap-2">
+                                       <AlertTriangle className="w-5 h-5 text-red-600" />
+                                       Delete Pack: {pack.name}
+                                     </AlertDialogTitle>
+                                     <AlertDialogDescription>
+                                       Are you sure you want to delete this pack and all {pack.qr_code_count} QR codes in it? This action cannot be undone.
+                                       <br /><br />
+                                       This will permanently delete:
+                                       <ul className="mt-2 list-disc list-inside text-sm">
+                                         <li>The pack "{pack.name}"</li>
+                                         <li>All {pack.qr_code_count} QR codes in this pack</li>
+                                         <li>All user claims for these codes</li>
+                                         <li>All scan history for these codes</li>
+                                       </ul>
+                                       <br />
+                                       <strong>This action is permanent and cannot be reversed.</strong>
+                                     </AlertDialogDescription>
+                                   </AlertDialogHeader>
+                                   <AlertDialogFooter>
+                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                     <AlertDialogAction 
+                                       onClick={() => deletePack(pack.id)}
+                                       className="bg-red-600 hover:bg-red-700"
+                                       disabled={deletingPacks.has(pack.id)}
+                                     >
+                                       {deletingPacks.has(pack.id) ? 'Deleting...' : 'Delete Pack'}
+                                     </AlertDialogAction>
+                                   </AlertDialogFooter>
+                                 </AlertDialogContent>
+                               </AlertDialog>
+                             </div>
                           </div>
                         </CardContent>
                       </Card>
