@@ -141,19 +141,29 @@ const AdminQrPage = () => {
     setIsGenerating(true);
     try {
       console.log('Generating QR codes via admin-qr-generate function...');
+      console.log('Form values before sending:', {
+        packName,
+        packDescription,
+        physicalProductInfo,
+        quantity
+      });
       
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session?.access_token) {
         throw new Error('No valid session token available');
       }
       
+      const requestBody = { 
+        quantity,
+        packName: packName || undefined,
+        packDescription: packDescription || undefined,
+        physicalProductInfo: physicalProductInfo || undefined
+      };
+      
+      console.log('Request body being sent:', requestBody);
+      
       const { data, error } = await supabase.functions.invoke('admin-qr-generate', {
-        body: { 
-          quantity,
-          packName: packName || undefined,
-          packDescription: packDescription || undefined,
-          physicalProductInfo: physicalProductInfo || undefined
-        },
+        body: requestBody,
         headers: {
           'Authorization': `Bearer ${sessionData.session.access_token}`,
           'Content-Type': 'application/json',
