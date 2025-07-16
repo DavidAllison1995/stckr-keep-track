@@ -1,21 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { qrLinkingService } from '@/services/qrLinking';
+import { supabase } from '@/integrations/supabase/client';
 
 export function QRAssignmentTest() {
   const [qrCode, setQrCode] = useState('');
   const [itemId, setItemId] = useState('');
   const [isAssigning, setIsAssigning] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
+  const [items, setItems] = useState<any[]>([]);
   const { toast } = useToast();
   const { user } = useSupabaseAuth();
-  const { items } = useSupabaseItems();
+
+  useEffect(() => {
+    if (user) {
+      fetchItems();
+    }
+  }, [user]);
+
+  const fetchItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('items')
+        .select('id, name')
+        .eq('user_id', user?.id)
+        .limit(5);
+      
+      if (error) {
+        console.error('Error fetching items:', error);
+        return;
+      }
+      
+      setItems(data || []);
+    } catch (error) {
+      console.error('Error fetching items:', error);
+    }
+  };
 
   const handleTestAssignment = async () => {
     if (!user) {
