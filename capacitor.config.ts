@@ -23,6 +23,15 @@ const config: CapacitorConfig = {
       handleUrl: {
         customScheme: 'stckr'
       }
+    },
+    GoogleAuth: {
+      scopes: ['profile', 'email'],
+      serverClientId: 'your-google-client-id.apps.googleusercontent.com',
+      forceCodeForRefreshToken: true
+    },
+    SignInWithApple: {
+      clientId: 'com.stckr.keeptrack',
+      redirectURI: 'https://4823056e-21ba-4628-9925-ad01b2666856.lovableproject.com/dashboard'
     }
   }
 };

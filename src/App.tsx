@@ -40,6 +40,7 @@ import ProtectedLayout from "./components/layouts/ProtectedLayout";
 import { GlobalQRScannerProvider } from "./contexts/GlobalQRScannerContext";
 import { useShop } from "./hooks/useShop";
 import { useDeepLinking } from "./hooks/useDeepLinking";
+import { useNativeAuth } from "./hooks/useNativeAuth";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,8 @@ const CartProviderWrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
+  useNativeAuth(); // Initialize native OAuth
+  
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

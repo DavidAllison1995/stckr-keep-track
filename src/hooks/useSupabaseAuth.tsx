@@ -3,6 +3,9 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Capacitor } from '@capacitor/core';
+import { SignInWithApple } from '@capacitor-community/apple-sign-in';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 interface AuthContextType {
   user: User | null;
@@ -120,23 +123,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithGoogle = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
+      // Use native Google Auth on mobile platforms
+      if (Capacitor.isNativePlatform()) {
+        const result = await GoogleAuth.signIn();
+        
+        if (result.authentication?.idToken) {
+          const { error } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: result.authentication.idToken,
+          });
 
-      if (error) {
-        toast({
-          title: 'Google Sign-In Failed',
-          description: error.message,
-          variant: 'destructive',
+          if (error) {
+            toast({
+              title: 'Google Sign-In Failed',
+              description: error.message,
+              variant: 'destructive',
+            });
+            return { error: error.message };
+          }
+
+          toast({
+            title: 'Welcome!',
+            description: 'You have been logged in with Google.',
+          });
+          return {};
+        }
+      } else {
+        // Use web OAuth for web platforms
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/dashboard`,
+          },
         });
-        return { error: error.message };
-      }
 
-      return {};
+        if (error) {
+          toast({
+            title: 'Google Sign-In Failed',
+            description: error.message,
+            variant: 'destructive',
+          });
+          return { error: error.message };
+        }
+
+        return {};
+      }
     } catch (error) {
       const message = 'An unexpected error occurred during Google sign-in';
       toast({
@@ -150,23 +181,55 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithApple = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'apple',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
-
-      if (error) {
-        toast({
-          title: 'Apple Sign-In Failed',
-          description: error.message,
-          variant: 'destructive',
+      // Use native Apple Sign-In on iOS
+      if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
+        const result = await SignInWithApple.authorize({
+          clientId: 'your.app.bundle.id',
+          redirectURI: `${window.location.origin}/dashboard`,
+          scopes: 'name email'
         });
-        return { error: error.message };
-      }
 
-      return {};
+        if (result.response?.identityToken) {
+          const { error } = await supabase.auth.signInWithIdToken({
+            provider: 'apple',
+            token: result.response.identityToken,
+          });
+
+          if (error) {
+            toast({
+              title: 'Apple Sign-In Failed',
+              description: error.message,
+              variant: 'destructive',
+            });
+            return { error: error.message };
+          }
+
+          toast({
+            title: 'Welcome!',
+            description: 'You have been logged in with Apple.',
+          });
+          return {};
+        }
+      } else {
+        // Use web OAuth for web platforms and Android
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'apple',
+          options: {
+            redirectTo: `${window.location.origin}/dashboard`,
+          },
+        });
+
+        if (error) {
+          toast({
+            title: 'Apple Sign-In Failed',
+            description: error.message,
+            variant: 'destructive',
+          });
+          return { error: error.message };
+        }
+
+        return {};
+      }
     } catch (error) {
       const message = 'An unexpected error occurred during Apple sign-in';
       toast({
