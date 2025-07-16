@@ -108,13 +108,11 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
     link.click();
   };
 
-  // Always show QR code (use direct format or legacy)
+  // Only show QR code if one is actually assigned to the item
   const isLegacyQR = Boolean(item.qr_code_id);
-  const qrData = directQRData;
-  const qrUrl = isLegacyQR ? `https://stckr.io/qr/${item.qr_code_id}` : qrData?.url;
-  const qrImageUrl = isLegacyQR ? generateQRCodeImageUrl(item.qr_code_id!) : qrData?.qrCodeImageUrl;
-
-  if (!qrData && !isLegacyQR) {
+  
+  // If no QR code is assigned, show placeholder message
+  if (!isLegacyQR) {
     return (
       <div className="space-y-6">
         <Card className="border border-gray-200">
@@ -123,16 +121,30 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
               <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <QrCode className="w-10 h-10 text-gray-400" />
               </div>
-              <h3 className="font-semibold text-lg mb-2">Loading QR Code...</h3>
+              <h3 className="font-semibold text-lg mb-2">No QR Code Assigned</h3>
               <p className="text-gray-600 mb-6">
-                Please wait while we generate your QR code.
+                No QR code has been assigned to this item yet.
               </p>
+              <p className="text-sm text-gray-500 mb-6">
+                Scan an existing QR code or generate a new one to link it here.
+              </p>
+              <Button 
+                onClick={() => setShowScanner(true)} 
+                className="bg-[#9333ea] hover:bg-[#a855f7] text-white rounded-full font-medium"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Assign QR Code
+              </Button>
             </div>
           </CardContent>
         </Card>
       </div>
     );
   }
+
+  // QR code assigned - show legacy QR code
+  const qrUrl = `https://stckr.io/qr/${item.qr_code_id}`;
+  const qrImageUrl = generateQRCodeImageUrl(item.qr_code_id!);
 
   // QR code display (direct format or legacy)
   return (
@@ -141,7 +153,7 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
         <CardHeader className="pb-4">
           <CardTitle className="text-lg flex items-center gap-2">
             <QrCode className="w-5 h-5 text-[#9333ea]" />
-            QR Code {!isLegacyQR && <Badge variant="secondary" className="text-xs">Direct Link</Badge>}
+            QR Code <Badge variant="secondary" className="text-xs">Assigned</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -167,13 +179,13 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
             
             <div className="mt-4 space-y-2">
               <Badge variant="secondary" className="text-sm font-mono bg-[#9333ea] text-white">
-                {isLegacyQR ? item.qr_code_id : `${item.name} QR`}
+                {item.qr_code_id}
               </Badge>
               <div className="text-xs text-gray-500 break-all">
                 Deep link: {qrUrl}
               </div>
               <div className="text-xs text-[#9333ea] font-medium bg-purple-50 p-3 rounded">
-                ✨ {isLegacyQR ? 'Legacy QR Code' : 'Direct item link'} - Optimized for mobile scanning
+                ✨ Assigned QR Code - Optimized for mobile scanning
               </div>
             </div>
           </div>
@@ -200,7 +212,7 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
               </Button>
             </div>
 
-            {/* Legacy QR Code Management */}
+            {/* QR Code Management */}
             {isLegacyQR && (
               <>
                 <Button 
@@ -220,16 +232,15 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
                       disabled={isDeleting}
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
-                      {isDeleting ? 'Removing...' : 'Remove Legacy QR Code'}
+                      {isDeleting ? 'Removing...' : 'Remove QR Code'}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Remove Legacy QR Code</AlertDialogTitle>
+                      <AlertDialogTitle>Remove QR Code</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Are you sure you want to remove the legacy QR code from this item? 
+                        Are you sure you want to remove the QR code from this item? 
                         The QR sticker will become unassigned and can be used for other items.
-                        The item will still have its direct QR code available.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -239,7 +250,7 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
                         className="bg-red-600 hover:bg-red-700"
                         disabled={isDeleting}
                       >
-                        {isDeleting ? 'Removing...' : 'Remove Legacy QR Code'}
+                        {isDeleting ? 'Removing...' : 'Remove QR Code'}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -250,7 +261,7 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
         </CardContent>
       </Card>
 
-      {/* QR Scanner Modal for Legacy QR Assignment */}
+      {/* QR Scanner Modal for QR Assignment */}
       {showScanner && (
         <SimpleQRScanner
           onScan={handleQRCodeScanned}
