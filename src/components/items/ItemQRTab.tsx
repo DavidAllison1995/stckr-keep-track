@@ -78,11 +78,20 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
   };
 
   const handleQRCodeScanned = async (code: string) => {
-    if (!user) return;
+    if (!user) {
+      console.error('No user found when trying to assign QR code');
+      return;
+    }
+    
+    console.log('=== QR CODE ASSIGNMENT DEBUG ===');
+    console.log('Scanned code:', code);
+    console.log('Item ID:', item.id);
+    console.log('User ID:', user.id);
     
     setIsAssigning(true);
     try {
       await qrLinkingService.linkQRToItem(code, item.id, user.id);
+      console.log('QR code linked successfully, refreshing status...');
       await loadQRLinkStatus(); // Refresh the status
       
       toast({
@@ -95,7 +104,7 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
       console.error('Error assigning QR code:', error);
       toast({
         title: 'Error',
-        description: 'Failed to assign QR code. Please try again.',
+        description: `Failed to assign QR code: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: 'destructive',
       });
     } finally {

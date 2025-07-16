@@ -126,6 +126,11 @@ export const qrLinkingService = {
    */
   async linkQRToItem(qrCode: string, itemId: string, userId: string): Promise<void> {
     try {
+      console.log('=== QR LINKING DEBUG ===');
+      console.log('QR Code:', qrCode);
+      console.log('Item ID:', itemId);
+      console.log('User ID:', userId);
+
       // First find the QR code by its code
       const { data: qrCodeData, error: qrError } = await supabase
         .from('qr_codes')
@@ -133,7 +138,10 @@ export const qrLinkingService = {
         .eq('code', qrCode)
         .single();
 
+      console.log('QR Code lookup result:', { qrCodeData, qrError });
+
       if (qrError || !qrCodeData) {
+        console.error('QR code not found:', qrError);
         throw new Error('QR code not found');
       }
 
@@ -145,21 +153,29 @@ export const qrLinkingService = {
         .eq('user_id', userId)
         .maybeSingle();
 
+      console.log('Existing link check:', { existingLink, existingError });
+
       if (existingError) {
+        console.error('Error checking existing QR link:', existingError);
         throw new Error('Error checking existing QR link');
       }
 
       if (existingLink) {
+        console.log('Updating existing link from item', existingLink.item_id, 'to item', itemId);
         // Update existing link to new item
         const { error: updateError } = await supabase
           .from('user_qr_links')
           .update({ item_id: itemId })
           .eq('id', existingLink.id);
 
+        console.log('Update result:', { updateError });
+
         if (updateError) {
+          console.error('Update error:', updateError);
           throw new Error('Failed to update QR link');
         }
       } else {
+        console.log('Creating new link');
         // Create new link
         const { error: insertError } = await supabase
           .from('user_qr_links')
@@ -169,10 +185,15 @@ export const qrLinkingService = {
             item_id: itemId
           });
 
+        console.log('Insert result:', { insertError });
+
         if (insertError) {
+          console.error('Insert error:', insertError);
           throw new Error('Failed to create QR link');
         }
       }
+
+      console.log('QR linking completed successfully');
     } catch (error) {
       console.error('Error in linkQRToItem:', error);
       throw error;
