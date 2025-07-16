@@ -77,20 +77,46 @@ function App() {
                     <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                     <Route path="/support" element={<SupportPage />} />
                     
-                    {/* Universal QR code route - publicly accessible */}
-                    <Route 
-                      path="/qr/:code" 
-                      element={
-                        <ItemsProvider>
-                          <MaintenanceProvider>
-                            <QRRedirectPage />
-                          </MaintenanceProvider>
-                        </ItemsProvider>
-                      } 
-                    />
-                    
-                    <Route path="/public/*" element={<PublicRoutes />} />
-                    <Route path="/claim/*" element={<ClaimRoutes />} />
+                     {/* Universal QR code route - publicly accessible */}
+                     <Route 
+                       path="/qr/:code" 
+                       element={
+                         <ItemsProvider>
+                           <MaintenanceProvider>
+                             <QRRedirectPage />
+                           </MaintenanceProvider>
+                         </ItemsProvider>
+                       } 
+                     />
+                     
+                     {/* Direct QR code route with query params - publicly accessible */}
+                     <Route 
+                       path="/qr" 
+                       element={
+                         <ItemsProvider>
+                           <MaintenanceProvider>
+                             <QRRedirectPage />
+                           </MaintenanceProvider>
+                         </ItemsProvider>
+                       } 
+                     />
+                     
+                     {/* Public item route - redirect to items/:id */}
+                     <Route 
+                       path="/item/:id" 
+                       element={
+                         <ItemsProvider>
+                           <MaintenanceProvider>
+                             <CartProviderWrapper>
+                               <ItemDetailPage />
+                             </CartProviderWrapper>
+                           </MaintenanceProvider>
+                         </ItemsProvider>
+                       } 
+                     />
+                     
+                     <Route path="/public/*" element={<PublicRoutes />} />
+                     <Route path="/claim/*" element={<ClaimRoutes />} />
                     
                     {/* Legacy route for backward compatibility */}
                     <Route 

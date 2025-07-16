@@ -7,6 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QrCode, Smartphone, Monitor } from 'lucide-react';
+import { qrService } from '@/services/qr';
+import { supabase } from '@/integrations/supabase/client';
 
 const QRRedirectPage = () => {
   const { code } = useParams<{ code: string }>();
@@ -82,23 +84,54 @@ const QRRedirectPage = () => {
         // Legacy format: https://stckr.io/qr/{code}
         setLinkType('legacy');
         
-        if (!isAuthenticated) {
-          navigate(`/auth?redirect=${encodeURIComponent(`/qr/${code}`)}`);
-          return;
-        }
+        // First check if QR code is assigned using qrService
+        try {
+          const qrStatus = await qrService.getStatus(code);
+          
+          if (qrStatus.isAssigned && qrStatus.itemId) {
+            // QR code is assigned to an item
+            if (!isAuthenticated) {
+              // Redirect to auth with item URL
+              navigate(`/auth?redirect=${encodeURIComponent(`/item/${qrStatus.itemId}`)}`);
+              return;
+            }
 
-        // Check if this QR code is already assigned to an item
-        const existingItem = items.find(item => item.qr_code_id === code);
-        
-        if (existingItem) {
-          setAssignedItem(existingItem);
-          // Show assigned item info briefly, then navigate
-          setTimeout(() => {
-            navigate(`/items/${existingItem.id}`);
-          }, 2000);
-        } else {
-          // QR code not assigned, show assignment UI
-          setAssignedItem(null);
+            // Get the item details
+            const targetItem = getItemById(qrStatus.itemId);
+            
+            if (targetItem) {
+              setAssignedItem(targetItem);
+              // Show assigned item info briefly, then navigate
+              setTimeout(() => {
+                navigate(`/items/${targetItem.id}`);
+              }, 2000);
+            } else {
+              toast({
+                title: "Item Not Found",
+                description: "The item linked to this QR code could not be found.",
+                variant: "destructive",
+              });
+              navigate('/');
+            }
+          } else {
+            // QR code is not assigned
+            if (!isAuthenticated) {
+              navigate(`/auth?redirect=${encodeURIComponent(`/qr/${code}`)}`);
+              return;
+            }
+            
+            // Show assignment UI
+            setAssignedItem(null);
+          }
+        } catch (error) {
+          console.error('Error checking QR code status:', error);
+          toast({
+            title: "Error",
+            description: "Failed to check QR code status. Please try again.",
+            variant: "destructive",
+          });
+          navigate('/');
+          return;
         }
       } else {
         // No valid parameters, redirect to home
