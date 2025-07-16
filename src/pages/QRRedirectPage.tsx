@@ -1,13 +1,15 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { QrCode, Smartphone, Monitor } from 'lucide-react';
-import { qrLinkingService } from '@/services/qrLinking';
+import { QrCode, Smartphone, Monitor, Loader2 } from 'lucide-react';
+import { qrAssignmentService } from '@/services/qrAssignment';
+import { QRAssignModal } from '@/components/qr/QRAssignModal';
+import ItemForm from '@/components/items/ItemForm';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 
 // Extract clean QR code from potentially malformed URL parameter
@@ -31,12 +33,12 @@ const QRRedirectPage = () => {
   const { code } = useParams<{ code: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { items, getItemById } = useSupabaseItems();
   const { isAuthenticated, isLoading, user } = useSupabaseAuth();
   const { toast } = useToast();
   const [isChecking, setIsChecking] = useState(true);
   const [assignedItem, setAssignedItem] = useState<any>(null);
-  const [linkType, setLinkType] = useState<'legacy' | 'direct'>('legacy');
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showCreateItemModal, setShowCreateItemModal] = useState(false);
   
   // Extract clean code from potentially malformed URL parameter
   const cleanCode = code ? extractCleanCode(code) : null;
@@ -72,14 +74,12 @@ const QRRedirectPage = () => {
       
       if (userID && itemID) {
         // Direct link format: https://stckr.io/qr?userID={userID}&itemID={itemID}
-        setLinkType('direct');
-        
         if (!isAuthenticated) {
           navigate(`/auth?redirect=${encodeURIComponent(`/qr?userID=${userID}&itemID=${itemID}`)}`);
           return;
         }
 
-        // Check if current user matches the userID and owns the item
+        // Check if current user matches the userID
         if (user?.id !== userID) {
           toast({
             title: "Access Denied",
@@ -90,50 +90,34 @@ const QRRedirectPage = () => {
           return;
         }
 
-        // Find the item by ID
-        const targetItem = getItemById(itemID);
-        if (targetItem && targetItem.user_id === userID) {
-          setAssignedItem(targetItem);
-            // Show item card directly - no redirect needed
-        } else {
-          toast({
-            title: "Item Not Found",
-            description: "The item linked to this QR code could not be found.",
-            variant: "destructive",
-          });
-          navigate('/items');
-        }
+        // For direct links, navigate directly to the item
+        navigate(`/items/${itemID}`);
+        return;
       } else if (cleanCode) {
-        // Legacy format: https://stckr.io/qr/{code}
-        setLinkType('legacy');
-        
-        // Check if QR code is linked to an item for the current user
+        // QR code format: https://stckr.io/qr/{code}
         if (!isAuthenticated) {
           navigate(`/auth?redirect=${encodeURIComponent(`/qr/${cleanCode}`)}`);
           return;
         }
 
         try {
-          const qrLinkStatus = await qrLinkingService.getUserQRLink(cleanCode, user!.id);
+          const result = await qrAssignmentService.checkQRCode(cleanCode, user!.id);
           
-          if (qrLinkStatus.isLinked && qrLinkStatus.itemId) {
-            // QR code is linked to an item for this user
-            const targetItem = getItemById(qrLinkStatus.itemId);
-            
-            if (targetItem) {
-              setAssignedItem(targetItem);
-              // Show item card directly - no redirect needed
-            } else {
-              toast({
-                title: "Item Not Found",
-                description: "The item linked to this QR code could not be found.",
-                variant: "destructive",
-              });
-              navigate('/');
-            }
+          if (!result.success) {
+            toast({
+              title: "Error",
+              description: result.error || "Failed to check QR code",
+              variant: "destructive",
+            });
+            navigate('/');
+            return;
+          }
+
+          if (result.assigned && result.item) {
+            // QR code is assigned to an item - show item details
+            setAssignedItem(result.item);
           } else {
-            // QR code is not linked to any item for this user
-            // Show assignment UI
+            // QR code is not assigned - show assignment UI
             setAssignedItem(null);
           }
         } catch (error) {
@@ -156,11 +140,35 @@ const QRRedirectPage = () => {
     };
 
     checkQRCodeAssignment();
-  }, [code, cleanCode, searchParams, items, navigate, toast, isAuthenticated, isLoading, user, getItemById]);
+  }, [code, cleanCode, searchParams, navigate, toast, isAuthenticated, isLoading, user]);
 
   const handleAssignQRCode = () => {
-    // Navigate to scanner with the scanned code
-    navigate('/scanner', { state: { scannedCode: cleanCode } });
+    setShowAssignModal(true);
+  };
+
+  const handleCreateNewItem = () => {
+    setShowAssignModal(false);
+    setShowCreateItemModal(true);
+  };
+
+  const handleAssignmentSuccess = () => {
+    setShowAssignModal(false);
+    // Refresh the page to show the newly assigned item
+    window.location.reload();
+  };
+
+  const handleItemCreated = async () => {
+    toast({
+      title: "Success",
+      description: "Item created successfully",
+    });
+    setShowCreateItemModal(false);
+    navigate('/items');
+  };
+
+  const handleModalClose = () => {
+    setShowAssignModal(false);
+    setShowCreateItemModal(false);
   };
 
   const handleDownloadApp = () => {
@@ -183,7 +191,7 @@ const QRRedirectPage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">
             {isLoading ? 'Loading...' : 'Checking QR code...'}
           </p>
@@ -269,70 +277,92 @@ const QRRedirectPage = () => {
 
   // QR code not assigned - show assignment UI
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-4">
-      <Card className="max-w-md w-full">
-        <CardHeader className="text-center">
-          <QrCode className="w-12 h-12 text-blue-600 mx-auto mb-2" />
-          <CardTitle>Unassigned QR Code</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="text-center">
-            <p className="text-gray-600 mb-4">
-              This QR code (ID: <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{cleanCode}</span>) is not assigned to any item yet.
-            </p>
-            <p className="text-sm text-gray-500 mb-6">
-              Would you like to assign it to one of your items?
-            </p>
-          </div>
+    <>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center">
+            <QrCode className="w-12 h-12 text-blue-600 mx-auto mb-2" />
+            <CardTitle>Unassigned QR Code</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="text-center">
+              <p className="text-gray-600 mb-4">
+                This QR code (ID: <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{cleanCode}</span>) is not assigned to any item yet.
+              </p>
+              <p className="text-sm text-gray-500 mb-6">
+                Would you like to assign it to one of your items?
+              </p>
+            </div>
 
-          <div className="space-y-3">
-            <Button 
-              onClick={handleAssignQRCode}
-              className="w-full bg-blue-600 hover:bg-blue-700"
-              size="lg"
-            >
-              Assign to Item
-            </Button>
-
-            <Button 
-              onClick={() => navigate('/items')}
-              variant="outline"
-              className="w-full"
-              size="lg"
-            >
-              View My Items
-            </Button>
-          </div>
-
-          {/* Future deep linking preparation */}
-          {device !== 'desktop' && (
-            <div className="pt-4 border-t border-gray-200">
-              <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
-                {device === 'ios' ? <Smartphone className="w-4 h-4" /> : <Smartphone className="w-4 h-4" />}
-                <span>Prefer using the mobile app?</span>
-              </div>
+            <div className="space-y-3">
               <Button 
-                onClick={handleDownloadApp}
-                variant="outline"
-                size="sm"
-                className="w-full text-xs"
+                onClick={handleAssignQRCode}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                size="lg"
               >
-                Get the {device === 'ios' ? 'iOS' : 'Android'} App (Coming Soon)
+                Assign to Item
+              </Button>
+
+              <Button 
+                onClick={() => navigate('/items')}
+                variant="outline"
+                className="w-full"
+                size="lg"
+              >
+                View My Items
               </Button>
             </div>
-          )}
 
-          {device === 'desktop' && (
-            <div className="pt-4 border-t border-gray-200 text-center">
-              <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                <Monitor className="w-4 h-4" />
-                <span>Scan QR codes on mobile for the best experience</span>
+            {/* Future deep linking preparation */}
+            {device !== 'desktop' && (
+              <div className="pt-4 border-t border-gray-200">
+                <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                  {device === 'ios' ? <Smartphone className="w-4 h-4" /> : <Smartphone className="w-4 h-4" />}
+                  <span>Prefer using the mobile app?</span>
+                </div>
+                <Button 
+                  onClick={handleDownloadApp}
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs"
+                >
+                  Get the {device === 'ios' ? 'iOS' : 'Android'} App (Coming Soon)
+                </Button>
               </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+            )}
+
+            {device === 'desktop' && (
+              <div className="pt-4 border-t border-gray-200 text-center">
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                  <Monitor className="w-4 h-4" />
+                  <span>Scan QR codes on mobile for the best experience</span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <QRAssignModal
+        isOpen={showAssignModal}
+        onClose={handleModalClose}
+        onCreateNewItem={handleCreateNewItem}
+        onSuccess={handleAssignmentSuccess}
+        qrCode={cleanCode || ''}
+      />
+
+      <Dialog open={showCreateItemModal} onOpenChange={setShowCreateItemModal}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Item</DialogTitle>
+          </DialogHeader>
+          <ItemForm 
+            onSuccess={handleItemCreated}
+            onCancel={() => setShowCreateItemModal(false)}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
