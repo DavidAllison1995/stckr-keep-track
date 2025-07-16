@@ -8,6 +8,7 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { qrLinkingService } from '@/services/qrLinking';
 import { supabase } from '@/integrations/supabase/client';
 
+// QR Assignment Test Component - Updated to use Supabase Auth
 export function QRAssignmentTest() {
   const [qrCode, setQrCode] = useState('');
   const [itemId, setItemId] = useState('');
