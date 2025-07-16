@@ -31,9 +31,10 @@ interface ItemDetailProps {
   onClose: () => void;
   defaultTab?: string;
   highlightTaskId?: string;
+  onItemUpdate?: () => void;
 }
 
-const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: ItemDetailProps) => {
+const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId, onItemUpdate }: ItemDetailProps) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const { deleteItem } = useSupabaseItems();
@@ -187,7 +188,7 @@ const ItemDetail = ({ item, onClose, defaultTab = 'details', highlightTaskId }: 
           </TabsContent>
           
           <TabsContent value="qr" className={isMobile ? "mt-4" : "mt-6"}>
-            <ItemQRTab item={item} />
+            <ItemQRTab item={item} onQRStatusChange={onItemUpdate} />
           </TabsContent>
         </Tabs>
       </div>

@@ -22,9 +22,10 @@ import { qrLinkingService, QRLinkStatus } from '@/services/qrLinking';
 
 interface ItemQRTabProps {
   item: Item;
+  onQRStatusChange?: () => void;
 }
 
-const ItemQRTab = ({ item }: ItemQRTabProps) => {
+const ItemQRTab = ({ item, onQRStatusChange }: ItemQRTabProps) => {
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -65,6 +66,9 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
         title: 'QR Code Removed',
         description: 'The QR code has been removed from this item.',
       });
+      
+      // Notify parent component of status change
+      onQRStatusChange?.();
     } catch (error) {
       console.error('Error removing QR code:', error);
       toast({
@@ -98,6 +102,9 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
         title: 'Success',
         description: 'QR code assigned successfully',
       });
+      
+      // Notify parent component of status change
+      onQRStatusChange?.();
       
       setShowScanner(false);
     } catch (error) {

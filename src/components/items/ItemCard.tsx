@@ -20,6 +20,8 @@ import {
 import { Item } from '@/hooks/useSupabaseItems';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { qrLinkingService, QRLinkStatus } from '@/services/qrLinking';
 import TwemojiIcon from '@/components/icons/TwemojiIcon';
 import NotoEmojiIcon from '@/components/icons/NotoEmojiIcon';
 import { QrCode, Download, Clock, AlertTriangle, CheckCircle2, Trash2, ChevronRight, Check, X, Eye, Edit } from 'lucide-react';
@@ -34,10 +36,13 @@ interface ItemCardProps {
 
 const ItemCard = ({ item, onClick }: ItemCardProps) => {
   const navigate = useNavigate();
+  const { user } = useSupabaseAuth();
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [qrLinkStatus, setQrLinkStatus] = useState<QRLinkStatus>({ isLinked: false });
+  const [isLoadingQR, setIsLoadingQR] = useState(true);
   
   const { getTasksByItem, tasks } = useSupabaseMaintenance();
   const { deleteItem } = useSupabaseItems();
@@ -48,6 +53,27 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
   const dueSoonTasks = itemTasks.filter(task => task.status === 'due_soon');
   const overdueTasks = itemTasks.filter(task => task.status === 'overdue');
   const inProgressTasks = itemTasks.filter(task => task.status === 'in_progress');
+
+  // Load QR link status when component mounts
+  useEffect(() => {
+    if (user) {
+      loadQRLinkStatus();
+    }
+  }, [user, item.id]);
+
+  const loadQRLinkStatus = async () => {
+    if (!user) return;
+    
+    setIsLoadingQR(true);
+    try {
+      const status = await qrLinkingService.getItemQRLink(item.id, user.id);
+      setQrLinkStatus(status);
+    } catch (error) {
+      console.error('Error loading QR link status:', error);
+    } finally {
+      setIsLoadingQR(false);
+    }
+  };
 
   // Debug logging
   useEffect(() => {
@@ -65,14 +91,14 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
   const iconEmoji = item.icon_id || '📦';
   
   // Generate short code from QR code ID
-  const shortCode = item.qr_code_id ? `B${item.qr_code_id.slice(-4).toUpperCase()}` : null;
+  const shortCode = qrLinkStatus.qrCodeId ? `B${qrLinkStatus.qrCodeId.slice(-4).toUpperCase()}` : null;
 
   // Generate QR code thumbnail on mount
   useEffect(() => {
-    if (item.qr_code_id) {
+    if (qrLinkStatus.qrCodeId) {
       const generateQrCode = async () => {
         try {
-          const dataUrl = await QRCode.toDataURL(`https://stckr.io/qr/${item.qr_code_id}`, { 
+          const dataUrl = await QRCode.toDataURL(`https://stckr.io/qr/${qrLinkStatus.qrCodeId}`, { 
             width: 128, 
             margin: 0 
           });
@@ -83,7 +109,19 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
       };
       generateQrCode();
     }
-  }, [item.qr_code_id]);
+  }, [qrLinkStatus.qrCodeId]);
+
+  // Re-load QR status when window gains focus (for when user navigates back)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (user) {
+        loadQRLinkStatus();
+      }
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [user]);
 
   const handleCardClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -111,10 +149,10 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
   };
 
   const downloadQrCode = async () => {
-    if (!item.qr_code_id || !shortCode) return;
+    if (!qrLinkStatus.qrCodeId || !shortCode) return;
     
     try {
-      const downloadDataUrl = await QRCode.toDataURL(`https://stckr.io/qr/${item.qr_code_id}`, { 
+      const downloadDataUrl = await QRCode.toDataURL(`https://stckr.io/qr/${qrLinkStatus.qrCodeId}`, { 
         width: 512, 
         margin: 1 
       });
@@ -186,7 +224,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
             )}
             
             {/* QR Status Indicator */}
-            {item.qr_code_id && (
+            {qrLinkStatus.isLinked && (
               <div className="absolute top-2 right-2 w-6 h-6 mobile-icon-md bg-green-600/20 border border-green-500/50 rounded-full flex items-center justify-center backdrop-blur-sm">
                 <QrCode className="w-3 h-3 mobile-icon-sm text-green-400" />
               </div>
@@ -213,12 +251,12 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
               <Badge 
                 variant="secondary" 
                 className={`text-xs px-2 py-0.5 h-5 font-medium border transition-colors ${
-                  item.qr_code_id 
+                  qrLinkStatus.isLinked 
                     ? "bg-green-600/20 text-green-300 border-green-500/30 hover:bg-green-600/30" 
                     : "bg-gray-700/50 text-gray-400 border-gray-600/50 hover:bg-gray-700/70"
                 }`}
               >
-                {item.qr_code_id ? (
+                {qrLinkStatus.isLinked ? (
                   <>
                     <Check className="w-2.5 h-2.5 mr-1" />
                     QR

@@ -16,7 +16,7 @@ const ItemDetailPage = () => {
   console.log('ItemDetailPage - ID from params:', id);
   console.log('ItemDetailPage - Search params:', searchParams.toString());
   
-  const { getItemById } = useSupabaseItems();
+  const { getItemById, refetch } = useSupabaseItems();
   const item = id ? getItemById(id) : null;
   const defaultTab = searchParams.get('tab') || 'details';
   const highlightTaskId = searchParams.get('highlight') || undefined;
@@ -65,6 +65,10 @@ const ItemDetailPage = () => {
                   onClose={handleClose}
                   defaultTab={defaultTab}
                   highlightTaskId={highlightTaskId}
+                  onItemUpdate={() => {
+                    // Refresh the item data when QR status changes
+                    refetch();
+                  }}
                 />
               ) : (
                 <div className="text-center">
@@ -90,6 +94,10 @@ const ItemDetailPage = () => {
       onClose={handleClose}
       defaultTab={defaultTab}
       highlightTaskId={highlightTaskId}
+      onItemUpdate={() => {
+        // Refresh the item data when QR status changes
+        refetch();
+      }}
     />
   );
 };
