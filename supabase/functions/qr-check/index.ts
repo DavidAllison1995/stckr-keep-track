@@ -30,15 +30,21 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (req.method !== 'POST') {
+    return Response.json({
+      success: false,
+      assigned: false,
+      error: 'Method not allowed'
+    }, { headers: corsHeaders, status: 405 });
+  }
+
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
   );
 
   try {
-    const url = new URL(req.url);
-    const qrCode = url.searchParams.get('qrCode');
-    const userId = url.searchParams.get('userId');
+    const { qrCode, userId } = await req.json();
     
     console.log('=== QR CHECK DEBUG ===');
     console.log('QR Code:', qrCode);

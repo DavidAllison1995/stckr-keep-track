@@ -44,6 +44,8 @@ export function QRAssignmentTest() {
   };
 
   const handleTestAssignment = async () => {
+    console.log('=== HANDLE TEST ASSIGNMENT CALLED ===');
+    console.log('Current state:', { qrCode, itemId, user: !!user });
     if (!user) {
       toast({
         title: 'Error',
