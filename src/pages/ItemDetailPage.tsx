@@ -87,20 +87,12 @@ const ItemDetailPage = () => {
   return (
     <ProtectedRoute>
       <ProtectedLayout>
-        <div className="min-h-screen bg-gray-950">
-          <div className="px-4 pt-4 pb-20">
-            <div className="bg-gray-900 rounded-t-3xl shadow-xl border border-gray-800 min-h-screen">
-              <div className="p-6 pb-8">
-                <ItemDetail 
-                  item={item} 
-                  onClose={handleClose}
-                  defaultTab={defaultTab}
-                  highlightTaskId={highlightTaskId}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+        <ItemDetail 
+          item={item} 
+          onClose={handleClose}
+          defaultTab={defaultTab}
+          highlightTaskId={highlightTaskId}
+        />
       </ProtectedLayout>
     </ProtectedRoute>
   );
