@@ -131,66 +131,21 @@ export const qrLinkingService = {
       console.log('Item ID:', itemId);
       console.log('User ID:', userId);
 
-      // First find the QR code by its code
-      const { data: qrCodeData, error: qrError } = await supabase
-        .from('qr_codes')
-        .select('id')
-        .eq('code', qrCode)
-        .single();
+      // Use the new edge function for better server-side debugging
+      const { data, error } = await supabase.functions.invoke('qr-assign', {
+        body: { qrCode, itemId, userId },
+      });
 
-      console.log('QR Code lookup result:', { qrCodeData, qrError });
+      console.log('QR assign function response:', { data, error });
 
-      if (qrError || !qrCodeData) {
-        console.error('QR code not found:', qrError);
-        throw new Error('QR code not found');
+      if (error) {
+        console.error('Error from qr-assign function:', error);
+        throw new Error(error.message || 'QR assignment failed');
       }
 
-      // Check if this QR code is already linked to another item for this user
-      const { data: existingLink, error: existingError } = await supabase
-        .from('user_qr_links')
-        .select('id, item_id')
-        .eq('qr_code_id', qrCodeData.id)
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      console.log('Existing link check:', { existingLink, existingError });
-
-      if (existingError) {
-        console.error('Error checking existing QR link:', existingError);
-        throw new Error('Error checking existing QR link');
-      }
-
-      if (existingLink) {
-        console.log('Updating existing link from item', existingLink.item_id, 'to item', itemId);
-        // Update existing link to new item
-        const { error: updateError } = await supabase
-          .from('user_qr_links')
-          .update({ item_id: itemId })
-          .eq('id', existingLink.id);
-
-        console.log('Update result:', { updateError });
-
-        if (updateError) {
-          console.error('Update error:', updateError);
-          throw new Error('Failed to update QR link');
-        }
-      } else {
-        console.log('Creating new link');
-        // Create new link
-        const { error: insertError } = await supabase
-          .from('user_qr_links')
-          .insert({
-            user_id: userId,
-            qr_code_id: qrCodeData.id,
-            item_id: itemId
-          });
-
-        console.log('Insert result:', { insertError });
-
-        if (insertError) {
-          console.error('Insert error:', insertError);
-          throw new Error('Failed to create QR link');
-        }
+      if (!data?.success) {
+        console.error('QR assignment failed:', data?.error);
+        throw new Error(data?.error || 'QR assignment failed');
       }
 
       console.log('QR linking completed successfully');

@@ -17,12 +17,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { QrCode, Plus, Trash2, Users, AlertTriangle, Package, FolderOpen, Edit, Eye, RotateCcw } from 'lucide-react';
+import { QrCode, Plus, Trash2, Users, AlertTriangle, Package, FolderOpen, Edit, Eye, RotateCcw, TestTube } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import QRCodeGrid from '@/components/qr/QRCodeGrid';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { QRAssignmentTest } from '@/components/admin/QRAssignmentTest';
 
 interface QRCodeData {
   id: string;
@@ -575,10 +576,11 @@ const AdminQrPage = () => {
         </div>
 
         <Tabs defaultValue="generate" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="generate">Generate QR Codes</TabsTrigger>
             <TabsTrigger value="packs">Manage Packs</TabsTrigger>
             <TabsTrigger value="all-codes">All QR Codes</TabsTrigger>
+            <TabsTrigger value="test">Test QR Assignment</TabsTrigger>
           </TabsList>
           
           <TabsContent value="generate" className="space-y-6">
@@ -963,6 +965,20 @@ const AdminQrPage = () => {
                     </table>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="test" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TestTube className="w-5 h-5" />
+                  QR Assignment Testing
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <QRAssignmentTest />
               </CardContent>
             </Card>
           </TabsContent>

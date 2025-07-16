@@ -55,3 +55,9 @@ verify_jwt = false
 [functions.admin-qr-pack-delete]
 verify_jwt = true
 
+[functions.qr-assign]
+verify_jwt = false
+
+[functions.qr-resolve]
+verify_jwt = false
+

@@ -20,9 +20,14 @@ export const qrRedirectService = {
    */
   async resolveQRCode(qrCodeId: string): Promise<QRResolutionResponse> {
     try {
+      console.log('=== QR REDIRECT SERVICE DEBUG ===');
+      console.log('Resolving QR code ID:', qrCodeId);
+
       const { data, error } = await supabase.functions.invoke('qr-resolve', {
         body: { qrCodeId },
       });
+
+      console.log('QR resolve function response:', { data, error });
 
       if (error) {
         console.error('Error resolving QR code:', error);
