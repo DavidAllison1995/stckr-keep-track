@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
-import { qrLinkingService } from '@/services/qrLinking';
+import { qrAssignmentService } from '@/services/qrAssignment';
 import { supabase } from '@/integrations/supabase/client';
 
 // QR Assignment Test Component - Updated to use Supabase Auth
@@ -67,12 +67,22 @@ export function QRAssignmentTest() {
       console.log('=== QR ASSIGNMENT TEST ===');
       console.log('Testing QR assignment with:', { qrCode, itemId, userId: user.id });
 
-      await qrLinkingService.linkQRToItem(qrCode, itemId, user.id);
+      const result = await qrAssignmentService.assignQRCode(qrCode, itemId, user.id);
 
-      toast({
-        title: 'Success',
-        description: 'QR code assigned successfully!',
-      });
+      console.log('Assignment result:', result);
+
+      if (result.success) {
+        toast({
+          title: 'Success',
+          description: 'QR code assigned successfully!',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: result.message || 'Failed to assign QR code',
+          variant: 'destructive',
+        });
+      }
     } catch (error) {
       console.error('QR assignment test failed:', error);
       toast({
@@ -109,19 +119,25 @@ export function QRAssignmentTest() {
       console.log('=== QR STATUS CHECK ===');
       console.log('Checking QR status for:', { qrCode, userId: user.id });
 
-      const status = await qrLinkingService.getUserQRLink(qrCode, user.id);
+      const status = await qrAssignmentService.checkQRCode(qrCode, user.id);
       
       console.log('QR status result:', status);
 
-      if (status.isLinked) {
+      if (status.success && status.assigned) {
         toast({
           title: 'QR Code Status',
-          description: `QR code is linked to item: ${status.itemName}`,
+          description: `QR code is assigned to item: ${status.item?.name || 'Unknown item'}`,
+        });
+      } else if (status.success && !status.assigned) {
+        toast({
+          title: 'QR Code Status',
+          description: 'QR code is not assigned to any item',
         });
       } else {
         toast({
           title: 'QR Code Status',
-          description: 'QR code is not linked to any item',
+          description: 'Failed to check QR status',
+          variant: 'destructive',
         });
       }
     } catch (error) {
@@ -190,7 +206,7 @@ export function QRAssignmentTest() {
         </div>
 
         <div className="text-sm text-muted-foreground">
-          <p>Available QR codes: NGLJ9P, 2UDN06, XAVXI6, FI2RGD, 6NS8AL, ADMDSK, SMRZQU</p>
+          <p>Available QR codes: GULMTB, YMY86V, WB7JMJ, ZXS55O, 30ZSHU, J0P6H8, SDEL42, LZQ0NW</p>
           <p>Check browser console for detailed debug logs</p>
         </div>
       </CardContent>
