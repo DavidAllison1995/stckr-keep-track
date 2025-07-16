@@ -11,6 +11,23 @@ import { qrService } from '@/services/qr';
 import { supabase } from '@/integrations/supabase/client';
 
 
+// Extract clean QR code from potentially malformed URL parameter
+const extractCleanCode = (rawCode: string): string => {
+  // If the code contains the full URL, extract just the code part
+  if (rawCode.includes('https://stckr.io/qr/')) {
+    const urlParts = rawCode.split('https://stckr.io/qr/');
+    return urlParts[urlParts.length - 1]; // Get the last part (the actual code)
+  }
+  
+  // If it contains query parameters, extract just the code
+  if (rawCode.includes('?')) {
+    return rawCode.split('?')[0];
+  }
+  
+  // Return the code as-is if it's already clean
+  return rawCode;
+};
+
 const QRRedirectPage = () => {
   const { code } = useParams<{ code: string }>();
   const [searchParams] = useSearchParams();
@@ -21,6 +38,9 @@ const QRRedirectPage = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [assignedItem, setAssignedItem] = useState<any>(null);
   const [linkType, setLinkType] = useState<'legacy' | 'direct'>('legacy');
+  
+  // Extract clean code from potentially malformed URL parameter
+  const cleanCode = code ? extractCleanCode(code) : null;
 
   // Detect device type for future deep linking
   const detectDevice = () => {
@@ -37,6 +57,7 @@ const QRRedirectPage = () => {
     console.log('Raw URL:', window.location.href);
     console.log('Code from params:', code);
     console.log('Search params:', searchParams.toString());
+    console.log('Clean code extracted:', cleanCode);
     
     const checkQRCodeAssignment = async () => {
       setIsChecking(true);
@@ -83,13 +104,13 @@ const QRRedirectPage = () => {
           });
           navigate('/items');
         }
-      } else if (code) {
+      } else if (cleanCode) {
         // Legacy format: https://stckr.io/qr/{code}
         setLinkType('legacy');
         
         // First check if QR code is assigned using qrService
         try {
-          const qrStatus = await qrService.getStatus(code);
+          const qrStatus = await qrService.getStatus(cleanCode);
           
           if (qrStatus.isAssigned && qrStatus.itemId) {
             // QR code is assigned to an item
@@ -116,7 +137,7 @@ const QRRedirectPage = () => {
           } else {
             // QR code is not assigned
             if (!isAuthenticated) {
-              navigate(`/auth?redirect=${encodeURIComponent(`/qr/${code}`)}`);
+              navigate(`/auth?redirect=${encodeURIComponent(`/qr/${cleanCode}`)}`);
               return;
             }
             
@@ -143,11 +164,11 @@ const QRRedirectPage = () => {
     };
 
     checkQRCodeAssignment();
-  }, [code, searchParams, items, navigate, toast, isAuthenticated, isLoading, user, getItemById]);
+  }, [code, cleanCode, searchParams, items, navigate, toast, isAuthenticated, isLoading, user, getItemById]);
 
   const handleAssignQRCode = () => {
     // Navigate to scanner with the scanned code
-    navigate('/scanner', { state: { scannedCode: code } });
+    navigate('/scanner', { state: { scannedCode: cleanCode } });
   };
 
   const handleDownloadApp = () => {
@@ -265,7 +286,7 @@ const QRRedirectPage = () => {
         <CardContent className="space-y-6">
           <div className="text-center">
             <p className="text-gray-600 mb-4">
-              This QR code (ID: <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{code}</span>) is not assigned to any item yet.
+              This QR code (ID: <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{cleanCode}</span>) is not assigned to any item yet.
             </p>
             <p className="text-sm text-gray-500 mb-6">
               Would you like to assign it to one of your items?
