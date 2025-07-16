@@ -7,8 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QrCode, Smartphone, Monitor } from 'lucide-react';
-import { qrService } from '@/services/qr';
-import { supabase } from '@/integrations/supabase/client';
+import { qrLinkingService } from '@/services/qrLinking';
 
 
 // Extract clean QR code from potentially malformed URL parameter
@@ -108,20 +107,18 @@ const QRRedirectPage = () => {
         // Legacy format: https://stckr.io/qr/{code}
         setLinkType('legacy');
         
-        // First check if QR code is assigned using qrService
-        try {
-          const qrStatus = await qrService.getStatus(cleanCode);
-          
-          if (qrStatus.isAssigned && qrStatus.itemId) {
-            // QR code is assigned to an item
-            if (!isAuthenticated) {
-              // Redirect to auth with item URL
-              navigate(`/auth?redirect=${encodeURIComponent(`/item/${qrStatus.itemId}`)}`);
-              return;
-            }
+        // Check if QR code is linked to an item for the current user
+        if (!isAuthenticated) {
+          navigate(`/auth?redirect=${encodeURIComponent(`/qr/${cleanCode}`)}`);
+          return;
+        }
 
-            // Get the item details
-            const targetItem = getItemById(qrStatus.itemId);
+        try {
+          const qrLinkStatus = await qrLinkingService.getUserQRLink(cleanCode, user!.id);
+          
+          if (qrLinkStatus.isLinked && qrLinkStatus.itemId) {
+            // QR code is linked to an item for this user
+            const targetItem = getItemById(qrLinkStatus.itemId);
             
             if (targetItem) {
               setAssignedItem(targetItem);
@@ -135,12 +132,7 @@ const QRRedirectPage = () => {
               navigate('/');
             }
           } else {
-            // QR code is not assigned
-            if (!isAuthenticated) {
-              navigate(`/auth?redirect=${encodeURIComponent(`/qr/${cleanCode}`)}`);
-              return;
-            }
-            
+            // QR code is not linked to any item for this user
             // Show assignment UI
             setAssignedItem(null);
           }

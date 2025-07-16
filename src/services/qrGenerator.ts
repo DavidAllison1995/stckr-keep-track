@@ -50,19 +50,12 @@ export const qrGenerator = {
   },
 
   /**
-   * Update item with QR code information
+   * @deprecated - Use qrLinkingService instead
+   * This method is deprecated and will be removed in a future version
    */
   async updateItemWithQRCode(itemId: string, qrData: QRCodeData): Promise<void> {
-    const { error } = await supabase
-      .from('items')
-      .update({ 
-        qr_code_id: `${qrData.userID}-${qrData.itemID}` // Store as reference
-      })
-      .eq('id', itemId);
-
-    if (error) {
-      throw new Error('Failed to update item with QR code');
-    }
+    console.warn('qrGenerator.updateItemWithQRCode is deprecated - use qrLinkingService');
+    throw new Error('This method is deprecated - use qrLinkingService.linkQRToItem instead');
   },
 
   /**

@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { qrLinkingService } from './qrLinking';
 
 export interface QrCodeStatus {
   isAssigned: boolean;
@@ -9,46 +10,45 @@ export interface QrCodeStatus {
 
 export const qrService = {
   async getStatus(code: string): Promise<QrCodeStatus> {
+    // For backward compatibility, check if any user has this QR code linked
     const { data, error } = await supabase
-      .from('items')
-      .select('id, name')
-      .eq('qr_code_id', code)
-      .single();
+      .from('user_qr_links')
+      .select(`
+        id,
+        item_id,
+        item:items(id, name)
+      `)
+      .eq('qr_code_id', (
+        await supabase
+          .from('qr_codes')
+          .select('id')
+          .eq('code', code)
+          .single()
+      ).data?.id)
+      .limit(1)
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+    if (error && error.code !== 'PGRST116') {
       throw new Error('Failed to check QR code status');
     }
 
-    if (data) {
+    if (data && data.item) {
       return {
         isAssigned: true,
-        itemId: data.id,
-        itemName: data.name,
+        itemId: data.item.id,
+        itemName: data.item.name,
       };
     }
 
     return { isAssigned: false };
   },
 
+  // Legacy methods - now use qrLinkingService instead
   async assignToItem(code: string, itemId: string): Promise<void> {
-    const { error } = await supabase
-      .from('items')
-      .update({ qr_code_id: code })
-      .eq('id', itemId);
-
-    if (error) {
-      throw new Error('Failed to assign QR code to item');
-    }
+    throw new Error('Legacy method - use qrLinkingService.linkQRToItem instead');
   },
 
   async unassignFromItem(itemId: string): Promise<void> {
-    const { error } = await supabase
-      .from('items')
-      .update({ qr_code_id: null })
-      .eq('id', itemId);
-
-    if (error) {
-      throw new Error('Failed to unassign QR code');
-    }
+    throw new Error('Legacy method - use qrLinkingService.unlinkQRFromItem instead');
   },
 };

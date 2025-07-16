@@ -4,7 +4,7 @@
     "apps": [],
     "details": [
       {
-        "appID": "TEAM_ID.com.upkeep.app",
+        "appID": "TEAM_ID.com.stckr.keeptrack",
         "paths": ["/qr/*", "/qr", "/item/*"]
       }
     ]

@@ -61,7 +61,6 @@ export type Database = {
           notes: string | null
           photo_url: string | null
           purchase_date: string | null
-          qr_code_id: string | null
           room: string | null
           updated_at: string
           user_id: string
@@ -78,7 +77,6 @@ export type Database = {
           notes?: string | null
           photo_url?: string | null
           purchase_date?: string | null
-          qr_code_id?: string | null
           room?: string | null
           updated_at?: string
           user_id: string
@@ -95,7 +93,6 @@ export type Database = {
           notes?: string | null
           photo_url?: string | null
           purchase_date?: string | null
-          qr_code_id?: string | null
           room?: string | null
           updated_at?: string
           user_id?: string
@@ -608,6 +605,45 @@ export type Database = {
           },
         ]
       }
+      user_qr_links: {
+        Row: {
+          assigned_at: string
+          id: string
+          item_id: string
+          qr_code_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          id?: string
+          item_id: string
+          qr_code_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          id?: string
+          item_id?: string
+          qr_code_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_qr_links_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_qr_links_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "qr_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_settings: {
         Row: {
           calendar_default_view: string | null
@@ -717,10 +753,6 @@ export type Database = {
       }
     }
     Functions: {
-      claim_qr: {
-        Args: { p_code: string; p_user_id: string; p_item_id: string }
-        Returns: Json
-      }
       is_user_admin: {
         Args: { user_id: string }
         Returns: boolean

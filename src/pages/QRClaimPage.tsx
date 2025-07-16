@@ -89,36 +89,9 @@ const QRClaimPage = () => {
 
     setIsClaiming(true);
     try {
-      const { data, error } = await supabase.rpc('claim_qr', {
-        p_code: code,
-        p_user_id: user.id,
-        p_item_id: selectedItemId
-      });
-
-      if (error) throw error;
-
-      const result = data as { success: boolean; error?: string; message?: string };
-
-      if (result.success) {
-        toast({
-          title: 'Success!',
-          description: 'QR code claimed successfully. Opening app...',
-        });
-
-        // Try to open in app
-        window.location.href = `upkeep://item/${selectedItemId}`;
-        
-        // Fallback for web
-        setTimeout(() => {
-          navigate(`/items/${selectedItemId}`);
-        }, 2000);
-      } else {
-        toast({
-          title: 'Error',
-          description: result.error || 'Failed to claim QR code',
-          variant: 'destructive',
-        });
-      }
+      // QR claiming is now deprecated
+      // Redirect to the new QR redirect page for proper handling
+      navigate(`/qr/${code}`);
     } catch (error) {
       console.error('Error claiming QR code:', error);
       toast({

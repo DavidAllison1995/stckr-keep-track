@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,33 +14,53 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { QrCode, Trash2, Scan, Plus, Copy, Download } from 'lucide-react';
-import { Item } from '@/hooks/useSupabaseItems';
+import { Item } from '@/types/item';
 import SimpleQRScanner from '@/components/qr/SimpleQRScanner';
-import { globalQrService } from '@/services/globalQr';
-import { qrGenerator } from '@/services/qrGenerator';
+import { qrLinkingService, QRLinkStatus } from '@/services/qrLinking';
 
 interface ItemQRTabProps {
   item: Item;
 }
 
 const ItemQRTab = ({ item }: ItemQRTabProps) => {
-  const { updateItem } = useSupabaseItems();
   const { user } = useSupabaseAuth();
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
-  
-  // Generate direct QR code data
-  const directQRData = user ? qrGenerator.getItemQRCode(user.id, item.id) : null;
+  const [qrLinkStatus, setQrLinkStatus] = useState<QRLinkStatus>({ isLinked: false });
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load QR link status when component mounts
+  useEffect(() => {
+    if (user) {
+      loadQRLinkStatus();
+    }
+  }, [user, item.id]);
+
+  const loadQRLinkStatus = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const status = await qrLinkingService.getItemQRLink(item.id, user.id);
+      setQrLinkStatus(status);
+    } catch (error) {
+      console.error('Error loading QR link status:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleDeleteQR = async () => {
+    if (!user) return;
+    
     setIsDeleting(true);
     try {
-      await updateItem(item.id, { qr_code_id: null });
+      await qrLinkingService.unlinkQRFromItem(item.id, user.id);
+      setQrLinkStatus({ isLinked: false });
       toast({
         title: 'QR Code Removed',
         description: 'The QR code has been removed from this item.',
@@ -58,20 +78,16 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
   };
 
   const handleQRCodeScanned = async (code: string) => {
+    if (!user) return;
+    
     setIsAssigning(true);
     try {
-      // If item already has a QR code, we're reassigning
-      if (item.qr_code_id) {
-        // First remove the old QR code
-        await updateItem(item.id, { qr_code_id: null });
-      }
-
-      // Try to claim the new QR code
-      await globalQrService.claimCode(code, item.id);
+      await qrLinkingService.linkQRToItem(code, item.id, user.id);
+      await loadQRLinkStatus(); // Refresh the status
       
       toast({
         title: 'Success',
-        description: item.qr_code_id ? 'QR code reassigned successfully' : 'QR code assigned successfully',
+        description: 'QR code assigned successfully',
       });
       
       setShowScanner(false);
@@ -87,9 +103,9 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
     }
   };
 
-  const generateQRCodeImageUrl = (code: string) => {
+  const generateQRCodeImageUrl = (qrCodeId: string) => {
     // Generate white QR code on dark background with no white padding/fill
-    const qrUrl = `https://stckr.io/qr/${code}`;
+    const qrUrl = `https://stckr.io/qr/${qrCodeId}`;
     return `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(qrUrl)}&ecc=H&color=FFFFFF&bgcolor=1E1E2F&margin=0&qzone=1`;
   };
 
@@ -108,11 +124,17 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
     link.click();
   };
 
-  // Only show QR code if one is actually assigned to the item
-  const isLegacyQR = Boolean(item.qr_code_id);
-  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+        <span className="ml-3 text-gray-600">Loading QR code...</span>
+      </div>
+    );
+  }
+
   // If no QR code is assigned, show placeholder message
-  if (!isLegacyQR) {
+  if (!qrLinkStatus.isLinked) {
     return (
       <div className="space-y-6">
         <Card className="border border-gray-200">
@@ -142,9 +164,9 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
     );
   }
 
-  // QR code assigned - show legacy QR code
-  const qrUrl = `https://stckr.io/qr/${item.qr_code_id}`;
-  const qrImageUrl = generateQRCodeImageUrl(item.qr_code_id!);
+  // QR code assigned - show QR code from new linking system
+  const qrUrl = `https://stckr.io/qr/${qrLinkStatus.qrCodeId}`;
+  const qrImageUrl = qrLinkStatus.imageUrl || generateQRCodeImageUrl(qrLinkStatus.qrCodeId!);
 
   // QR code display (direct format or legacy)
   return (
@@ -179,7 +201,7 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
             
             <div className="mt-4 space-y-2">
               <Badge variant="secondary" className="text-sm font-mono bg-[#9333ea] text-white">
-                {item.qr_code_id}
+                {qrLinkStatus.qrCodeId}
               </Badge>
               <div className="text-xs text-gray-500 break-all">
                 Deep link: {qrUrl}
@@ -213,7 +235,7 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
             </div>
 
             {/* QR Code Management */}
-            {isLegacyQR && (
+            {qrLinkStatus.isLinked && (
               <>
                 <Button 
                   onClick={() => setShowScanner(true)} 
@@ -238,10 +260,10 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Remove QR Code</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to remove the QR code from this item? 
-                        The QR sticker will become unassigned and can be used for other items.
-                      </AlertDialogDescription>
+                  <AlertDialogDescription>
+                    Are you sure you want to remove the QR code from this item? 
+                    The QR code will become unassigned and can be used for other items.
+                  </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
