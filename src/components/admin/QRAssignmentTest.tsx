@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
-import { useAuth } from '@/hooks/useAuth';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { qrLinkingService } from '@/services/qrLinking';
 
 export function QRAssignmentTest() {
@@ -14,7 +14,7 @@ export function QRAssignmentTest() {
   const [isAssigning, setIsAssigning] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const { items } = useSupabaseItems();
 
   const handleTestAssignment = async () => {
