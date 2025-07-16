@@ -39,6 +39,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ProtectedLayout from "./components/layouts/ProtectedLayout";
 import { GlobalQRScannerProvider } from "./contexts/GlobalQRScannerContext";
 import { useShop } from "./hooks/useShop";
+import { useDeepLinking } from "./hooks/useDeepLinking";
 
 const queryClient = new QueryClient();
 
@@ -55,9 +56,10 @@ const PlatformAwareRoot = () => {
   return <Index />;
 };
 
-// Create a wrapper component to access useShop hook
+// Create a wrapper component to access useShop hook and initialize deep linking
 const CartProviderWrapper = ({ children }: { children: React.ReactNode }) => {
   const { products } = useShop();
+  useDeepLinking(); // Initialize deep linking
   return <CartProvider products={products}>{children}</CartProvider>;
 };
 

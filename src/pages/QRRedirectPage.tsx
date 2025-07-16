@@ -53,6 +53,42 @@ const QRRedirectPage = () => {
 
   const device = detectDevice();
 
+  // Smart app redirect function
+  const attemptAppRedirect = (itemId: string) => {
+    const appUrl = `stckr://item/${itemId}`;
+    const fallbackUrl = `/item/${itemId}`;
+    
+    // For mobile devices, try to open the app first
+    if (device !== 'desktop') {
+      console.log('Attempting app redirect to:', appUrl);
+      
+      // Create hidden iframe to attempt app opening
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = appUrl;
+      document.body.appendChild(iframe);
+      
+      // Set timeout to fallback to web if app doesn't open
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+        console.log('App redirect timeout, falling back to web:', fallbackUrl);
+        navigate(fallbackUrl);
+      }, 1000);
+      
+      // Also try window.location as a backup method
+      setTimeout(() => {
+        try {
+          window.location.href = appUrl;
+        } catch (error) {
+          console.log('Window.location app redirect failed, using web fallback');
+        }
+      }, 100);
+    } else {
+      // Desktop - go directly to web version
+      navigate(fallbackUrl);
+    }
+  };
+
   useEffect(() => {
     console.log('=== QR REDIRECT DEBUG ===');
     console.log('Raw URL:', window.location.href);
@@ -90,8 +126,9 @@ const QRRedirectPage = () => {
           return;
         }
 
-        // For direct links, navigate directly to the item
-        navigate(`/items/${itemID}`);
+        // For direct links, attempt smart app redirect to item
+        console.log('Direct link detected, redirecting to item:', itemID);
+        attemptAppRedirect(itemID);
         return;
       } else if (cleanCode) {
         // QR code format: https://stckr.io/qr/{code}
@@ -114,8 +151,10 @@ const QRRedirectPage = () => {
           }
 
           if (result.assigned && result.item) {
-            // QR code is assigned to an item - show item details
-            setAssignedItem(result.item);
+            // QR code is assigned to an item - redirect directly to item card
+            console.log('QR code is assigned, redirecting to item:', result.item.id);
+            attemptAppRedirect(result.item.id);
+            return;
           } else {
             // QR code is not assigned - show assignment UI
             setAssignedItem(null);
@@ -200,80 +239,8 @@ const QRRedirectPage = () => {
     );
   }
 
-  // Show assigned item card directly
-  if (assignedItem) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4">
-        <div className="max-w-2xl mx-auto">
-          <Card className="mb-6">
-            <CardHeader className="text-center">
-              <QrCode className="w-12 h-12 text-blue-600 mx-auto mb-2" />
-              <CardTitle className="text-green-600">Item Found!</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="text-center">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{assignedItem.name}</h1>
-                <p className="text-lg text-gray-600 mb-4">{assignedItem.category}</p>
-                {assignedItem.description && (
-                  <p className="text-gray-700 mb-4">{assignedItem.description}</p>
-                )}
-              </div>
-              
-              {assignedItem.photo_url && (
-                <div className="flex justify-center">
-                  <img 
-                    src={assignedItem.photo_url} 
-                    alt={assignedItem.name}
-                    className="max-w-full h-auto max-h-96 object-cover rounded-lg shadow-lg"
-                  />
-                </div>
-              )}
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {assignedItem.room && (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-gray-700 mb-1">Location</h3>
-                    <p className="text-gray-600">{assignedItem.room}</p>
-                  </div>
-                )}
-                
-                {assignedItem.purchase_date && (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-gray-700 mb-1">Purchase Date</h3>
-                    <p className="text-gray-600">{new Date(assignedItem.purchase_date).toLocaleDateString()}</p>
-                  </div>
-                )}
-                
-                {assignedItem.warranty_date && (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-gray-700 mb-1">Warranty Until</h3>
-                    <p className="text-gray-600">{new Date(assignedItem.warranty_date).toLocaleDateString()}</p>
-                  </div>
-                )}
-              </div>
-              
-              {assignedItem.notes && (
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-gray-700 mb-2">Notes</h3>
-                  <p className="text-gray-600">{assignedItem.notes}</p>
-                </div>
-              )}
-              
-              <div className="text-center pt-4">
-                <Button 
-                  onClick={() => navigate('/items')}
-                  className="bg-blue-600 hover:bg-blue-700"
-                  size="lg"
-                >
-                  View All Items
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
+  // This section is now removed since we redirect directly to item cards
+  // instead of showing the holding page
 
   // QR code not assigned - show assignment UI
   return (

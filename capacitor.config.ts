@@ -18,6 +18,11 @@ const config: CapacitorConfig = {
     StatusBar: {
       style: "default",
       backgroundColor: "#ffffff"
+    },
+    App: {
+      handleUrl: {
+        customScheme: 'stckr'
+      }
     }
   }
 };

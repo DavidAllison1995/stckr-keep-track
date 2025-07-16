@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,8 @@ import { Mail, Lock, User, QrCode, Eye, EyeOff, Info } from 'lucide-react';
 
 const AuthPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectUrl = searchParams.get('redirect');
   const {
     isAuthenticated,
     isLoading,
@@ -27,7 +29,9 @@ const AuthPage = () => {
 
   // Redirect if already authenticated
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    // If there's a redirect URL, go there; otherwise go to dashboard
+    const destination = redirectUrl ? decodeURIComponent(redirectUrl) : '/dashboard';
+    return <Navigate to={destination} replace />;
   }
 
   if (isLoading) {

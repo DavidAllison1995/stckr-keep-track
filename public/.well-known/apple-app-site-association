@@ -5,7 +5,13 @@
     "details": [
       {
         "appID": "TEAM_ID.com.stckr.keeptrack",
-        "paths": ["/qr/*", "/qr", "/item/*"]
+        "paths": [
+          "/qr/*",
+          "/qr",
+          "/item/*",
+          "/items/*",
+          "/auth*"
+        ]
       }
     ]
   }
