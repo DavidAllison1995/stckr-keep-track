@@ -44,9 +44,26 @@ serve(async (req) => {
   );
 
   try {
-    const { qrCode, userId } = await req.json();
-    
     console.log('=== QR CHECK DEBUG ===');
+    console.log('Request method:', req.method);
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+    
+    let qrCode, userId;
+    
+    try {
+      const body = await req.json();
+      console.log('Request body:', body);
+      qrCode = body.qrCode;
+      userId = body.userId;
+    } catch (jsonError) {
+      console.error('JSON parsing error:', jsonError);
+      return Response.json({
+        success: false,
+        assigned: false,
+        error: 'Invalid JSON in request body'
+      }, { headers: corsHeaders, status: 400 });
+    }
+    
     console.log('QR Code:', qrCode);
     console.log('User ID:', userId);
 
@@ -130,10 +147,12 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in qr-check function:', error);
+    console.error('Error stack:', error.stack);
     return Response.json({
       success: false,
       assigned: false,
-      error: 'Internal server error'
+      qrCode: '',
+      error: `Internal server error: ${error.message}`
     }, { headers: corsHeaders, status: 500 });
   }
 });
