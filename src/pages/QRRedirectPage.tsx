@@ -10,6 +10,7 @@ import { QrCode, Smartphone, Monitor } from 'lucide-react';
 import { qrService } from '@/services/qr';
 import { supabase } from '@/integrations/supabase/client';
 
+
 const QRRedirectPage = () => {
   const { code } = useParams<{ code: string }>();
   const [searchParams] = useSearchParams();
@@ -68,10 +69,7 @@ const QRRedirectPage = () => {
         const targetItem = getItemById(itemID);
         if (targetItem && targetItem.user_id === userID) {
           setAssignedItem(targetItem);
-          // Show assigned item info briefly, then navigate
-          setTimeout(() => {
-            navigate(`/items/${targetItem.id}`);
-          }, 2000);
+            // Show item card directly - no redirect needed
         } else {
           toast({
             title: "Item Not Found",
@@ -101,10 +99,7 @@ const QRRedirectPage = () => {
             
             if (targetItem) {
               setAssignedItem(targetItem);
-              // Show assigned item info briefly, then navigate
-              setTimeout(() => {
-                navigate(`/items/${targetItem.id}`);
-              }, 2000);
+              // Show item card directly - no redirect needed
             } else {
               toast({
                 title: "Item Not Found",
@@ -179,28 +174,77 @@ const QRRedirectPage = () => {
     );
   }
 
-  // Show assigned item briefly before redirecting
+  // Show assigned item card directly
   if (assignedItem) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-4">
-        <Card className="max-w-md w-full">
-          <CardHeader className="text-center">
-            <QrCode className="w-12 h-12 text-blue-600 mx-auto mb-2" />
-            <CardTitle className="text-green-600">QR Code Found!</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center space-y-4">
-            <p className="text-gray-600">
-              This QR code is assigned to:
-            </p>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <h3 className="font-semibold text-lg">{assignedItem.name}</h3>
-              <p className="text-gray-600">{assignedItem.category}</p>
-            </div>
-            <p className="text-sm text-gray-500">
-              Redirecting to item details...
-            </p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+        <div className="max-w-2xl mx-auto">
+          <Card className="mb-6">
+            <CardHeader className="text-center">
+              <QrCode className="w-12 h-12 text-blue-600 mx-auto mb-2" />
+              <CardTitle className="text-green-600">Item Found!</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="text-center">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">{assignedItem.name}</h1>
+                <p className="text-lg text-gray-600 mb-4">{assignedItem.category}</p>
+                {assignedItem.description && (
+                  <p className="text-gray-700 mb-4">{assignedItem.description}</p>
+                )}
+              </div>
+              
+              {assignedItem.photo_url && (
+                <div className="flex justify-center">
+                  <img 
+                    src={assignedItem.photo_url} 
+                    alt={assignedItem.name}
+                    className="max-w-full h-auto max-h-96 object-cover rounded-lg shadow-lg"
+                  />
+                </div>
+              )}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {assignedItem.room && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-gray-700 mb-1">Location</h3>
+                    <p className="text-gray-600">{assignedItem.room}</p>
+                  </div>
+                )}
+                
+                {assignedItem.purchase_date && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-gray-700 mb-1">Purchase Date</h3>
+                    <p className="text-gray-600">{new Date(assignedItem.purchase_date).toLocaleDateString()}</p>
+                  </div>
+                )}
+                
+                {assignedItem.warranty_date && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-semibold text-gray-700 mb-1">Warranty Until</h3>
+                    <p className="text-gray-600">{new Date(assignedItem.warranty_date).toLocaleDateString()}</p>
+                  </div>
+                )}
+              </div>
+              
+              {assignedItem.notes && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-700 mb-2">Notes</h3>
+                  <p className="text-gray-600">{assignedItem.notes}</p>
+                </div>
+              )}
+              
+              <div className="text-center pt-4">
+                <Button 
+                  onClick={() => navigate('/items')}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  size="lg"
+                >
+                  View All Items
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
