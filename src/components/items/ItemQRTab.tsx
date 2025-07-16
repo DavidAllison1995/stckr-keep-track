@@ -145,23 +145,22 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
   // If no QR code is assigned, show placeholder message
   if (!qrLinkStatus.isLinked) {
     return (
-      <div className="space-y-6">
-        <Card className="border border-gray-200">
+      <div className="min-h-[400px] flex items-center justify-center">
+        <Card className="w-full max-w-md mx-auto shadow-lg border-0 bg-gradient-to-br from-background to-muted/20">
           <CardContent className="p-8">
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <QrCode className="w-10 h-10 text-gray-400" />
+            <div className="text-center space-y-6">
+              <div className="w-24 h-24 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+                <QrCode className="w-12 h-12 text-primary/60" />
               </div>
-              <h3 className="font-semibold text-lg mb-2">No QR Code Assigned</h3>
-              <p className="text-gray-600 mb-6">
-                No QR code has been assigned to this item yet.
-              </p>
-              <p className="text-sm text-gray-500 mb-6">
-                Scan an existing QR code or generate a new one to link it here.
-              </p>
+              <div className="space-y-2">
+                <h3 className="font-semibold text-xl text-foreground">No QR Code Assigned</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Scan an existing QR code to link it to this item
+                </p>
+              </div>
               <Button 
                 onClick={() => setShowScanner(true)} 
-                className="bg-[#9333ea] hover:bg-[#a855f7] text-white rounded-full font-medium"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Assign QR Code
@@ -179,118 +178,101 @@ const ItemQRTab = ({ item }: ItemQRTabProps) => {
 
   // QR code display (direct format or legacy)
   return (
-    <div className="space-y-6">
-      <Card className="border border-gray-200">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <QrCode className="w-5 h-5 text-[#9333ea]" />
-            QR Code <Badge variant="secondary" className="text-xs">Assigned</Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* QR Code Display with Dark Sticker Preview */}
-          <div className="text-center">
-            {/* Dark Sticker Preview - Optimized for Dark Backgrounds */}
-            <div className="relative inline-block">
-              {/* Dark sticker background matching generated QR background */}
-              <div className="bg-[#1e1e2f] rounded-xl p-6 shadow-lg border-2 border-gray-600">
-                <div className="relative">
-                  <img
-                    src={qrImageUrl}
-                    alt="QR Code"
-                    className="w-48 h-48 mx-auto rounded"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                    }}
-                  />
-                </div>
+    <div className="min-h-[500px] flex items-center justify-center">
+      <div className="w-full max-w-lg mx-auto space-y-8">
+        {/* Status Badge */}
+        <div className="text-center">
+          <Badge className="bg-primary/10 text-primary border-primary/20 px-4 py-2 rounded-full">
+            QR Code Assigned
+          </Badge>
+        </div>
+
+        {/* QR Code Display */}
+        <div className="text-center">
+          <Card className="inline-block shadow-xl border-0 bg-gradient-to-br from-background to-muted/20 p-8 rounded-2xl">
+            <div className="relative">
+              <div className="bg-[#1e1e2f] rounded-2xl p-8 shadow-inner">
+                <img
+                  src={qrImageUrl}
+                  alt="QR Code"
+                  className="w-56 h-56 mx-auto rounded-xl shadow-lg"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
               </div>
             </div>
+          </Card>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Button 
+              onClick={() => handleCopyQRUrl(qrUrl!)}
+              variant="outline"
+              className="flex items-center gap-2 py-6 rounded-xl border-2 hover:border-primary/50 hover:bg-primary/5 transition-all duration-200"
+            >
+              <Copy className="w-4 h-4" />
+              Copy URL
+            </Button>
             
-            <div className="mt-4 space-y-2">
-              <Badge variant="secondary" className="text-sm font-mono bg-[#9333ea] text-white">
-                {qrLinkStatus.qrCodeId}
-              </Badge>
-              <div className="text-xs text-gray-500 break-all">
-                Deep link: {qrUrl}
-              </div>
-              <div className="text-xs text-[#9333ea] font-medium bg-purple-50 p-3 rounded">
-                ✨ Assigned QR Code - Optimized for mobile scanning
-              </div>
-            </div>
+            <Button 
+              onClick={() => handleDownloadQR(qrImageUrl!, `${item.name}-qr-code.png`)}
+              variant="outline"
+              className="flex items-center gap-2 py-6 rounded-xl border-2 hover:border-primary/50 hover:bg-primary/5 transition-all duration-200"
+            >
+              <Download className="w-4 h-4" />
+              Download
+            </Button>
           </div>
 
-          {/* Action Buttons */}
+          {/* QR Code Management */}
           <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2">
-              <Button 
-                onClick={() => handleCopyQRUrl(qrUrl!)}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <Copy className="w-4 h-4" />
-                Copy URL
-              </Button>
-              
-              <Button 
-                onClick={() => handleDownloadQR(qrImageUrl!, `${item.name}-qr-code.png`)}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <Download className="w-4 h-4" />
-                Download
-              </Button>
-            </div>
+            <Button 
+              onClick={() => setShowScanner(true)} 
+              className="w-full bg-secondary hover:bg-secondary/80 text-secondary-foreground py-6 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+              disabled={isAssigning}
+            >
+              <Scan className="w-4 h-4 mr-2" />
+              {isAssigning ? 'Assigning...' : 'Assign New QR Code'}
+            </Button>
 
-            {/* QR Code Management */}
-            {qrLinkStatus.isLinked && (
-              <>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
                 <Button 
-                  onClick={() => setShowScanner(true)} 
-                  className="w-full bg-[#9333ea] hover:bg-[#a855f7] text-white rounded-full font-medium"
-                  disabled={isAssigning}
+                  variant="outline" 
+                  className="w-full text-destructive hover:text-destructive hover:bg-destructive/5 border-destructive/20 hover:border-destructive/50 py-6 rounded-xl font-medium transition-all duration-200"
+                  disabled={isDeleting}
                 >
-                  <Scan className="w-4 h-4 mr-2" />
-                  {isAssigning ? 'Assigning...' : 'Assign New QR Code'}
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {isDeleting ? 'Removing...' : 'Remove QR Code'}
                 </Button>
-
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 rounded-full"
-                      disabled={isDeleting}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      {isDeleting ? 'Removing...' : 'Remove QR Code'}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Remove QR Code</AlertDialogTitle>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Remove QR Code</AlertDialogTitle>
                   <AlertDialogDescription>
                     Are you sure you want to remove the QR code from this item? 
                     The QR code will become unassigned and can be used for other items.
                   </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction 
-                        onClick={handleDeleteQR}
-                        className="bg-red-600 hover:bg-red-700"
-                        disabled={isDeleting}
-                      >
-                        {isDeleting ? 'Removing...' : 'Remove QR Code'}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </>
-            )}
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={handleDeleteQR}
+                    className="bg-destructive hover:bg-destructive/90"
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? 'Removing...' : 'Remove QR Code'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* QR Scanner Modal for QR Assignment */}
       {showScanner && (
