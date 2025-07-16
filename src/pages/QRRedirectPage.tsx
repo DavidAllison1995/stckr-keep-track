@@ -33,6 +33,11 @@ const QRRedirectPage = () => {
   const device = detectDevice();
 
   useEffect(() => {
+    console.log('=== QR REDIRECT DEBUG ===');
+    console.log('Raw URL:', window.location.href);
+    console.log('Code from params:', code);
+    console.log('Search params:', searchParams.toString());
+    
     const checkQRCodeAssignment = async () => {
       setIsChecking(true);
       
