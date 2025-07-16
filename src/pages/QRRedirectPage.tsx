@@ -55,34 +55,21 @@ const QRRedirectPage = () => {
 
   // Smart app redirect function
   const attemptAppRedirect = (itemId: string) => {
-    const appUrl = `stckr://item/${itemId}`;
-    const fallbackUrl = `/item/${itemId}`;
+    const appUrl = `stckr://items/${itemId}`;
+    const fallbackUrl = `/items/${itemId}`;
     
     // For mobile devices, try to open the app first
     if (device !== 'desktop') {
       console.log('Attempting app redirect to:', appUrl);
       
-      // Create hidden iframe to attempt app opening
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.src = appUrl;
-      document.body.appendChild(iframe);
+      // Try to open the app
+      window.location.href = appUrl;
       
       // Set timeout to fallback to web if app doesn't open
       setTimeout(() => {
-        document.body.removeChild(iframe);
         console.log('App redirect timeout, falling back to web:', fallbackUrl);
         navigate(fallbackUrl);
       }, 1000);
-      
-      // Also try window.location as a backup method
-      setTimeout(() => {
-        try {
-          window.location.href = appUrl;
-        } catch (error) {
-          console.log('Window.location app redirect failed, using web fallback');
-        }
-      }, 100);
     } else {
       // Desktop - go directly to web version
       navigate(fallbackUrl);
@@ -126,9 +113,9 @@ const QRRedirectPage = () => {
           return;
         }
 
-        // For direct links, attempt smart app redirect to item
+        // For direct links, redirect directly to item
         console.log('Direct link detected, redirecting to item:', itemID);
-        attemptAppRedirect(itemID);
+        navigate(`/items/${itemID}`);
         return;
       } else if (cleanCode) {
         // QR code format: https://stckr.io/qr/{code}

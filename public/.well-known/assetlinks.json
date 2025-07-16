@@ -6,6 +6,12 @@
       "namespace": "android_app",
       "package_name": "com.stckr.keeptrack",
       "sha256_cert_fingerprints": ["YOUR_APP_SHA256_FINGERPRINT"]
-    }
+    },
+    "include": [
+      "/qr/*",
+      "/items/*",
+      "/item/*",
+      "/auth*"
+    ]
   }
 ]

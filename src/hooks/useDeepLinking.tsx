@@ -23,8 +23,12 @@ export const useDeepLinking = () => {
         console.log('Deep link path:', path);
         
         // Handle different deep link paths
-        if (path.startsWith('/item/')) {
+        if (path.startsWith('/items/')) {
           // Navigate to item detail page
+          const itemId = path.replace('/items/', '');
+          navigate(`/items/${itemId}`);
+        } else if (path.startsWith('/item/')) {
+          // Handle legacy /item/ format
           const itemId = path.replace('/item/', '');
           navigate(`/items/${itemId}`);
         } else if (path.startsWith('/qr/')) {
