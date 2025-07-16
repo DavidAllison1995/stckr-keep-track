@@ -85,16 +85,12 @@ const ItemDetailPage = () => {
   }
 
   return (
-    <ProtectedRoute>
-      <ProtectedLayout>
-        <ItemDetail 
-          item={item} 
-          onClose={handleClose}
-          defaultTab={defaultTab}
-          highlightTaskId={highlightTaskId}
-        />
-      </ProtectedLayout>
-    </ProtectedRoute>
+    <ItemDetail 
+      item={item} 
+      onClose={handleClose}
+      defaultTab={defaultTab}
+      highlightTaskId={highlightTaskId}
+    />
   );
 };
 
