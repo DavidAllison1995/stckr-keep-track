@@ -184,7 +184,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Use native Apple Sign-In on iOS
       if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
         const result = await SignInWithApple.authorize({
-          clientId: 'your.app.bundle.id',
+          clientId: 'S8DW7A8W55',
           redirectURI: `${window.location.origin}/dashboard`,
           scopes: 'name email'
         });
