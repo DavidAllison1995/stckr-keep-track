@@ -5,7 +5,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Capacitor } from '@capacitor/core';
 import { SignInWithApple } from '@capacitor-community/apple-sign-in';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 interface AuthContextType {
   user: User | null;
@@ -121,55 +120,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (): Promise<{ error?: string }> => {
     try {
-      // Use native Google Auth on mobile platforms
-      if (Capacitor.isNativePlatform()) {
-        const result = await GoogleAuth.signIn();
-        
-        if (result.authentication?.idToken) {
-          const { error } = await supabase.auth.signInWithIdToken({
-            provider: 'google',
-            token: result.authentication.idToken,
-          });
+      // Use Supabase OAuth for both web and native platforms
+      // This works with Capacitor 7 using the Browser plugin for OAuth flow
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+          skipBrowserRedirect: Capacitor.isNativePlatform(),
+        },
+      });
 
-          if (error) {
-            toast({
-              title: 'Google Sign-In Failed',
-              description: error.message,
-              variant: 'destructive',
-            });
-            return { error: error.message };
-          }
-
-          toast({
-            title: 'Welcome!',
-            description: 'You have been logged in with Google.',
-          });
-          return {};
-        }
-      } else {
-        // Use web OAuth for web platforms
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/dashboard`,
-          },
+      if (error) {
+        toast({
+          title: 'Google Sign-In Failed',
+          description: error.message,
+          variant: 'destructive',
         });
-
-        if (error) {
-          toast({
-            title: 'Google Sign-In Failed',
-            description: error.message,
-            variant: 'destructive',
-          });
-          return { error: error.message };
-        }
-
-        return {};
+        return { error: error.message };
       }
-    } catch (error) {
-      const message = 'An unexpected error occurred during Google sign-in';
+
+      if (!Capacitor.isNativePlatform()) {
+        toast({
+          title: 'Redirecting...',
+          description: 'You will be redirected to Google for authentication.',
+        });
+      }
+
+      return {};
+    } catch (error: any) {
+      const message = error?.message || 'An unexpected error occurred during Google sign-in';
       toast({
         title: 'Google Sign-In Failed',
         description: message,

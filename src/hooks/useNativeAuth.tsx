@@ -1,16 +1,12 @@
 import { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 export const useNativeAuth = () => {
   useEffect(() => {
-    // Initialize GoogleAuth when the app starts
+    // Native auth initialization for Capacitor 7
+    // OAuth2 configuration is handled in individual auth methods
     if (Capacitor.isNativePlatform()) {
-      GoogleAuth.initialize({
-        clientId: '1004044323466-qskm9l5081ithk4572h677kdh2soi8ar.apps.googleusercontent.com',
-        scopes: ['profile', 'email'],
-        grantOfflineAccess: true,
-      });
+      console.log('Native platform detected - OAuth2 ready');
     }
   }, []);
 };

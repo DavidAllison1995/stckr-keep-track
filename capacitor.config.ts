@@ -24,10 +24,8 @@ const config: CapacitorConfig = {
         customScheme: 'stckr'
       }
     },
-    GoogleAuth: {
-      scopes: ['profile', 'email'],
-      serverClientId: '1004044323466-qskm9l5081ithk4572h677kdh2soi8ar.apps.googleusercontent.com',
-      forceCodeForRefreshToken: true
+    Browser: {
+      // OAuth redirect handling
     },
     SignInWithApple: {
       clientId: 'S8DW7A8W55',
