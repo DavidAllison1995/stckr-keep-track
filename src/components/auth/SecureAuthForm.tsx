@@ -12,9 +12,10 @@ import { useToast } from '@/hooks/use-toast';
 interface SecureAuthFormProps {
   mode: 'login' | 'signup';
   onToggleMode: () => void;
+  onAuthError?: (email?: string) => void;
 }
 
-const SecureAuthForm = ({ mode, onToggleMode }: SecureAuthFormProps) => {
+const SecureAuthForm = ({ mode, onToggleMode, onAuthError }: SecureAuthFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -78,6 +79,7 @@ const SecureAuthForm = ({ mode, onToggleMode }: SecureAuthFormProps) => {
       if (mode === 'login') {
         const result = await login(sanitizedEmail, password);
         if (result.error) {
+          onAuthError?.(sanitizedEmail);
           toast({
             title: 'Login Failed',
             description: result.error,
@@ -87,6 +89,7 @@ const SecureAuthForm = ({ mode, onToggleMode }: SecureAuthFormProps) => {
       } else {
         const result = await signup(sanitizedEmail, password, sanitizedFirstName, sanitizedLastName);
         if (result.error) {
+          onAuthError?.(sanitizedEmail);
           toast({
             title: 'Signup Failed',
             description: result.error,

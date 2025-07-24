@@ -7,7 +7,9 @@ export const useSecurityHeaders = () => {
     // Content Security Policy - more restrictive for production
     const meta = document.createElement('meta');
     meta.httpEquiv = 'Content-Security-Policy';
-    meta.content = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.qrserver.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://cudftlquaydissmvqjmv.supabase.co wss://cudftlquaydissmvqjmv.supabase.co https://api.qrserver.com; frame-ancestors 'none';";
+    meta.content = import.meta.env.DEV 
+      ? "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.qrserver.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://cudftlquaydissmvqjmv.supabase.co wss://cudftlquaydissmvqjmv.supabase.co https://api.qrserver.com; frame-ancestors 'none';"
+      : "default-src 'self'; script-src 'self' https://api.qrserver.com; style-src 'self' 'sha256-HASH' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://cudftlquaydissmvqjmv.supabase.co wss://cudftlquaydissmvqjmv.supabase.co https://api.qrserver.com; frame-ancestors 'none';";
     document.head.appendChild(meta);
 
     // X-Content-Type-Options
