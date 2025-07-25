@@ -6,6 +6,14 @@ const config: CapacitorConfig = {
   appName: 'STCKR - Keep Track',
   webDir: 'dist',
   // Remove server config for production builds
+  ios: {
+    contentInset: 'automatic',
+    infoPlist: {
+      NSCameraUsageDescription: 'This app uses the camera to take photos of your items for easy identification and organization.',
+      NSPhotoLibraryUsageDescription: 'This app accesses your photo library to let you select and attach photos to your items for better organization.',
+      NSPhotoLibraryAddUsageDescription: 'This app saves photos you take to your photo library for backup and easy access.'
+    }
+  },
   plugins: {
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"]
