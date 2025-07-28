@@ -29,7 +29,7 @@ image_transformation = { enabled = true }
 [auth]
 enabled = true
 port = 54326
-site_url = "http://localhost:3000"
+site_url = "https://stckr.io"
 additional_redirect_urls = ["https://cudftlquaydissmvqjmv.supabase.co/auth/v1/callback"]
 jwt_expiry = 3600
 enable_signup = true
