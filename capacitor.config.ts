@@ -43,7 +43,7 @@ const config: CapacitorConfig = {
     },
     SignInWithApple: {
       clientId: 'S8DW7A8W55',
-      redirectURI: 'https://4823056e-21ba-4628-9925-ad01b2666856.lovableproject.com/dashboard'
+      redirectURI: 'https://stckr.io/dashboard'
     }
   }
 };
