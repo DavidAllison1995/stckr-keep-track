@@ -35,6 +35,12 @@ const config: CapacitorConfig = {
     Browser: {
       // OAuth redirect handling
     },
+    Camera: {
+      // iPad-specific camera configuration for better stability
+      iosUseDefaultImagePicker: true,
+      // Enable better memory management
+      enableBackup: false
+    },
     SignInWithApple: {
       clientId: 'S8DW7A8W55',
       redirectURI: 'https://4823056e-21ba-4628-9925-ad01b2666856.lovableproject.com/dashboard'

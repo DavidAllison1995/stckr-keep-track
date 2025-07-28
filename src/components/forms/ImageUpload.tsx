@@ -107,6 +107,11 @@ const ImageUpload = ({ currentImageUrl, onImageChange, userId, itemId, disabled 
 
   // Handle camera capture using Capacitor Camera API
   const handleTakePhoto = async () => {
+    // Prevent multiple simultaneous calls
+    if (isUploading) {
+      return;
+    }
+
     try {
       // Check if running on a mobile device with Capacitor
       if (!Capacitor.isNativePlatform()) {
@@ -118,12 +123,43 @@ const ImageUpload = ({ currentImageUrl, onImageChange, userId, itemId, disabled 
         return;
       }
 
-      // Use Capacitor Camera API for mobile devices
+      // Import camera permissions check
+      const { Camera: CameraPermissions } = await import('@capacitor/camera');
+      
+      // Check camera permissions first (critical for iPad stability)
+      try {
+        const permissionStatus = await CameraPermissions.checkPermissions();
+        
+        if (permissionStatus.camera === 'denied') {
+          // Request permission if denied
+          const requestResult = await CameraPermissions.requestPermissions();
+          if (requestResult.camera !== 'granted') {
+            toast({
+              title: 'Camera permission required',
+              description: 'Please allow camera access in Settings to take photos',
+              variant: 'destructive',
+            });
+            return;
+          }
+        }
+      } catch (permError) {
+        console.warn('Permission check failed:', permError);
+        // Continue anyway for older iOS versions that don't support permission API
+      }
+
+      // Set uploading state to prevent multiple calls
+      setIsUploading(true);
+
+      // Use Capacitor Camera API for mobile devices with iPad-safe options
       const image = await CapacitorCamera.getPhoto({
         quality: 80,
         allowEditing: false,
         resultType: CameraResultType.Base64,
         source: CameraSource.Camera,
+        // iPad-specific: Use prompt instead of popover for better compatibility
+        presentationStyle: 'fullscreen',
+        // Ensure proper cleanup and memory management
+        saveToGallery: false,
       });
 
       if (image.base64String) {
@@ -139,19 +175,37 @@ const ImageUpload = ({ currentImageUrl, onImageChange, userId, itemId, disabled 
     } catch (error) {
       console.error('Camera error:', error);
       
-      // Handle specific error cases
+      // Handle specific error cases with more detailed iPad error handling
       if (error && typeof error === 'object' && 'message' in error) {
-        const errorMessage = (error as { message: string }).message;
+        const errorMessage = (error as { message: string }).message.toLowerCase();
         
-        if (errorMessage.includes('cancelled') || errorMessage.includes('cancelled')) {
+        if (errorMessage.includes('cancelled') || errorMessage.includes('canceled')) {
           // User cancelled, no need to show error
           return;
         }
         
-        if (errorMessage.includes('permission')) {
+        if (errorMessage.includes('permission') || errorMessage.includes('denied')) {
           toast({
             title: 'Camera permission required',
-            description: 'Please allow camera access to take photos',
+            description: 'Please allow camera access in Settings to take photos',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        if (errorMessage.includes('unavailable') || errorMessage.includes('not available')) {
+          toast({
+            title: 'Camera not available',
+            description: 'Camera is not available on this device. Please choose from gallery instead.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        if (errorMessage.includes('busy') || errorMessage.includes('in use')) {
+          toast({
+            title: 'Camera busy',
+            description: 'Camera is currently in use. Please try again in a moment.',
             variant: 'destructive',
           });
           return;
@@ -163,6 +217,9 @@ const ImageUpload = ({ currentImageUrl, onImageChange, userId, itemId, disabled 
         description: 'Failed to take photo. Please try again or choose from gallery.',
         variant: 'destructive',
       });
+    } finally {
+      // Always reset uploading state
+      setIsUploading(false);
     }
   };
 

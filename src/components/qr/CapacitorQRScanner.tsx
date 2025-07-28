@@ -46,12 +46,31 @@ const CapacitorQRScanner = ({ onScan, onClose }: CapacitorQRScannerProps) => {
       setIsLoading(true);
       setError('');
 
-      // Use Capacitor Camera API for mobile devices
+      // Check camera permissions first (critical for iPad stability)
+      try {
+        const permissionStatus = await CapacitorCamera.checkPermissions();
+        
+        if (permissionStatus.camera === 'denied') {
+          const requestResult = await CapacitorCamera.requestPermissions();
+          if (requestResult.camera !== 'granted') {
+            setError('Camera permission is required to scan QR codes. Please allow camera access in Settings.');
+            return;
+          }
+        }
+      } catch (permError) {
+        console.warn('Permission check failed:', permError);
+        // Continue anyway for older iOS versions
+      }
+
+      // Use Capacitor Camera API for mobile devices with iPad-safe options
       const image = await CapacitorCamera.getPhoto({
         quality: 90,
         allowEditing: false,
         resultType: CameraResultType.Base64,
         source: CameraSource.Camera,
+        // iPad-specific: Use fullscreen for better compatibility
+        presentationStyle: 'fullscreen',
+        saveToGallery: false,
       });
 
       if (image.base64String) {
