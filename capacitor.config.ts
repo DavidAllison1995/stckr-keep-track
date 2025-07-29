@@ -36,10 +36,11 @@ const config: CapacitorConfig = {
       // OAuth redirect handling
     },
     Camera: {
-      // iPad-specific camera configuration for better stability
-      iosUseDefaultImagePicker: true,
-      // Enable better memory management
-      enableBackup: false
+      // Use default camera for better iOS compatibility
+      iosUseDefaultImagePicker: false,
+      // Enhanced permissions for iOS
+      enableBackup: false,
+      permissions: ['camera', 'photos']
     },
     SignInWithApple: {
       clientId: 'com.stckr.supabase.oauth',
