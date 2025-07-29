@@ -4,7 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Capacitor } from '@capacitor/core';
-import { SignInWithApple } from '@capacitor-community/apple-sign-in';
+
 
 interface AuthContextType {
   user: User | null;
@@ -180,23 +180,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithApple = async () => {
     try {
-      // Use Supabase OAuth without custom redirectTo
-      // Let Supabase handle the callback to /auth/v1/callback
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'apple',
-      });
-
-      if (error) {
-        console.error('Apple OAuth error:', error);
-        toast({
-          title: 'Apple Sign-In Failed',
-          description: error.message,
-          variant: 'destructive',
+      // Check if running on native platform
+      if (Capacitor.isNativePlatform()) {
+        // Use native Apple Sign In for mobile apps
+        const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
+        
+        const result = await SignInWithApple.authorize({
+          clientId: 'com.stckr.supabase.oauth',
+          redirectURI: 'https://cudftlquaydissmvqjmv.supabase.co/auth/v1/callback',
+          scopes: 'name email',
+          state: 'state',
+          nonce: 'nonce'
         });
-        return { error: error.message };
+
+        if (result.response && result.response.identityToken) {
+          // Sign in to Supabase with the identity token
+          const { error } = await supabase.auth.signInWithIdToken({
+            provider: 'apple',
+            token: result.response.identityToken,
+            nonce: 'nonce'
+          });
+
+          if (error) {
+            throw error;
+          }
+        }
+      } else {
+        // Use web OAuth for web platform
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'apple',
+        });
+
+        if (error) {
+          throw error;
+        }
       }
 
-      // No toast needed here as the user will be redirected
       return {};
     } catch (error: any) {
       console.error('Apple Sign-In exception:', error);
