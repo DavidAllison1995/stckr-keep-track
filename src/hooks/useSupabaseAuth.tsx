@@ -49,12 +49,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log('Starting email/password login for:', email);
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('Login error:', error);
         toast({
           title: 'Login Failed',
           description: error.message,
@@ -63,13 +66,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { error: error.message };
       }
 
+      console.log('Login successful');
       toast({
         title: 'Welcome back!',
         description: 'You have been logged in successfully.',
       });
       return {};
-    } catch (error) {
-      const message = 'An unexpected error occurred during login';
+    } catch (error: any) {
+      console.error('Login exception:', error);
+      const message = error?.message || 'An unexpected error occurred during login';
       toast({
         title: 'Login Failed',
         description: message,
