@@ -180,14 +180,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithApple = async () => {
     try {
-      // Always use web OAuth for Apple Sign-In to avoid client configuration issues
-      // This works consistently across all platforms
+      // Use Supabase OAuth without custom redirectTo
+      // Let Supabase handle the callback to /auth/v1/callback
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
-        options: {
-          redirectTo: `${window.location.origin}/`,
-          skipBrowserRedirect: false,
-        },
       });
 
       if (error) {
