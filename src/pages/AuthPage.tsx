@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Mail, Lock, User, QrCode, Eye, EyeOff, Info } from 'lucide-react';
 
 const AuthPage = () => {
@@ -26,6 +27,28 @@ const AuthPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+
+  // Handle OAuth callback - check for session when URL has OAuth parameters
+  useEffect(() => {
+    const handleOAuthCallback = async () => {
+      console.log('Checking for OAuth callback session...');
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (session && !error) {
+        console.log('OAuth callback session found:', session.user?.email);
+        const destination = redirectUrl ? decodeURIComponent(redirectUrl) : '/dashboard';
+        navigate(destination, { replace: true });
+      } else if (error) {
+        console.error('OAuth callback error:', error);
+      }
+    };
+
+    // Check if this is an OAuth callback (has code, error, or hash in URL)
+    const hasOAuthParams = searchParams.has('code') || searchParams.has('error') || window.location.hash.includes('access_token');
+    if (hasOAuthParams && !isAuthenticated && !isLoading) {
+      console.log('OAuth parameters detected, checking session...');
+      handleOAuthCallback();
+    }
+  }, [searchParams, navigate, redirectUrl, isAuthenticated, isLoading]);
 
   // Redirect if already authenticated
   if (isAuthenticated) {
