@@ -42,8 +42,8 @@ const config: CapacitorConfig = {
       enableBackup: false
     },
     SignInWithApple: {
-      clientId: 'S8DW7A8W55',
-      redirectURI: 'https://stckr.io/dashboard'
+      clientId: 'com.stckr.supabase.oauth',
+      redirectURI: 'https://cudftlquaydissmvqjmv.supabase.co/auth/v1/callback'
     }
   }
 };
