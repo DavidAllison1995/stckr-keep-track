@@ -140,26 +140,54 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithGoogle = async (): Promise<{ error?: string }> => {
     try {
-      // Use Supabase OAuth for both web and native platforms
-      // This works with Capacitor 7 using the Browser plugin for OAuth flow
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-          skipBrowserRedirect: Capacitor.isNativePlatform(),
-        },
-      });
+      // Check if running on native platform
+      if (Capacitor.isNativePlatform()) {
+        try {
+          // Use native Google Sign In for mobile apps (iOS and Android)
+          const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
+          
+          // Initialize and sign in
+          const result = await GoogleAuth.signIn();
+          
+          if (result.authentication?.idToken) {
+            // Sign in to Supabase with the ID token
+            const { error } = await supabase.auth.signInWithIdToken({
+              provider: 'google',
+              token: result.authentication.idToken,
+            });
 
-      if (error) {
-        toast({
-          title: 'Google Sign-In Failed',
-          description: error.message,
-          variant: 'destructive',
+            if (error) {
+              throw error;
+            }
+          }
+        } catch (nativeError: any) {
+          // Fallback to web OAuth if native fails
+          console.warn('Native Google Sign In failed, falling back to web OAuth:', nativeError);
+          const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              redirectTo: `${window.location.origin}/dashboard`,
+              skipBrowserRedirect: true,
+            },
+          });
+
+          if (error) {
+            throw error;
+          }
+        }
+      } else {
+        // Use web OAuth for web platform
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/dashboard`,
+          },
         });
-        return { error: error.message };
-      }
 
-      if (!Capacitor.isNativePlatform()) {
+        if (error) {
+          throw error;
+        }
+
         toast({
           title: 'Redirecting...',
           description: 'You will be redirected to Google for authentication.',
