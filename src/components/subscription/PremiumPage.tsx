@@ -4,12 +4,20 @@ import { Check, Zap, Heart, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useNativeSubscription } from '@/hooks/useNativeSubscription';
 
 export const PremiumPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { 
+    isNativePlatform, 
+    offerings, 
+    isLoading: nativeLoading, 
+    purchaseSubscription,
+    restorePurchases 
+  } = useNativeSubscription();
 
-  const handleUpgrade = async () => {
+  const handleWebUpgrade = async () => {
     try {
       const { data, error } = await supabase.functions.invoke('create-subscription-checkout', {
         body: {}
@@ -27,6 +35,18 @@ export const PremiumPage = () => {
         description: 'Failed to start upgrade process. Please try again.',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleNativePurchase = async () => {
+    if (!offerings.length) return;
+    
+    const monthlyPackage = offerings[0]?.availablePackages.find(
+      pkg => pkg.packageType === 'MONTHLY'
+    );
+    
+    if (monthlyPackage) {
+      await purchaseSubscription(monthlyPackage.identifier);
     }
   };
 
@@ -104,15 +124,38 @@ export const PremiumPage = () => {
           </CardContent>
         </Card>
 
-        <div className="text-center">
-          <Button 
-            onClick={handleUpgrade}
-            size="lg"
-            className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold px-8 py-3 text-lg"
-          >
-            <Zap className="w-5 h-5 mr-2" />
-            Go Premium – £2.49/month
-          </Button>
+        <div className="text-center space-y-4">
+          {isNativePlatform ? (
+            <>
+              <Button 
+                onClick={handleNativePurchase}
+                size="lg"
+                className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold px-8 py-3 text-lg w-full"
+                disabled={nativeLoading || !offerings.length}
+              >
+                <Zap className="w-5 h-5 mr-2" />
+                {nativeLoading ? 'Loading...' : 'Subscribe via App Store'}
+              </Button>
+              <Button
+                onClick={restorePurchases}
+                variant="outline"
+                size="lg"
+                className="w-full"
+                disabled={nativeLoading}
+              >
+                Restore Purchases
+              </Button>
+            </>
+          ) : (
+            <Button 
+              onClick={handleWebUpgrade}
+              size="lg"
+              className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold px-8 py-3 text-lg"
+            >
+              <Zap className="w-5 h-5 mr-2" />
+              Go Premium – £2.49/month
+            </Button>
+          )}
         </div>
       </div>
     </div>

@@ -42,6 +42,9 @@ const config: CapacitorConfig = {
       enableBackup: false,
       permissions: ['camera', 'photos']
     },
+    Purchases: {
+      // RevenueCat configuration
+    },
     SignInWithApple: {
       clientId: 'com.stckr.supabase.oauth',
       redirectURI: 'https://cudftlquaydissmvqjmv.supabase.co/auth/v1/callback'
