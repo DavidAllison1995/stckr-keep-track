@@ -45,11 +45,6 @@ const config: CapacitorConfig = {
     Purchases: {
       // RevenueCat configuration
     },
-    GoogleAuth: {
-      scopes: ['profile', 'email'],
-      serverClientId: '1004044323466-google.apps.googleusercontent.com',
-      forceCodeForRefreshToken: true,
-    },
     SignInWithApple: {
       clientId: 'com.stckr.supabase.oauth',
       redirectURI: 'https://cudftlquaydissmvqjmv.supabase.co/auth/v1/callback'
