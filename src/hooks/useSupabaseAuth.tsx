@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Capacitor } from '@capacitor/core';
 import { SignInWithApple } from '@capacitor-community/apple-sign-in';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 
 interface AuthContextType {
@@ -29,6 +30,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
+    
+    // Initialize Google Auth for native platforms
+    if (Capacitor.isNativePlatform()) {
+      GoogleAuth.initialize({
+        clientId: '1004044323466-google.apps.googleusercontent.com',
+        scopes: ['profile', 'email'],
+        grantOfflineAccess: true,
+      });
+    }
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -141,19 +151,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithGoogle = async (): Promise<{ error?: string }> => {
     try {
-      // Use Supabase OAuth for both web and native platforms
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
+      if (Capacitor.isNativePlatform()) {
+        // Use native Google Sign-In for mobile
+        const googleUser = await GoogleAuth.signIn();
+        
+        if (googleUser.authentication?.idToken) {
+          // Sign in to Supabase with the Google ID token
+          const { error } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: googleUser.authentication.idToken,
+          });
 
-      if (error) {
-        throw error;
-      }
+          if (error) {
+            throw error;
+          }
 
-      if (!Capacitor.isNativePlatform()) {
+          toast({
+            title: 'Success!',
+            description: 'Successfully signed in with Google.',
+          });
+        } else {
+          throw new Error('No ID token received from Google');
+        }
+      } else {
+        // Use web OAuth for web platform
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/dashboard`,
+          },
+        });
+
+        if (error) {
+          throw error;
+        }
+
         toast({
           title: 'Redirecting...',
           description: 'You will be redirected to Google for authentication.',
