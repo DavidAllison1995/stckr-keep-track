@@ -75,50 +75,43 @@ const ItemsList = ({ onItemSelect }: ItemsListProps) => {
         </Dialog>
       </div>
 
-      {/* Enhanced Search and Filters */}
-      <Card variant="elevated" className="bg-gray-800/50 border-gray-700 shadow-medium backdrop-blur-sm">
-        <CardContent className="p-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
-              <Input
-                type="text"
-                placeholder="Search items..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-9 bg-gray-900/70 border-gray-600 focus:bg-gray-900 focus:border-purple-500 focus:ring-purple-500/20 text-white placeholder:text-gray-500 transition-all duration-200"
-              />
-            </div>
-            <div className="flex gap-2">
-              <div className="relative">
-                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-purple-400" />
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-36 h-9 pl-8 bg-gray-900/70 border-gray-600 text-white hover:border-purple-500 transition-colors">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent className="animate-slide-up bg-gray-800 border-gray-600">
-                    <SelectItem value="all" className="text-white hover:bg-purple-600/20">All Categories</SelectItem>
-                    {categories.map(category => (
-                      <SelectItem key={category} value={category} className="text-white hover:bg-purple-600/20">{category}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Select value={roomFilter} onValueChange={setRoomFilter}>
-                <SelectTrigger className="w-32 h-9 bg-gray-900/70 border-gray-600 text-white hover:border-purple-500 transition-colors">
-                  <SelectValue placeholder="Room" />
-                </SelectTrigger>
-                <SelectContent className="animate-slide-up bg-gray-800 border-gray-600">
-                  <SelectItem value="all" className="text-white hover:bg-purple-600/20">All Rooms</SelectItem>
-                  {rooms.map(room => (
-                    <SelectItem key={room} value={room} className="text-white hover:bg-purple-600/20">{room}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Compact Search and Filters */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex-1 relative max-w-sm">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Search items..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8 h-8 text-sm bg-gray-800/50 border-gray-700 focus:border-gray-600 text-white placeholder:text-gray-500 transition-colors"
+          />
+        </div>
+        <div className="flex gap-2">
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-28 h-8 text-xs bg-gray-800/50 border-gray-700 text-gray-300 hover:border-gray-600 transition-colors">
+              <SelectValue placeholder="All..." />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-800 border-gray-600">
+              <SelectItem value="all" className="text-white hover:bg-purple-600/20 text-xs">All...</SelectItem>
+              {categories.map(category => (
+                <SelectItem key={category} value={category} className="text-white hover:bg-purple-600/20 text-xs">{category}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={roomFilter} onValueChange={setRoomFilter}>
+            <SelectTrigger className="w-28 h-8 text-xs bg-gray-800/50 border-gray-700 text-gray-300 hover:border-gray-600 transition-colors">
+              <SelectValue placeholder="All Rooms" />
+            </SelectTrigger>
+            <SelectContent className="bg-gray-800 border-gray-600">
+              <SelectItem value="all" className="text-white hover:bg-purple-600/20 text-xs">All Rooms</SelectItem>
+              {rooms.map(room => (
+                <SelectItem key={room} value={room} className="text-white hover:bg-purple-600/20 text-xs">{room}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {/* Enhanced Items Grid */}
       {filteredItems.length === 0 ? (
