@@ -119,132 +119,249 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="font-semibold text-lg text-white">Maintenance Tasks</h3>
-        <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700 text-white">
+      {/* Header with better styling */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div>
+          <h3 className="font-bold text-xl text-white mb-1">Maintenance Tasks</h3>
+          <p className="text-sm text-gray-400">
+            {activeTasks.length} active task{activeTasks.length !== 1 ? 's' : ''} 
+            {completedTasks.length > 0 && `, ${completedTasks.length} completed`}
+          </p>
+        </div>
+        <Button 
+          onClick={() => setShowAddForm(true)} 
+          className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg transition-all duration-200 font-medium"
+        >
           <Plus className="w-4 h-4 mr-2" />
-          Add Task
+          Add New Task
         </Button>
       </div>
 
-      {/* Show Completed Tasks Toggle */}
+      {/* Show Completed Tasks Toggle - Better positioning */}
       {completedTasks.length > 0 && (
-        <div className="flex justify-end">
+        <div className="flex justify-center sm:justify-end">
           <Button 
             variant="outline" 
             size="sm"
             onClick={() => setShowCompleted(!showCompleted)}
-            className="border-gray-600 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-500"
+            className="border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-500 transition-all duration-200"
           >
-            {showCompleted ? 'Hide Completed Tasks' : 'Show Completed Tasks'}
+            {showCompleted ? 'Hide' : 'Show'} Completed Tasks ({completedTasks.length})
           </Button>
         </div>
       )}
 
-      {/* Active Tasks */}
+      {/* Active Tasks with improved design */}
       {activeTasks.length > 0 && (
-        <div>
-          <h4 className="font-medium text-white mb-3 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-purple-400" />
-            Active Tasks ({activeTasks.length})
-          </h4>
-          <div className="space-y-3">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 pb-2 border-b border-gray-700">
+            <div className="w-8 h-8 bg-purple-900/50 rounded-lg flex items-center justify-center border border-purple-600/50">
+              <Clock className="w-4 h-4 text-purple-400" />
+            </div>
+            <h4 className="font-semibold text-lg text-white">
+              Active Tasks
+            </h4>
+            <Badge className="bg-purple-900/50 text-purple-300 border-purple-600/50">
+              {activeTasks.length}
+            </Badge>
+          </div>
+          
+          <div className="grid gap-4">
             {activeTasks.map((task) => (
               <Card 
                 key={task.id} 
-                className={`bg-gray-800 border-gray-700 ${highlightTaskId === task.id ? 'ring-2 ring-blue-500' : ''}`}
+                className={`
+                  bg-gradient-to-r from-gray-800/50 to-gray-900/50 border-gray-700 hover:border-gray-600 
+                  transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/10
+                  ${highlightTaskId === task.id ? 'ring-2 ring-purple-500 border-purple-500' : ''}
+                `}
               >
-                <CardContent className="p-2 sm:p-3 md:p-4">
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-                    <div className="flex-1 min-w-0">
-                      {/* Task Title with Icon - Mobile Optimized */}
-                      <div className="flex items-start gap-2 mb-2">
-                        <div className="flex-shrink-0 mt-0.5">
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    {/* Task Header */}
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <div className="flex-shrink-0 mt-1">
                           {getTaskIcon(task)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h5 className={`font-medium text-white leading-tight ${
-                            task.title.length > 20 
-                              ? 'text-sm sm:text-base line-clamp-2' 
-                              : 'text-base'
-                          }`}>
+                          <h5 className="font-semibold text-lg text-white leading-tight mb-1">
                             {task.title}
                           </h5>
-                          {/* Status Badge - Below title on mobile, inline on larger screens */}
-                          <div className="mt-1 sm:mt-0 sm:hidden">
-                            {getStatusBadge(task)}
-                          </div>
-                        </div>
-                        {/* Status Badge - Hidden on mobile, shown on larger screens */}
-                        <div className="hidden sm:flex flex-shrink-0">
-                          {getStatusBadge(task)}
+                          {task.notes && (
+                            <p className="text-sm text-gray-300 leading-relaxed">{task.notes}</p>
+                          )}
                         </div>
                       </div>
-                      
-                      {/* Task Notes */}
-                      {task.notes && (
-                        <p className="text-sm text-gray-300 mt-1 leading-relaxed">{task.notes}</p>
-                      )}
-                      
-                      {/* Task Date and Recurrence */}
-                      <div className="flex items-center gap-2 mt-2 flex-wrap">
-                        <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        <span className="text-sm text-gray-400">
-                          Due: {new Date(task.date).toLocaleDateString()}
-                        </span>
-                        {task.recurrence !== 'none' && (
-                          <Badge variant="outline" className="text-xs border-gray-600 text-gray-300">
-                            {task.recurrence}
-                          </Badge>
-                        )}
+                      <div className="flex-shrink-0">
+                        {getStatusBadge(task)}
                       </div>
                     </div>
                     
-                    {/* Action Buttons - Consistent sizing and better mobile layout */}
-                    <div className="flex gap-1.5 sm:gap-2 justify-end sm:justify-start flex-shrink-0">
+                    {/* Task Details */}
+                    <div className="flex items-center gap-4 text-sm text-gray-400">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4" />
+                        <span>Due: {new Date(task.date).toLocaleDateString()}</span>
+                      </div>
+                      {task.recurrence !== 'none' && (
+                        <Badge variant="outline" className="border-gray-600 text-gray-300 text-xs">
+                          Repeats {task.recurrence}
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {/* Action Buttons - Redesigned to be more obvious */}
+                    <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-700">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleAddToCalendar(task)}
-                        title="Add to Calendar"
-                        className="border-gray-600 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-500 h-8 w-8 sm:w-auto sm:px-3 p-0 sm:p-2"
+                        className="
+                          border-blue-600/50 text-blue-300 hover:bg-blue-600 hover:text-white hover:border-blue-500 
+                          transition-all duration-200 font-medium flex-1 sm:flex-none
+                        "
                       >
-                        <CalendarPlus className="w-4 h-4 sm:mr-1" />
-                        <span className="hidden sm:inline ml-1">Add to Calendar</span>
+                        <CalendarPlus className="w-4 h-4 mr-2" />
+                        Add to Calendar
                       </Button>
+                      
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleEditTask(task)}
-                        className="border-gray-600 text-gray-300 hover:bg-purple-600 hover:text-white hover:border-purple-500 h-8 w-8 sm:w-auto sm:px-3 p-0 sm:p-2"
+                        className="
+                          border-purple-600/50 text-purple-300 hover:bg-purple-600 hover:text-white hover:border-purple-500 
+                          transition-all duration-200 font-medium flex-1 sm:flex-none
+                        "
                       >
-                        <Edit className="w-4 h-4 sm:mr-1" />
-                        <span className="hidden sm:inline ml-1">Edit</span>
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit Task
                       </Button>
+                      
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleTaskComplete(task.id)}
-                        className="border-gray-600 text-gray-300 hover:bg-green-600 hover:text-white hover:border-green-500 h-8 w-8 sm:w-auto sm:px-3 p-0 sm:p-2"
+                        className="
+                          border-green-600/50 text-green-300 hover:bg-green-600 hover:text-white hover:border-green-500 
+                          transition-all duration-200 font-medium flex-1 sm:flex-none
+                        "
                       >
-                        <CheckCircle2 className="w-4 h-4 sm:mr-1" />
-                        <span className="hidden sm:inline ml-1">Complete</span>
+                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                        Mark Complete
                       </Button>
+                      
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-red-600 hover:text-white hover:border-red-500 h-8 w-8 p-0">
-                            <Trash2 className="w-4 h-4" />
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="
+                              border-red-600/50 text-red-300 hover:bg-red-600 hover:text-white hover:border-red-500 
+                              transition-all duration-200 font-medium
+                            "
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent className="bg-gray-900 border-gray-700">
                           <AlertDialogHeader>
                             <AlertDialogTitle className="text-white">Delete Task</AlertDialogTitle>
                             <AlertDialogDescription className="text-gray-400">
-                              Are you sure you want to delete this maintenance task? This action cannot be undone.
+                              Are you sure you want to delete "{task.title}"? This action cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700">Cancel</AlertDialogCancel>
+                            <AlertDialogCancel className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700">
+                              Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => handleTaskDelete(task.id)}
+                              className="bg-red-600 hover:bg-red-700 text-white"
+                            >
+                              Delete Task
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Completed Tasks with improved design */}
+      {showCompleted && completedTasks.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 pb-2 border-b border-gray-700">
+            <div className="w-8 h-8 bg-green-900/50 rounded-lg flex items-center justify-center border border-green-600/50">
+              <CheckCircle2 className="w-4 h-4 text-green-400" />
+            </div>
+            <h4 className="font-semibold text-lg text-white">
+              Completed Tasks
+            </h4>
+            <Badge className="bg-green-900/50 text-green-300 border-green-600/50">
+              {completedTasks.length}
+            </Badge>
+          </div>
+          
+          <div className="grid gap-4">
+            {completedTasks.map((task) => (
+              <Card key={task.id} className="bg-gray-800/30 border-gray-700 opacity-75 hover:opacity-90 transition-opacity">
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <div className="flex-shrink-0 mt-1">
+                          <CheckCircle2 className="w-5 h-5 text-green-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h5 className="font-semibold text-lg text-white leading-tight mb-1">
+                            {task.title}
+                          </h5>
+                          {task.notes && (
+                            <p className="text-sm text-gray-300 leading-relaxed">{task.notes}</p>
+                          )}
+                        </div>
+                      </div>
+                      <Badge className="bg-green-900/50 text-green-300 border-green-600/50">
+                        Completed
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm text-gray-400">
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Completed: {new Date(task.updated_at).toLocaleDateString()}</span>
+                      </div>
+                      
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="border-red-600/50 text-red-300 hover:bg-red-600 hover:text-white hover:border-red-500"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="bg-gray-900 border-gray-700">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="text-white">Delete Completed Task</AlertDialogTitle>
+                            <AlertDialogDescription className="text-gray-400">
+                              Are you sure you want to delete "{task.title}"? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700">
+                              Cancel
+                            </AlertDialogCancel>
                             <AlertDialogAction 
                               onClick={() => handleTaskDelete(task.id)}
                               className="bg-red-600 hover:bg-red-700"
@@ -263,84 +380,22 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
         </div>
       )}
 
-      {/* Completed Tasks (conditionally shown) */}
-      {showCompleted && completedTasks.length > 0 && (
-        <>
-          <Separator className="bg-gray-700" />
-          <div>
-            <h4 className="font-medium text-white mb-3 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-green-400" />
-              Completed Tasks ({completedTasks.length})
-            </h4>
-            <div className="space-y-3">
-              {completedTasks.map((task) => (
-                <Card key={task.id} className="bg-gray-800 border-gray-700 opacity-75">
-                  <CardContent className="p-2 sm:p-3 md:p-4">
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-                      <div className="flex-1 min-w-0">
-                        <h5 className={`font-medium text-white leading-tight ${
-                          task.title.length > 20 
-                            ? 'text-sm sm:text-base line-clamp-2' 
-                            : 'text-base'
-                        }`}>
-                          {task.title}
-                        </h5>
-                        {task.notes && (
-                          <p className="text-sm text-gray-300 mt-1 leading-relaxed">{task.notes}</p>
-                        )}
-                        <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                          <span className="text-sm text-gray-400">
-                            Completed: {new Date(task.updated_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Badge variant="secondary" className="bg-green-900/50 text-green-300 border-green-600/50 text-xs px-2 py-0.5 h-5 whitespace-nowrap">Completed</Badge>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-red-600 hover:text-white hover:border-red-500 h-8 w-8 p-0">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent className="bg-gray-900 border-gray-700">
-                            <AlertDialogHeader>
-                              <AlertDialogTitle className="text-white">Delete Completed Task</AlertDialogTitle>
-                              <AlertDialogDescription className="text-gray-400">
-                                Are you sure you want to delete this completed maintenance task? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700">Cancel</AlertDialogCancel>
-                              <AlertDialogAction 
-                                onClick={() => handleTaskDelete(task.id)}
-                                className="bg-red-600 hover:bg-red-700"
-                              >
-                                Delete Task
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
-
+      {/* Empty State - Improved design */}
       {itemTasks.length === 0 && (
-        <div className="text-center py-8">
-          <Clock className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-          <h4 className="font-medium text-white mb-2">No maintenance tasks yet</h4>
-          <p className="text-gray-400 mb-4">
-            Add your first maintenance task to keep track of this item's upkeep.
+        <div className="text-center py-12">
+          <div className="w-16 h-16 bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4 border border-purple-600/50">
+            <Clock className="w-8 h-8 text-purple-400" />
+          </div>
+          <h4 className="font-semibold text-xl text-white mb-2">No maintenance tasks yet</h4>
+          <p className="text-gray-400 mb-6 max-w-md mx-auto">
+            Keep your {item?.name || 'item'} in perfect condition by adding maintenance tasks and reminders.
           </p>
-          <Button onClick={() => setShowAddForm(true)} className="bg-purple-600 hover:bg-purple-700 text-white">
+          <Button 
+            onClick={() => setShowAddForm(true)} 
+            className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg font-medium"
+          >
             <Plus className="w-4 h-4 mr-2" />
-            Add First Task
+            Add Your First Task
           </Button>
         </div>
       )}
