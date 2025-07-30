@@ -4,14 +4,14 @@ plugins {
 
 android {
     namespace "com.stckr.keeptrack"
-    compileSdkVersion 34
+    compileSdkVersion rootProject.ext.compileSdkVersion
     
     defaultConfig {
         applicationId "com.stckr.keeptrack"
-        minSdkVersion 24
-        targetSdkVersion 34
-        versionCode 1
-        versionName "1.0"
+        minSdkVersion     rootProject.ext.minSdkVersion
+        targetSdkVersion  rootProject.ext.targetSdkVersion
+        versionCode       1
+        versionName       "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     
