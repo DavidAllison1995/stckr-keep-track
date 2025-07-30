@@ -140,59 +140,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithGoogle = async (): Promise<{ error?: string }> => {
     try {
-      // Check if running on native platform
-      if (Capacitor.isNativePlatform()) {
-        try {
-          // Use native Google Sign In for mobile apps (iOS and Android)
-          const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
-          
-          // Initialize and sign in
-          const result = await GoogleAuth.signIn();
-          
-          if (result.authentication?.idToken) {
-            // Sign in to Supabase with the ID token
-            const { error } = await supabase.auth.signInWithIdToken({
-              provider: 'google',
-              token: result.authentication.idToken,
-            });
+      // For now, use web OAuth for all platforms to avoid build issues
+      // TODO: Implement native Google Sign In after build is working
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
 
-            if (error) {
-              throw error;
-            }
-          }
-        } catch (nativeError: any) {
-          // Fallback to web OAuth if native fails
-          console.warn('Native Google Sign In failed, falling back to web OAuth:', nativeError);
-          const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-              redirectTo: `${window.location.origin}/dashboard`,
-              skipBrowserRedirect: true,
-            },
-          });
-
-          if (error) {
-            throw error;
-          }
-        }
-      } else {
-        // Use web OAuth for web platform
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/dashboard`,
-          },
-        });
-
-        if (error) {
-          throw error;
-        }
-
-        toast({
-          title: 'Redirecting...',
-          description: 'You will be redirected to Google for authentication.',
-        });
+      if (error) {
+        throw error;
       }
+
+      toast({
+        title: 'Redirecting...',
+        description: 'You will be redirected to Google for authentication.',
+      });
 
       return {};
     } catch (error: any) {
@@ -208,40 +172,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithApple = async () => {
     try {
-      // Check if running on native platform
-      if (Capacitor.isNativePlatform()) {
-        // Use native Apple Sign In for mobile apps
-        const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
-        
-        const result = await SignInWithApple.authorize({
-          clientId: 'com.stckr.supabase.oauth',
-          redirectURI: 'https://cudftlquaydissmvqjmv.supabase.co/auth/v1/callback',
-          scopes: 'name email',
-          state: 'state',
-          nonce: 'nonce'
-        });
+      // For now, use web OAuth for all platforms to avoid build issues
+      // TODO: Implement native Apple Sign In after build is working
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+      });
 
-        if (result.response && result.response.identityToken) {
-          // Sign in to Supabase with the identity token
-          const { error } = await supabase.auth.signInWithIdToken({
-            provider: 'apple',
-            token: result.response.identityToken,
-            nonce: 'nonce'
-          });
-
-          if (error) {
-            throw error;
-          }
-        }
-      } else {
-        // Use web OAuth for web platform
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'apple',
-        });
-
-        if (error) {
-          throw error;
-        }
+      if (error) {
+        throw error;
       }
 
       return {};
