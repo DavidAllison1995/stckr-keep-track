@@ -61,8 +61,8 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/premium/success`,
-      cancel_url: `${req.headers.get("origin")}/premium`,
+      success_url: `${req.headers.get("origin")}/items`,
+      cancel_url: `${req.headers.get("origin")}/items`,
       allow_promotion_codes: true,
       billing_address_collection: "auto",
     });

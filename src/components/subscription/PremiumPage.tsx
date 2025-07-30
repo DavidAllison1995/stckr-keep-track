@@ -11,8 +11,8 @@ export const PremiumPage = () => {
 
   const handleUpgrade = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { priceId: 'premium-monthly' }
+      const { data, error } = await supabase.functions.invoke('create-subscription-checkout', {
+        body: {}
       });
 
       if (error) throw error;
