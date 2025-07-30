@@ -10,6 +10,7 @@ import { useSupabaseItems, Item } from '@/hooks/useSupabaseItems';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import NotoEmojiIconPicker from '@/components/forms/NotoEmojiIconPicker';
 import ImageUpload from '@/components/forms/ImageUpload';
+import { useSubscriptionLimits } from '@/hooks/useSubscriptionLimits';
 
 interface ItemFormProps {
   item?: Item;
@@ -22,6 +23,7 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
   const navigate = useNavigate();
   const { user } = useSupabaseAuth();
   const { addItem, updateItem } = useSupabaseItems();
+  const { checkItemLimit, UpgradeModalComponent } = useSubscriptionLimits();
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -102,6 +104,11 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
         });
         newItem = item;
       } else {
+        // Check item limit for new items
+        if (!checkItemLimit()) {
+          return;
+        }
+        
         // Add new item
         newItem = await addItem({
           name: formData.name.trim(),
@@ -136,6 +143,7 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
 
   return (
     <div className="space-y-6">
+      <UpgradeModalComponent />
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <Label htmlFor="name">Item Name *</Label>

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DatePicker } from '@/components/ui/date-picker';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
+import { useSubscriptionLimits } from '@/hooks/useSubscriptionLimits';
 
 interface MaintenanceTaskFormProps {
   itemId?: string;
@@ -16,6 +17,7 @@ interface MaintenanceTaskFormProps {
 const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) => {
   const { addTask } = useSupabaseMaintenance();
   const { items } = useSupabaseItems();
+  const { checkTaskLimit, UpgradeModalComponent } = useSubscriptionLimits();
   const [formData, setFormData] = useState({
     title: '',
     notes: '',
@@ -57,6 +59,15 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
       status: status,
     });
 
+    // Check task limit if assigning to a specific item
+    const targetItemId = formData.selectedItemId === 'unassigned' ? null : formData.selectedItemId || null;
+    if (targetItemId) {
+      const canAdd = await checkTaskLimit(targetItemId);
+      if (!canAdd) {
+        return;
+      }
+    }
+
     try {
       await addTask({
         item_id: formData.selectedItemId === 'unassigned' ? null : formData.selectedItemId || null,
@@ -77,7 +88,9 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <>
+      <UpgradeModalComponent />
+      <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <Label htmlFor="title">Task Title *</Label>
         <Input
@@ -139,6 +152,7 @@ const MaintenanceTaskForm = ({ itemId, onSuccess }: MaintenanceTaskFormProps) =>
         </Button>
       </div>
     </form>
+    </>
   );
 };
 

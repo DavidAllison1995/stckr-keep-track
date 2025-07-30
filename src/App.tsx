@@ -26,6 +26,7 @@ import NotFound from "./pages/NotFound";
 import QRRedirectPage from "./pages/QRRedirectPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import SupportPage from "./pages/SupportPage";
+import PremiumPage from "./pages/PremiumPage";
 
 // Route components
 import PublicRoutes from "./routes/PublicRoutes";
@@ -78,9 +79,17 @@ function App() {
                   <Routes>
                     {/* Public routes */}
                     <Route path="/" element={<PlatformAwareRoot />} />
-                    <Route path="/auth" element={<AuthPage />} />
-                    <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-                    <Route path="/support" element={<SupportPage />} />
+                     <Route path="/auth" element={<AuthPage />} />
+                     <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                     <Route path="/support" element={<SupportPage />} />
+                     <Route 
+                       path="/premium" 
+                       element={
+                         <ProtectedRoute>
+                           <PremiumPage />
+                         </ProtectedRoute>
+                       } 
+                     />
                     
                      {/* Universal QR code route - publicly accessible */}
                      <Route 
