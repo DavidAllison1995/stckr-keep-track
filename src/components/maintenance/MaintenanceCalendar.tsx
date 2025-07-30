@@ -209,13 +209,13 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
       {/* Days of Week Header */}
       <div className="grid grid-cols-7 border-b border-gray-700 bg-gray-800">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} className={`${isMobile ? 'p-2' : 'p-3'} text-center text-sm font-medium text-gray-300 border-r border-gray-700 last:border-r-0`}>
-            {day}
+          <div key={day} className={`${isMobile ? 'p-1.5' : 'p-3'} text-center text-sm font-medium text-gray-300 border-r border-gray-700 last:border-r-0`}>
+            {isMobile ? day.slice(0, 1) : day}
           </div>
         ))}
       </div>
 
-      {/* Calendar Grid */}
+      {/* Calendar Grid - Mobile Optimized */}
       <div className="grid grid-cols-7 bg-gray-900">
         {calendarDays.map((day, index) => {
           const dateKey = format(day, 'yyyy-MM-dd');
@@ -228,59 +228,127 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
             <div
               key={index}
               className={`
-                ${isMobile ? 'min-h-[80px] p-2' : 'min-h-[100px] p-2'} 
+                ${isMobile ? 'h-16 p-1' : 'min-h-[100px] p-2'} 
                 border-r border-b border-gray-700 last:border-r-0 
                 cursor-pointer hover:bg-gray-800/50 transition-all duration-200
                 ${isSelected ? 'bg-purple-900/30 border-purple-500' : ''}
                 ${!isCurrentMonth ? 'text-gray-500 bg-gray-900/50' : 'bg-gray-900'}
                 ${isTodayDate && !isSelected ? 'bg-purple-900/20' : ''}
+                ${isMobile ? 'flex flex-col' : ''}
               `}
               onClick={() => handleDateClick(day)}
             >
-              <div className="flex items-center justify-between mb-1">
-                <span
-                  className={`
-                    ${isMobile ? 'text-sm' : 'text-sm'} font-medium transition-all duration-200
-                    ${isTodayDate ? `bg-purple-600 text-white rounded-full ${isMobile ? 'w-6 h-6 text-xs' : 'w-6 h-6'} flex items-center justify-center shadow-lg` : ''}
-                    ${isSelected && !isTodayDate ? 'text-purple-400 font-bold' : ''}
-                    ${!isSelected && !isTodayDate && isCurrentMonth ? 'text-gray-200' : ''}
-                    ${!isCurrentMonth ? 'text-gray-500' : ''}
-                  `}
-                >
-                  {format(day, 'd')}
-                </span>
-              </div>
-              
-              {/* Status Indicators */}
-              {dayData && renderStatusIndicators(dayData)}
-              
-              {/* Task preview for current month days */}
-              {isCurrentMonth && dayData && dayData.tasks.length > 0 && (
-                <div className="space-y-1 mt-1">
-                  {dayData.tasks
-                    .slice(0, isMobile ? 2 : 2)
-                    .map(task => {
-                      const taskStatus = task.status === 'completed' ? 'completed' : calculateTaskStatus(task.date);
-                      return (
-                        <div
-                          key={task.id}
-                          className={`${isMobile ? 'text-xs p-1' : 'text-xs p-1'} rounded truncate transition-all duration-200 ${
-                            taskStatus === 'completed' ? 'bg-purple-900/50 text-purple-200 border border-purple-600/30' :
-                            taskStatus === 'overdue' ? 'bg-red-900/50 text-red-200 border border-red-600/30' :
-                            taskStatus === 'due_soon' ? 'bg-yellow-900/50 text-yellow-200 border border-yellow-600/30' :
-                            'bg-gray-800/80 text-gray-200 border border-gray-600/30'
-                          }`}
-                        >
-                          {task.title}
+              {isMobile ? (
+                /* Mobile: Compact 2-line layout */
+                <>
+                  {/* Top line: Date number and mini status indicators */}
+                  <div className="flex items-center justify-between h-6">
+                    <span
+                      className={`
+                        text-xs font-medium transition-all duration-200
+                        ${isTodayDate ? 'bg-purple-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center shadow-lg' : ''}
+                        ${isSelected && !isTodayDate ? 'text-purple-400 font-bold' : ''}
+                        ${!isSelected && !isTodayDate && isCurrentMonth ? 'text-gray-200' : ''}
+                        ${!isCurrentMonth ? 'text-gray-500' : ''}
+                      `}
+                    >
+                      {format(day, 'd')}
+                    </span>
+                    {/* Mini status indicators (only if tasks exist) */}
+                    {dayData && dayData.tasks.length > 0 && (
+                      <div className="flex gap-0.5">
+                        {dayData.statusCounts.overdue > 0 && (
+                          <div className="w-1 h-1 bg-red-500 rounded-full" />
+                        )}
+                        {dayData.statusCounts.due_soon > 0 && (
+                          <div className="w-1 h-1 bg-yellow-500 rounded-full" />
+                        )}
+                        {dayData.statusCounts.up_to_date > 0 && (
+                          <div className="w-1 h-1 bg-green-500 rounded-full" />
+                        )}
+                        {dayData.statusCounts.completed > 0 && settings.showCompletedTasks && (
+                          <div className="w-1 h-1 bg-purple-400 rounded-full" />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Bottom line: Task preview (emoji + short title) */}
+                  {isCurrentMonth && dayData && dayData.tasks.length > 0 && (
+                    <div className="flex-1 flex flex-col justify-center">
+                      {dayData.tasks.slice(0, 1).map(task => {
+                        const taskStatus = task.status === 'completed' ? 'completed' : calculateTaskStatus(task.date);
+                        return (
+                          <div
+                            key={task.id}
+                            className="text-xs truncate leading-tight"
+                            style={{ 
+                              color: taskStatus === 'completed' ? '#c084fc' :
+                                     taskStatus === 'overdue' ? '#fca5a5' :
+                                     taskStatus === 'due_soon' ? '#fde047' : '#d1d5db'
+                            }}
+                          >
+                            {task.title.length > 8 ? task.title.slice(0, 8) + '...' : task.title}
+                          </div>
+                        );
+                      })}
+                      {dayData.tasks.length > 1 && (
+                        <div className="text-xs text-gray-500 leading-none">
+                          +{dayData.tasks.length - 1}
                         </div>
-                      );
-                    })}
-                  {dayData.tasks.length > (isMobile ? 2 : 2) && (
-                    <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-gray-400`}>
-                      +{dayData.tasks.length - (isMobile ? 2 : 2)} more
+                      )}
                     </div>
                   )}
-                </div>
+                </>
+              ) : (
+                /* Desktop: Original layout */
+                <>
+                  <div className="flex items-center justify-between mb-1">
+                    <span
+                      className={`
+                        text-sm font-medium transition-all duration-200
+                        ${isTodayDate ? 'bg-purple-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-lg' : ''}
+                        ${isSelected && !isTodayDate ? 'text-purple-400 font-bold' : ''}
+                        ${!isSelected && !isTodayDate && isCurrentMonth ? 'text-gray-200' : ''}
+                        ${!isCurrentMonth ? 'text-gray-500' : ''}
+                      `}
+                    >
+                      {format(day, 'd')}
+                    </span>
+                  </div>
+                  
+                  {/* Status Indicators */}
+                  {dayData && renderStatusIndicators(dayData)}
+                  
+                  {/* Task preview for current month days */}
+                  {isCurrentMonth && dayData && dayData.tasks.length > 0 && (
+                    <div className="space-y-1 mt-1">
+                      {dayData.tasks
+                        .slice(0, 2)
+                        .map(task => {
+                          const taskStatus = task.status === 'completed' ? 'completed' : calculateTaskStatus(task.date);
+                          return (
+                            <div
+                              key={task.id}
+                              className={`text-xs p-1 rounded truncate transition-all duration-200 ${
+                                taskStatus === 'completed' ? 'bg-purple-900/50 text-purple-200 border border-purple-600/30' :
+                                taskStatus === 'overdue' ? 'bg-red-900/50 text-red-200 border border-red-600/30' :
+                                taskStatus === 'due_soon' ? 'bg-yellow-900/50 text-yellow-200 border border-yellow-600/30' :
+                                'bg-gray-800/80 text-gray-200 border border-gray-600/30'
+                              }`}
+                            >
+                              {task.title}
+                            </div>
+                          );
+                        })}
+                      {dayData.tasks.length > 2 && (
+                        <div className="text-xs text-gray-400">
+                          +{dayData.tasks.length - 2} more
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           );
@@ -622,11 +690,9 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
       <div className={`grid ${isMobile ? 'grid-cols-1 gap-1' : 'grid-cols-1 lg:grid-cols-4 gap-6'} w-full overflow-hidden`}>
         {/* Calendar View */}
         <div className={`${isMobile ? 'col-span-1' : 'lg:col-span-3'} w-full overflow-hidden`}>
-          <div className={isMobile ? 'max-h-[60vh] overflow-y-auto' : ''}>
-            {viewMode === 'month' && renderMonthView()}
-            {viewMode === 'week' && renderWeekView()}
-            {viewMode === 'day' && renderDayView()}
-          </div>
+          {viewMode === 'month' && renderMonthView()}
+          {viewMode === 'week' && renderWeekView()}
+          {viewMode === 'day' && renderDayView()}
         </div>
 
         {/* Task Sidebar */}
