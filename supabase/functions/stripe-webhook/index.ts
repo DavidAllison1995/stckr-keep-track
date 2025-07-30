@@ -54,7 +54,31 @@ serve(async (req) => {
 
     switch (event.type) {
       case "checkout.session.completed": {
-        await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session, supabaseClient);
+        const session = event.data.object as Stripe.Checkout.Session;
+        
+        // Check if this is a subscription or one-time payment
+        if (session.mode === 'subscription') {
+          await handleSubscriptionCheckout(session, supabaseClient);
+        } else {
+          await handleCheckoutCompleted(session, supabaseClient);
+        }
+        break;
+      }
+      case "customer.subscription.created":
+      case "customer.subscription.updated": {
+        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription, supabaseClient);
+        break;
+      }
+      case "customer.subscription.deleted": {
+        await handleSubscriptionCancelled(event.data.object as Stripe.Subscription, supabaseClient);
+        break;
+      }
+      case "invoice.payment_succeeded": {
+        await handlePaymentSucceeded(event.data.object as Stripe.Invoice, supabaseClient);
+        break;
+      }
+      case "invoice.payment_failed": {
+        await handlePaymentFailed(event.data.object as Stripe.Invoice, supabaseClient);
         break;
       }
       default:
@@ -402,5 +426,268 @@ async function sendToPrintful(order: any, products: any[], items: any[], shippin
         printful_error: `Exception: ${error.message}`
       })
       .eq("id", order.id);
+  }
+}
+
+// Handle subscription checkout completion
+async function handleSubscriptionCheckout(session: Stripe.Checkout.Session, supabaseClient: any) {
+  console.log("💎 PROCESSING SUBSCRIPTION CHECKOUT:", session.id);
+
+  try {
+    if (session.payment_status !== 'paid') {
+      console.warn("⚠️ Subscription payment not confirmed, skipping");
+      return;
+    }
+
+    // Get customer email from session
+    const customerEmail = session.customer_email || session.customer_details?.email;
+    if (!customerEmail) {
+      throw new Error("No customer email found in session");
+    }
+
+    console.log("📧 Customer email:", customerEmail);
+
+    // Find user by email
+    const { data: userData, error: userError } = await supabaseClient.auth.admin.listUsers();
+    if (userError) {
+      console.error("❌ Error fetching users:", userError);
+      throw userError;
+    }
+
+    const user = userData.users.find((u: any) => u.email === customerEmail);
+    if (!user) {
+      console.error("❌ User not found for email:", customerEmail);
+      throw new Error(`User not found for email: ${customerEmail}`);
+    }
+
+    console.log("👤 Found user:", user.id);
+
+    // Get subscription details from Stripe
+    if (session.subscription) {
+      const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+      await updateUserSubscription(subscription, user.id, supabaseClient);
+    }
+
+    console.log("✅ Subscription checkout processed successfully");
+
+  } catch (error) {
+    console.error("❌ SUBSCRIPTION CHECKOUT ERROR:", error);
+    throw error;
+  }
+}
+
+// Handle subscription created/updated
+async function handleSubscriptionUpdated(subscription: Stripe.Subscription, supabaseClient: any) {
+  console.log("🔄 PROCESSING SUBSCRIPTION UPDATE:", subscription.id);
+
+  try {
+    // Get customer email
+    const customer = await stripe.customers.retrieve(subscription.customer as string);
+    if (!customer || customer.deleted) {
+      throw new Error("Customer not found or deleted");
+    }
+
+    const customerEmail = (customer as Stripe.Customer).email;
+    if (!customerEmail) {
+      throw new Error("Customer email not found");
+    }
+
+    // Find user by email
+    const { data: userData, error: userError } = await supabaseClient.auth.admin.listUsers();
+    if (userError) throw userError;
+
+    const user = userData.users.find((u: any) => u.email === customerEmail);
+    if (!user) {
+      console.error("❌ User not found for email:", customerEmail);
+      return;
+    }
+
+    await updateUserSubscription(subscription, user.id, supabaseClient);
+    console.log("✅ Subscription updated successfully");
+
+  } catch (error) {
+    console.error("❌ SUBSCRIPTION UPDATE ERROR:", error);
+    throw error;
+  }
+}
+
+// Handle subscription cancelled
+async function handleSubscriptionCancelled(subscription: Stripe.Subscription, supabaseClient: any) {
+  console.log("❌ PROCESSING SUBSCRIPTION CANCELLATION:", subscription.id);
+
+  try {
+    // Get customer email
+    const customer = await stripe.customers.retrieve(subscription.customer as string);
+    if (!customer || customer.deleted) {
+      throw new Error("Customer not found or deleted");
+    }
+
+    const customerEmail = (customer as Stripe.Customer).email;
+    if (!customerEmail) {
+      throw new Error("Customer email not found");
+    }
+
+    // Find user by email
+    const { data: userData, error: userError } = await supabaseClient.auth.admin.listUsers();
+    if (userError) throw userError;
+
+    const user = userData.users.find((u: any) => u.email === customerEmail);
+    if (!user) {
+      console.error("❌ User not found for email:", customerEmail);
+      return;
+    }
+
+    // Get free plan
+    const { data: freePlan, error: planError } = await supabaseClient
+      .from('subscription_plans')
+      .select('id')
+      .eq('name', 'Free')
+      .single();
+
+    if (planError) throw planError;
+
+    // Update user subscription to free
+    await supabaseClient
+      .from('user_subscriptions')
+      .upsert({
+        user_id: user.id,
+        plan_id: freePlan.id,
+        stripe_customer_id: subscription.customer,
+        stripe_subscription_id: null,
+        status: 'cancelled',
+        current_period_start: null,
+        current_period_end: null,
+        cancel_at_period_end: false,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
+
+    console.log("✅ Subscription cancelled, user moved to free plan");
+
+  } catch (error) {
+    console.error("❌ SUBSCRIPTION CANCELLATION ERROR:", error);
+    throw error;
+  }
+}
+
+// Handle successful payment (for recurring billing)
+async function handlePaymentSucceeded(invoice: Stripe.Invoice, supabaseClient: any) {
+  console.log("💰 PROCESSING PAYMENT SUCCESS:", invoice.id);
+
+  try {
+    if (invoice.subscription) {
+      const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+      
+      // Get customer email
+      const customer = await stripe.customers.retrieve(subscription.customer as string);
+      if (!customer || customer.deleted) {
+        throw new Error("Customer not found or deleted");
+      }
+
+      const customerEmail = (customer as Stripe.Customer).email;
+      if (!customerEmail) {
+        throw new Error("Customer email not found");
+      }
+
+      // Find user by email
+      const { data: userData, error: userError } = await supabaseClient.auth.admin.listUsers();
+      if (userError) throw userError;
+
+      const user = userData.users.find((u: any) => u.email === customerEmail);
+      if (!user) {
+        console.error("❌ User not found for email:", customerEmail);
+        return;
+      }
+
+      await updateUserSubscription(subscription, user.id, supabaseClient);
+      console.log("✅ Payment processed, subscription updated");
+    }
+
+  } catch (error) {
+    console.error("❌ PAYMENT SUCCESS ERROR:", error);
+    throw error;
+  }
+}
+
+// Handle failed payment
+async function handlePaymentFailed(invoice: Stripe.Invoice, supabaseClient: any) {
+  console.log("❌ PROCESSING PAYMENT FAILURE:", invoice.id);
+
+  try {
+    if (invoice.subscription) {
+      const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+      
+      // Get customer email
+      const customer = await stripe.customers.retrieve(subscription.customer as string);
+      if (!customer || customer.deleted) {
+        throw new Error("Customer not found or deleted");
+      }
+
+      const customerEmail = (customer as Stripe.Customer).email;
+      if (!customerEmail) {
+        throw new Error("Customer email not found");
+      }
+
+      // Find user by email
+      const { data: userData, error: userError } = await supabaseClient.auth.admin.listUsers();
+      if (userError) throw userError;
+
+      const user = userData.users.find((u: any) => u.email === customerEmail);
+      if (!user) {
+        console.error("❌ User not found for email:", customerEmail);
+        return;
+      }
+
+      // Update subscription status to past_due
+      await supabaseClient
+        .from('user_subscriptions')
+        .update({
+          status: 'past_due',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id);
+
+      console.log("⚠️ Payment failed, subscription marked as past_due");
+    }
+
+  } catch (error) {
+    console.error("❌ PAYMENT FAILURE ERROR:", error);
+    throw error;
+  }
+}
+
+// Helper function to update user subscription
+async function updateUserSubscription(subscription: Stripe.Subscription, userId: string, supabaseClient: any) {
+  console.log("🔄 UPDATING USER SUBSCRIPTION:", subscription.id, "for user:", userId);
+
+  try {
+    // Get premium plan
+    const { data: premiumPlan, error: planError } = await supabaseClient
+      .from('subscription_plans')
+      .select('id')
+      .eq('name', 'Premium')
+      .single();
+
+    if (planError) throw planError;
+
+    // Update user subscription
+    await supabaseClient
+      .from('user_subscriptions')
+      .upsert({
+        user_id: userId,
+        plan_id: premiumPlan.id,
+        stripe_customer_id: subscription.customer,
+        stripe_subscription_id: subscription.id,
+        status: subscription.status,
+        current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+        cancel_at_period_end: subscription.cancel_at_period_end,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
+
+    console.log("✅ User subscription updated successfully");
+
+  } catch (error) {
+    console.error("❌ UPDATE SUBSCRIPTION ERROR:", error);
+    throw error;
   }
 }
