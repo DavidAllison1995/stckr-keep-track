@@ -11,7 +11,8 @@ import MaintenanceTaskForm from '@/components/maintenance/MaintenanceTaskForm';
 import TaskEditDialog from '@/components/maintenance/TaskEditDialog';
 import { Plus, Calendar, CheckCircle2, Clock, AlertTriangle, Trash2, Edit, CalendarPlus } from 'lucide-react';
 import { calculateTaskStatus, getStatusLabel, getStatusColor, getStatusBorderColor } from '@/utils/taskStatus';
-import { generateICSFile } from '@/utils/calendarExport';
+import { generateICSFile, addToNativeCalendar } from '@/utils/calendarExport';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ItemMaintenanceTabProps {
   itemId: string;
@@ -21,6 +22,7 @@ interface ItemMaintenanceTabProps {
 const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps) => {
   const { tasks, updateTask, deleteTask } = useSupabaseMaintenance();
   const { getItemById } = useSupabaseItems();
+  const isMobile = useIsMobile();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);
   const [editingTask, setEditingTask] = useState<any>(null);
@@ -63,7 +65,11 @@ const ItemMaintenanceTab = ({ itemId, highlightTaskId }: ItemMaintenanceTabProps
   };
 
   const handleAddToCalendar = (task: any) => {
-    generateICSFile(task, item?.name);
+    if (isMobile) {
+      addToNativeCalendar(task, item?.name);
+    } else {
+      generateICSFile(task, item?.name);
+    }
   };
 
   const getTaskIcon = (task: any) => {

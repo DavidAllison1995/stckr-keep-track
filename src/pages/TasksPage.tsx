@@ -5,9 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, Package, CalendarPlus } from 'lucide-react';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
-import { generateICSFile } from '@/utils/calendarExport';
+import { generateICSFile, addToNativeCalendar } from '@/utils/calendarExport';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const TasksPage = () => {
+  const isMobile = useIsMobile();
   const { status } = useParams<{ status: string }>();
   const navigate = useNavigate();
   const { getTasksByStatus } = useSupabaseMaintenance();
@@ -66,7 +68,11 @@ const TasksPage = () => {
   const handleAddToCalendar = (task: any, e: React.MouseEvent) => {
     e.stopPropagation();
     const assignedItem = task.item_id ? getItemById(task.item_id) : null;
-    generateICSFile(task, assignedItem?.name);
+    if (isMobile) {
+      addToNativeCalendar(task, assignedItem?.name);
+    } else {
+      generateICSFile(task, assignedItem?.name);
+    }
   };
 
   const formatDate = (dateString: string) => {

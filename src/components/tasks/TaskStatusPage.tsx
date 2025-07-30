@@ -8,7 +8,8 @@ import { ArrowLeft, CalendarPlus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LucideIcon } from 'lucide-react';
 import { calculateTaskStatus, getStatusLabel, getStatusColor } from '@/utils/taskStatus';
-import { generateICSFile } from '@/utils/calendarExport';
+import { generateICSFile, addToNativeCalendar } from '@/utils/calendarExport';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface TaskStatusPageProps {
   title: string;
@@ -29,6 +30,7 @@ const TaskStatusPage = ({
   emptyStateMessage, 
   emptyStateEmoji 
 }: TaskStatusPageProps) => {
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { tasks, isLoading } = useSupabaseMaintenance();
   const { getItemById } = useSupabaseItems();
@@ -58,7 +60,11 @@ const TaskStatusPage = ({
   const handleAddToCalendar = (task: any, e: React.MouseEvent) => {
     e.stopPropagation();
     const assignedItem = task.item_id ? getItemById(task.item_id) : null;
-    generateICSFile(task, assignedItem?.name);
+    if (isMobile) {
+      addToNativeCalendar(task, assignedItem?.name);
+    } else {
+      generateICSFile(task, assignedItem?.name);
+    }
   };
 
   if (isLoading) {
