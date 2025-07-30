@@ -184,6 +184,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       return {};
     } catch (error: any) {
+      console.error('Google Sign-In error:', error);
       const message = error?.message || 'An unexpected error occurred during Google sign-in';
       toast({
         title: 'Google Sign-In Failed',
@@ -231,7 +232,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       return {};
     } catch (error: any) {
-      console.error('Apple Sign-In exception:', error);
+      console.error('Apple Sign-In error:', error);
       const message = error?.message || 'An unexpected error occurred during Apple sign-in';
       toast({
         title: 'Apple Sign-In Failed',

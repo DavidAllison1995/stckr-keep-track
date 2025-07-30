@@ -7,7 +7,10 @@ const firebaseConfig = {
   projectId: "stckr-keep-track",
   storageBucket: "stckr-keep-track.appspot.com",
   messagingSenderId: "1004044323466",
-  appId: "1:1004044323466:web:abc123def456"
+  appId: "1:1004044323466:web:abc123def456",
+  // Required for Android
+  androidClientId: "1004044323466-android.apps.googleusercontent.com",
+  iosClientId: "1004044323466-ios.apps.googleusercontent.com"
 };
 
 // Initialize Firebase
