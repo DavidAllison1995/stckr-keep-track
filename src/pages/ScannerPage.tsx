@@ -112,32 +112,32 @@ const ScannerPage = () => {
         </Button>
       </div>
 
-      {/* Secondary Action Buttons - Smaller and Less Prominent */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {/* Secondary Action Buttons - Icon Only, Side by Side */}
+      <div className="flex justify-center gap-4">
         {hasPrintableFile ? (
           <div className="text-center">
             <Button 
               onClick={handlePrintAtHome}
               disabled={isGeneratingPDF}
               variant="outline"
-              className="w-full border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white font-medium rounded-lg px-4 py-2 transition-colors duration-200 text-sm"
+              size="icon"
+              className="w-12 h-12 border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition-colors duration-200"
             >
-              <Printer className="w-4 h-4 mr-2" />
-              {isGeneratingPDF ? 'Downloading...' : 'Print at Home'}
+              <Printer className="w-5 h-5" />
             </Button>
-            <p className="text-xs text-gray-500 mt-1">Download printable sticker sheet</p>
+            <p className="text-xs text-gray-500 mt-1">Print at Home</p>
           </div>
         ) : (
           <div className="text-center">
             <Button 
               disabled
               variant="outline"
-              className="w-full border-gray-700 text-gray-500 cursor-not-allowed font-medium rounded-lg px-4 py-2 text-sm"
+              size="icon"
+              className="w-12 h-12 border-gray-700 text-gray-500 cursor-not-allowed rounded-lg"
             >
-              <Printer className="w-4 h-4 mr-2" />
-              Print at Home
+              <Printer className="w-5 h-5" />
             </Button>
-            <p className="text-xs text-red-400 mt-2">Print file currently unavailable</p>
+            <p className="text-xs text-red-400 mt-1">Unavailable</p>
           </div>
         )}
         
@@ -145,12 +145,12 @@ const ScannerPage = () => {
           <Button 
             onClick={() => navigate('/shop')} 
             variant="outline"
-            className="w-full border-purple-600 text-purple-400 hover:bg-purple-800 hover:text-white font-medium rounded-lg px-4 py-2 transition-colors duration-200 text-sm"
+            size="icon"
+            className="w-12 h-12 border-purple-600 text-purple-400 hover:bg-purple-800 hover:text-white rounded-lg transition-colors duration-200"
           >
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            Buy Stickers
+            <ShoppingCart className="w-5 h-5" />
           </Button>
-          <p className="text-xs text-gray-500 mt-1">Ready-made stickers delivered</p>
+          <p className="text-xs text-gray-500 mt-1">Buy Stickers</p>
         </div>
       </div>
 
