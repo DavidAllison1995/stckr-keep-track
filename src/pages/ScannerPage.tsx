@@ -100,37 +100,39 @@ const ScannerPage = () => {
         </div>
       </div>
 
-      {/* Start Scanner Button - Top Priority */}
-      <div className="text-center">
+      {/* Start Scanner Button - Main Feature */}
+      <div className="text-center mb-8">
         <Button 
           onClick={handleStartScan} 
           size="lg" 
-          className="bg-[#9333ea] hover:bg-[#a855f7] text-white font-semibold px-8 py-4 rounded-xl shadow-lg transition-all duration-200 hover:scale-105"
+          className="bg-[#9333ea] hover:bg-[#a855f7] text-white font-bold px-12 py-6 rounded-2xl shadow-2xl transition-all duration-200 hover:scale-105 text-lg"
         >
-          <QrCode className="w-6 h-6 mr-3" />
+          <QrCode className="w-8 h-8 mr-4" />
           Start Scanner
         </Button>
       </div>
 
-      {/* Action Buttons - Side by Side */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Secondary Action Buttons - Smaller and Less Prominent */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {hasPrintableFile ? (
           <div className="text-center">
             <Button 
               onClick={handlePrintAtHome}
               disabled={isGeneratingPDF}
-              className="w-full bg-gray-700 text-white font-semibold rounded-xl px-6 py-3 hover:bg-gray-600 transition-colors duration-200 shadow-lg"
+              variant="outline"
+              className="w-full border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white font-medium rounded-lg px-4 py-2 transition-colors duration-200 text-sm"
             >
               <Printer className="w-4 h-4 mr-2" />
               {isGeneratingPDF ? 'Downloading...' : 'Print at Home'}
             </Button>
-            <p className="text-xs text-gray-400 mt-2">Download printable sticker sheet</p>
+            <p className="text-xs text-gray-500 mt-1">Download printable sticker sheet</p>
           </div>
         ) : (
           <div className="text-center">
             <Button 
               disabled
-              className="w-full bg-gray-600 text-gray-400 font-semibold rounded-xl px-6 py-3 cursor-not-allowed"
+              variant="outline"
+              className="w-full border-gray-700 text-gray-500 cursor-not-allowed font-medium rounded-lg px-4 py-2 text-sm"
             >
               <Printer className="w-4 h-4 mr-2" />
               Print at Home
@@ -142,12 +144,13 @@ const ScannerPage = () => {
         <div className="text-center">
           <Button 
             onClick={() => navigate('/shop')} 
-            className="w-full bg-[#9333ea] text-white font-semibold rounded-xl px-6 py-3 hover:bg-[#a855f7] transition-colors duration-200 shadow-lg"
+            variant="outline"
+            className="w-full border-purple-600 text-purple-400 hover:bg-purple-800 hover:text-white font-medium rounded-lg px-4 py-2 transition-colors duration-200 text-sm"
           >
             <ShoppingCart className="w-4 h-4 mr-2" />
             Buy Stickers
           </Button>
-          <p className="text-xs text-gray-400 mt-2">Ready-made stickers delivered</p>
+          <p className="text-xs text-gray-500 mt-1">Ready-made stickers delivered</p>
         </div>
       </div>
 
