@@ -4,6 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Capacitor } from '@capacitor/core';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 
 
 interface AuthContextType {
@@ -140,23 +141,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithGoogle = async (): Promise<{ error?: string }> => {
     try {
-      // Temporarily use web OAuth for all platforms due to dependency issues
-      // TODO: Implement native Google Sign In after resolving Capacitor 7 compatibility
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
+      if (Capacitor.isNativePlatform()) {
+        // Use Firebase Authentication for native platforms
+        const result = await FirebaseAuthentication.signInWithGoogle();
+        
+        if (result.credential?.idToken) {
+          // Sign in to Supabase with the Firebase ID token
+          const { error } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: result.credential.idToken,
+          });
 
-      if (error) {
-        throw error;
+          if (error) {
+            throw error;
+          }
+
+          toast({
+            title: 'Success!',
+            description: 'Successfully signed in with Google.',
+          });
+        } else {
+          throw new Error('No ID token received from Google');
+        }
+      } else {
+        // Use web OAuth for web platform
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/dashboard`,
+          },
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        toast({
+          title: 'Redirecting...',
+          description: 'You will be redirected to Google for authentication.',
+        });
       }
-
-      toast({
-        title: 'Redirecting...',
-        description: 'You will be redirected to Google for authentication.',
-      });
 
       return {};
     } catch (error: any) {
@@ -172,14 +196,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithApple = async () => {
     try {
-      // Temporarily use web OAuth for all platforms due to dependency issues
-      // TODO: Implement native Apple Sign In after resolving compatibility
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'apple',
-      });
+      if (Capacitor.isNativePlatform()) {
+        // Use Firebase Authentication for native platforms
+        const result = await FirebaseAuthentication.signInWithApple();
+        
+        if (result.credential?.idToken) {
+          // Sign in to Supabase with the Firebase ID token
+          const { error } = await supabase.auth.signInWithIdToken({
+            provider: 'apple',
+            token: result.credential.idToken,
+          });
 
-      if (error) {
-        throw error;
+          if (error) {
+            throw error;
+          }
+
+          toast({
+            title: 'Success!',
+            description: 'Successfully signed in with Apple.',
+          });
+        } else {
+          throw new Error('No ID token received from Apple');
+        }
+      } else {
+        // Use web OAuth for web platform
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'apple',
+        });
+
+        if (error) {
+          throw error;
+        }
       }
 
       return {};
