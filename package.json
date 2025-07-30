@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@capacitor-community/apple-sign-in": "^7.0.1",
-    "@capacitor-firebase/authentication": "^7.3.0",
     "@capacitor/android": "^7.4.0",
     "@capacitor/app": "^7.0.1",
     "@capacitor/browser": "^7.0.1",
@@ -60,7 +59,6 @@
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
-    "firebase": "^11.10.0",
     "framer-motion": "^12.18.1",
     "input-otp": "^1.2.4",
     "jspdf": "^3.0.1",

@@ -48,10 +48,6 @@ const config: CapacitorConfig = {
     SignInWithApple: {
       clientId: 'com.stckr.supabase.oauth',
       redirectURI: 'https://cudftlquaydissmvqjmv.supabase.co/auth/v1/callback'
-    },
-    FirebaseAuthentication: {
-      skipNativeAuth: false,
-      providers: ["google.com", "apple.com"]
     }
   }
 };
