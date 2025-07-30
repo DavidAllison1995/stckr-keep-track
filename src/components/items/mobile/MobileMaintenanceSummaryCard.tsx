@@ -29,6 +29,18 @@ const MobileMaintenanceSummaryCard = ({
     }
   };
 
+  const handleNextTaskClick = () => {
+    if (onTabChange) {
+      onTabChange('tasks');
+    }
+  };
+
+  const handleRecentCompletedClick = () => {
+    if (onTabChange) {
+      onTabChange('tasks');
+    }
+  };
+
   if (!nextTask && !recentCompleted) {
     return null;
   }
@@ -62,7 +74,10 @@ const MobileMaintenanceSummaryCard = ({
       </CardHeader>
       <CardContent className="space-y-3">
         {nextTask && (
-          <div className="bg-amber-900/20 border border-amber-600/30 rounded-lg p-3">
+          <button 
+            onClick={handleNextTaskClick}
+            className="w-full bg-amber-900/20 border border-amber-600/30 rounded-lg p-3 hover:bg-amber-900/30 transition-colors text-left"
+          >
             <div className="flex items-start gap-2 mb-2">
               <Clock className="w-4 h-4 text-amber-400 mt-0.5" />
               <div className="flex-1 min-w-0">
@@ -75,11 +90,14 @@ const MobileMaintenanceSummaryCard = ({
                 {nextTask.status.replace('_', ' ')}
               </Badge>
             </div>
-          </div>
+          </button>
         )}
 
         {recentCompleted && (
-          <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3">
+          <button 
+            onClick={handleRecentCompletedClick}
+            className="w-full bg-green-900/20 border border-green-600/30 rounded-lg p-3 hover:bg-green-900/30 transition-colors text-left"
+          >
             <div className="flex items-start gap-2">
               <CheckCircle className="w-4 h-4 text-green-400 mt-0.5" />
               <div className="flex-1 min-w-0">
@@ -89,7 +107,7 @@ const MobileMaintenanceSummaryCard = ({
                 </p>
               </div>
             </div>
-          </div>
+          </button>
         )}
       </CardContent>
     </Card>
