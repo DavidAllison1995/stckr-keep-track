@@ -27,6 +27,7 @@ import QRRedirectPage from "./pages/QRRedirectPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import SupportPage from "./pages/SupportPage";
 import PremiumPage from "./pages/PremiumPage";
+import CameraTestPage from "./pages/CameraTestPage";
 
 // Route components
 import PublicRoutes from "./routes/PublicRoutes";
@@ -309,6 +310,20 @@ function App() {
                           <CartProviderWrapper>
                             <ProtectedLayout>
                               <SettingsPage />
+                            </ProtectedLayout>
+                          </CartProviderWrapper>
+                        </ProtectedRoute>
+                      } 
+                    />
+                    
+                    {/* Camera Test Page */}
+                    <Route 
+                      path="/camera-test" 
+                      element={
+                        <ProtectedRoute>
+                          <CartProviderWrapper>
+                            <ProtectedLayout>
+                              <CameraTestPage />
                             </ProtectedLayout>
                           </CartProviderWrapper>
                         </ProtectedRoute>

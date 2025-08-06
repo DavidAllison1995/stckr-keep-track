@@ -123,43 +123,55 @@ const ImageUpload = ({ currentImageUrl, onImageChange, userId, itemId, disabled 
         return;
       }
 
-      // Import camera permissions check
-      const { Camera: CameraPermissions } = await import('@capacitor/camera');
-      
-      // Check camera permissions first (critical for iPad stability)
-      try {
-        const permissionStatus = await CameraPermissions.checkPermissions();
-        
-        if (permissionStatus.camera === 'denied') {
-          // Request permission if denied
-          const requestResult = await CameraPermissions.requestPermissions();
-          if (requestResult.camera !== 'granted') {
-            toast({
-              title: 'Camera permission required',
-              description: 'Please allow camera access in Settings to take photos',
-              variant: 'destructive',
-            });
-            return;
-          }
-        }
-      } catch (permError) {
-        console.warn('Permission check failed:', permError);
-        // Continue anyway for older iOS versions that don't support permission API
-      }
-
       // Set uploading state to prevent multiple calls
       setIsUploading(true);
 
-      // Use Capacitor Camera API for mobile devices with iPad-safe options
+      // Check camera permissions first - critical for both iOS and Android
+      console.log('Checking camera permissions...');
+      const permissionStatus = await CapacitorCamera.checkPermissions();
+      console.log('Permission status:', permissionStatus);
+      
+      if (permissionStatus.camera !== 'granted') {
+        console.log('Requesting camera permissions...');
+        const requestResult = await CapacitorCamera.requestPermissions();
+        console.log('Permission request result:', requestResult);
+        
+        if (requestResult.camera !== 'granted') {
+          toast({
+            title: 'Camera permission required',
+            description: 'Please allow camera access in Settings to take photos',
+            variant: 'destructive',
+          });
+          return;
+        }
+      }
+
+      // Check photo library permissions for iOS
+      if (permissionStatus.photos !== 'granted') {
+        console.log('Requesting photo library permissions...');
+        const photoRequestResult = await CapacitorCamera.requestPermissions();
+        console.log('Photo permission request result:', photoRequestResult);
+      }
+
+      console.log('Launching camera...');
+      // Use Capacitor Camera API with proper error handling
       const image = await CapacitorCamera.getPhoto({
-        quality: 80,
+        quality: 85,
         allowEditing: false,
         resultType: CameraResultType.Base64,
         source: CameraSource.Camera,
-        // iPad-specific: Use prompt instead of popover for better compatibility
         presentationStyle: 'fullscreen',
-        // Ensure proper cleanup and memory management
         saveToGallery: false,
+        // Force camera mode - don't show picker
+        promptLabelHeader: 'Take Photo',
+        promptLabelCancel: 'Cancel',
+        promptLabelPhoto: 'From Gallery',
+        promptLabelPicture: 'Take Picture',
+      });
+
+      console.log('Photo captured successfully:', {
+        hasBase64: !!image.base64String,
+        format: image.format
       });
 
       if (image.base64String) {
@@ -169,31 +181,34 @@ const ImageUpload = ({ currentImageUrl, onImageChange, userId, itemId, disabled 
           `photo_${Date.now()}.${image.format || 'jpg'}`
         );
 
+        console.log('Converting and uploading photo...');
         // Process the file
         await handleFileSelect(file);
+      } else {
+        throw new Error('No image data received from camera');
       }
     } catch (error) {
-      console.error('Camera error:', error);
+      console.error('Camera error details:', error);
       
-      // Handle specific error cases with more detailed iPad error handling
+      // Handle specific error cases
       if (error && typeof error === 'object' && 'message' in error) {
         const errorMessage = (error as { message: string }).message.toLowerCase();
         
-        if (errorMessage.includes('cancelled') || errorMessage.includes('canceled')) {
-          // User cancelled, no need to show error
+        if (errorMessage.includes('cancelled') || errorMessage.includes('canceled') || errorMessage.includes('user cancelled')) {
+          console.log('User cancelled camera');
           return;
         }
         
-        if (errorMessage.includes('permission') || errorMessage.includes('denied')) {
+        if (errorMessage.includes('permission') || errorMessage.includes('denied') || errorMessage.includes('not authorized')) {
           toast({
-            title: 'Camera permission required',
-            description: 'Please allow camera access in Settings to take photos',
+            title: 'Camera permission denied',
+            description: 'Please enable camera access in your device Settings > Privacy > Camera',
             variant: 'destructive',
           });
           return;
         }
 
-        if (errorMessage.includes('unavailable') || errorMessage.includes('not available')) {
+        if (errorMessage.includes('unavailable') || errorMessage.includes('not available') || errorMessage.includes('not supported')) {
           toast({
             title: 'Camera not available',
             description: 'Camera is not available on this device. Please choose from gallery instead.',
@@ -202,10 +217,19 @@ const ImageUpload = ({ currentImageUrl, onImageChange, userId, itemId, disabled 
           return;
         }
 
-        if (errorMessage.includes('busy') || errorMessage.includes('in use')) {
+        if (errorMessage.includes('busy') || errorMessage.includes('in use') || errorMessage.includes('already in use')) {
           toast({
             title: 'Camera busy',
-            description: 'Camera is currently in use. Please try again in a moment.',
+            description: 'Camera is currently in use by another app. Please close other apps and try again.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        if (errorMessage.includes('timeout') || errorMessage.includes('timed out')) {
+          toast({
+            title: 'Camera timeout',
+            description: 'Camera failed to start within expected time. Please try again.',
             variant: 'destructive',
           });
           return;

@@ -46,40 +46,53 @@ const CapacitorQRScanner = ({ onScan, onClose }: CapacitorQRScannerProps) => {
       setIsLoading(true);
       setError('');
 
-      // Check camera permissions first (critical for iPad stability)
-      try {
-        const permissionStatus = await CapacitorCamera.checkPermissions();
+      // Check camera permissions first - critical for both iOS and Android
+      console.log('QR Scanner: Checking camera permissions...');
+      const permissionStatus = await CapacitorCamera.checkPermissions();
+      console.log('QR Scanner: Permission status:', permissionStatus);
+      
+      if (permissionStatus.camera !== 'granted') {
+        console.log('QR Scanner: Requesting camera permissions...');
+        const requestResult = await CapacitorCamera.requestPermissions();
+        console.log('QR Scanner: Permission request result:', requestResult);
         
-        if (permissionStatus.camera === 'denied') {
-          const requestResult = await CapacitorCamera.requestPermissions();
-          if (requestResult.camera !== 'granted') {
-            setError('Camera permission is required to scan QR codes. Please allow camera access in Settings.');
-            return;
-          }
+        if (requestResult.camera !== 'granted') {
+          setError('Camera permission is required to scan QR codes. Please enable camera access in Settings > Privacy > Camera.');
+          return;
         }
-      } catch (permError) {
-        console.warn('Permission check failed:', permError);
-        // Continue anyway for older iOS versions
       }
 
-      // Use Capacitor Camera API for mobile devices with iPad-safe options
+      console.log('QR Scanner: Launching camera...');
+      // Use Capacitor Camera API for mobile devices with proper error handling
       const image = await CapacitorCamera.getPhoto({
-        quality: 90,
+        quality: 95, // Higher quality for better QR detection
         allowEditing: false,
         resultType: CameraResultType.Base64,
         source: CameraSource.Camera,
-        // iPad-specific: Use fullscreen for better compatibility
         presentationStyle: 'fullscreen',
         saveToGallery: false,
+        // Force camera mode
+        promptLabelHeader: 'Scan QR Code',
+        promptLabelCancel: 'Cancel',
+        promptLabelPhoto: 'From Gallery',
+        promptLabelPicture: 'Take Picture',
+      });
+
+      console.log('QR Scanner: Photo captured:', {
+        hasBase64: !!image.base64String,
+        format: image.format
       });
 
       if (image.base64String) {
+        console.log('QR Scanner: Processing image for QR codes...');
         // Convert base64 to ImageData and scan for QR code
         const imageData = await base64ToImageData(image.base64String);
-        const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
+        const qrCode = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: 'dontInvert', // Performance optimization
+        });
 
         if (qrCode) {
-          console.log('QR Code detected:', qrCode.data);
+          console.log('QR Scanner: QR Code detected:', qrCode.data);
           setScanComplete(true);
           
           // Haptic feedback
@@ -91,38 +104,50 @@ const CapacitorQRScanner = ({ onScan, onClose }: CapacitorQRScannerProps) => {
           setTimeout(() => onScan(qrCode.data), 500);
           return;
         } else {
-          // No QR code found, allow retry
-          setError('No QR code found in the image. Please try again.');
+          console.log('QR Scanner: No QR code found in image');
+          setError('No QR code found in the image. Please ensure the QR code is clearly visible and try again.');
           setIsLoading(false);
           return;
         }
+      } else {
+        throw new Error('No image data received from camera');
       }
     } catch (error: any) {
-      console.error('Capacitor camera error:', error);
+      console.error('QR Scanner: Capacitor camera error:', error);
       setIsLoading(false);
       
       // Handle specific error cases
       if (error && typeof error === 'object' && 'message' in error) {
-        const errorMessage = error.message;
+        const errorMessage = error.message.toLowerCase();
         
-        if (errorMessage.includes('cancelled') || errorMessage.includes('canceled')) {
-          // User cancelled, just close
+        if (errorMessage.includes('cancelled') || errorMessage.includes('canceled') || errorMessage.includes('user cancelled')) {
+          console.log('QR Scanner: User cancelled');
           onClose();
           return;
         }
         
-        if (errorMessage.includes('permission')) {
-          setError('Camera permission is required to scan QR codes. Please allow camera access in your device settings.');
+        if (errorMessage.includes('permission') || errorMessage.includes('denied') || errorMessage.includes('not authorized')) {
+          setError('Camera permission denied. Please enable camera access in Settings > Privacy > Camera and try again.');
           return;
         }
         
-        if (errorMessage.includes('not available')) {
-          setError('Camera is not available on this device.');
+        if (errorMessage.includes('unavailable') || errorMessage.includes('not available') || errorMessage.includes('not supported')) {
+          setError('Camera is not available on this device or is currently in use by another app.');
+          return;
+        }
+
+        if (errorMessage.includes('busy') || errorMessage.includes('in use')) {
+          setError('Camera is currently busy. Please close other apps using the camera and try again.');
+          return;
+        }
+
+        if (errorMessage.includes('timeout')) {
+          setError('Camera failed to start. Please try again.');
           return;
         }
       }
       
-      setError('Failed to access camera. Please try again.');
+      setError('Failed to access camera. Please check that camera permissions are enabled and try again.');
     }
   }, [onScan, onClose]);
 
