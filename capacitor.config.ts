@@ -48,9 +48,6 @@ const config: CapacitorConfig = {
     SignInWithApple: {
       clientId: 'com.stckr.keeptrack',
       redirectURI: 'https://cudftlquaydissmvqjmv.supabase.co/auth/v1/callback'
-    },
-    GoogleOneTapAuth: {
-      googleWebClientId: 'YOUR_GOOGLE_WEB_CLIENT_ID'
     }
   }
 };

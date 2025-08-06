@@ -141,57 +141,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithGoogle = async (): Promise<{ error?: string }> => {
     try {
-      // Use native Google Sign-In on mobile platforms
-      if (Capacitor.isNativePlatform()) {
-        const { GoogleOneTapAuth } = await import('capacitor-native-google-one-tap-signin');
-        
-        // Initialize the plugin first
-        await GoogleOneTapAuth.initialize({ 
-          clientId: 'YOUR_GOOGLE_WEB_CLIENT_ID' 
-        });
-        
-        // Try auto or one-tap sign in
-        const result = await GoogleOneTapAuth.tryAutoOrOneTapSignIn();
-        
-        if (result.isSuccess && result.success?.idToken) {
-          const { error } = await supabase.auth.signInWithIdToken({
-            provider: 'google',
-            token: result.success.idToken,
-          });
-
-          if (error) {
-            throw error;
-          }
-
-          toast({
-            title: 'Success!',
-            description: 'Successfully signed in with Google.',
-          });
-
-          return {};
-        } else {
-          throw new Error('Google Sign-In was cancelled or failed');
-        }
-      } else {
-        // Use Supabase OAuth for web platforms
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/dashboard`,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
           },
-        });
+        },
+      });
 
-        if (error) {
-          throw error;
-        }
-
-        toast({
-          title: 'Redirecting...',
-          description: 'You will be redirected to Google for authentication.',
-        });
-
-        return {};
+      if (error) {
+        throw error;
       }
+
+      toast({
+        title: 'Opening Google Sign-In...',
+        description: 'Please complete the sign-in process.',
+      });
+
+      return {};
     } catch (error: any) {
       console.error('Google Sign-In error:', error);
       const message = error?.message || 'An unexpected error occurred during Google sign-in';
@@ -208,6 +178,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       // Use native Apple Sign-In on mobile platforms
       if (Capacitor.isNativePlatform()) {
+        console.log('Starting Apple Sign-In on native platform...');
+        
         const result = await SignInWithApple.authorize({
           clientId: 'com.stckr.keeptrack',
           redirectURI: 'https://cudftlquaydissmvqjmv.supabase.co/auth/v1/callback',
@@ -215,13 +187,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           state: 'signin'
         });
 
+        console.log('Apple Sign-In result:', result);
+
         if (result.response && result.response.identityToken) {
+          console.log('Apple identity token received, authenticating with Supabase...');
+          
           const { error } = await supabase.auth.signInWithIdToken({
             provider: 'apple',
             token: result.response.identityToken,
           });
 
           if (error) {
+            console.error('Supabase Apple auth error:', error);
             throw error;
           }
 
@@ -232,6 +209,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
           return {};
         } else {
+          console.error('Apple Sign-In failed - no identity token received');
           throw new Error('Apple Sign-In was cancelled or failed');
         }
       } else {
