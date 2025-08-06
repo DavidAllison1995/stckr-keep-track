@@ -28,6 +28,7 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import SupportPage from "./pages/SupportPage";
 import PremiumPage from "./pages/PremiumPage";
 import CameraTestPage from "./pages/CameraTestPage";
+import NativeAuthTestPage from "./components/auth/NativeAuthTestPage";
 
 // Route components
 import PublicRoutes from "./routes/PublicRoutes";
@@ -324,6 +325,20 @@ function App() {
                           <CartProviderWrapper>
                             <ProtectedLayout>
                               <CameraTestPage />
+                            </ProtectedLayout>
+                          </CartProviderWrapper>
+                        </ProtectedRoute>
+                      } 
+                    />
+                    
+                    {/* Native Auth Test Page */}
+                    <Route 
+                      path="/native-auth-test" 
+                      element={
+                        <ProtectedRoute>
+                          <CartProviderWrapper>
+                            <ProtectedLayout>
+                              <NativeAuthTestPage />
                             </ProtectedLayout>
                           </CartProviderWrapper>
                         </ProtectedRoute>

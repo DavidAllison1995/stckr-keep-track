@@ -59,6 +59,11 @@ const config: CapacitorConfig = {
     SignInWithApple: {
       clientId: 'com.stckr.keeptrack',
       redirectURI: 'https://cudftlquaydissmvqjmv.supabase.co/auth/v1/callback'
+    },
+    GoogleAuth: {
+      scopes: ['profile', 'email'],
+      serverClientId: '1049043334764-p0c5vpjqt1n2nvddvo9lbdbdnfnuafnq.apps.googleusercontent.com',
+      forceCodeForRefreshToken: true,
     }
   }
 };
