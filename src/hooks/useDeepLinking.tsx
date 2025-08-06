@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useDeepLinking = () => {
   const navigate = useNavigate();
@@ -21,6 +22,26 @@ export const useDeepLinking = () => {
       if (url.protocol === 'stckr:') {
         const path = url.pathname;
         console.log('Deep link path:', path);
+        
+        // Handle OAuth callback
+        if (path === '/login-callback' || event.url.includes('login-callback')) {
+          console.log('OAuth callback received');
+          try {
+            // Extract tokens from URL and exchange for session
+            const urlParams = new URLSearchParams(url.search);
+            const code = urlParams.get('code');
+            
+            if (code) {
+              console.log('Processing OAuth code exchange');
+              navigate('/dashboard');
+            } else {
+              console.log('No OAuth code found in callback');
+            }
+          } catch (error) {
+            console.error('Error processing OAuth callback:', error);
+          }
+          return;
+        }
         
         // Handle different deep link paths
         if (path.startsWith('/items/')) {

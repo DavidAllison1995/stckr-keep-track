@@ -143,13 +143,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signInWithGoogle = async (): Promise<{ error?: string }> => {
     try {
       if (Capacitor.isNativePlatform()) {
-        console.log('Starting native Google Sign-In with in-app browser...');
+        console.log('Starting native Google Sign-In with custom scheme...');
         
-        // Use Capacitor Browser for in-app OAuth flow
+        // Use custom scheme for mobile OAuth callback
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: `${window.location.origin}/dashboard`,
+            redirectTo: 'stckr://login-callback',
           },
         });
 
@@ -204,7 +204,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Perform native Apple Sign-In directly
         const result = await SignInWithApple.authorize({
           clientId: 'com.stckr.keeptrack',
-          redirectURI: 'https://cudftlquaydissmvqjmv.supabase.co/auth/v1/callback',
+          redirectURI: 'stckr://login-callback',
           scopes: 'email name',
         });
         
