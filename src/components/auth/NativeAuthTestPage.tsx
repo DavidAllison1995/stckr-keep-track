@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Phone, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { Browser } from '@capacitor/browser';
 import { SignInWithApple } from '@capacitor-community/apple-sign-in';
 import { getAuthConfig } from '@/utils/nativeAuthSetup';
 
@@ -53,24 +53,18 @@ const NativeAuthTestPage = () => {
       return;
     }
 
-    // Test Google Auth Plugin
+    // Test Browser Plugin for OAuth
     try {
-      await GoogleAuth.initialize({
-        clientId: '1049043334764-p0c5vpjqt1n2nvddvo9lbdbdnfnuafnq.apps.googleusercontent.com',
-        scopes: ['profile', 'email'],
-        grantOfflineAccess: true,
-      });
-      
       addResult({
-        test: 'Google Auth Plugin',
+        test: 'Browser Plugin',
         status: 'success',
-        message: 'Google Auth plugin initialized successfully'
+        message: 'Browser plugin is available for OAuth flows'
       });
     } catch (error) {
       addResult({
-        test: 'Google Auth Plugin',
+        test: 'Browser Plugin',
         status: 'error',
-        message: 'Google Auth plugin initialization failed',
+        message: 'Browser plugin not available',
         details: error
       });
     }
@@ -106,41 +100,17 @@ const NativeAuthTestPage = () => {
   const testGoogleSignIn = async () => {
     try {
       addResult({
-        test: 'Google Sign-In Test',
+        test: 'Google OAuth Test',
         status: 'warning',
-        message: 'Starting Google Sign-In flow...'
+        message: 'OAuth flows now use browser-based authentication'
       });
-
-      const result = await GoogleAuth.signIn();
-      
-      addResult({
-        test: 'Google Sign-In Test',
-        status: 'success',
-        message: `Google Sign-In successful for ${result.email}`,
-        details: { 
-          email: result.email, 
-          name: result.name,
-          hasIdToken: !!result.authentication?.idToken
-        }
-      });
-
-      // Sign out immediately
-      await GoogleAuth.signOut();
     } catch (error: any) {
-      if (error.message?.includes('cancelled')) {
-        addResult({
-          test: 'Google Sign-In Test',
-          status: 'warning',
-          message: 'Google Sign-In was cancelled by user'
-        });
-      } else {
-        addResult({
-          test: 'Google Sign-In Test',
-          status: 'error',
-          message: 'Google Sign-In failed',
-          details: error
-        });
-      }
+      addResult({
+        test: 'Google OAuth Test',
+        status: 'error',
+        message: 'OAuth test failed',
+        details: error
+      });
     }
   };
 
@@ -254,7 +224,7 @@ const NativeAuthTestPage = () => {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Button onClick={testGoogleSignIn} className="bg-blue-600 hover:bg-blue-700">
-                  Test Google Sign-In
+                  Test OAuth Flow
                 </Button>
                 {Capacitor.getPlatform() === 'ios' && (
                   <Button onClick={testAppleSignIn} className="bg-gray-700 hover:bg-gray-800">
