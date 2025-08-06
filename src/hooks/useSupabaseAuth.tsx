@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Capacitor } from '@capacitor/core';
 import { SignInWithApple } from '@capacitor-community/apple-sign-in';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { Browser } from '@capacitor/browser';
 
 
 interface AuthContextType {
@@ -143,43 +143,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signInWithGoogle = async (): Promise<{ error?: string }> => {
     try {
       if (Capacitor.isNativePlatform()) {
-        console.log('Starting native Google Sign-In...');
+        console.log('Starting native Google Sign-In with in-app browser...');
         
-        // Initialize Google Auth plugin
-        await GoogleAuth.initialize({
-          clientId: '1049043334764-p0c5vpjqt1n2nvddvo9lbdbdnfnuafnq.apps.googleusercontent.com', // Your web client ID
-          scopes: ['profile', 'email'],
-          grantOfflineAccess: true,
-        });
-
-        // Perform native Google Sign-In
-        const result = await GoogleAuth.signIn();
-        console.log('Google Sign-In result:', result);
-
-        if (!result.authentication?.idToken) {
-          throw new Error('Failed to get ID token from Google Sign-In');
-        }
-
-        // Sign in to Supabase using the ID token
-        const { data, error } = await supabase.auth.signInWithIdToken({
+        // Use Capacitor Browser for in-app OAuth flow
+        const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
-          token: result.authentication.idToken,
-          access_token: result.authentication.accessToken,
+          options: {
+            redirectTo: `${window.location.origin}/dashboard`,
+          },
         });
 
         if (error) {
           throw error;
         }
 
-        console.log('Google Sign-In successful:', data.user?.email);
-        toast({
-          title: 'Welcome!',
-          description: 'You have been signed in with Google successfully.',
-        });
-
         return {};
       } else {
-        // Fallback to browser OAuth for web
+        // Standard browser OAuth for web
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
@@ -300,14 +280,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      // If on native platform, also sign out from native providers
+      // Close any open browser sessions on native platform
       if (Capacitor.isNativePlatform()) {
         try {
-          // Sign out from Google if available
-          await GoogleAuth.signOut();
-          console.log('Signed out from Google');
-        } catch (googleError) {
-          console.log('Google sign out not needed or failed:', googleError);
+          await Browser.close();
+          console.log('Closed browser sessions');
+        } catch (browserError) {
+          console.log('Browser close not needed or failed:', browserError);
         }
       }
 

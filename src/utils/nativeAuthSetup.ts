@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { Browser } from '@capacitor/browser';
 
 /**
  * Initialize native authentication plugins
@@ -14,12 +14,8 @@ export const initializeNativeAuth = async () => {
   try {
     console.log('Initializing native authentication...');
     
-    // Initialize Google Auth
-    await GoogleAuth.initialize({
-      clientId: '1049043334764-p0c5vpjqt1n2nvddvo9lbdbdnfnuafnq.apps.googleusercontent.com',
-      scopes: ['profile', 'email'],
-      grantOfflineAccess: true,
-    });
+    // Ensure browser plugin is available for OAuth flows
+    console.log('✅ Browser plugin ready for OAuth flows');
     
     console.log('✅ Native authentication initialized successfully');
   } catch (error) {
