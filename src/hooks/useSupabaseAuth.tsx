@@ -141,24 +141,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithGoogle = async (): Promise<{ error?: string }> => {
     try {
-      // For mobile platforms, use the Browser plugin to handle OAuth
+      // Use native Google Sign-In on mobile platforms
       if (Capacitor.isNativePlatform()) {
-        const { Browser } = await import('@capacitor/browser');
+        const { GoogleOneTapAuth } = await import('capacitor-native-google-one-tap-signin');
         
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/dashboard`,
-            skipBrowserRedirect: true,
-          },
+        // Initialize the plugin first
+        await GoogleOneTapAuth.initialize({ 
+          clientId: 'YOUR_GOOGLE_WEB_CLIENT_ID' 
         });
+        
+        // Try auto or one-tap sign in
+        const result = await GoogleOneTapAuth.tryAutoOrOneTapSignIn();
+        
+        if (result.isSuccess && result.success?.idToken) {
+          const { error } = await supabase.auth.signInWithIdToken({
+            provider: 'google',
+            token: result.success.idToken,
+          });
 
-        if (error) {
-          throw error;
+          if (error) {
+            throw error;
+          }
+
+          toast({
+            title: 'Success!',
+            description: 'Successfully signed in with Google.',
+          });
+
+          return {};
+        } else {
+          throw new Error('Google Sign-In was cancelled or failed');
         }
-
-        // The auth flow will continue in the browser
-        return {};
       } else {
         // Use Supabase OAuth for web platforms
         const { error } = await supabase.auth.signInWithOAuth({
@@ -195,22 +208,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       // Use native Apple Sign-In on mobile platforms
       if (Capacitor.isNativePlatform()) {
-        // Generate a random nonce for security
-        const nonce = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-        
         const result = await SignInWithApple.authorize({
-          clientId: 'com.stckr.supabase.oauth',
+          clientId: 'com.stckr.keeptrack',
           redirectURI: 'https://cudftlquaydissmvqjmv.supabase.co/auth/v1/callback',
           scopes: 'name email',
-          state: 'state',
-          nonce: nonce
+          state: 'signin'
         });
 
         if (result.response && result.response.identityToken) {
           const { error } = await supabase.auth.signInWithIdToken({
             provider: 'apple',
             token: result.response.identityToken,
-            nonce: nonce
           });
 
           if (error) {
