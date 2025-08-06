@@ -173,24 +173,57 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithApple = async () => {
     try {
-      // Use Supabase OAuth for both web and native platforms
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'apple',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
+      // Use native Apple Sign-In on mobile platforms
+      if (Capacitor.isNativePlatform()) {
+        
+        const result = await SignInWithApple.authorize({
+          clientId: 'com.stckr.supabase.oauth',
+          redirectURI: 'https://cudftlquaydissmvqjmv.supabase.co/auth/v1/callback',
+          scopes: 'name email',
+          state: 'state',
+          nonce: 'nonce'
+        });
 
-      if (error) {
-        throw error;
+        if (result.response && result.response.identityToken) {
+          const { error } = await supabase.auth.signInWithIdToken({
+            provider: 'apple',
+            token: result.response.identityToken,
+            nonce: 'nonce'
+          });
+
+          if (error) {
+            throw error;
+          }
+
+          toast({
+            title: 'Success!',
+            description: 'Successfully signed in with Apple.',
+          });
+
+          return {};
+        } else {
+          throw new Error('Failed to get Apple identity token');
+        }
+      } else {
+        // Use Supabase OAuth for web platforms
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'apple',
+          options: {
+            redirectTo: `${window.location.origin}/dashboard`,
+          },
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        toast({
+          title: 'Redirecting...',
+          description: 'You will be redirected to Apple for authentication.',
+        });
+
+        return {};
       }
-
-      toast({
-        title: 'Redirecting...',
-        description: 'You will be redirected to Apple for authentication.',
-      });
-
-      return {};
     } catch (error: any) {
       console.error('Apple Sign-In error:', error);
       const message = error?.message || 'An unexpected error occurred during Apple sign-in';
