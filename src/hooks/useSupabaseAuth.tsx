@@ -141,32 +141,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithGoogle = async (): Promise<{ error?: string }> => {
     try {
-      // Use native Google Sign-In on mobile platforms
+      // For mobile platforms, use the Browser plugin to handle OAuth
       if (Capacitor.isNativePlatform()) {
-        const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
+        const { Browser } = await import('@capacitor/browser');
         
-        const result = await GoogleAuth.signIn();
-        
-        if (result.authentication?.idToken) {
-          const { error } = await supabase.auth.signInWithIdToken({
-            provider: 'google',
-            token: result.authentication.idToken,
-            access_token: result.authentication.accessToken,
-          });
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/dashboard`,
+            skipBrowserRedirect: true,
+          },
+        });
 
-          if (error) {
-            throw error;
-          }
-
-          toast({
-            title: 'Success!',
-            description: 'Successfully signed in with Google.',
-          });
-
-          return {};
-        } else {
-          throw new Error('Failed to get Google authentication tokens');
+        if (error) {
+          throw error;
         }
+
+        // The auth flow will continue in the browser
+        return {};
       } else {
         // Use Supabase OAuth for web platforms
         const { error } = await supabase.auth.signInWithOAuth({
