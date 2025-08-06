@@ -9,9 +9,20 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'automatic',
     infoPlist: {
-      NSCameraUsageDescription: 'This app uses the camera to take photos of your items for easy identification and organization.',
-      NSPhotoLibraryUsageDescription: 'This app accesses your photo library to let you select and attach photos to your items for better organization.',
-      NSPhotoLibraryAddUsageDescription: 'This app saves photos you take to your photo library for backup and easy access.'
+      NSCameraUsageDescription: 'STCKR uses the camera to take photos of your items for easy identification, organization, and QR code scanning to track your belongings.',
+      NSPhotoLibraryUsageDescription: 'STCKR accesses your photo library to let you select and attach photos to your items for better organization and visual identification of your belongings.',
+      NSPhotoLibraryAddUsageDescription: 'STCKR saves photos you take to your photo library for backup and easy access to your item documentation.',
+      NSLocationWhenInUseUsageDescription: 'STCKR may use your location to help organize items by location for better tracking and management.',
+      NSMicrophoneUsageDescription: 'STCKR may access the microphone for camera functionality when taking photos of your items.',
+      NSContactsUsageDescription: 'STCKR may access contacts to enable sharing item information with trusted contacts.',
+      NSCalendarsUsageDescription: 'STCKR accesses your calendar to schedule and track maintenance reminders for your items.',
+      NSRemindersUsageDescription: 'STCKR accesses reminders to create maintenance alerts and notifications for your tracked items.',
+      CFBundleURLTypes: [
+        {
+          CFBundleURLName: 'STCKR OAuth',
+          CFBundleURLSchemes: ['stckr', 'com.stckr.keeptrack']
+        }
+      ]
     }
   },
   plugins: {
