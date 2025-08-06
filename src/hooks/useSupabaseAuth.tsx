@@ -141,14 +141,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithGoogle = async (): Promise<{ error?: string }> => {
     try {
+      // Use Supabase OAuth for both web and mobile
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/dashboard`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
         },
       });
 
@@ -157,7 +154,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       toast({
-        title: 'Opening Google Sign-In...',
+        title: 'Redirecting to Google...',
         description: 'Please complete the sign-in process.',
       });
 
@@ -176,42 +173,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithApple = async () => {
     try {
-      // Use native Apple Sign-In on mobile platforms
+      // Check if we're on a native platform
       if (Capacitor.isNativePlatform()) {
         console.log('Starting Apple Sign-In on native platform...');
         
-        const result = await SignInWithApple.authorize({
-          clientId: 'com.stckr.keeptrack',
-          redirectURI: 'https://cudftlquaydissmvqjmv.supabase.co/auth/v1/callback',
-          scopes: 'name email',
-          state: 'signin'
+        // For now, fallback to web OAuth until native setup is complete
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'apple',
+          options: {
+            redirectTo: `${window.location.origin}/dashboard`,
+          },
         });
 
-        console.log('Apple Sign-In result:', result);
-
-        if (result.response && result.response.identityToken) {
-          console.log('Apple identity token received, authenticating with Supabase...');
-          
-          const { error } = await supabase.auth.signInWithIdToken({
-            provider: 'apple',
-            token: result.response.identityToken,
-          });
-
-          if (error) {
-            console.error('Supabase Apple auth error:', error);
-            throw error;
-          }
-
-          toast({
-            title: 'Success!',
-            description: 'Successfully signed in with Apple.',
-          });
-
-          return {};
-        } else {
-          console.error('Apple Sign-In failed - no identity token received');
-          throw new Error('Apple Sign-In was cancelled or failed');
+        if (error) {
+          throw error;
         }
+
+        toast({
+          title: 'Redirecting to Apple...',
+          description: 'Please complete the sign-in process.',
+        });
+
+        return {};
       } else {
         // Use Supabase OAuth for web platforms
         const { error } = await supabase.auth.signInWithOAuth({
@@ -243,7 +226,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { error: message };
     }
   };
-
   const logout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
