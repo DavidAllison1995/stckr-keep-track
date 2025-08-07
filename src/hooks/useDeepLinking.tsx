@@ -19,7 +19,7 @@ export const useDeepLinking = () => {
       // Parse the deep link URL
       const url = new URL(event.url);
       
-      if (url.protocol === 'stckr:') {
+      if (url.protocol === 'com.stckr.keeptrack:' || url.protocol === 'stckr:') {
         const path = url.pathname;
         console.log('Deep link path:', path);
         

@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
-import { Browser } from '@capacitor/browser';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { SignInWithApple } from '@capacitor-community/apple-sign-in';
 
 /**
  * Initialize native authentication plugins
@@ -14,8 +15,18 @@ export const initializeNativeAuth = async () => {
   try {
     console.log('Initializing native authentication...');
     
-    // Ensure browser plugin is available for OAuth flows
-    console.log('✅ Browser plugin ready for OAuth flows');
+    // Initialize Google Auth
+    await GoogleAuth.initialize({
+      clientId: '1049043334764-p0c5vpjqt1n2nvddvo9lbdbdnfnuafnq.apps.googleusercontent.com',
+      scopes: ['profile', 'email'],
+      grantOfflineAccess: true,
+    });
+    console.log('✅ GoogleAuth plugin initialized');
+    
+    // Initialize Apple Sign-In (iOS only)
+    if (Capacitor.getPlatform() === 'ios') {
+      console.log('✅ AppleSignIn plugin enabled');
+    }
     
     console.log('✅ Native authentication initialized successfully');
   } catch (error) {

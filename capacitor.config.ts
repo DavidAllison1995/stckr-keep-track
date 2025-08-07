@@ -26,6 +26,15 @@ const config: CapacitorConfig = {
     }
   },
   plugins: {
+    GoogleAuth: {
+      scopes: ['profile', 'email'],
+      serverClientId: '1049043334764-p0c5vpjqt1n2nvddvo9lbdbdnfnuafnq.apps.googleusercontent.com',
+      forceCodeForRefreshToken: true
+    },
+    SignInWithApple: {
+      clientId: 'com.stckr.keeptrack',
+      redirectURI: 'com.stckr.keeptrack://callback'
+    },
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"]
     },
@@ -40,28 +49,25 @@ const config: CapacitorConfig = {
     },
     App: {
       handleUrl: {
-        customScheme: 'stckr'
+        customScheme: 'com.stckr.keeptrack'
       }
     },
     Browser: {
-      // OAuth redirect handling
+      // OAuth redirect handling for web fallback
     },
     Camera: {
-      // Use default camera for better iOS compatibility
       iosUseDefaultImagePicker: false,
-      // Enhanced permissions for iOS
       enableBackup: false,
       permissions: ['camera', 'photos']
     },
     Purchases: {
       // RevenueCat configuration
-    },
-    SignInWithApple: {
-      clientId: 'com.stckr.keeptrack',
-      redirectURI: 'https://cudftlquaydissmvqjmv.supabase.co/auth/v1/callback'
-    },
-    Browser: {
-      // OAuth redirect handling for in-app flows
+    }
+  },
+  cordova: {
+    preferences: {
+      AndroidScheme: 'com.stckr.keeptrack',
+      IOSUrlScheme: 'com.stckr.keeptrack'
     }
   }
 };
