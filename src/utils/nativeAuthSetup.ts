@@ -21,9 +21,11 @@ export const initializeNativeAuth = async () => {
     
     // Initialize Apple Sign-In (iOS only)
     if (Capacitor.getPlatform() === 'ios') {
-      // Apple Sign-In doesn't require explicit initialization for v5.x
+      // Apple Sign-In v7 doesn't require explicit initialization
       console.log('✅ AppleSignIn plugin ready');
     }
+    
+    console.log('✅ Purchases plugin ready');
     
     console.log('✅ Native authentication initialized successfully');
   } catch (error) {
