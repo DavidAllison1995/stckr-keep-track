@@ -9,9 +9,9 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'automatic',
     infoPlist: {
-      NSCameraUsageDescription: 'STCKR uses the camera to take photos of your items for easy identification, organization, and QR code scanning to track your belongings.',
-      NSPhotoLibraryUsageDescription: 'STCKR accesses your photo library to let you select and attach photos to your items for better organization and visual identification of your belongings.',
-      NSPhotoLibraryAddUsageDescription: 'STCKR saves photos you take to your photo library for backup and easy access to your item documentation.',
+      NSCameraUsageDescription: 'STCKR uses the camera to take photos of your items for easy identification, organization, and QR code scanning to track your belongings. Camera access enables you to capture high-quality images for item documentation and maintenance records. The app may use camera reaction effects (AVCaptureDevice.reactionEffectGesturesEnabled) to enhance the photo-taking experience.',
+      NSPhotoLibraryUsageDescription: 'STCKR accesses your photo library to let you select existing photos and attach them to your items for better organization and visual identification of your belongings. This allows you to use photos you\'ve already taken to document your items without needing to retake them.',
+      NSPhotoLibraryAddUsageDescription: 'STCKR saves photos you take of your items to your photo library for backup and easy access to your item documentation. This ensures your item photos are safely stored and accessible outside the app.',
       NSLocationWhenInUseUsageDescription: 'STCKR may use your location to help organize items by location for better tracking and management.',
       NSMicrophoneUsageDescription: 'STCKR may access the microphone for camera functionality when taking photos of your items.',
       NSContactsUsageDescription: 'STCKR may access contacts to enable sharing item information with trusted contacts.',
