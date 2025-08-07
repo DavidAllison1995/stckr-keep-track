@@ -219,6 +219,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           clientId: 'com.stckr.keeptrack',
           redirectURI: 'com.stckr.keeptrack://callback',
           scopes: 'email name',
+          state: 'com.stckr.keeptrack',
         });
         
          console.log('Apple Sign-In result:', result);
