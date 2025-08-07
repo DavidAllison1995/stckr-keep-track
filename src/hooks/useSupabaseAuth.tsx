@@ -216,10 +216,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         // Perform native Apple Sign-In directly
         const result = await SignInWithApple.authorize({
-          clientId: 'com.stckr.keeptrack',
+          clientId: 'com.stckr.keeptrack.service',
           redirectURI: 'com.stckr.keeptrack://callback',
           scopes: 'email name',
-          state: 'com.stckr.keeptrack',
+          state: 'com.stckr.keeptrack'
         });
         
          console.log('Apple Sign-In result:', result);

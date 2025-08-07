@@ -33,8 +33,8 @@ const config: CapacitorConfig = {
       redirectUri: 'com.stckr.keeptrack://callback'
     },
     SignInWithApple: {
-      clientId: 'com.stckr.keeptrack',
-      redirectURI: 'com.stckr.keeptrack://callback'
+      clientId: 'com.stckr.keeptrack.service',
+      redirectUri: 'com.stckr.keeptrack://callback'
     },
     PushNotifications: {
       presentationOptions: ["badge", "sound", "alert"]
