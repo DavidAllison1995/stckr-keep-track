@@ -221,7 +221,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           scopes: 'email name',
         });
         
-        console.log('Apple Sign-In result:', result);
+         console.log('Apple Sign-In result:', result);
 
         if (!result.response?.identityToken) {
           throw new Error('Failed to get identity token from Apple Sign-In');
@@ -230,7 +230,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Sign in to Supabase using the identity token
         const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'apple',
-          token: result.response?.identityToken,
+          token: result.response.identityToken,
         });
 
         if (error) {

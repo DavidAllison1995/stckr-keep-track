@@ -24,19 +24,14 @@ export const useDeepLinking = () => {
         console.log('Deep link path:', path);
         
         // Handle OAuth callback
-        if (path === '/login-callback' || event.url.includes('login-callback')) {
+        if ((path === '/callback' || path === '/login-callback') || 
+            (url.host === 'callback' || event.url.includes('callback'))) {
           console.log('OAuth callback received');
           try {
-            // Extract tokens from URL and exchange for session
-            const urlParams = new URLSearchParams(url.search);
-            const code = urlParams.get('code');
-            
-            if (code) {
-              console.log('Processing OAuth code exchange');
-              navigate('/dashboard');
-            } else {
-              console.log('No OAuth code found in callback');
-            }
+            // For native OAuth flows, the plugins handle token exchange automatically
+            // Just navigate to dashboard on successful callback
+            console.log('Processing OAuth callback - navigating to dashboard');
+            navigate('/dashboard');
           } catch (error) {
             console.error('Error processing OAuth callback:', error);
           }

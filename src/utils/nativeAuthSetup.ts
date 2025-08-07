@@ -15,17 +15,14 @@ export const initializeNativeAuth = async () => {
   try {
     console.log('Initializing native authentication...');
     
-    // Initialize Google Auth
-    await GoogleAuth.initialize({
-      clientId: '1049043334764-p0c5vpjqt1n2nvddvo9lbdbdnfnuafnq.apps.googleusercontent.com',
-      scopes: ['profile', 'email'],
-      grantOfflineAccess: true,
-    });
+    // Initialize Google Auth (uses config from capacitor.config.ts)
+    await GoogleAuth.initialize();
     console.log('✅ GoogleAuth plugin initialized');
     
     // Initialize Apple Sign-In (iOS only)
     if (Capacitor.getPlatform() === 'ios') {
-      console.log('✅ AppleSignIn plugin enabled');
+      // Apple Sign-In doesn't require explicit initialization
+      console.log('✅ AppleSignIn plugin ready');
     }
     
     console.log('✅ Native authentication initialized successfully');
