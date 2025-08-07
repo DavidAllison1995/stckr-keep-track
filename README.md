@@ -109,10 +109,10 @@ This app uses Capacitor 7 for mobile deployment:
 
 The app supports multiple authentication methods:
 - Email/password
-- Google Sign-In (OAuth2 flow compatible with Capacitor 7)
-- Apple Sign-In (iOS only)
+- Google Sign-In (OAuth2 flow via Supabase)
+- Apple Sign-In (OAuth2 flow via Supabase)
 
-**Important**: Google Sign-In now uses Supabase OAuth with `@capacitor/browser` for Capacitor 7 compatibility. The previous `@codetrix-studio/capacitor-google-auth` plugin has been removed as it was incompatible with Capacitor 7.
+**Authentication**: OAuth flows use Supabase's built-in OAuth providers with `@capacitor/browser` for stable cross-platform compatibility.
 
 ### Environment Setup
 
