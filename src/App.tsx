@@ -29,7 +29,6 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import SupportPage from "./pages/SupportPage";
 import PremiumPage from "./pages/PremiumPage";
 import CameraTestPage from "./pages/CameraTestPage";
-import NativeAuthTestPage from "./components/auth/NativeAuthTestPage";
 
 // Route components
 import PublicRoutes from "./routes/PublicRoutes";
@@ -44,8 +43,6 @@ import ProtectedLayout from "./components/layouts/ProtectedLayout";
 import { GlobalQRScannerProvider } from "./contexts/GlobalQRScannerContext";
 import { useShop } from "./hooks/useShop";
 import { useDeepLinking } from "./hooks/useDeepLinking";
-import { useNativeAuth } from "./hooks/useNativeAuth";
-import { initializeNativeAuth } from "./utils/nativeAuthSetup";
 
 const queryClient = new QueryClient();
 
@@ -70,13 +67,6 @@ const CartProviderWrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
-  useNativeAuth(); // Initialize native OAuth
-  
-  // Initialize native auth plugins on app startup
-  React.useEffect(() => {
-    initializeNativeAuth();
-  }, []);
-  
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -338,19 +328,6 @@ function App() {
                       } 
                     />
                     
-                    {/* Native Auth Test Page */}
-                    <Route 
-                      path="/native-auth-test" 
-                      element={
-                        <ProtectedRoute>
-                          <CartProviderWrapper>
-                            <ProtectedLayout>
-                              <NativeAuthTestPage />
-                            </ProtectedLayout>
-                          </CartProviderWrapper>
-                        </ProtectedRoute>
-                      } 
-                    />
                     
                     {/* Shop routes - now wrapped with CartProvider in ShopRoutes */}
                     <Route 
