@@ -3,10 +3,9 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Capacitor } from '@capacitor/core';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
-import { SignInWithApple } from '@capacitor-community/apple-sign-in';
 import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
+import { useWebViewAuth } from './useWebViewAuth';
 
 
 interface AuthContextType {
@@ -19,6 +18,10 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<{ error?: string }>;
   signInWithApple: () => Promise<{ error?: string }>;
   logout: () => Promise<void>;
+  isAuthModalVisible: boolean;
+  authProvider: 'google' | 'apple';
+  handleAuthSuccess: (url: string) => void;
+  handleAuthCancel: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,6 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const webViewAuth = useWebViewAuth();
 
   useEffect(() => {
     let mounted = true;
@@ -141,156 +145,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signInWithGoogle = async (): Promise<{ error?: string }> => {
-    try {
-      if (Capacitor.isNativePlatform()) {
-        console.log('Starting native Google Sign-In...');
-        
-        // Use native Google Auth plugin
-        const result = await GoogleAuth.signIn();
-        console.log('Google Sign-In result:', result);
+  const signInWithGoogle = webViewAuth.signInWithGoogle;
 
-        if (!result.authentication?.idToken) {
-          throw new Error('Failed to get ID token from Google Sign-In');
-        }
-
-        // Sign in to Supabase using the ID token
-        const { data, error } = await supabase.auth.signInWithIdToken({
-          provider: 'google',
-          token: result.authentication.idToken,
-        });
-
-        if (error) {
-          throw error;
-        }
-
-        console.log('Google Sign-In successful:', data.user?.email);
-        toast({
-          title: 'Welcome!',
-          description: 'You have been signed in with Google successfully.',
-        });
-
-        return {};
-      } else {
-        // Standard browser OAuth for web
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/dashboard`,
-          },
-        });
-
-        if (error) {
-          throw error;
-        }
-
-        toast({
-          title: 'Redirecting to Google...',
-          description: 'Please complete the sign-in process.',
-        });
-
-        return {};
-      }
-    } catch (error: any) {
-      console.error('Google Sign-In error:', error);
-      
-      // Handle specific Google Auth errors
-      if (error.message?.includes('popup_closed_by_user') || error.message?.includes('cancelled')) {
-        return { error: 'Sign-in was cancelled' };
-      }
-      
-      const message = error?.message || 'An unexpected error occurred during Google sign-in';
-      toast({
-        title: 'Google Sign-In Failed',
-        description: message,
-        variant: 'destructive',
-      });
-      return { error: message };
-    }
-  };
-
-  const signInWithApple = async () => {
-    try {
-      if (Capacitor.isNativePlatform()) {
-        console.log('Starting native Apple Sign-In...');
-        
-        // Perform native Apple Sign-In directly
-        const result = await SignInWithApple.authorize({
-          clientId: 'com.stckr.keeptrack.service',
-          redirectURI: 'com.stckr.keeptrack://callback',
-          scopes: 'email name',
-          state: 'com.stckr.keeptrack'
-        });
-        
-         console.log('Apple Sign-In result:', result);
-
-        if (!result.response?.identityToken) {
-          throw new Error('Failed to get identity token from Apple Sign-In');
-        }
-
-        // Sign in to Supabase using the identity token
-        const { data, error } = await supabase.auth.signInWithIdToken({
-          provider: 'apple',
-          token: result.response.identityToken,
-        });
-
-        if (error) {
-          throw error;
-        }
-
-        console.log('Apple Sign-In successful:', data.user?.email);
-        toast({
-          title: 'Welcome!',
-          description: 'You have been signed in with Apple successfully.',
-        });
-
-        return {};
-      } else {
-        // Fallback to browser OAuth for web
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'apple',
-          options: {
-            redirectTo: `${window.location.origin}/dashboard`,
-          },
-        });
-
-        if (error) {
-          throw error;
-        }
-
-        toast({
-          title: 'Redirecting...',
-          description: 'You will be redirected to Apple for authentication.',
-        });
-
-        return {};
-      }
-    } catch (error: any) {
-      console.error('Apple Sign-In error:', error);
-      
-      // Handle specific Apple Auth errors
-      if (error.message?.includes('cancelled') || error.message?.includes('canceled')) {
-        return { error: 'Sign-in was cancelled' };
-      }
-      
-      if (error.message?.includes('not available')) {
-        toast({
-          title: 'Apple Sign-In Unavailable',
-          description: 'Apple Sign-In is not available on this device. Please use email/password or Google Sign-In.',
-          variant: 'destructive',
-        });
-        return { error: 'Apple Sign-In not available on this device' };
-      }
-      
-      const message = error?.message || 'An unexpected error occurred during Apple sign-in';
-      toast({
-        title: 'Apple Sign-In Failed',
-        description: message,
-        variant: 'destructive',
-      });
-      return { error: message };
-    }
-  };
+  const signInWithApple = webViewAuth.signInWithApple;
 
   const logout = async () => {
     try {
@@ -337,6 +194,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signInWithGoogle,
     signInWithApple,
     logout,
+    // Expose WebView auth modal state for components to use
+    isAuthModalVisible: webViewAuth.isAuthModalVisible,
+    authProvider: webViewAuth.authProvider,
+    handleAuthSuccess: webViewAuth.handleAuthSuccess,
+    handleAuthCancel: webViewAuth.handleAuthCancel,
   };
 
   return (

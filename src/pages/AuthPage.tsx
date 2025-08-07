@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Mail, Lock, User, QrCode, Eye, EyeOff, Info } from 'lucide-react';
+import { AuthModal } from '@/components/auth/AuthModal';
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -21,7 +22,11 @@ const AuthPage = () => {
     login,
     signup,
     signInWithGoogle,
-    signInWithApple
+    signInWithApple,
+    isAuthModalVisible,
+    authProvider,
+    handleAuthSuccess,
+    handleAuthCancel
   } = useSupabaseAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -392,6 +397,14 @@ const AuthPage = () => {
             </CardContent>
           </Card>
         </div>
+        
+        {/* WebView Auth Modal */}
+        <AuthModal
+          provider={authProvider}
+          visible={isAuthModalVisible}
+          onSuccess={handleAuthSuccess}
+          onCancel={handleAuthCancel}
+        />
       </div>
     </TooltipProvider>
   );

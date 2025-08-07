@@ -23,18 +23,12 @@ export const useDeepLinking = () => {
         const path = url.pathname;
         console.log('Deep link path:', path);
         
-        // Handle OAuth callback
+        // Handle OAuth callback for WebView flow
         if ((path === '/callback' || path === '/login-callback') || 
             (url.host === 'callback' || event.url.includes('callback'))) {
-          console.log('OAuth callback received');
-          try {
-            // For native OAuth flows, the plugins handle token exchange automatically
-            // Just navigate to dashboard on successful callback
-            console.log('Processing OAuth callback - navigating to dashboard');
-            navigate('/dashboard');
-          } catch (error) {
-            console.error('Error processing OAuth callback:', error);
-          }
+          console.log('OAuth callback received for WebView flow');
+          // This will be handled by AuthModal's URL monitoring
+          // No navigation needed as the modal will close and handle success
           return;
         }
         
