@@ -24,54 +24,52 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const supabaseUrl = 'https://cudftlquaydissmvqjmv.supabase.co';
   const redirectUrl = Capacitor.isNativePlatform() 
     ? 'com.stckr.keeptrack://callback'
-    : `${window.location.origin}/`;
+    : `${window.location.origin}/auth`;
 
   const handleStartAuth = async () => {
     setLoading(true);
     
     const authUrl = `${supabaseUrl}/auth/v1/authorize?provider=${provider}&redirect_to=${encodeURIComponent(redirectUrl)}`;
+    console.log('Starting OAuth flow with URL:', authUrl);
     
     if (Capacitor.isNativePlatform()) {
       try {
-        await Browser.open({
-          url: authUrl,
-          windowName: '_self'
-        });
+        console.log('Opening OAuth in native browser...');
         
-        // Listen for app URL open events
+        // Set up app URL listener first
         const { App } = await import('@capacitor/app');
-        App.addListener('appUrlOpen', (event) => {
-          if (event.url.startsWith('com.stckr.keeptrack://callback')) {
-            Browser.close();
+        
+        const handleAppUrl = (event: { url: string }) => {
+          console.log('Deep link received:', event.url);
+          if (event.url.startsWith('com.stckr.keeptrack://')) {
+            console.log('OAuth callback detected, closing browser and processing...');
+            Browser.close().catch(console.error);
             onSuccess(event.url);
             App.removeAllListeners();
           }
+        };
+        
+        App.addListener('appUrlOpen', handleAppUrl);
+        
+        await Browser.open({
+          url: authUrl,
+          windowName: '_self',
+          toolbarColor: '#ffffff',
+          presentationStyle: 'popover'
         });
+        
+        setLoading(false);
       } catch (error) {
         console.error('Failed to open browser:', error);
         setLoading(false);
+        onCancel();
       }
     } else {
-      // Web fallback - use iframe
-      setWebViewUrl(authUrl);
+      // Web fallback - standard OAuth redirect
+      console.log('Web platform detected, using standard redirect...');
+      window.location.href = authUrl;
     }
   };
-
-  const handleWebMessage = (event: MessageEvent) => {
-    if (event.origin === supabaseUrl) {
-      const url = event.data.url || window.location.href;
-      if (url.includes('access_token') || url.includes('code')) {
-        onSuccess(url);
-      }
-    }
-  };
-
-  React.useEffect(() => {
-    if (visible && !Capacitor.isNativePlatform()) {
-      window.addEventListener('message', handleWebMessage);
-      return () => window.removeEventListener('message', handleWebMessage);
-    }
-  }, [visible]);
 
   React.useEffect(() => {
     if (visible) {
@@ -98,30 +96,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </div>
         
         <div className="p-4">
-          {loading && Capacitor.isNativePlatform() ? (
-            <div className="flex flex-col items-center justify-center py-8 space-y-4">
-              <Loader2 className="h-8 w-8 animate-spin" />
-              <p className="text-sm text-muted-foreground">
-                Opening {provider === 'google' ? 'Google' : 'Apple'} sign in...
+          <div className="flex flex-col items-center justify-center py-8 space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <p className="text-sm text-muted-foreground text-center">
+              {Capacitor.isNativePlatform() 
+                ? `Opening ${provider === 'google' ? 'Google' : 'Apple'} sign in...`
+                : 'Redirecting to authentication...'
+              }
+            </p>
+            {Capacitor.isNativePlatform() && (
+              <p className="text-xs text-muted-foreground text-center">
+                Complete the sign-in process in the browser that opens, then return to this app.
               </p>
-            </div>
-          ) : !Capacitor.isNativePlatform() && webViewUrl ? (
-            <div className="w-full h-96 border rounded-lg overflow-hidden">
-              <iframe
-                src={webViewUrl}
-                className="w-full h-full"
-                title={`${provider} OAuth`}
-                onLoad={() => setLoading(false)}
-              />
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8 space-y-4">
-              <Loader2 className="h-8 w-8 animate-spin" />
-              <p className="text-sm text-muted-foreground">
-                Preparing authentication...
-              </p>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

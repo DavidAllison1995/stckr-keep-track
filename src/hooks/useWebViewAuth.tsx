@@ -12,17 +12,43 @@ export const useWebViewAuth = () => {
     try {
       setIsAuthModalVisible(false);
       
-      // Parse the URL to extract tokens
-      const urlObj = new URL(url);
-      const accessToken = urlObj.hash.match(/access_token=([^&]*)/)?.[1];
-      const refreshToken = urlObj.hash.match(/refresh_token=([^&]*)/)?.[1];
-      const expiresIn = urlObj.hash.match(/expires_in=([^&]*)/)?.[1];
+      console.log('Processing auth callback URL:', url);
+      
+      // Try different parsing methods for the URL
+      let accessToken: string | null = null;
+      let refreshToken: string | null = null;
+      
+      if (url.includes('#')) {
+        // Parse hash fragment
+        const urlObj = new URL(url);
+        accessToken = urlObj.hash.match(/access_token=([^&]*)/)?.[1];
+        refreshToken = urlObj.hash.match(/refresh_token=([^&]*)/)?.[1];
+      } else if (url.includes('code=')) {
+        // Handle authorization code flow
+        const urlObj = new URL(url);
+        const code = urlObj.searchParams.get('code');
+        if (code) {
+          console.log('Authorization code received, exchanging for tokens...');
+          // Let Supabase handle the code exchange
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) {
+            throw error;
+          }
+          if (data?.session) {
+            toast({
+              title: 'Welcome!',
+              description: `You have been signed in with ${authProvider === 'google' ? 'Google' : 'Apple'} successfully.`,
+            });
+            return;
+          }
+        }
+      }
       
       if (accessToken) {
         // Set the session using the tokens
         const { data, error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken || '',
+          access_token: decodeURIComponent(accessToken),
+          refresh_token: refreshToken ? decodeURIComponent(refreshToken) : '',
         });
         
         if (error) {
@@ -34,7 +60,7 @@ export const useWebViewAuth = () => {
           description: `You have been signed in with ${authProvider === 'google' ? 'Google' : 'Apple'} successfully.`,
         });
       } else {
-        throw new Error('No access token found in callback URL');
+        throw new Error('No access token or authorization code found in callback URL');
       }
     } catch (error: any) {
       console.error('Auth callback error:', error);
