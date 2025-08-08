@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Capacitor } from '@capacitor/core';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+// Using Supabase OAuth for Google sign-in on all platforms (no native plugin)
 import { SignInWithApple } from '@capacitor-community/apple-sign-in';
 
 export const useWebViewAuth = () => {
@@ -85,45 +85,25 @@ export const useWebViewAuth = () => {
 
   const signInWithGoogle = useCallback(async () => {
     try {
-      if (!Capacitor.isNativePlatform()) {
-        // Web: standard Supabase OAuth
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/dashboard`,
-          },
-        });
-        if (error) throw error;
-        return {};
-      }
+      const isNative = Capacitor.isNativePlatform();
+      const redirectTo = isNative
+        ? 'com.stckr.keeptrack://auth/callback'
+        : `${window.location.origin}/dashboard`;
 
-      // Native: use Google SDK to get idToken, then sign in with Supabase
-      try {
-        // Some platforms require initialize to be called explicitly
-        await (GoogleAuth as any).initialize?.({
-          clientId: '1004044323466-ij201m6vumudnmlj8k3dbrqp799g9vbn.apps.googleusercontent.com',
-          scopes: ['profile', 'email'],
-          grantOfflineAccess: false,
-        });
-      } catch {}
-
-      const googleUser: any = await GoogleAuth.signIn();
-      const idToken: string | undefined = googleUser?.authentication?.idToken || googleUser?.idToken;
-
-      if (!idToken) {
-        throw new Error('No idToken returned from Google');
-      }
-
-      const { error } = await supabase.auth.signInWithIdToken({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        token: idToken,
+        options: {
+          redirectTo,
+        },
       });
       if (error) throw error;
 
-      toast({
-        title: 'Welcome!',
-        description: 'Signed in with Google successfully.',
-      });
+      if (isNative) {
+        toast({
+          title: 'Continue in Browser',
+          description: 'Complete Google sign-in, then you’ll return to the app.',
+        });
+      }
       return {};
     } catch (error: any) {
       console.error('Google Sign-In error:', error);
