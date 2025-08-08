@@ -23,27 +23,15 @@ export const checkAndRequestCameraPermissions = async (): Promise<PermissionResu
 
     // If camera permission is already granted, check photos permission
     if (permissionStatus.camera === 'granted') {
-      // For iOS, we also need photo library permission
-      if (Capacitor.getPlatform() === 'ios' && permissionStatus.photos !== 'granted') {
-        console.log('Camera granted, requesting photo library permissions...');
-        const photoRequest = await Camera.requestPermissions();
-        console.log('Photo permission result:', photoRequest);
-        
-        if (photoRequest.photos === 'denied') {
-          return {
-            granted: false,
-            message: 'Photo library access is required. Please enable it in Settings > Privacy > Photos.'
-          };
-        }
-      }
-      
+      // Camera access is sufficient for capture. Photo Library is only needed when saving to or picking from Photos.
+      // We won't request Photos here to avoid unnecessary prompts/crashes on some devices.
       return { granted: true };
     }
 
     // If permission is denied, request it
     if (permissionStatus.camera === 'denied' || permissionStatus.camera === 'prompt') {
       console.log('Requesting camera permissions...');
-      const requestResult = await Camera.requestPermissions();
+      const requestResult = await Camera.requestPermissions({ permissions: ['camera'] });
       console.log('Permission request result:', requestResult);
 
       if (requestResult.camera === 'granted') {

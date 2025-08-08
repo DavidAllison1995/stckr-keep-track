@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { uploadItemImage, deleteItemImage } from '@/services/imageUploadService';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
+import { checkAndRequestCameraPermissions } from '@/utils/cameraPermissions';
 
 interface ImageUploadProps {
   currentImageUrl?: string;
@@ -105,6 +106,13 @@ const ImageUpload = ({ currentImageUrl, onImageChange, userId, itemId, disabled 
     return new File([u8arr], filename, { type: mime });
   };
 
+  // Convert URI (webPath) to File object to avoid large base64 memory usage
+  const uriToFile = async (webPath: string, filename: string): Promise<File> => {
+    const res = await fetch(webPath);
+    const blob = await res.blob();
+    const type = blob.type || 'image/jpeg';
+    return new File([blob], filename, { type });
+  };
   // Handle camera capture using Capacitor Camera API
   const handleTakePhoto = async () => {
     // Prevent multiple simultaneous calls
@@ -126,66 +134,47 @@ const ImageUpload = ({ currentImageUrl, onImageChange, userId, itemId, disabled 
       // Set uploading state to prevent multiple calls
       setIsUploading(true);
 
-      // Check camera permissions first - critical for both iOS and Android
-      console.log('Checking camera permissions...');
-      const permissionStatus = await CapacitorCamera.checkPermissions();
-      console.log('Permission status:', permissionStatus);
-      
-      if (permissionStatus.camera !== 'granted') {
-        console.log('Requesting camera permissions...');
-        const requestResult = await CapacitorCamera.requestPermissions();
-        console.log('Permission request result:', requestResult);
-        
-        if (requestResult.camera !== 'granted') {
-          toast({
-            title: 'Camera permission required',
-            description: 'Please allow camera access in Settings to take photos',
-            variant: 'destructive',
-          });
-          return;
-        }
+      // Unified permission check
+      const perm = await checkAndRequestCameraPermissions();
+      if (!perm.granted) {
+        toast({
+          title: 'Camera permission required',
+          description: perm.message || 'Please allow camera access in Settings to take photos',
+          variant: 'destructive',
+        });
+        return;
       }
 
-      // Check photo library permissions for iOS
-      if (permissionStatus.photos !== 'granted') {
-        console.log('Requesting photo library permissions...');
-        const photoRequestResult = await CapacitorCamera.requestPermissions();
-        console.log('Photo permission request result:', photoRequestResult);
-      }
+      // No need to request Photo Library permission unless saving to Photos or picking from gallery
 
       console.log('Launching camera...');
       // Use Capacitor Camera API with proper error handling
       const image = await CapacitorCamera.getPhoto({
-        quality: 85,
+        quality: 80,
         allowEditing: false,
-        resultType: CameraResultType.Base64,
+        resultType: CameraResultType.Uri,
         source: CameraSource.Camera,
         presentationStyle: 'fullscreen',
         saveToGallery: false,
-        // Force camera mode - don't show picker
         promptLabelHeader: 'Take Photo',
         promptLabelCancel: 'Cancel',
-        promptLabelPhoto: 'From Gallery',
-        promptLabelPicture: 'Take Picture',
       });
 
       console.log('Photo captured successfully:', {
-        hasBase64: !!image.base64String,
+        hasPath: !!image.webPath,
         format: image.format
       });
 
-      if (image.base64String) {
-        // Convert base64 to File
-        const file = base64ToFile(
-          `data:${image.format === 'jpeg' ? 'image/jpeg' : 'image/png'};base64,${image.base64String}`,
+      if (image.webPath) {
+        const file = await uriToFile(
+          image.webPath,
           `photo_${Date.now()}.${image.format || 'jpg'}`
         );
 
-        console.log('Converting and uploading photo...');
-        // Process the file
+        console.log('Uploading photo from URI...');
         await handleFileSelect(file);
       } else {
-        throw new Error('No image data received from camera');
+        throw new Error('No image path received from camera');
       }
     } catch (error) {
       console.error('Camera error details:', error);

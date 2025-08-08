@@ -4,6 +4,7 @@ import { Camera, X, RotateCcw, Loader2 } from 'lucide-react';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import jsQR from 'jsqr';
+import { checkAndRequestCameraPermissions } from '@/utils/cameraPermissions';
 
 interface CapacitorQRScannerProps {
   onScan: (code: string) => void;
@@ -41,52 +42,65 @@ const CapacitorQRScanner = ({ onScan, onClose }: CapacitorQRScannerProps) => {
     });
   };
 
+  // Convert URI to ImageData to avoid base64 memory spikes
+  const uriToImageData = (uri: string): Promise<ImageData> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Failed to create canvas context'));
+          return;
+        }
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        resolve(imageData);
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = uri;
+    });
+  };
+
   const scanWithCapacitorCamera = useCallback(async () => {
     try {
       setIsLoading(true);
       setError('');
 
-      // Check camera permissions first - critical for both iOS and Android
+      // Check camera permissions via unified helper
       console.log('QR Scanner: Checking camera permissions...');
-      const permissionStatus = await CapacitorCamera.checkPermissions();
-      console.log('QR Scanner: Permission status:', permissionStatus);
-      
-      if (permissionStatus.camera !== 'granted') {
-        console.log('QR Scanner: Requesting camera permissions...');
-        const requestResult = await CapacitorCamera.requestPermissions();
-        console.log('QR Scanner: Permission request result:', requestResult);
-        
-        if (requestResult.camera !== 'granted') {
-          setError('Camera permission is required to scan QR codes. Please enable camera access in Settings > Privacy > Camera.');
-          return;
-        }
+      const permission = await checkAndRequestCameraPermissions();
+      if (!permission.granted) {
+        setError(permission.message || 'Camera permission is required to scan QR codes. Please enable camera access in Settings.');
+        return;
       }
 
       console.log('QR Scanner: Launching camera...');
       // Use Capacitor Camera API for mobile devices with proper error handling
       const image = await CapacitorCamera.getPhoto({
-        quality: 95, // Higher quality for better QR detection
+        quality: 90, // Higher quality for better QR detection
         allowEditing: false,
-        resultType: CameraResultType.Base64,
+        resultType: CameraResultType.Uri,
         source: CameraSource.Camera,
         presentationStyle: 'fullscreen',
         saveToGallery: false,
         // Force camera mode
         promptLabelHeader: 'Scan QR Code',
         promptLabelCancel: 'Cancel',
-        promptLabelPhoto: 'From Gallery',
-        promptLabelPicture: 'Take Picture',
       });
 
       console.log('QR Scanner: Photo captured:', {
-        hasBase64: !!image.base64String,
+        hasPath: !!image.webPath,
         format: image.format
       });
 
-      if (image.base64String) {
+      if (image.webPath) {
         console.log('QR Scanner: Processing image for QR codes...');
-        // Convert base64 to ImageData and scan for QR code
-        const imageData = await base64ToImageData(image.base64String);
+        // Convert URI to ImageData and scan for QR code
+        const imageData = await uriToImageData(image.webPath);
         const qrCode = jsQR(imageData.data, imageData.width, imageData.height, {
           inversionAttempts: 'dontInvert', // Performance optimization
         });
@@ -94,13 +108,9 @@ const CapacitorQRScanner = ({ onScan, onClose }: CapacitorQRScannerProps) => {
         if (qrCode) {
           console.log('QR Scanner: QR Code detected:', qrCode.data);
           setScanComplete(true);
-          
-          // Haptic feedback
           if ('vibrate' in navigator) {
             navigator.vibrate(100);
           }
-          
-          // Call the onScan callback
           setTimeout(() => onScan(qrCode.data), 500);
           return;
         } else {
@@ -110,7 +120,7 @@ const CapacitorQRScanner = ({ onScan, onClose }: CapacitorQRScannerProps) => {
           return;
         }
       } else {
-        throw new Error('No image data received from camera');
+        throw new Error('No image path received from camera');
       }
     } catch (error: any) {
       console.error('QR Scanner: Capacitor camera error:', error);
