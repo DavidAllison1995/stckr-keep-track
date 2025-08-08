@@ -2,8 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Capacitor } from '@capacitor/core';
-// Using Supabase OAuth for Google sign-in on all platforms (no native plugin)
-// Using Supabase OAuth for Apple sign-in on all platforms (no native plugin)
+// On native, use an in-app browser via AuthModal; on web, use Supabase OAuth
 
 export const useWebViewAuth = () => {
   const [isAuthModalVisible, setIsAuthModalVisible] = useState(false);
@@ -86,24 +85,20 @@ export const useWebViewAuth = () => {
   const signInWithGoogle = useCallback(async () => {
     try {
       const isNative = Capacitor.isNativePlatform();
-      const redirectTo = isNative
-        ? 'com.stckr.keeptrack://auth/callback'
-        : `${window.location.origin}/dashboard`;
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo,
-        },
-      });
-      if (error) throw error;
 
       if (isNative) {
-        toast({
-          title: 'Continue in Browser',
-          description: 'Complete Google sign-in, then you’ll return to the app.',
-        });
+        // Use in-app browser flow via AuthModal on native
+        setAuthProvider('google');
+        setIsAuthModalVisible(true);
+        return {};
       }
+
+      const redirectTo = `${window.location.origin}/dashboard`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo },
+      });
+      if (error) throw error;
       return {};
     } catch (error: any) {
       console.error('Google Sign-In error:', error);
@@ -120,24 +115,20 @@ export const useWebViewAuth = () => {
   const signInWithApple = useCallback(async () => {
     try {
       const isNative = Capacitor.isNativePlatform();
-      const redirectTo = isNative
-        ? 'com.stckr.keeptrack://auth/callback'
-        : `${window.location.origin}/dashboard`;
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'apple',
-        options: {
-          redirectTo,
-        },
-      });
-      if (error) throw error;
 
       if (isNative) {
-        toast({
-          title: 'Continue in Browser',
-          description: 'Complete Apple sign-in, then you’ll return to the app.',
-        });
+        // Use in-app browser flow via AuthModal on native
+        setAuthProvider('apple');
+        setIsAuthModalVisible(true);
+        return {};
       }
+
+      const redirectTo = `${window.location.origin}/dashboard`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: { redirectTo },
+      });
+      if (error) throw error;
       return {};
     } catch (error: any) {
       console.error('Apple Sign-In error:', error);
