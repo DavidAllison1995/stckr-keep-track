@@ -6,5 +6,5 @@
     <string name="custom_url_scheme">com.stckr.keeptrack</string>
     
     <!-- Google OAuth Configuration -->
-    <string name="server_client_id">1049043334764-p0c5vpjqt1n2nvddvo9lbdbdnfnuafnq.apps.googleusercontent.com</string>
+    <string name="server_client_id">1004044323466-hle7gdlsk6tppj0gn1o02olrqv1j6fcr.apps.googleusercontent.com</string>
 </resources>

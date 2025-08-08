@@ -100,7 +100,11 @@ export const useWebViewAuth = () => {
       // Native: use Google SDK to get idToken, then sign in with Supabase
       try {
         // Some platforms require initialize to be called explicitly
-        await (GoogleAuth as any).initialize?.();
+        await (GoogleAuth as any).initialize?.({
+          clientId: '1004044323466-ij201m6vumudnmlj8k3dbrqp799g9vbn.apps.googleusercontent.com',
+          scopes: ['profile', 'email'],
+          grantOfflineAccess: false,
+        });
       } catch {}
 
       const googleUser: any = await GoogleAuth.signIn();
