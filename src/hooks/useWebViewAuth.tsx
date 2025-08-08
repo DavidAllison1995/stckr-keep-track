@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Capacitor } from '@capacitor/core';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { SignInWithApple } from '@capacitor-community/apple-sign-in';
 
 export const useWebViewAuth = () => {
   const [isAuthModalVisible, setIsAuthModalVisible] = useState(false);
@@ -84,21 +86,40 @@ export const useWebViewAuth = () => {
   const signInWithGoogle = useCallback(async () => {
     try {
       if (!Capacitor.isNativePlatform()) {
-        // For web, use standard OAuth flow
+        // Web: standard Supabase OAuth
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
             redirectTo: `${window.location.origin}/dashboard`,
           },
         });
-        
         if (error) throw error;
         return {};
       }
-      
-      // For native, use WebView modal
-      setAuthProvider('google');
-      setIsAuthModalVisible(true);
+
+      // Native: use Google SDK to get idToken, then sign in with Supabase
+      try {
+        // Some platforms require initialize to be called explicitly
+        await (GoogleAuth as any).initialize?.();
+      } catch {}
+
+      const googleUser: any = await GoogleAuth.signIn();
+      const idToken: string | undefined = googleUser?.authentication?.idToken || googleUser?.idToken;
+
+      if (!idToken) {
+        throw new Error('No idToken returned from Google');
+      }
+
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: idToken,
+      });
+      if (error) throw error;
+
+      toast({
+        title: 'Welcome!',
+        description: 'Signed in with Google successfully.',
+      });
       return {};
     } catch (error: any) {
       console.error('Google Sign-In error:', error);
@@ -115,21 +136,35 @@ export const useWebViewAuth = () => {
   const signInWithApple = useCallback(async () => {
     try {
       if (!Capacitor.isNativePlatform()) {
-        // For web, use standard OAuth flow
+        // Web: standard Supabase OAuth
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'apple',
           options: {
             redirectTo: `${window.location.origin}/dashboard`,
           },
         });
-        
         if (error) throw error;
         return {};
       }
-      
-      // For native, use WebView modal
-      setAuthProvider('apple');
-      setIsAuthModalVisible(true);
+
+      // Native: use Apple Sign-In plugin to get identityToken, then sign in with Supabase
+      const result: any = await SignInWithApple.authorize();
+      const idToken: string | undefined = (result as any)?.response?.identityToken || (result as any)?.identityToken;
+
+      if (!idToken) {
+        throw new Error('No identityToken returned from Apple');
+      }
+
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: idToken,
+      });
+      if (error) throw error;
+
+      toast({
+        title: 'Welcome!',
+        description: 'Signed in with Apple successfully.',
+      });
       return {};
     } catch (error: any) {
       console.error('Apple Sign-In error:', error);
