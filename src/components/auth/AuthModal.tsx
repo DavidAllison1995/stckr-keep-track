@@ -20,16 +20,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [webViewUrl, setWebViewUrl] = useState('');
+  const listenerRef = React.useRef<{ remove: () => void } | null>(null);
 
   const supabaseUrl = 'https://cudftlquaydissmvqjmv.supabase.co';
   const redirectUrl = Capacitor.isNativePlatform() 
-    ? 'com.stckr.keeptrack://callback'
+    ? 'capacitor://localhost/callback'
     : `${window.location.origin}/auth`;
 
   const handleStartAuth = async () => {
     setLoading(true);
     
-    const authUrl = `${supabaseUrl}/auth/v1/authorize?provider=${provider}&redirect_to=${encodeURIComponent(redirectUrl)}`;
+    const authUrl = `${supabaseUrl}/auth/v1/authorize?provider=${provider}&redirect_to=${encodeURIComponent(redirectUrl)}&flow_type=pkce`;
     console.log('Starting OAuth flow with URL:', authUrl);
     
     if (Capacitor.isNativePlatform()) {
@@ -41,15 +42,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         
         const handleAppUrl = (event: { url: string }) => {
           console.log('Deep link received:', event.url);
-          if (event.url.startsWith('com.stckr.keeptrack://')) {
+          if (event.url.startsWith('capacitor://') || event.url.startsWith('com.stckr.keeptrack://')) {
             console.log('OAuth callback detected, closing browser and processing...');
             Browser.close().catch(console.error);
             onSuccess(event.url);
-            App.removeAllListeners();
+            listenerRef.current?.remove?.();
           }
         };
         
-        App.addListener('appUrlOpen', handleAppUrl);
+        listenerRef.current = await App.addListener('appUrlOpen', handleAppUrl as any);
         
         await Browser.open({
           url: authUrl,
@@ -78,6 +79,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     return () => {
       setLoading(false);
       setWebViewUrl('');
+      listenerRef.current?.remove?.();
     };
   }, [visible, provider]);
 
