@@ -20,7 +20,7 @@ const config: CapacitorConfig = {
       CFBundleURLTypes: [
         {
           CFBundleURLName: 'STCKR OAuth',
-          CFBundleURLSchemes: ['stckr', 'com.stckr.keeptrack']
+          CFBundleURLSchemes: ['stckr', 'com.stckr.keeptrack', 'com.googleusercontent.apps.1004044323466-ij201m6vumudnmlj8k3dbrqp799g9vbn']
         }
       ]
     }
