@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Capacitor } from '@capacitor/core';
 // Using Supabase OAuth for Google sign-in on all platforms (no native plugin)
-import { SignInWithApple } from '@capacitor-community/apple-sign-in';
+// Using Supabase OAuth for Apple sign-in on all platforms (no native plugin)
 
 export const useWebViewAuth = () => {
   const [isAuthModalVisible, setIsAuthModalVisible] = useState(false);
@@ -119,36 +119,25 @@ export const useWebViewAuth = () => {
 
   const signInWithApple = useCallback(async () => {
     try {
-      if (!Capacitor.isNativePlatform()) {
-        // Web: standard Supabase OAuth
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'apple',
-          options: {
-            redirectTo: `${window.location.origin}/dashboard`,
-          },
-        });
-        if (error) throw error;
-        return {};
-      }
+      const isNative = Capacitor.isNativePlatform();
+      const redirectTo = isNative
+        ? 'com.stckr.keeptrack://auth/callback'
+        : `${window.location.origin}/dashboard`;
 
-      // Native: use Apple Sign-In plugin to get identityToken, then sign in with Supabase
-      const result: any = await SignInWithApple.authorize();
-      const idToken: string | undefined = (result as any)?.response?.identityToken || (result as any)?.identityToken;
-
-      if (!idToken) {
-        throw new Error('No identityToken returned from Apple');
-      }
-
-      const { error } = await supabase.auth.signInWithIdToken({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
-        token: idToken,
+        options: {
+          redirectTo,
+        },
       });
       if (error) throw error;
 
-      toast({
-        title: 'Welcome!',
-        description: 'Signed in with Apple successfully.',
-      });
+      if (isNative) {
+        toast({
+          title: 'Continue in Browser',
+          description: 'Complete Apple sign-in, then you’ll return to the app.',
+        });
+      }
       return {};
     } catch (error: any) {
       console.error('Apple Sign-In error:', error);
