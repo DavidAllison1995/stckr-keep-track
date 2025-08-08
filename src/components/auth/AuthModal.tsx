@@ -24,7 +24,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const supabaseUrl = 'https://cudftlquaydissmvqjmv.supabase.co';
   const redirectUrl = Capacitor.isNativePlatform() 
-    ? 'com.stckr.keeptrack://auth/callback'
+    ? 'capacitor://localhost/callback'
     : `${window.location.origin}/auth`;
 
   const handleStartAuth = async () => {
@@ -42,7 +42,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         
         const handleAppUrl = (event: { url: string }) => {
           console.log('Deep link received:', event.url);
-          if (event.url.startsWith('capacitor://') || event.url.startsWith('com.stckr.keeptrack://')) {
+          if (event.url.includes('callback')) {
             console.log('OAuth callback detected, closing browser and processing...');
             Browser.close().catch(console.error);
             onSuccess(event.url);
