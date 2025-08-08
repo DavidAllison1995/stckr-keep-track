@@ -11,7 +11,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@capacitor-community/apple-sign-in": "^6.0.0",
     "@capacitor/android": "^7.4.2",
     "@capacitor/app": "^7.0.2",
     "@capacitor/browser": "^7.0.2",
@@ -23,7 +22,6 @@
     "@capacitor/push-notifications": "^7.0.2",
     "@capacitor/splash-screen": "^7.0.2",
     "@capacitor/status-bar": "^7.0.2",
-    "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
