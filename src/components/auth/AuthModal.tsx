@@ -24,7 +24,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const supabaseUrl = 'https://cudftlquaydissmvqjmv.supabase.co';
   const redirectUrl = Capacitor.isNativePlatform() 
-    ? 'capacitor://localhost/callback'
+    ? 'com.stckr.keeptrack://callback'
     : `${window.location.origin}/auth`;
 
   const handleStartAuth = async () => {
