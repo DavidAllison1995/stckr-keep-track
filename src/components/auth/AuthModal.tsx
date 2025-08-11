@@ -23,9 +23,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const listenerRef = React.useRef<{ remove: () => void } | null>(null);
 
   const supabaseUrl = 'https://cudftlquaydissmvqjmv.supabase.co';
-  const redirectUrl = Capacitor.isNativePlatform() 
+  const platform = Capacitor.getPlatform();
+  const redirectUrl = platform === 'ios'
     ? 'com.stckr.keeptrack://callback'
-    : `${window.location.origin}/auth`;
+    : platform === 'android'
+      ? 'capacitor://localhost/callback'
+      : `${window.location.origin}/auth`;
+
 
   const handleStartAuth = async () => {
     setLoading(true);
