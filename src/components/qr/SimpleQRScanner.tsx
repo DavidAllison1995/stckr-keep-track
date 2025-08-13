@@ -93,29 +93,69 @@ const SimpleQRScanner = ({ onScan, onClose }: SimpleQRScannerProps) => {
     setScanComplete(false);
 
     try {
-      // First try back camera
-      console.log('Requesting back camera...');
-      let stream;
-      
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { 
-            facingMode: { ideal: "environment" },
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }
-        });
-        console.log('✅ Back camera acquired');
-      } catch (backCameraError) {
-        console.warn('Back camera failed, trying front camera...', backCameraError);
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        console.log('✅ Front camera acquired');
+      // Check if getUserMedia is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera API not supported in this browser');
       }
+
+      // Add timeout to camera request
+      const stream = await Promise.race([
+        (async () => {
+          console.log('Requesting back camera...');
+          try {
+            const backStream = await navigator.mediaDevices.getUserMedia({
+              video: { 
+                facingMode: { ideal: "environment" },
+                width: { ideal: 1280, max: 1920 },
+                height: { ideal: 720, max: 1080 }
+              }
+            });
+            console.log('✅ Back camera acquired');
+            return backStream;
+          } catch (backCameraError) {
+            console.warn('Back camera failed, trying front camera...', backCameraError);
+            const frontStream = await navigator.mediaDevices.getUserMedia({ 
+              video: {
+                width: { ideal: 1280, max: 1920 },
+                height: { ideal: 720, max: 1080 }
+              }
+            });
+            console.log('✅ Front camera acquired');
+            return frontStream;
+          }
+        })(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Camera request timeout')), 10000)
+        )
+      ]) as MediaStream;
 
       streamRef.current = stream;
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        
+        // Wait for video to be ready with timeout
+        await Promise.race([
+          new Promise<void>((resolve, reject) => {
+            const video = videoRef.current!;
+            const onCanPlay = () => {
+              video.removeEventListener('canplay', onCanPlay);
+              video.removeEventListener('error', onError);
+              resolve();
+            };
+            const onError = (e: Event) => {
+              video.removeEventListener('canplay', onCanPlay);
+              video.removeEventListener('error', onError);
+              reject(new Error('Video loading failed'));
+            };
+            video.addEventListener('canplay', onCanPlay);
+            video.addEventListener('error', onError);
+          }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Video loading timeout')), 5000)
+          )
+        ]);
+
         await videoRef.current.play();
         console.log('Video playing, readyState:', videoRef.current.readyState);
         
@@ -131,12 +171,20 @@ const SimpleQRScanner = ({ onScan, onClose }: SimpleQRScannerProps) => {
       console.error('Camera error:', error);
       setIsLoading(false);
       
+      // Clean up on error
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+      
       if (error.name === 'NotAllowedError') {
         setError('Camera access denied. Please allow camera access and try again.');
       } else if (error.name === 'NotFoundError') {
         setError('No camera found on this device.');
       } else if (error.name === 'NotReadableError') {
         setError('Camera is in use by another application. Please close other apps and try again.');
+      } else if (error.message?.includes('timeout')) {
+        setError('Camera failed to start within expected time. Please try again.');
       } else {
         setError('Failed to access camera. Please try again.');
       }

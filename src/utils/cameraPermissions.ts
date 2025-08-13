@@ -17,21 +17,39 @@ export const checkAndRequestCameraPermissions = async (): Promise<PermissionResu
   try {
     console.log('Checking camera permissions...');
     
-    // Check current permission status
-    const permissionStatus = await Camera.checkPermissions();
+    // Check if Camera plugin is available
+    if (!Camera) {
+      console.warn('Camera plugin not available');
+      return { granted: false, message: 'Camera plugin not available. Please run "npx cap sync" to install native plugins.' };
+    }
+
+    // Check current permission status with timeout
+    const permissionStatus = await Promise.race([
+      Camera.checkPermissions(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Permission check timeout')), 5000)
+      )
+    ]) as any;
+    
     console.log('Current permission status:', permissionStatus);
 
-    // If camera permission is already granted, check photos permission
+    // If camera permission is already granted
     if (permissionStatus.camera === 'granted') {
-      // Camera access is sufficient for capture. Photo Library is only needed when saving to or picking from Photos.
-      // We won't request Photos here to avoid unnecessary prompts/crashes on some devices.
       return { granted: true };
     }
 
-    // If permission is denied, request it
-    if (permissionStatus.camera === 'denied' || permissionStatus.camera === 'prompt') {
+    // If permission is denied or prompt needed, request it
+    if (permissionStatus.camera === 'denied' || permissionStatus.camera === 'prompt' || permissionStatus.camera === 'prompt-with-rationale') {
       console.log('Requesting camera permissions...');
-      const requestResult = await Camera.requestPermissions({ permissions: ['camera'] });
+      
+      // Request with timeout
+      const requestResult = await Promise.race([
+        Camera.requestPermissions({ permissions: ['camera'] }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Permission request timeout')), 10000)
+        )
+      ]) as any;
+      
       console.log('Permission request result:', requestResult);
 
       if (requestResult.camera === 'granted') {
@@ -56,13 +74,20 @@ export const checkAndRequestCameraPermissions = async (): Promise<PermissionResu
   } catch (error) {
     console.error('Permission check failed:', error);
     
-    // On older devices or platforms that don't support the permission API,
-    // we'll assume permissions are handled at the OS level
+    // Handle specific error cases
     if (error && typeof error === 'object' && 'message' in error) {
       const errorMessage = (error as { message: string }).message;
+      
       if (errorMessage.includes('not implemented') || errorMessage.includes('not supported')) {
         console.log('Permission API not supported, assuming OS-level handling');
         return { granted: true, message: 'Permission handling delegated to OS' };
+      }
+      
+      if (errorMessage.includes('timeout')) {
+        return { 
+          granted: false, 
+          message: 'Camera permission check timed out. Please try again or check device settings.' 
+        };
       }
     }
 

@@ -75,22 +75,28 @@ const CapacitorQRScanner = ({ onScan, onClose }: CapacitorQRScannerProps) => {
       const permission = await checkAndRequestCameraPermissions();
       if (!permission.granted) {
         setError(permission.message || 'Camera permission is required to scan QR codes. Please enable camera access in Settings.');
+        setIsLoading(false);
         return;
       }
 
       console.log('QR Scanner: Launching camera...');
-      // Use Capacitor Camera API for mobile devices with proper error handling
-      const image = await CapacitorCamera.getPhoto({
-        quality: 90, // Higher quality for better QR detection
-        allowEditing: false,
-        resultType: CameraResultType.Uri,
-        source: CameraSource.Camera,
-        presentationStyle: 'fullscreen',
-        saveToGallery: false,
-        // Force camera mode
-        promptLabelHeader: 'Scan QR Code',
-        promptLabelCancel: 'Cancel',
-      });
+      // Use Capacitor Camera API for mobile devices with proper error handling and timeout
+      const image = await Promise.race([
+        CapacitorCamera.getPhoto({
+          quality: 90, // Higher quality for better QR detection
+          allowEditing: false,
+          resultType: CameraResultType.Uri,
+          source: CameraSource.Camera,
+          presentationStyle: 'fullscreen',
+          saveToGallery: false,
+          // Force camera mode
+          promptLabelHeader: 'Scan QR Code',
+          promptLabelCancel: 'Cancel',
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Camera timeout - please try again')), 30000)
+        )
+      ]) as any;
 
       console.log('QR Scanner: Photo captured:', {
         hasPath: !!image.webPath,

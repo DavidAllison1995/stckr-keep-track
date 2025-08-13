@@ -142,23 +142,27 @@ const ImageUpload = ({ currentImageUrl, onImageChange, userId, itemId, disabled 
           description: perm.message || 'Please allow camera access in Settings to take photos',
           variant: 'destructive',
         });
+        setIsUploading(false);
         return;
       }
 
-      // No need to request Photo Library permission unless saving to Photos or picking from gallery
-
       console.log('Launching camera...');
-      // Use Capacitor Camera API with proper error handling
-      const image = await CapacitorCamera.getPhoto({
-        quality: 80,
-        allowEditing: false,
-        resultType: CameraResultType.Uri,
-        source: CameraSource.Camera,
-        presentationStyle: 'fullscreen',
-        saveToGallery: false,
-        promptLabelHeader: 'Take Photo',
-        promptLabelCancel: 'Cancel',
-      });
+      // Use Capacitor Camera API with proper error handling and timeout
+      const image = await Promise.race([
+        CapacitorCamera.getPhoto({
+          quality: 80,
+          allowEditing: false,
+          resultType: CameraResultType.Uri,
+          source: CameraSource.Camera,
+          presentationStyle: 'fullscreen',
+          saveToGallery: false,
+          promptLabelHeader: 'Take Photo',
+          promptLabelCancel: 'Cancel',
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Camera timeout - please try again')), 30000)
+        )
+      ]) as any;
 
       console.log('Photo captured successfully:', {
         hasPath: !!image.webPath,
