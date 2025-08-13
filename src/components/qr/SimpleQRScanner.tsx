@@ -12,10 +12,18 @@ interface SimpleQRScannerProps {
 }
 
 const SimpleQRScanner = ({ onScan, onClose }: SimpleQRScannerProps) => {
+  console.log('SimpleQRScanner: Platform check:', {
+    isNative: Capacitor.isNativePlatform(),
+    platform: Capacitor.getPlatform()
+  });
+
   // Use Capacitor camera for mobile devices to avoid iPad WebView crashes
   if (Capacitor.isNativePlatform()) {
+    console.log('SimpleQRScanner: Using CapacitorQRScanner for native platform');
     return <CapacitorQRScanner onScan={onScan} onClose={onClose} />;
   }
+
+  console.log('SimpleQRScanner: Using web-based QR scanner');
 
   // Web-based scanner for desktop/development
   const videoRef = useRef<HTMLVideoElement>(null);

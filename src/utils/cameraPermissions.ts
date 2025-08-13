@@ -10,16 +10,23 @@ export interface PermissionResult {
  * Comprehensive camera permission handler for both iOS and Android
  */
 export const checkAndRequestCameraPermissions = async (): Promise<PermissionResult> => {
+  console.log('CameraPermissions: Starting permission check...');
+  console.log('CameraPermissions: Platform info:', {
+    isNative: Capacitor.isNativePlatform(),
+    platform: Capacitor.getPlatform()
+  });
+
   if (!Capacitor.isNativePlatform()) {
+    console.log('CameraPermissions: Web platform detected, allowing browser to handle permissions');
     return { granted: true, message: 'Web platform - permissions handled by browser' };
   }
 
   try {
-    console.log('Checking camera permissions...');
+    console.log('CameraPermissions: Native platform detected, checking camera permissions...');
     
     // Check if Camera plugin is available
     if (!Camera) {
-      console.warn('Camera plugin not available');
+      console.error('CameraPermissions: Camera plugin not available');
       return { granted: false, message: 'Camera plugin not available. Please run "npx cap sync" to install native plugins.' };
     }
 

@@ -121,8 +121,15 @@ const ImageUpload = ({ currentImageUrl, onImageChange, userId, itemId, disabled 
     }
 
     try {
+      console.log('ImageUpload: Starting photo capture...');
+      console.log('ImageUpload: Platform check:', {
+        isNative: Capacitor.isNativePlatform(),
+        platform: Capacitor.getPlatform()
+      });
+
       // Check if running on a mobile device with Capacitor
       if (!Capacitor.isNativePlatform()) {
+        console.log('ImageUpload: Web platform detected, using file input fallback');
         // Fallback to file input for web
         if (fileInputRef.current) {
           fileInputRef.current.setAttribute('capture', 'environment');
@@ -131,12 +138,25 @@ const ImageUpload = ({ currentImageUrl, onImageChange, userId, itemId, disabled 
         return;
       }
 
+      // Check if Camera plugin is available first
+      if (!CapacitorCamera) {
+        console.error('ImageUpload: Capacitor Camera plugin not available');
+        toast({
+          title: 'Camera not available',
+          description: 'Camera plugin not available. Please ensure the app is running on a mobile device.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       // Set uploading state to prevent multiple calls
       setIsUploading(true);
 
       // Unified permission check
+      console.log('ImageUpload: Checking camera permissions...');
       const perm = await checkAndRequestCameraPermissions();
       if (!perm.granted) {
+        console.error('ImageUpload: Camera permission not granted:', perm.message);
         toast({
           title: 'Camera permission required',
           description: perm.message || 'Please allow camera access in Settings to take photos',

@@ -70,10 +70,25 @@ const CapacitorQRScanner = ({ onScan, onClose }: CapacitorQRScannerProps) => {
       setIsLoading(true);
       setError('');
 
+      console.log('QR Scanner: Starting scan process...');
+      console.log('QR Scanner: Platform check:', {
+        isNative: Capacitor.isNativePlatform(),
+        platform: Capacitor.getPlatform()
+      });
+
+      // Check if Camera plugin is available first
+      if (!CapacitorCamera) {
+        console.error('QR Scanner: Capacitor Camera plugin not available');
+        setError('Camera plugin not available. Please ensure the app is running on a mobile device.');
+        setIsLoading(false);
+        return;
+      }
+
       // Check camera permissions via unified helper
       console.log('QR Scanner: Checking camera permissions...');
       const permission = await checkAndRequestCameraPermissions();
       if (!permission.granted) {
+        console.error('QR Scanner: Camera permission not granted:', permission.message);
         setError(permission.message || 'Camera permission is required to scan QR codes. Please enable camera access in Settings.');
         setIsLoading(false);
         return;
