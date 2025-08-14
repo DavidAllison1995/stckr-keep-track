@@ -4,7 +4,8 @@ import { Camera, X, RotateCcw, Loader2 } from 'lucide-react';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import jsQR from 'jsqr';
-import { checkAndRequestCameraPermissions } from '@/utils/cameraPermissions';
+import { checkAndRequestCameraPermissions, openAppSettings } from '@/utils/cameraPermissions';
+import { App } from '@capacitor/app';
 
 interface CapacitorQRScannerProps {
   onScan: (code: string) => void;
@@ -198,6 +199,47 @@ const CapacitorQRScanner = ({ onScan, onClose }: CapacitorQRScannerProps) => {
     handleStartScan();
   };
 
+  const handleScanFromPhoto = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+
+      const image = await CapacitorCamera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Photos,
+        promptLabelHeader: 'Select Photo to Scan',
+        promptLabelCancel: 'Cancel',
+      });
+
+      if (image.webPath) {
+        const imageData = await uriToImageData(image.webPath);
+        const qrCode = jsQR(imageData.data, imageData.width, imageData.height);
+
+        if (qrCode) {
+          setScanComplete(true);
+          if ('vibrate' in navigator) {
+            navigator.vibrate(100);
+          }
+          setTimeout(() => onScan(qrCode.data), 500);
+        } else {
+          setError('No QR code found in the selected photo. Please try a different image.');
+          setIsLoading(false);
+        }
+      }
+    } catch (error: any) {
+      console.error('Photo scan error:', error);
+      if (error.message?.includes('cancelled')) {
+        setError('');
+        setIsLoading(false);
+      } else {
+        setError('Failed to scan photo. Please try again.');
+        setIsLoading(false);
+      }
+    }
+  }, [onScan]);
+
   const handleClose = () => {
     setIsScanning(false);
     setIsLoading(false);
@@ -212,6 +254,31 @@ const CapacitorQRScanner = ({ onScan, onClose }: CapacitorQRScannerProps) => {
       handleStartScan();
     }
   }, [handleStartScan]);
+
+  // Handle app state changes to cleanup properly
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const handleAppStateChange = (state: { isActive: boolean }) => {
+      if (!state.isActive && (isLoading || isScanning)) {
+        console.log('CapacitorQRScanner: App went background, cleaning up');
+        handleClose();
+      }
+    };
+
+    let listener: any;
+    const setupListener = async () => {
+      listener = await App.addListener('appStateChange', handleAppStateChange);
+    };
+    
+    setupListener();
+    
+    return () => {
+      if (listener?.remove) {
+        listener.remove();
+      }
+    };
+  }, [isLoading, isScanning, handleClose]);
 
   if (scanComplete) {
     return (
@@ -269,6 +336,16 @@ const CapacitorQRScanner = ({ onScan, onClose }: CapacitorQRScannerProps) => {
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Try Again
               </Button>
+              {error.includes('permission') && (
+                <>
+                  <Button onClick={openAppSettings} variant="outline" className="w-full">
+                    Open Settings
+                  </Button>
+                  <Button onClick={handleScanFromPhoto} variant="outline" className="w-full">
+                    Scan from Photo
+                  </Button>
+                </>
+              )}
               <Button onClick={handleClose} variant="outline" className="w-full">
                 Close
               </Button>

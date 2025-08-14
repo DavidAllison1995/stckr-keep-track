@@ -17,9 +17,11 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>NSCameraUsageDescription</key>
-	<string>We need to use your camera to snap pictures of your items.</string>
+	<string>We use the camera to take item photos and scan QR codes.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>We need permission to add photos to your library after you capture them in app.</string>
+	<string>We access your photo library only when you pick an image.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>We may save photos to your library when you choose to export them.</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>

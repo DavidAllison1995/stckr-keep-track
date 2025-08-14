@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { uploadItemImage, deleteItemImage } from '@/services/imageUploadService';
 import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
-import { checkAndRequestCameraPermissions } from '@/utils/cameraPermissions';
+import { checkAndRequestCameraPermissions, openAppSettings } from '@/utils/cameraPermissions';
 
 interface ImageUploadProps {
   currentImageUrl?: string;
@@ -161,6 +161,11 @@ const ImageUpload = ({ currentImageUrl, onImageChange, userId, itemId, disabled 
           title: 'Camera permission required',
           description: perm.message || 'Please allow camera access in Settings to take photos',
           variant: 'destructive',
+          action: perm.state === 'denied' ? (
+            <Button onClick={openAppSettings} variant="outline" size="sm">
+              Open Settings
+            </Button>
+          ) : undefined,
         });
         setIsUploading(false);
         return;

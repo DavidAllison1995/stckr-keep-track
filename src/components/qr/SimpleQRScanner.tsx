@@ -5,6 +5,7 @@ import { Camera, X, RotateCcw, Loader2 } from 'lucide-react';
 import jsQR from 'jsqr';
 import { Capacitor } from '@capacitor/core';
 import CapacitorQRScanner from './CapacitorQRScanner';
+import { isLikelySimulator } from '@/utils/platformHelpers';
 
 interface SimpleQRScannerProps {
   onScan: (code: string) => void;
@@ -17,8 +18,8 @@ const SimpleQRScanner = ({ onScan, onClose }: SimpleQRScannerProps) => {
     platform: Capacitor.getPlatform()
   });
 
-  // Use Capacitor camera for mobile devices to avoid iPad WebView crashes
-  if (Capacitor.isNativePlatform()) {
+  // Use Capacitor camera for mobile devices, except simulators
+  if (Capacitor.isNativePlatform() && !isLikelySimulator()) {
     console.log('SimpleQRScanner: Using CapacitorQRScanner for native platform');
     return <CapacitorQRScanner onScan={onScan} onClose={onClose} />;
   }
