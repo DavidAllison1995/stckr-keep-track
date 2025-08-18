@@ -64,22 +64,19 @@ serve(async (req) => {
     const codeFromQuery = url.searchParams.get('code') || url.searchParams.get('codeId') || url.searchParams.get('qrCodeId')
     const codeFromBody = body?.codeId || body?.qrCodeId
 
-    const resolvedCode = [codeFromBody, codeFromQuery, codeFromPath]
+    // Prefer body -> query -> path and ignore the function name suffix
+    const rawCodeInput = [codeFromBody, codeFromQuery, codeFromPath]
       .find((c) => c && c !== 'qr-claim') as string | undefined
 
-    if (!resolvedCode || !validateQRCode(resolvedCode)) {
-      console.error('Invalid QR code format:', resolvedCode, 'from IP:', clientIP);
+    if (!rawCodeInput) {
+      console.error('No QR code provided from IP:', clientIP);
       return new Response(
-        JSON.stringify({ error: 'Valid QR code required' }), 
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        JSON.stringify({ error: 'QR code is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    const sanitizedCode = sanitizeInput(resolvedCode);
-
+    // Create a supabase client early for later use
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
@@ -124,6 +121,52 @@ serve(async (req) => {
       )
     }
 
+    // Normalize provided value to the canonical short code
+    const normalizeToCode = async (input: string): Promise<string | null> => {
+      let candidate = input.trim();
+
+      // If it's a URL, try to extract the code from query or last path segment
+      try {
+        const u = new URL(candidate);
+        const qp = u.searchParams.get('code') || u.searchParams.get('codeId') || u.searchParams.get('qr') || u.searchParams.get('qrCodeId');
+        if (qp) candidate = qp;
+        else {
+          const segs = u.pathname.split('/').filter(Boolean);
+          if (segs.length > 0) candidate = segs[segs.length - 1];
+        }
+      } catch (_) {
+        // Not a URL, continue
+      }
+
+      if (validateQRCode(candidate)) {
+        return sanitizeInput(candidate);
+      }
+
+      if (validateUUID(candidate)) {
+        const { data: qrRow, error: qrErr } = await supabaseClient
+          .from('qr_codes')
+          .select('code')
+          .eq('id', candidate)
+          .maybeSingle();
+        if (qrErr || !qrRow?.code) return null;
+        return sanitizeInput(qrRow.code);
+      }
+
+      return null;
+    };
+
+    const codeValue = await normalizeToCode(rawCodeInput);
+    if (!codeValue) {
+      console.error('Invalid QR code format:', rawCodeInput, 'from IP:', clientIP);
+      return new Response(
+        JSON.stringify({ error: 'Valid QR code required' }), 
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
     if (req.method === 'GET') {
       // Get user's claim for this code
       const { data, error } = await supabaseClient
@@ -138,7 +181,7 @@ serve(async (req) => {
             name
           )
         `)
-        .eq('qr_codes.code', sanitizedCode)
+        .eq('qr_codes.code', codeValue)
         .eq('user_id', user.id)
         .single()
 
@@ -176,7 +219,7 @@ serve(async (req) => {
               name
             )
           `)
-          .eq('qr_codes.code', sanitizedCode)
+          .eq('qr_codes.code', codeValue)
           .eq('user_id', user.id)
           .single()
 
@@ -218,7 +261,7 @@ serve(async (req) => {
         user_id: user.id,
         event_type: 'qr_claim_attempt',
         event_data: { 
-          qr_code: sanitizedCode, 
+          qr_code: codeValue, 
           item_id: itemId,
           client_ip: clientIP
         },
@@ -228,7 +271,7 @@ serve(async (req) => {
 
       // Use the RPC function to claim the code
       const { data, error } = await supabaseClient.rpc('claim_qr', {
-        p_code: sanitizedCode,
+        p_code: codeValue,
         p_user_id: user.id,
         p_item_id: itemId
       })
@@ -241,7 +284,7 @@ serve(async (req) => {
           user_id: user.id,
           event_type: 'qr_claim_failed',
           event_data: { 
-            qr_code: sanitizedCode, 
+            qr_code: codeValue, 
             item_id: itemId,
             error: error.message,
             client_ip: clientIP
