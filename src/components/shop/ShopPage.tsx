@@ -9,6 +9,8 @@ import { useCart } from '@/contexts/CartContext';
 import { downloadPrintableStickers } from '@/utils/printableStickers';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useSubscriptionLimits } from '@/hooks/useSubscriptionLimits';
+import { UpgradeModal } from '@/components/subscription/UpgradeModal';
 import CartDrawer from './CartDrawer';
 
 const ShopPage = () => {
@@ -18,6 +20,8 @@ const ShopPage = () => {
   const navigate = useNavigate();
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const { usageLimits } = useSubscriptionLimits();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const getQuantity = (productId: string) => quantities[productId] || 1;
 
@@ -36,6 +40,13 @@ const ShopPage = () => {
   };
 
   const handlePrintAtHome = async () => {
+    // Check if user has premium subscription
+    if (!usageLimits?.isPremium) {
+      // Show upgrade modal for non-premium users
+      setShowUpgradeModal(true);
+      return;
+    }
+
     try {
       await downloadPrintableStickers();
       toast({
@@ -229,6 +240,10 @@ const ShopPage = () => {
       </div>
 
       <CartDrawer open={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      <UpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={() => setShowUpgradeModal(false)} 
+      />
     </div>
   );
 };
