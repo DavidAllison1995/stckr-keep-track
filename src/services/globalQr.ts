@@ -37,7 +37,8 @@ export const globalQrService = {
     }
 
     const { data, error } = await supabase.functions.invoke('qr-claim', {
-      method: 'GET',
+      method: 'POST',
+      body: { codeId, action: 'get' },
       headers: {
         Authorization: `Bearer ${session.data.session.access_token}`,
       },
@@ -47,10 +48,16 @@ export const globalQrService = {
       throw new Error('Failed to get user claims');
     }
 
-    return data.claims || [];
+    // Support both array and single claim responses
+    if (Array.isArray((data as any)?.claims)) {
+      return (data as any).claims as QrClaim[];
+    }
+
+    const single = (data as any)?.claim;
+    return single ? [single as QrClaim] : [];
   },
 
-  async claimCode(codeId: string, itemId: string): Promise<QrClaim> {
+  async claimCode(codeId: string, itemId: string): Promise<any> {
     const session = await supabase.auth.getSession();
     if (!session.data.session) {
       throw new Error('Not authenticated');
@@ -58,7 +65,7 @@ export const globalQrService = {
 
     const { data, error } = await supabase.functions.invoke('qr-claim', {
       method: 'POST',
-      body: { itemId },
+      body: { codeId, itemId },
       headers: {
         Authorization: `Bearer ${session.data.session.access_token}`,
       },
@@ -68,6 +75,6 @@ export const globalQrService = {
       throw new Error('Failed to claim QR code');
     }
 
-    return data.claim;
+    return data;
   },
 };

@@ -54,10 +54,21 @@ serve(async (req) => {
 
   try {
     const url = new URL(req.url)
-    const code = url.pathname.split('/').pop()
+    // Try to resolve the QR code from multiple sources: body (POST), query, or path suffix
+    let body: any = {}
+    if (req.method === 'POST') {
+      body = await req.json().catch(() => ({}))
+    }
 
-    if (!code || !validateQRCode(code)) {
-      console.error('Invalid QR code format:', code, 'from IP:', clientIP);
+    const codeFromPath = url.pathname.split('/').pop()
+    const codeFromQuery = url.searchParams.get('code') || url.searchParams.get('codeId') || url.searchParams.get('qrCodeId')
+    const codeFromBody = body?.codeId || body?.qrCodeId
+
+    const resolvedCode = [codeFromBody, codeFromQuery, codeFromPath]
+      .find((c) => c && c !== 'qr-claim') as string | undefined
+
+    if (!resolvedCode || !validateQRCode(resolvedCode)) {
+      console.error('Invalid QR code format:', resolvedCode, 'from IP:', clientIP);
       return new Response(
         JSON.stringify({ error: 'Valid QR code required' }), 
         { 
@@ -67,7 +78,7 @@ serve(async (req) => {
       )
     }
 
-    const sanitizedCode = sanitizeInput(code);
+    const sanitizedCode = sanitizeInput(resolvedCode);
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -149,16 +160,50 @@ serve(async (req) => {
     }
 
     if (req.method === 'POST') {
-      const body = await req.json().catch(() => ({}));
-      const { itemId } = body;
+      const { itemId } = (body || {}) as { itemId?: string }
 
-      if (!itemId || !validateUUID(itemId)) {
+      // If no itemId provided, treat this POST as a read (some clients cannot send GET with body)
+      if (!itemId) {
+        const { data, error } = await supabaseClient
+          .from('user_qr_claims')
+          .select(`
+            *,
+            qr_codes!inner (
+              code
+            ),
+            items (
+              id,
+              name
+            )
+          `)
+          .eq('qr_codes.code', sanitizedCode)
+          .eq('user_id', user.id)
+          .single()
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching claim (POST-read):', error.message, 'for user:', user.id);
+          return new Response(
+            JSON.stringify({ error: 'Failed to fetch claim' }),
+            {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            }
+          )
+        }
+
+        return new Response(
+          JSON.stringify({ claim: data }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      if (!validateUUID(itemId)) {
         console.error('Invalid item ID provided:', itemId, 'by user:', user.id);
         return new Response(
-          JSON.stringify({ error: 'Valid item ID required' }), 
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          JSON.stringify({ error: 'Valid item ID required' }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           }
         )
       }

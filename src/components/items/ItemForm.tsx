@@ -99,7 +99,6 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
           description: formData.description || undefined,
           purchase_date: formData.purchase_date || undefined,
           warranty_date: formData.warranty_date || undefined,
-          qr_code_id: formData.qr_code_id || undefined,
           photo_url: formData.photo_url || undefined,
         });
         newItem = item;
@@ -119,7 +118,6 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
           purchase_date: formData.purchase_date || undefined,
           warranty_date: formData.warranty_date || undefined,
           photo_url: formData.photo_url || undefined,
-          qr_code_id: formData.qr_code_id || undefined,
           notes: undefined,
           documents: [],
         });
