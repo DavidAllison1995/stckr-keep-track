@@ -36,11 +36,11 @@ serve(async (req) => {
     console.log('=== QR RESOLVE DEBUG ===');
     console.log('Resolving QR code:', qrCodeId);
 
-    // First, find the QR code by ID
+    // First, find the QR code by code string (not ID)
     const { data: qrCode, error: qrError } = await supabase
       .from('qr_codes')
       .select('*')
-      .eq('id', qrCodeId)
+      .eq('code', qrCodeId)
       .single();
 
     console.log('QR code lookup result:', { qrCode, qrError });
@@ -63,7 +63,7 @@ serve(async (req) => {
         item:items(*),
         qr_code:qr_codes(*)
       `)
-      .eq('qr_code_id', qrCodeId)
+      .eq('qr_code_id', qrCode.id)
       .maybeSingle();
 
     console.log('Assignment lookup result:', { assignment, assignmentError });

@@ -33,13 +33,9 @@ export const useDeepLinking = () => {
         }
         
         // Handle different deep link paths
-        if (path.startsWith('/items/')) {
-          // Navigate to item detail page
-          const itemId = path.replace('/items/', '');
-          navigate(`/items/${itemId}`);
-        } else if (path.startsWith('/item/')) {
-          // Handle legacy /item/ format
-          const itemId = path.replace('/item/', '');
+        if (path.startsWith('/items/') || path.startsWith('/item/')) {
+          // Navigate to item detail page (handle both formats)
+          const itemId = path.replace(/^\/(items?|item)\//, '');
           navigate(`/items/${itemId}`);
         } else if (path.startsWith('/qr/')) {
           // Navigate to QR resolution page

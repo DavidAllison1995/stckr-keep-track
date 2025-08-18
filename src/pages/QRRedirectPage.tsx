@@ -53,23 +53,24 @@ const QRRedirectPage = () => {
 
   const device = detectDevice();
 
-  // Smart app redirect function
+  // Smart app redirect function with proper deep link handling
   const attemptAppRedirect = (itemId: string) => {
-    const appUrl = `stckr://items/${itemId}`;
+    const universalLink = `https://stckr.io/item/${itemId}`;
+    const appUrl = `com.stckr.keeptrack://item/${itemId}`;
     const fallbackUrl = `/items/${itemId}`;
     
-    // For mobile devices, try to open the app first
+    // For mobile devices, try universal link first (works for both app and web)
     if (device !== 'desktop') {
-      console.log('Attempting app redirect to:', appUrl);
+      console.log('Attempting universal link redirect to:', universalLink);
       
-      // Try to open the app
-      window.location.href = appUrl;
+      // Use universal link which works for both installed app and web fallback
+      window.location.href = universalLink;
       
-      // Set timeout to fallback to web if app doesn't open
+      // Fallback timeout (in case of issues)
       setTimeout(() => {
-        console.log('App redirect timeout, falling back to web:', fallbackUrl);
+        console.log('Universal link timeout, falling back to web:', fallbackUrl);
         navigate(fallbackUrl);
-      }, 1000);
+      }, 1500);
     } else {
       // Desktop - go directly to web version
       navigate(fallbackUrl);
