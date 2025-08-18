@@ -23,6 +23,7 @@ import SimpleQRScanner from '@/components/qr/SimpleQRScanner';
 import { qrLinkingService, QRLinkStatus } from '@/services/qrLinking';
 import { globalQrService } from '@/services/globalQr';
 import { supabase } from '@/integrations/supabase/client';
+import { createPortal } from 'react-dom';
 
 interface ItemQRTabProps {
   item: Item;
@@ -338,12 +339,15 @@ const ItemQRTab = ({ item, onQRStatusChange }: ItemQRTabProps) => {
       </div>
 
       {/* QR Scanner Modal for QR Assignment */}
-      {showScanner && (
-        <SimpleQRScanner
-          onScan={handleQRCodeScanned}
-          onClose={() => setShowScanner(false)}
-        />
-      )}
+      {showScanner &&
+        createPortal(
+          <SimpleQRScanner
+            onScan={handleQRCodeScanned}
+            onClose={() => setShowScanner(false)}
+          />,
+          document.body
+        )
+      }
     </div>
   );
 };
