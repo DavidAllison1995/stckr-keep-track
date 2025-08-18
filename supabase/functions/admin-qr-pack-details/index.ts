@@ -23,7 +23,10 @@ serve(async (req) => {
     // Verify user is authenticated and is admin
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
     if (authError || !user) {
-      return new Response('Unauthorized', { status: 401, headers: corsHeaders })
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }), 
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     // Check if user is admin
@@ -31,14 +34,31 @@ serve(async (req) => {
       .rpc('is_user_admin', { user_id: user.id })
 
     if (adminError || !isAdmin) {
-      return new Response('Forbidden - Admin access required', { status: 403, headers: corsHeaders })
+      return new Response(
+        JSON.stringify({ error: 'Forbidden - Admin access required' }), 
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    const url = new URL(req.url)
-    const packId = url.pathname.split('/').pop()
+    // Parse request body
+    let requestBody;
+    try {
+      const bodyText = await req.text();
+      requestBody = bodyText ? JSON.parse(bodyText) : {};
+    } catch (parseError) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { packId } = requestBody;
 
     if (!packId) {
-      return new Response('Pack ID required', { status: 400, headers: corsHeaders })
+      return new Response(
+        JSON.stringify({ error: 'Pack ID required' }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     // Get QR codes for the specified pack
@@ -58,7 +78,10 @@ serve(async (req) => {
 
     if (error) {
       console.error('Error fetching QR codes for pack:', error)
-      return new Response('Failed to fetch QR codes', { status: 500, headers: corsHeaders })
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch QR codes' }), 
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     // Get pack details
@@ -70,7 +93,10 @@ serve(async (req) => {
 
     if (packError) {
       console.error('Error fetching pack details:', packError)
-      return new Response('Failed to fetch pack details', { status: 500, headers: corsHeaders })
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch pack details' }), 
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     return new Response(
@@ -80,6 +106,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in qr-pack-details function:', error)
-    return new Response('Internal error', { status: 500, headers: corsHeaders })
+    return new Response(
+      JSON.stringify({ error: 'Internal error' }), 
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   }
 })
