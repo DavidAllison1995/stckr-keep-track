@@ -98,7 +98,18 @@ serve(async (req) => {
     }
 
     if (req.method === 'POST') {
-      const { name, description, physicalProductInfo } = await req.json()
+      let requestBody;
+      try {
+        const bodyText = await req.text();
+        requestBody = bodyText ? JSON.parse(bodyText) : {};
+      } catch (parseError) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid JSON in request body' }), 
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      const { name, description, physicalProductInfo } = requestBody;
 
       if (!name) {
         return new Response('Pack name is required', { status: 400, headers: corsHeaders })
@@ -128,7 +139,18 @@ serve(async (req) => {
     }
 
     if (req.method === 'PUT') {
-      const { packId, name, description, physicalProductInfo } = await req.json()
+      let requestBody;
+      try {
+        const bodyText = await req.text();
+        requestBody = bodyText ? JSON.parse(bodyText) : {};
+      } catch (parseError) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid JSON in request body' }), 
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      const { packId, name, description, physicalProductInfo } = requestBody;
 
       if (!packId) {
         return new Response('Pack ID is required', { status: 400, headers: corsHeaders })
@@ -159,7 +181,18 @@ serve(async (req) => {
     }
 
     if (req.method === 'DELETE') {
-      const { packId } = await req.json()
+      let requestBody;
+      try {
+        const bodyText = await req.text();
+        requestBody = bodyText ? JSON.parse(bodyText) : {};
+      } catch (parseError) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid JSON in request body' }), 
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      const { packId } = requestBody;
 
       if (!packId) {
         return new Response('Pack ID is required', { status: 400, headers: corsHeaders })
