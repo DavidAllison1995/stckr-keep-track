@@ -13,6 +13,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { QrCode, Trash2, Scan, Plus, Copy, Download } from 'lucide-react';
@@ -35,6 +37,8 @@ const ItemQRTab = ({ item, onQRStatusChange }: ItemQRTabProps) => {
   const [isAssigning, setIsAssigning] = useState(false);
   const [qrLinkStatus, setQrLinkStatus] = useState<QRLinkStatus>({ isLinked: false });
   const [isLoading, setIsLoading] = useState(true);
+  const [showManualDialog, setShowManualDialog] = useState(false);
+  const [manualCode, setManualCode] = useState('');
 
   // Load QR link status when component mounts
   useEffect(() => {
@@ -137,12 +141,37 @@ const ItemQRTab = ({ item, onQRStatusChange }: ItemQRTabProps) => {
     }
   };
 
+  const handleManualAssign = async () => {
+    if (!user) return;
+    if (!manualCode?.trim()) {
+      toast({ title: 'Enter a code', description: 'Please paste a QR code or URL.', variant: 'destructive' });
+      return;
+    }
+    setIsAssigning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('qr-claim', {
+        body: { codeId: manualCode.trim(), itemId: item.id },
+      });
+      console.log('Manual claim response:', { data, error });
+      if (error) throw new Error(error.message || 'QR assignment failed');
+      if (!data?.success) throw new Error(data?.error || data?.message || 'QR assignment failed');
+      setShowManualDialog(false);
+      setManualCode('');
+      await loadQRLinkStatus();
+      toast({ title: 'QR assigned', description: 'The QR code was linked to this item.' });
+      onQRStatusChange?.();
+    } catch (e) {
+      console.error('Manual assign error:', e);
+      toast({ title: 'Error', description: e instanceof Error ? e.message : 'Failed to assign QR', variant: 'destructive' });
+    } finally {
+      setIsAssigning(false);
+    }
+  };
   const generateQRCodeImageUrl = (qrCodeId: string) => {
     // Generate white QR code on dark background with no white padding/fill
     const qrUrl = `https://stckr.io/qr/${qrCodeId}`;
     return `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(qrUrl)}&ecc=H&color=FFFFFF&bgcolor=1E1E2F&margin=0&qzone=1`;
   };
-
   const handleCopyQRUrl = (url: string) => {
     navigator.clipboard.writeText(url);
     toast({
@@ -183,13 +212,22 @@ const ItemQRTab = ({ item, onQRStatusChange }: ItemQRTabProps) => {
                   Scan an existing QR code to link it to this item
                 </p>
               </div>
-              <Button 
-                onClick={() => setShowScanner(true)} 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Assign QR Code
-              </Button>
+              <div className="flex flex-col items-center gap-3">
+                <Button 
+                  onClick={() => setShowScanner(true)} 
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Assign QR Code
+                </Button>
+                <Button 
+                  onClick={() => setShowManualDialog(true)}
+                  variant="outline"
+                  className="px-8 py-3 rounded-xl"
+                >
+                  Enter code manually
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
