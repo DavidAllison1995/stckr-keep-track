@@ -20,6 +20,7 @@ import { Item } from '@/types/item';
 import SimpleQRScanner from '@/components/qr/SimpleQRScanner';
 import { qrLinkingService, QRLinkStatus } from '@/services/qrLinking';
 import { globalQrService } from '@/services/globalQr';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ItemQRTabProps {
   item: Item;
@@ -95,8 +96,23 @@ const ItemQRTab = ({ item, onQRStatusChange }: ItemQRTabProps) => {
     
     setIsAssigning(true);
     try {
-      // Use the same service that works in the QR creation flow
-      await globalQrService.claimCode(code, item.id);
+      // Use the qr-claim edge function directly for consistency
+      const { data, error } = await supabase.functions.invoke('qr-claim', {
+        body: { codeId: code, itemId: item.id }
+      });
+
+      console.log('QR claim response:', { data, error });
+
+      if (error) {
+        console.error('Error from qr-claim function:', error);
+        throw new Error(error.message || 'QR assignment failed');
+      }
+
+      if (!data?.success) {
+        console.error('QR assignment failed:', data?.error || data?.message);
+        throw new Error(data?.error || data?.message || 'QR assignment failed');
+      }
+
       console.log('QR code claimed successfully, refreshing status...');
       await loadQRLinkStatus(); // Refresh the status
       

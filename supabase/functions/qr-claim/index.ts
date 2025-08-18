@@ -320,7 +320,7 @@ serve(async (req) => {
         user_id: user.id,
         event_type: 'qr_claim_success',
         event_data: { 
-          qr_code: sanitizedCode, 
+          qr_code: codeValue, 
           item_id: itemId,
           client_ip: clientIP
         },
@@ -328,7 +328,7 @@ serve(async (req) => {
         user_agent: req.headers.get('user-agent')
       }).catch(err => console.error('Audit log error:', err));
 
-      console.log('QR code claimed successfully:', sanitizedCode, 'by user:', user.id);
+      console.log('QR code claimed successfully:', codeValue, 'by user:', user.id);
       return new Response(
         JSON.stringify({ success: true, message: result.message }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
