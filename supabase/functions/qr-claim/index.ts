@@ -62,7 +62,7 @@ serve(async (req) => {
 
     const codeFromPath = url.pathname.split('/').pop()
     const codeFromQuery = url.searchParams.get('code') || url.searchParams.get('codeId') || url.searchParams.get('qrCodeId')
-    const codeFromBody = body?.codeId || body?.qrCodeId
+    const codeFromBody = body?.codeId || body?.qrCodeId || body?.code
 
     // Prefer body -> query -> path and ignore the function name suffix
     const rawCodeInput = [codeFromBody, codeFromQuery, codeFromPath]
@@ -76,12 +76,7 @@ serve(async (req) => {
       )
     }
 
-    // Create a supabase client early for later use
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    )
-
+    // Validate Authorization header and create a Supabase client that runs as the user
     const authHeader = req.headers.get('Authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       console.error('Missing or invalid authorization header from IP:', clientIP);
@@ -94,10 +89,14 @@ serve(async (req) => {
       )
     }
 
-    const token = authHeader.replace('Bearer ', '')
-    
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    )
+
     // Verify user is authenticated
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
     if (authError || !user) {
       console.error('Authentication failed:', authError?.message, 'from IP:', clientIP);
       return new Response(
