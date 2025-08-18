@@ -232,6 +232,39 @@ const ItemQRTab = ({ item, onQRStatusChange }: ItemQRTabProps) => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Global overlays rendered via portal */}
+        {showScanner &&
+          createPortal(
+            <SimpleQRScanner
+              onScan={handleQRCodeScanned}
+              onClose={() => setShowScanner(false)}
+            />,
+            document.body
+          )
+        }
+
+        <Dialog open={showManualDialog} onOpenChange={setShowManualDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Enter QR code</DialogTitle>
+              <DialogDescription>Paste the code or full QR URL to link it to this item.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <Input
+                value={manualCode}
+                onChange={(e) => setManualCode(e.target.value)}
+                placeholder="e.g. WL4GUS or https://stckr.io/qr/WL4GUS"
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowManualDialog(false)}>Cancel</Button>
+              <Button onClick={handleManualAssign} disabled={isAssigning}>
+                {isAssigning ? 'Assigning...' : 'Assign'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
