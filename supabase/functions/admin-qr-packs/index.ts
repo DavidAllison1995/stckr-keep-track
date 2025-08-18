@@ -109,13 +109,31 @@ serve(async (req) => {
         );
       }
       
-      const { name, description, physicalProductInfo } = requestBody;
+      const { name, description, physicalProductInfo, action } = requestBody;
 
-      if (!name) {
-        return new Response('Pack name is required', { status: 400, headers: corsHeaders })
+      // Support listing via POST (supabase.functions.invoke uses POST by default)
+      if (!name || action === 'list') {
+        console.log('POST list packs - fetching from qr_pack_stats...')
+        const { data: packs, error } = await serviceClient
+          .from('qr_pack_stats')
+          .select('*')
+          .order('created_at', { ascending: false })
+
+        if (error) {
+          console.error('Error fetching packs via POST:', error)
+          return new Response(
+            JSON.stringify({ error: 'Failed to fetch packs', details: error.message }), 
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+
+        return new Response(
+          JSON.stringify({ packs: packs || [] }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
       }
 
-      // Create new pack
+      // Create new pack when name is provided
       const { data: pack, error } = await serviceClient
         .from('qr_code_packs')
         .insert({
