@@ -15,7 +15,7 @@ import { useSubscriptionLimits } from '@/hooks/useSubscriptionLimits';
 interface ItemFormProps {
   item?: Item;
   initialQrCode?: string;
-  onSuccess: () => void;
+  onSuccess: (createdItem?: Item) => void;
   onCancel?: () => void;
 }
 
@@ -125,7 +125,7 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
         });
       }
 
-      onSuccess();
+      onSuccess(newItem);
 
       // If this was a new item created with a QR code, navigate to its detail page
       if (!item && initialQrCode && newItem) {
@@ -253,7 +253,7 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
           <Button type="submit" className="flex-1">
             {item ? 'Update Item' : 'Create Item'}
           </Button>
-          <Button type="button" variant="outline" onClick={onCancel || onSuccess}>
+          <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
         </div>
