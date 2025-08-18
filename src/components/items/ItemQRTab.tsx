@@ -19,6 +19,7 @@ import { QrCode, Trash2, Scan, Plus, Copy, Download } from 'lucide-react';
 import { Item } from '@/types/item';
 import SimpleQRScanner from '@/components/qr/SimpleQRScanner';
 import { qrLinkingService, QRLinkStatus } from '@/services/qrLinking';
+import { globalQrService } from '@/services/globalQr';
 
 interface ItemQRTabProps {
   item: Item;
@@ -94,8 +95,9 @@ const ItemQRTab = ({ item, onQRStatusChange }: ItemQRTabProps) => {
     
     setIsAssigning(true);
     try {
-      await qrLinkingService.linkQRToItem(code, item.id, user.id);
-      console.log('QR code linked successfully, refreshing status...');
+      // Use the same service that works in the QR creation flow
+      await globalQrService.claimCode(code, item.id);
+      console.log('QR code claimed successfully, refreshing status...');
       await loadQRLinkStatus(); // Refresh the status
       
       toast({
