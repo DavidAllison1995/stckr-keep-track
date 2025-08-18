@@ -882,6 +882,10 @@ export type Database = {
         Args: { qr_code_uuid: string }
         Returns: boolean
       }
+      claim_qr: {
+        Args: { p_code: string; p_item_id: string; p_user_id: string }
+        Returns: Json
+      }
       get_user_subscription: {
         Args: { user_uuid: string }
         Returns: {
