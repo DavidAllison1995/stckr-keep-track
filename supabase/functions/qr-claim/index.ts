@@ -256,7 +256,7 @@ serve(async (req) => {
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
       );
 
-      await supabaseAdmin.from('security_audit_log').insert({
+      const { error: auditErr1 } = await supabaseAdmin.from('security_audit_log').insert({
         user_id: user.id,
         event_type: 'qr_claim_attempt',
         event_data: { 
@@ -266,7 +266,8 @@ serve(async (req) => {
         },
         ip_address: clientIP,
         user_agent: req.headers.get('user-agent')
-      }).catch(err => console.error('Audit log error:', err));
+      });
+      if (auditErr1) console.error('Audit log error:', auditErr1);
 
       // Use the RPC function to claim the code
       const { data, error } = await supabaseClient.rpc('claim_qr', {
@@ -279,7 +280,7 @@ serve(async (req) => {
         console.error('Error claiming code:', error.message, 'for user:', user.id);
         
         // Log failed claim for audit
-        await supabaseAdmin.from('security_audit_log').insert({
+        const { error: auditErr2 } = await supabaseAdmin.from('security_audit_log').insert({
           user_id: user.id,
           event_type: 'qr_claim_failed',
           event_data: { 
@@ -290,7 +291,8 @@ serve(async (req) => {
           },
           ip_address: clientIP,
           user_agent: req.headers.get('user-agent')
-        }).catch(err => console.error('Audit log error:', err));
+        });
+        if (auditErr2) console.error('Audit log error:', auditErr2);
         
         return new Response(
           JSON.stringify({ error: 'Failed to claim code' }), 
@@ -315,7 +317,7 @@ serve(async (req) => {
       }
 
       // Log successful claim
-      await supabaseAdmin.from('security_audit_log').insert({
+      const { error: auditErr3 } = await supabaseAdmin.from('security_audit_log').insert({
         user_id: user.id,
         event_type: 'qr_claim_success',
         event_data: { 
@@ -325,7 +327,8 @@ serve(async (req) => {
         },
         ip_address: clientIP,
         user_agent: req.headers.get('user-agent')
-      }).catch(err => console.error('Audit log error:', err));
+      });
+      if (auditErr3) console.error('Audit log error:', auditErr3);
 
       console.log('QR code claimed successfully:', codeValue, 'by user:', user.id);
       return new Response(
