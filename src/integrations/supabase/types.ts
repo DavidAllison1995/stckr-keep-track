@@ -516,6 +516,36 @@ export type Database = {
           },
         ]
       }
+      security_audit_log: {
+        Row: {
+          created_at: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       shipping_addresses: {
         Row: {
           city: string
@@ -848,6 +878,10 @@ export type Database = {
       }
     }
     Functions: {
+      can_access_qr_code: {
+        Args: { qr_code_uuid: string }
+        Returns: boolean
+      }
       get_user_subscription: {
         Args: { user_uuid: string }
         Returns: {
