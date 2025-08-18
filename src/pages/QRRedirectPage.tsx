@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QrCode, Smartphone, Monitor, Loader2 } from 'lucide-react';
-import { qrAssignmentService } from '@/services/qrAssignment';
+import { qrRedirectService } from '@/services/qrRedirect';
 import { QRAssignModal } from '@/components/qr/QRAssignModal';
 import ItemForm from '@/components/items/ItemForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -126,7 +126,7 @@ const QRRedirectPage = () => {
         }
 
         try {
-          const result = await qrAssignmentService.checkQRCode(cleanCode, user!.id);
+          const result = await qrRedirectService.resolveQRCode(cleanCode);
           
           if (!result.success) {
             toast({
