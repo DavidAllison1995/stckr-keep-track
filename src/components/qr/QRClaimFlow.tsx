@@ -64,15 +64,14 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
     if (!createdItem) {
       console.error('No item provided to handleItemCreated');
       toast({
-        title: "Error",
+        title: "Error", 
         description: "Failed to get created item",
         variant: "destructive",
       });
       return;
     }
-    
+
     try {
-      // Use the atomic create and claim function with all item properties
       const newItemId = await qrService.createItemAndClaimQR(qrKey, {
         name: createdItem.name,
         category: createdItem.category,
@@ -80,35 +79,26 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
         photo_url: createdItem.photo_url,
         room: createdItem.room,
         description: createdItem.description,
-        icon_id: createdItem.icon_id
+        icon_id: createdItem.icon_id,
       });
-      
+
+      // Navigate immediately using the authoritative return
+      navigate(`/items/${newItemId}`);
+
+      // Optional: verify in background (do not block UX)
+      qrService.checkQRAssignment(qrKey).catch(() => {});
+
       toast({
         title: "Success",
         description: "New item created and QR code assigned",
       });
-      
-      // Navigate immediately using the returned ID
-      navigate(`/items/${newItemId}`);
+
       onClose();
-      
-      // Verify in background (non-blocking)
-      setTimeout(async () => {
-        try {
-          const verification = await qrService.checkQRAssignment(qrKey);
-          if (!verification.assigned) {
-            console.warn('QR assignment verification failed:', verification);
-          }
-        } catch (error) {
-          console.warn('QR assignment verification error:', error);
-        }
-      }, 1000);
-      
     } catch (error) {
-      console.error('Failed to create item and claim QR:', error);
+      console.error('Failed to create item and claim QR code:', error);
       toast({
-        title: "Error", 
-        description: "Failed to create item and assign QR code",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create item and assign QR code",
         variant: "destructive",
       });
     }

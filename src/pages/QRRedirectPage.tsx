@@ -52,8 +52,8 @@ const QRRedirectPage = () => {
   const device = detectDevice();
 
   const attemptAppRedirect = (itemId: string) => {
-    console.log('Attempting navigation to item:', itemId);
-    // Direct navigation - we're already in the app at this point
+    // We are (usually) already in the app context here.
+    // Navigate directly. If this page is reached on web, the SPA route works too.
     navigate(`/items/${itemId}`);
   };
 

@@ -9,56 +9,38 @@ export const useDeepLinkHandler = () => {
   useEffect(() => {
     const handleAppUrlOpen = async (event: { url: string }) => {
       console.log('Deep link received:', event.url);
-      
+
       try {
         const url = new URL(event.url);
-        
-        // Handle different URL schemes - always use /qr/:code for QR codes
-        if (url.protocol === 'stckr:' || url.hostname === 'stckr.io') {
-          const pathSegments = url.pathname.split('/').filter(Boolean);
-          
+        const pathSegments = url.pathname.split('/').filter(Boolean);
+
+        if (url.protocol.startsWith('stckr') || url.hostname === 'stckr.io') {
           if (pathSegments.length >= 2) {
             const [type, id] = pathSegments;
-            
-            switch (type) {
-              case 'qr':
-                // Normalize the QR code and log the deep link scan
-                const normalizedCode = qrService.normalizeQRKey(id);
-                await qrService.logQRScan(normalizedCode, 'mobile', 'deep-link');
-                navigate(`/qr/${normalizedCode}`);
-                break;
-                
-              case 'item':
-                navigate(`/items/${id}`);
-                break;
-                
-              default:
-                console.log('Unhandled deep link type:', type);
-                navigate('/dashboard');
+
+            if (type === 'qr') {
+              await qrService.logQRScan(id, 'mobile', 'deep-link');
+              navigate(`/qr/${id}`);
+              return;
             }
-          } else {
-            // Fallback to dashboard for malformed links
-            navigate('/dashboard');
+
+            if (type === 'item') {
+              navigate(`/items/${id}`);
+              return;
+            }
           }
         }
-      } catch (error) {
-        console.error('Error handling deep link:', error);
+
+        navigate('/dashboard'); // fallback
+      } catch (e) {
+        console.error('Error handling deep link:', e);
         navigate('/dashboard');
       }
     };
 
-    // Listen for incoming deep links
     App.addListener('appUrlOpen', handleAppUrlOpen);
-
-    // Check if app was launched with a deep link
     App.getLaunchUrl().then(({ url }) => {
-      if (url) {
-        handleAppUrlOpen({ url });
-      }
+      if (url) handleAppUrlOpen({ url });
     });
-
-    return () => {
-      // Cleanup is handled automatically by Capacitor
-    };
   }, [navigate]);
 };

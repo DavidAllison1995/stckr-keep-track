@@ -1,358 +1,123 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Max-Age': '86400',
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
-  'X-XSS-Protection': '1; mode=block',
-  'Referrer-Policy': 'strict-origin-when-cross-origin'
-}
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Max-Age": "86400",
+};
 
-// Input validation and sanitization
-function sanitizeInput(input: string): string {
-  return input.replace(/[<>'"&]/g, '').trim().substring(0, 255);
-}
-
-function validateQRCode(code: string): boolean {
-  return /^[A-Za-z0-9]{6,8}$/.test(code);
-}
-
-function validateUUID(uuid: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uuid);
-}
-
-// Rate limiting storage (simple in-memory)
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
-
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const windowMs = 300000; // 5 minutes
-  const maxRequests = 10; // 10 claims per 5 minutes per user
-
-  const current = rateLimitStore.get(userId) || { count: 0, resetTime: now + windowMs };
-  
-  if (now > current.resetTime) {
-    current.count = 1;
-    current.resetTime = now + windowMs;
-  } else {
-    current.count++;
+function normalizeCode(raw: string): string {
+  let s = (raw || "").trim();
+  try {
+    const u = new URL(s);
+    const qp = u.searchParams.get("code") || u.searchParams.get("qr") || u.searchParams.get("codeId") || u.searchParams.get("qrCodeId");
+    if (qp) s = qp;
+    else {
+      const segs = u.pathname.split("/").filter(Boolean);
+      if (segs.length) s = segs[segs.length - 1];
+    }
+  } catch {
+    // not a URL
   }
-  
-  rateLimitStore.set(userId, current);
-  return current.count <= maxRequests;
+  s = s.split("?")[0].split("#")[0];
+  s = s.replace(/[^A-Za-z0-9]/g, "");
+  return s.toUpperCase();
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
-
-  const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
 
   try {
-    const url = new URL(req.url)
-    // Try to resolve the QR code from multiple sources: body (POST), query, or path suffix
-    let body: any = {}
-    if (req.method === 'POST') {
-      body = await req.json().catch(() => ({}))
-    }
+    const url = new URL(req.url);
+    const body = await req.json().catch(() => ({})) as { itemId?: string; codeId?: string; code?: string; qr?: string; qrCodeId?: string };
 
-    const codeFromPath = url.pathname.split('/').pop()
-    const codeFromQuery = url.searchParams.get('code') || url.searchParams.get('codeId') || url.searchParams.get('qrCodeId')
-    const codeFromBody = body?.codeId || body?.qrCodeId || body?.code
+    const codeRaw =
+      body.codeId || body.qrCodeId || body.code || body.qr ||
+      url.searchParams.get("code") || url.searchParams.get("qr") || url.searchParams.get("codeId") || url.searchParams.get("qrCodeId") ||
+      url.pathname.split("/").filter(Boolean).pop() || "";
 
-    // Prefer body -> query -> path and ignore the function name suffix
-    const rawCodeInput = [codeFromBody, codeFromQuery, codeFromPath]
-      .find((c) => c && c !== 'qr-claim') as string | undefined
-
-    if (!rawCodeInput) {
-      console.error('No QR code provided from IP:', clientIP);
-      return new Response(
-        JSON.stringify({ error: 'QR code is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Validate Authorization header and create a Supabase client that runs as the user
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.error('Missing or invalid authorization header from IP:', clientIP);
-      return new Response(
-        JSON.stringify({ error: 'Authorization required' }), 
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
-    )
-
-    // Verify user is authenticated
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
-    if (authError || !user) {
-      console.error('Authentication failed:', authError?.message, 'from IP:', clientIP);
-      return new Response(
-        JSON.stringify({ error: 'Authentication failed' }), 
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    // Check rate limiting for authenticated user
-    if (!checkRateLimit(user.id)) {
-      console.warn('Rate limit exceeded for user:', user.id, 'from IP:', clientIP);
-      return new Response(
-        JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), 
-        { 
-          status: 429, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    // Normalize provided value to the canonical short code
-    const normalizeToCode = async (input: string): Promise<string | null> => {
-      let candidate = input.trim();
-
-      // If it's a URL, try to extract the code from query or last path segment
-      try {
-        const u = new URL(candidate);
-        const qp = u.searchParams.get('code') || u.searchParams.get('codeId') || u.searchParams.get('qr') || u.searchParams.get('qrCodeId');
-        if (qp) candidate = qp;
-        else {
-          const segs = u.pathname.split('/').filter(Boolean);
-          if (segs.length > 0) candidate = segs[segs.length - 1];
-        }
-      } catch (_) {
-        // Not a URL, continue
-      }
-
-      if (validateQRCode(candidate)) {
-        return sanitizeInput(candidate);
-      }
-
-      if (validateUUID(candidate)) {
-        const { data: qrRow, error: qrErr } = await supabaseClient
-          .from('qr_codes')
-          .select('code')
-          .eq('id', candidate)
-          .maybeSingle();
-        if (qrErr || !qrRow?.code) return null;
-        return sanitizeInput(qrRow.code);
-      }
-
-      return null;
-    };
-
-    const codeValue = await normalizeToCode(rawCodeInput);
-    if (!codeValue) {
-      console.error('Invalid QR code format:', rawCodeInput, 'from IP:', clientIP);
-      return new Response(
-        JSON.stringify({ error: 'Valid QR code required' }), 
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    if (req.method === 'GET') {
-      // Get user's claim for this code
-      const { data, error } = await supabaseClient
-        .from('user_qr_claims')
-        .select(`
-          *,
-          qr_codes!inner (
-            code
-          ),
-          items (
-            id,
-            name
-          )
-        `)
-        .eq('qr_codes.code', codeValue)
-        .eq('user_id', user.id)
-        .single()
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching claim:', error.message, 'for user:', user.id);
-        return new Response(
-          JSON.stringify({ error: 'Failed to fetch claim' }), 
-          { 
-            status: 500, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        )
-      }
-
-      return new Response(
-        JSON.stringify({ claim: data }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    if (req.method === 'POST') {
-      const { itemId } = (body || {}) as { itemId?: string }
-
-      // If no itemId provided, treat this POST as a read (some clients cannot send GET with body)
-      if (!itemId) {
-        const { data, error } = await supabaseClient
-          .from('user_qr_claims')
-          .select(`
-            *,
-            qr_codes!inner (
-              code
-            ),
-            items (
-              id,
-              name
-            )
-          `)
-          .eq('qr_codes.code', codeValue)
-          .eq('user_id', user.id)
-          .single()
-
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error fetching claim (POST-read):', error.message, 'for user:', user.id);
-          return new Response(
-            JSON.stringify({ error: 'Failed to fetch claim' }),
-            {
-              status: 500,
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            }
-          )
-        }
-
-        return new Response(
-          JSON.stringify({ claim: data }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-
-      if (!validateUUID(itemId)) {
-        console.error('Invalid item ID provided:', itemId, 'by user:', user.id);
-        return new Response(
-          JSON.stringify({ error: 'Valid item ID required' }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        )
-      }
-
-      // Log claim attempt for audit
-      const supabaseAdmin = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-      );
-
-      const { error: auditErr1 } = await supabaseAdmin.from('security_audit_log').insert({
-        user_id: user.id,
-        event_type: 'qr_claim_attempt',
-        event_data: { 
-          qr_code: codeValue, 
-          item_id: itemId,
-          client_ip: clientIP
-        },
-        ip_address: clientIP,
-        user_agent: req.headers.get('user-agent')
+    const code = normalizeCode(codeRaw);
+    if (!code) {
+      return new Response(JSON.stringify({ error: "Valid QR code required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
-      if (auditErr1) console.error('Audit log error:', auditErr1);
+    }
 
-      // Use the RPC function to claim the code
-      const { data, error } = await supabaseClient.rpc('claim_qr', {
-        p_code: codeValue,
-        p_user_id: user.id,
-        p_item_id: itemId
-      })
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Authorization required" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } },
+    );
+
+    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: "Authentication failed" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (req.method === "GET") {
+      // Return current user's claim (if any)
+      const { data, error } = await supabase
+        .from("item_qr_links")
+        .select("item_id")
+        .eq("user_id", user.id)
+        .eq("qr_key", code)
+        .maybeSingle();
+
+      if (error && error.code !== "PGRST116") {
+        return new Response(JSON.stringify({ error: "Failed to fetch claim" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      return new Response(JSON.stringify({ claim: data ?? null }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (req.method === "POST") {
+      const itemId = (body.itemId || "").trim();
+      if (!/^[0-9a-f-]{36}$/i.test(itemId)) {
+        return new Response(JSON.stringify({ error: "Valid item ID required" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Call canonical RPC
+      const { data, error } = await supabase.rpc("claim_qr_for_item", {
+        p_qr_key: code,
+        p_item_id: itemId,
+      });
 
       if (error) {
-        console.error('Error claiming code:', error.message, 'for user:', user.id);
-        
-        // Log failed claim for audit
-        const { error: auditErr2 } = await supabaseAdmin.from('security_audit_log').insert({
-          user_id: user.id,
-          event_type: 'qr_claim_failed',
-          event_data: { 
-            qr_code: codeValue, 
-            item_id: itemId,
-            error: error.message,
-            client_ip: clientIP
-          },
-          ip_address: clientIP,
-          user_agent: req.headers.get('user-agent')
+        return new Response(JSON.stringify({ error: "Failed to claim code" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
-        if (auditErr2) console.error('Audit log error:', auditErr2);
-        
-        return new Response(
-          JSON.stringify({ error: 'Failed to claim code' }), 
-          { 
-            status: 500, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        )
       }
 
-      const result = data as { success: boolean; error?: string; message?: string }
-
-      if (!result.success) {
-        console.warn('QR claim rejected:', result.error, 'for user:', user.id);
-        return new Response(
-          JSON.stringify({ error: result.error }),
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        )
-      }
-
-      // Log successful claim
-      const { error: auditErr3 } = await supabaseAdmin.from('security_audit_log').insert({
-        user_id: user.id,
-        event_type: 'qr_claim_success',
-        event_data: { 
-          qr_code: codeValue, 
-          item_id: itemId,
-          client_ip: clientIP
-        },
-        ip_address: clientIP,
-        user_agent: req.headers.get('user-agent')
+      return new Response(JSON.stringify(data ?? { success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
-      if (auditErr3) console.error('Audit log error:', auditErr3);
-
-      console.log('QR code claimed successfully:', codeValue, 'by user:', user.id);
-      return new Response(
-        JSON.stringify({ success: true, message: result.message }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
     }
 
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }), 
-      { 
-        status: 405, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
-
-  } catch (error) {
-    console.error('Unexpected error in qr-claim:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }), 
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    console.error("qr-claim error:", e);
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
-})
+});

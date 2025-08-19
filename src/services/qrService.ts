@@ -22,27 +22,30 @@ export interface QRClaimResponse {
 
 export const qrService = {
   /**
-   * Normalize QR code input from various formats to canonical UPPER case
+   * Normalize QR input to a canonical UPPER alphanumeric key
    */
   normalizeQRKey(input: string): string {
-    let s = input.trim();
+    let s = (input || '').trim();
 
-    // Extract last path segment if it's a URL
+    // If it's a URL, try to extract last path seg or ?code= param
     try {
       const u = new URL(s);
-      const segs = u.pathname.split('/').filter(Boolean);
-      if (segs.length) s = segs[segs.length - 1];
-    } catch (_) {
-      // not a URL → keep s
+      const qp = u.searchParams.get('code') || u.searchParams.get('qr') || u.searchParams.get('codeId') || u.searchParams.get('qrCodeId');
+      if (qp) s = qp;
+      else {
+        const segs = u.pathname.split('/').filter(Boolean);
+        if (segs.length) s = segs[segs.length - 1];
+      }
+    } catch {
+      // not a URL
     }
 
-    // Strip query/hash
+    // Strip query/hash if any slipped through
     if (s.includes('?')) s = s.split('?')[0];
     if (s.includes('#')) s = s.split('#')[0];
 
-    // Only alnum, 6–8 recommended (don't hard‑reject here; server validates)
+    // Only alphanumeric; final canonical UPPER
     s = s.replace(/[^A-Za-z0-9]/g, '');
-
     return s.toUpperCase();
   },
 
