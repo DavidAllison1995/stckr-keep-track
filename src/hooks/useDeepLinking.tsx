@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
-import { supabase } from '@/integrations/supabase/client';
+import { qrService } from '@/services/qrService';
 
 export const useDeepLinking = () => {
   const navigate = useNavigate();
@@ -38,8 +38,9 @@ export const useDeepLinking = () => {
           const itemId = path.replace(/^\/(items?|item)\//, '');
           navigate(`/items/${itemId}`);
         } else if (path.startsWith('/qr/')) {
-          // Navigate to QR resolution page
+          // Navigate to QR resolution page with logging
           const qrCode = path.replace('/qr/', '');
+          await qrService.logQRScan(qrCode, 'mobile', 'deep-link');
           navigate(`/qr/${qrCode}`);
         } else {
           // Default to dashboard

@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
-import { qrAssignmentService } from '@/services/qrAssignment';
+import { qrService } from '@/services/qrService';
 import { useToast } from '@/hooks/use-toast';
-import { QRAssignModal } from './QRAssignModal';
-import ItemForm from '@/components/items/ItemForm';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { QRClaimFlow } from './QRClaimFlow';
 import { Loader2 } from 'lucide-react';
 
 interface QRScanHandlerProps {
@@ -18,8 +16,7 @@ export const QRScanHandler = ({ scannedCode, onComplete }: QRScanHandlerProps) =
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isChecking, setIsChecking] = useState(true);
-  const [showAssignModal, setShowAssignModal] = useState(false);
-  const [showCreateItemModal, setShowCreateItemModal] = useState(false);
+  const [showClaimFlow, setShowClaimFlow] = useState(false);
 
   useEffect(() => {
     if (scannedCode && user) {
@@ -32,14 +29,11 @@ export const QRScanHandler = ({ scannedCode, onComplete }: QRScanHandlerProps) =
 
     setIsChecking(true);
     try {
-      console.log('=== QR SCAN HANDLER ===');
-      console.log('Processing scanned code:', scannedCode);
-
-      const result = await qrAssignmentService.checkQRCode(scannedCode, user.id);
-
+      const result = await qrService.checkQRAssignment(scannedCode);
+      
       if (!result.success) {
         toast({
-          title: "Error",
+          title: "Error", 
           description: result.error || "Failed to check QR code",
           variant: "destructive",
         });
@@ -47,21 +41,24 @@ export const QRScanHandler = ({ scannedCode, onComplete }: QRScanHandlerProps) =
         return;
       }
 
-      if (result.assigned && result.item) {
-        // QR code is already assigned to an item - navigate to item details
+      if (!result.authenticated) {
         toast({
-          title: "QR Code Found",
-          description: `Opening ${result.item.name}`,
-          variant: "default",
+          title: "Authentication Required",
+          description: "Please log in to assign QR codes",
+          variant: "destructive",
         });
+        onComplete();
+        return;
+      }
+
+      if (result.assigned && result.item) {
         navigate(`/items/${result.item.id}`);
         onComplete();
       } else {
-        // QR code is not assigned - show assignment modal
-        setShowAssignModal(true);
+        setShowClaimFlow(true);
       }
     } catch (error) {
-      console.error('Error processing scanned code:', error);
+      console.error('Error checking QR code:', error);
       toast({
         title: "Error",
         description: "Failed to process QR code. Please try again.",
@@ -73,29 +70,8 @@ export const QRScanHandler = ({ scannedCode, onComplete }: QRScanHandlerProps) =
     }
   };
 
-  const handleAssignmentSuccess = () => {
-    setShowAssignModal(false);
-    onComplete();
-  };
-
-  const handleCreateNewItem = () => {
-    setShowAssignModal(false);
-    setShowCreateItemModal(true);
-  };
-
-  const handleItemCreated = async () => {
-    toast({
-      title: "Success",
-      description: "Item created successfully",
-      variant: "default",
-    });
-    setShowCreateItemModal(false);
-    onComplete();
-  };
-
-  const handleClose = () => {
-    setShowAssignModal(false);
-    setShowCreateItemModal(false);
+  const handleClaimFlowClose = () => {
+    setShowClaimFlow(false);
     onComplete();
   };
 
@@ -112,27 +88,11 @@ export const QRScanHandler = ({ scannedCode, onComplete }: QRScanHandlerProps) =
   }
 
   return (
-    <>
-      <QRAssignModal
-        isOpen={showAssignModal}
-        onClose={handleClose}
-        onCreateNewItem={handleCreateNewItem}
-        onSuccess={handleAssignmentSuccess}
-        qrCode={scannedCode}
-      />
-
-      <Dialog open={showCreateItemModal} onOpenChange={setShowCreateItemModal}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create New Item</DialogTitle>
-          </DialogHeader>
-          <ItemForm 
-            onSuccess={handleItemCreated}
-            onCancel={() => setShowCreateItemModal(false)}
-          />
-        </DialogContent>
-      </Dialog>
-    </>
+    <QRClaimFlow
+      qrKey={scannedCode}
+      isOpen={showClaimFlow}
+      onClose={handleClaimFlowClose}
+    />
   );
 };
 

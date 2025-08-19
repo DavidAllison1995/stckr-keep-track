@@ -6,8 +6,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QrCode, Smartphone, Monitor, Loader2 } from 'lucide-react';
-import { qrRedirectService } from '@/services/qrRedirect';
-import { QRAssignModal } from '@/components/qr/QRAssignModal';
+import { qrService } from '@/services/qrService';
+import { QRClaimFlow } from '@/components/qr/QRClaimFlow';
 import ItemForm from '@/components/items/ItemForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
@@ -36,9 +36,7 @@ const QRRedirectPage = () => {
   const { isAuthenticated, isLoading, user } = useSupabaseAuth();
   const { toast } = useToast();
   const [isChecking, setIsChecking] = useState(true);
-  const [assignedItem, setAssignedItem] = useState<any>(null);
-  const [showAssignModal, setShowAssignModal] = useState(false);
-  const [showCreateItemModal, setShowCreateItemModal] = useState(false);
+  const [showClaimFlow, setShowClaimFlow] = useState(false);
   
   // Extract clean code from potentially malformed URL parameter
   const cleanCode = code ? extractCleanCode(code) : null;
@@ -126,7 +124,10 @@ const QRRedirectPage = () => {
         }
 
         try {
-          const result = await qrRedirectService.resolveQRCode(cleanCode);
+          // Log the scan for analytics
+          await qrService.logQRScan(cleanCode, device, 'web');
+          
+          const result = await qrService.checkQRAssignment(cleanCode);
           
           if (!result.success) {
             toast({
@@ -138,6 +139,12 @@ const QRRedirectPage = () => {
             return;
           }
 
+          if (!result.authenticated) {
+            // Not authenticated - redirect to auth with QR code in redirect
+            navigate(`/auth?redirect=${encodeURIComponent(`/qr/${cleanCode}`)}`);
+            return;
+          }
+
           if (result.assigned && result.item) {
             // QR code is assigned to an item - redirect directly to item card
             console.log('QR code is assigned, redirecting to item:', result.item.id);
@@ -145,7 +152,7 @@ const QRRedirectPage = () => {
             return;
           } else {
             // QR code is not assigned - show assignment UI
-            setAssignedItem(null);
+            setShowClaimFlow(true);
           }
         } catch (error) {
           console.error('Error checking QR code status:', error);
@@ -170,32 +177,12 @@ const QRRedirectPage = () => {
   }, [code, cleanCode, searchParams, navigate, toast, isAuthenticated, isLoading, user]);
 
   const handleAssignQRCode = () => {
-    setShowAssignModal(true);
+    setShowClaimFlow(true);
   };
 
-  const handleCreateNewItem = () => {
-    setShowAssignModal(false);
-    setShowCreateItemModal(true);
-  };
-
-  const handleAssignmentSuccess = () => {
-    setShowAssignModal(false);
-    // Refresh the page to show the newly assigned item
-    window.location.reload();
-  };
-
-  const handleItemCreated = async () => {
-    toast({
-      title: "Success",
-      description: "Item created successfully",
-    });
-    setShowCreateItemModal(false);
-    navigate('/items');
-  };
-
-  const handleModalClose = () => {
-    setShowAssignModal(false);
-    setShowCreateItemModal(false);
+  const handleClaimFlowClose = () => {
+    setShowClaimFlow(false);
+    navigate('/dashboard');
   };
 
   const handleDownloadApp = () => {
@@ -298,25 +285,11 @@ const QRRedirectPage = () => {
         </Card>
       </div>
 
-      <QRAssignModal
-        isOpen={showAssignModal}
-        onClose={handleModalClose}
-        onCreateNewItem={handleCreateNewItem}
-        onSuccess={handleAssignmentSuccess}
-        qrCode={cleanCode || ''}
+      <QRClaimFlow
+        qrKey={cleanCode || ''}
+        isOpen={showClaimFlow}
+        onClose={handleClaimFlowClose}
       />
-
-      <Dialog open={showCreateItemModal} onOpenChange={setShowCreateItemModal}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create New Item</DialogTitle>
-          </DialogHeader>
-          <ItemForm 
-            onSuccess={handleItemCreated}
-            onCancel={() => setShowCreateItemModal(false)}
-          />
-        </DialogContent>
-      </Dialog>
     </>
   );
 };

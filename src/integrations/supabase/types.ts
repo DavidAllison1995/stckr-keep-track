@@ -49,6 +49,38 @@ export type Database = {
           },
         ]
       }
+      item_qr_links: {
+        Row: {
+          assigned_at: string | null
+          id: string
+          item_id: string
+          qr_key: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          id?: string
+          item_id: string
+          qr_key: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          id?: string
+          item_id?: string
+          qr_key?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_qr_links_qr_key_fkey"
+            columns: ["qr_key"]
+            isOneToOne: false
+            referencedRelation: "qr_catalog"
+            referencedColumns: ["qr_key"]
+          },
+        ]
+      }
       items: {
         Row: {
           category: string
@@ -415,6 +447,27 @@ export type Database = {
         }
         Relationships: []
       }
+      qr_catalog: {
+        Row: {
+          created_at: string | null
+          is_active: boolean | null
+          metadata: Json | null
+          qr_key: string
+        }
+        Insert: {
+          created_at?: string | null
+          is_active?: boolean | null
+          metadata?: Json | null
+          qr_key: string
+        }
+        Update: {
+          created_at?: string | null
+          is_active?: boolean | null
+          metadata?: Json | null
+          qr_key?: string
+        }
+        Relationships: []
+      }
       qr_code_packs: {
         Row: {
           created_at: string
@@ -486,6 +539,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      qr_scans: {
+        Row: {
+          created_at: string | null
+          id: string
+          platform: string | null
+          qr_key: string
+          source: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          platform?: string | null
+          qr_key: string
+          source?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          platform?: string | null
+          qr_key?: string
+          source?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       scan_history: {
         Row: {
@@ -882,8 +962,16 @@ export type Database = {
         Args: { qr_code_uuid: string }
         Returns: boolean
       }
+      check_qr_assignment: {
+        Args: { p_qr_key: string }
+        Returns: Json
+      }
       claim_qr: {
         Args: { p_code: string; p_item_id: string; p_user_id: string }
+        Returns: Json
+      }
+      claim_qr_for_item: {
+        Args: { p_item_id: string; p_qr_key: string }
         Returns: Json
       }
       get_user_subscription: {
@@ -898,6 +986,10 @@ export type Database = {
       is_user_admin: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      unassign_qr: {
+        Args: { p_qr_key: string }
+        Returns: Json
       }
     }
     Enums: {

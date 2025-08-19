@@ -21,8 +21,13 @@ const config: CapacitorConfig = {
         {
           CFBundleURLName: 'STCKR OAuth',
           CFBundleURLSchemes: ['stckr', 'com.stckr.keeptrack', 'com.googleusercontent.apps.1004044323466-ij201m6vumudnmlj8k3dbrqp799g9vbn']
+        },
+        {
+          CFBundleURLName: 'STCKR Deep Links',
+          CFBundleURLSchemes: ['stckr']
         }
-      ]
+      ],
+      com_apple_developer_associated_domains: ['applinks:stckr.io']
     }
   },
   plugins: {
