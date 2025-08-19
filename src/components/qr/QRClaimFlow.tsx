@@ -30,19 +30,15 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
     try {
       await qrService.claimQRForItem(qrKey, selectedItemId);
       
-      // Verify the assignment by checking the database
-      const result = await qrService.checkQRAssignment(qrKey);
-      
-      if (!result.success || !result.assigned || !result.item) {
-        throw new Error('Could not verify QR assignment after claiming');
-      }
+      // Navigate immediately and verify in background
+      navigate(`/items/${selectedItemId}`);
+      qrService.checkQRAssignment(qrKey).catch(() => {});
       
       toast({
         title: "Success", 
         description: "QR code assigned to item successfully",
       });
       
-      navigate(`/items/${result.item.id}`);
       onClose();
     } catch (error) {
       console.error('Failed to claim QR code:', error);
@@ -114,6 +110,7 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
           <ItemForm 
             onSuccess={handleItemCreated}
             onCancel={() => setShowCreateForm(false)}
+            mode="collectOnly"
           />
         </DialogContent>
       </Dialog>

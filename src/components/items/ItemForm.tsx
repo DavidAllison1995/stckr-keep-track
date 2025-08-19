@@ -17,9 +17,10 @@ interface ItemFormProps {
   initialQrCode?: string;
   onSuccess: (createdItem?: Item) => void;
   onCancel?: () => void;
+  mode?: 'normal' | 'collectOnly';
 }
 
-const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) => {
+const ItemForm = ({ item, initialQrCode, onSuccess, onCancel, mode = 'normal' }: ItemFormProps) => {
   const navigate = useNavigate();
   const { user } = useSupabaseAuth();
   const { addItem, updateItem } = useSupabaseItems();
@@ -83,6 +84,19 @@ const ItemForm = ({ item, initialQrCode, onSuccess, onCancel }: ItemFormProps) =
     e.preventDefault();
     
     if (!formData.name.trim()) {
+      return;
+    }
+
+    // If in collectOnly mode, just return the form data without creating an item
+    if (mode === 'collectOnly') {
+      onSuccess({
+        name: formData.name.trim(),
+        category: formData.category || 'Other',
+        icon_id: formData.icon_id,
+        room: formData.room || undefined,
+        description: formData.description || undefined,
+        photo_url: formData.photo_url || undefined,
+      } as any);
       return;
     }
 
