@@ -80,7 +80,48 @@ export const qrService = {
   },
 
   /**
-   * Assign a QR code to an item
+   * Atomically create a new item and assign QR code to it
+   */
+  async createItemAndClaimQR(qrKey: string, itemData: {
+    name: string;
+    category?: string;
+    notes?: string;
+    photo_url?: string;
+    room?: string;
+    description?: string;
+    icon_id?: string;
+  }): Promise<string> {
+    try {
+      const normalizedKey = this.normalizeQRKey(qrKey);
+      
+      console.log('Creating item and claiming QR:', { qrKey: normalizedKey, itemData });
+      
+      const { data: itemId, error } = await supabase.rpc('create_item_and_claim_qr', {
+        p_qr_key: normalizedKey,
+        p_name: itemData.name,
+        p_category: itemData.category || null,
+        p_notes: itemData.notes || null,
+        p_photo_url: itemData.photo_url || null,
+        p_room: itemData.room || null,
+        p_description: itemData.description || null,
+        p_icon_id: itemData.icon_id || null,
+      });
+
+      if (error) {
+        console.error('Error creating item and claiming QR:', error);
+        throw new Error(error.message);
+      }
+
+      console.log('Successfully created item and claimed QR:', itemId);
+      return itemId as string;
+    } catch (error) {
+      console.error('Error calling create_item_and_claim_qr:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Assign a QR code to an existing item
    */
   async claimQRForItem(qrKey: string, itemId: string): Promise<QRClaimResponse> {
     try {

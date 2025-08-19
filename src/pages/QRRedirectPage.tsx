@@ -127,7 +127,11 @@ const QRRedirectPage = () => {
           // Log the scan for analytics
           await qrService.logQRScan(cleanCode, device, 'web');
           
+          // ALWAYS fresh-check the database for assignment status (no cache)
+          console.log('Fresh checking QR assignment for:', cleanCode);
           const result = await qrService.checkQRAssignment(cleanCode);
+          
+          console.log('QR assignment check result:', result);
           
           if (!result.success) {
             toast({
@@ -152,6 +156,7 @@ const QRRedirectPage = () => {
             return;
           } else {
             // QR code is not assigned - show assignment UI
+            console.log('QR code not assigned, showing claim flow');
             setShowClaimFlow(true);
           }
         } catch (error) {

@@ -974,6 +974,19 @@ export type Database = {
         Args: { p_item_id: string; p_qr_key: string }
         Returns: Json
       }
+      create_item_and_claim_qr: {
+        Args: {
+          p_category?: string
+          p_description?: string
+          p_icon_id?: string
+          p_name: string
+          p_notes?: string
+          p_photo_url?: string
+          p_qr_key: string
+          p_room?: string
+        }
+        Returns: string
+      }
       get_user_subscription: {
         Args: { user_uuid: string }
         Returns: {

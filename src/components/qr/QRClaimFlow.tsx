@@ -30,12 +30,19 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
     try {
       await qrService.claimQRForItem(qrKey, selectedItemId);
       
+      // Verify the assignment by checking the database
+      const result = await qrService.checkQRAssignment(qrKey);
+      
+      if (!result.success || !result.assigned || !result.item) {
+        throw new Error('Could not verify QR assignment after claiming');
+      }
+      
       toast({
-        title: "Success",
+        title: "Success", 
         description: "QR code assigned to item successfully",
       });
       
-      navigate(`/items/${selectedItemId}`);
+      navigate(`/items/${result.item.id}`);
       onClose();
     } catch (error) {
       console.error('Failed to claim QR code:', error);
@@ -57,7 +64,7 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
     if (!createdItem) {
       console.error('No item provided to handleItemCreated');
       toast({
-        title: "Error",
+        title: "Error", 
         description: "Failed to get created item",
         variant: "destructive",
       });
@@ -65,20 +72,36 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
     }
     
     try {
-      await qrService.claimQRForItem(qrKey, createdItem.id);
+      // Use the atomic function to create item and claim QR in one transaction
+      const newItemId = await qrService.createItemAndClaimQR(qrKey, {
+        name: createdItem.name,
+        category: createdItem.category,
+        notes: createdItem.notes,
+        photo_url: createdItem.photo_url,
+        room: createdItem.room,
+        description: createdItem.description,
+        icon_id: createdItem.icon_id,
+      });
+      
+      // Verify the assignment by checking the database
+      const result = await qrService.checkQRAssignment(qrKey);
+      
+      if (!result.success || !result.assigned || !result.item) {
+        throw new Error('Could not verify QR assignment after creation');
+      }
       
       toast({
         title: "Success",
         description: "New item created and QR code assigned",
       });
       
-      navigate(`/items/${createdItem.id}`);
+      navigate(`/items/${result.item.id}`);
       onClose();
     } catch (error) {
-      console.error('Failed to claim QR code for new item:', error);
+      console.error('Failed to create item and claim QR code:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Item created but failed to assign QR code",
+        description: error instanceof Error ? error.message : "Failed to create item and assign QR code",
         variant: "destructive",
       });
     }
