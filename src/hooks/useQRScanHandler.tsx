@@ -14,14 +14,14 @@ export const useQRScanner = () => {
     setIsProcessing(true);
     
     try {
-      // Normalize the QR code
+      // Normalize the QR code to canonical uppercase
       const qrKey = qrService.normalizeQRKey(scannedText);
       console.log('Processing QR scan:', { original: scannedText, normalized: qrKey });
 
       // Log the scan
       await qrService.logQRScan(qrKey, 'web', 'camera');
 
-      // Navigate to QR handler page
+      // Navigate to canonical QR route - single entry point for all QR codes
       navigate(`/qr/${qrKey}`);
       
     } catch (error) {

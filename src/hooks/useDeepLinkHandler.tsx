@@ -13,7 +13,7 @@ export const useDeepLinkHandler = () => {
       try {
         const url = new URL(event.url);
         
-        // Handle different URL schemes
+        // Handle different URL schemes - always use /qr/:code for QR codes
         if (url.protocol === 'stckr:' || url.hostname === 'stckr.io') {
           const pathSegments = url.pathname.split('/').filter(Boolean);
           
@@ -22,9 +22,10 @@ export const useDeepLinkHandler = () => {
             
             switch (type) {
               case 'qr':
-                // Log the deep link scan
-                await qrService.logQRScan(id, 'mobile', 'deep-link');
-                navigate(`/qr/${id}`);
+                // Normalize the QR code and log the deep link scan
+                const normalizedCode = qrService.normalizeQRKey(id);
+                await qrService.logQRScan(normalizedCode, 'mobile', 'deep-link');
+                navigate(`/qr/${normalizedCode}`);
                 break;
                 
               case 'item':

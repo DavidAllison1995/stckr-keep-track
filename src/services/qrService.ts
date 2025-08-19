@@ -22,26 +22,28 @@ export interface QRClaimResponse {
 
 export const qrService = {
   /**
-   * Normalize QR input to extract just the key
+   * Normalize QR code input from various formats to canonical UPPER case
    */
   normalizeQRKey(input: string): string {
-    // Handle various input formats
-    const trimmed = input.trim();
-    
-    // If it's a URL, extract the last segment
-    if (trimmed.includes('stckr.io/qr/') || trimmed.includes('://qr/')) {
-      const segments = trimmed.split('/');
-      return segments[segments.length - 1].split('?')[0]; // Remove query params
+    let s = input.trim();
+
+    // Extract last path segment if it's a URL
+    try {
+      const u = new URL(s);
+      const segs = u.pathname.split('/').filter(Boolean);
+      if (segs.length) s = segs[segs.length - 1];
+    } catch (_) {
+      // not a URL → keep s
     }
-    
-    // If it starts with stckr://, extract after the last /
-    if (trimmed.startsWith('stckr://')) {
-      const segments = trimmed.split('/');
-      return segments[segments.length - 1].split('?')[0];
-    }
-    
-    // Otherwise assume it's already a clean key
-    return trimmed.toUpperCase();
+
+    // Strip query/hash
+    if (s.includes('?')) s = s.split('?')[0];
+    if (s.includes('#')) s = s.split('#')[0];
+
+    // Only alnum, 6–8 recommended (don't hard‑reject here; server validates)
+    s = s.replace(/[^A-Za-z0-9]/g, '');
+
+    return s.toUpperCase();
   },
 
   /**
