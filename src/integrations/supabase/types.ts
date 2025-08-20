@@ -508,6 +508,7 @@ export type Database = {
           id: string
           image_url: string | null
           pack_id: string | null
+          qr_key_canonical: string
         }
         Insert: {
           code: string
@@ -515,6 +516,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           pack_id?: string | null
+          qr_key_canonical: string
         }
         Update: {
           code?: string
@@ -522,6 +524,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           pack_id?: string | null
+          qr_key_canonical?: string
         }
         Relationships: [
           {
