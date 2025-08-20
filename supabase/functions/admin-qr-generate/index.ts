@@ -138,9 +138,12 @@ serve(async (req) => {
     // Generate unique codes with white QR on dark background
     const codes = []
     
+    const normalize = (raw: string) => raw.replace(/[^A-Za-z0-9]/g, '').toUpperCase()
+    
     for (let i = 0; i < quantity; i++) {
       const codeId = generateCodeId()
       const codePrinted = `QR-${codeId}`
+      const canonicalKey = normalize(codePrinted)
       
       // Generate universal deep link URL for app/web compatibility
       const qrUrl = `https://stckr.io/qr/${codePrinted}`
@@ -151,6 +154,9 @@ serve(async (req) => {
       codes.push({ 
         id: crypto.randomUUID(),
         code_printed: codePrinted,
+        qr_key_canonical: canonicalKey,
+        // Legacy field to satisfy NOT NULL and keep compatibility
+        code: codePrinted,
         image_url: qrDataUrl,
         pack_id: packId
       })
@@ -162,6 +168,8 @@ serve(async (req) => {
       .insert(codes.map(code => ({
         id: code.id,
         code_printed: code.code_printed,
+        qr_key_canonical: code.qr_key_canonical,
+        code: code.code,
         pack_id: code.pack_id,
         image_url: code.image_url
       })))
