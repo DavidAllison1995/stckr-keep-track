@@ -140,18 +140,17 @@ serve(async (req) => {
     
     for (let i = 0; i < quantity; i++) {
       const codeId = generateCodeId()
-      const token = crypto.randomUUID()
+      const codePrinted = `QR-${codeId}`
       
       // Generate universal deep link URL for app/web compatibility
-      const qrUrl = `https://stckr.io/qr/${codeId}`
+      const qrUrl = `https://stckr.io/qr/${codePrinted}`
       
       // Generate white QR code on dark transparent background - no white fill/padding
       const qrDataUrl = await generateDarkOptimizedQRCode(qrUrl)
       
       codes.push({ 
         id: crypto.randomUUID(),
-        code: codeId,
-        token,
+        code_printed: codePrinted,
         image_url: qrDataUrl,
         pack_id: packId
       })
@@ -162,7 +161,7 @@ serve(async (req) => {
       .from('qr_codes')
       .insert(codes.map(code => ({
         id: code.id,
-        code: code.code,
+        code_printed: code.code_printed,
         pack_id: code.pack_id,
         image_url: code.image_url
       })))
@@ -178,7 +177,7 @@ serve(async (req) => {
     // Return codes with image URLs for frontend display
     const returnCodes = codes.map((code, index) => ({
       id: code.id,
-      code: code.code,
+      code_printed: code.code_printed,
       created_at: new Date().toISOString(),
       is_active: true,
       image_url: code.image_url
