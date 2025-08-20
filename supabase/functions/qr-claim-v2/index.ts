@@ -92,20 +92,29 @@ serve(async (req) => {
       });
     }
 
+    const token = authHeader.replace('Bearer ', '');
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      },
     );
 
     // Verify user
-    const { data: { user }, error: authErr } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+    const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
     if (authErr || !user) {
       return new Response(JSON.stringify({ error: "Authentication failed" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    if (req.method === "GET") {
+    if (req.method === "GET" || (req.method === "POST" && (body as any)?.action === "get")) {
       // Check current user's claim using new schema
       const { data, error } = await supabase
         .from("qr_codes")
