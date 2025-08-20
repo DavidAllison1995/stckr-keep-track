@@ -101,8 +101,8 @@ const ItemQRTab = ({ item, onQRStatusChange }: ItemQRTabProps) => {
     
     setIsAssigning(true);
     try {
-      // Use the qr-claim edge function directly for consistency
-      const { data, error } = await supabase.functions.invoke('qr-claim', {
+      // Use the qr-claim-v2 edge function for the new system
+      const { data, error } = await supabase.functions.invoke('qr-claim-v2', {
         body: { codeId: code, itemId: item.id }
       });
 
@@ -150,7 +150,7 @@ const ItemQRTab = ({ item, onQRStatusChange }: ItemQRTabProps) => {
     }
     setIsAssigning(true);
     try {
-      const { data, error } = await supabase.functions.invoke('qr-claim', {
+      const { data, error } = await supabase.functions.invoke('qr-claim-v2', {
         body: { codeId: manualCode.trim(), itemId: item.id },
       });
       console.log('Manual claim response:', { data, error });

@@ -76,7 +76,7 @@ serve(async (req) => {
     // Get all QR codes that don't have image_url
     const { data: qrCodes, error: fetchError } = await serviceClient
       .from('qr_codes')
-      .select('id, code')
+      .select('id, code_printed')
       .is('image_url', null)
 
     if (fetchError) {
@@ -100,7 +100,7 @@ serve(async (req) => {
     const updates = []
     for (const qrCode of qrCodes) {
       try {
-        const qrUrl = `https://stckr.io/qr/${qrCode.code}`
+        const qrUrl = `https://stckr.io/qr/${qrCode.code_printed}`
         const qrDataUrl = await generateDarkOptimizedQRCode(qrUrl)
         
         updates.push({
@@ -108,7 +108,7 @@ serve(async (req) => {
           image_url: qrDataUrl
         })
       } catch (error) {
-        console.error(`Failed to generate image for code ${qrCode.code}:`, error)
+        console.error(`Failed to generate image for code ${qrCode.code_printed}:`, error)
       }
     }
 

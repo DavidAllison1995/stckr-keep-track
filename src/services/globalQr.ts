@@ -36,7 +36,7 @@ export const globalQrService = {
       throw new Error('Not authenticated');
     }
 
-    const { data, error } = await supabase.functions.invoke('qr-claim', {
+    const { data, error } = await supabase.functions.invoke('qr-claim-v2', {
       method: 'POST',
       body: { codeId, action: 'get' },
       headers: {
@@ -63,7 +63,7 @@ export const globalQrService = {
       throw new Error('Not authenticated');
     }
 
-    const { data, error } = await supabase.functions.invoke('qr-claim', {
+    const { data, error } = await supabase.functions.invoke('qr-claim-v2', {
       method: 'POST',
       body: { codeId, itemId },
       headers: {

@@ -132,7 +132,7 @@ export const qrLinkingService = {
       console.log('User ID:', userId);
 
       // Use the new edge function for better server-side debugging
-      const { data, error } = await supabase.functions.invoke('qr-claim', {
+      const { data, error } = await supabase.functions.invoke('qr-claim-v2', {
         body: { codeId: qrCode, itemId },
       });
 

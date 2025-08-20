@@ -79,7 +79,7 @@ export const qrAssignmentService = {
       console.log('=== QR ASSIGN ===');
       console.log('Assigning QR code:', qrCode, 'to item:', itemId, 'for user:', userId);
 
-      const { data, error } = await supabase.functions.invoke('qr-claim', {
+      const { data, error } = await supabase.functions.invoke('qr-claim-v2', {
         body: { codeId: qrCode, itemId }
       });
 

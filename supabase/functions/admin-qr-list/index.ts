@@ -98,10 +98,14 @@ serve(async (req) => {
       .from('qr_codes')
       .select(`
         id, 
-        code, 
+        code_printed, 
+        qr_key_canonical,
         created_at, 
         pack_id,
         image_url,
+        claimed_item_id,
+        claimed_by_user_id,
+        claimed_at,
         pack:qr_code_packs(
           id,
           name,
@@ -131,9 +135,13 @@ serve(async (req) => {
       id: code.id,
       created_at: code.created_at,
       is_active: true, // All QR codes are active by default
-      code: code.code,
+      code_printed: code.code_printed,
+      qr_key_canonical: code.qr_key_canonical,
       pack_id: code.pack_id,
       image_url: code.image_url,
+      claimed_item_id: code.claimed_item_id,
+      claimed_by_user_id: code.claimed_by_user_id,
+      claimed_at: code.claimed_at,
       pack: code.pack // Include pack information
     }))
 
