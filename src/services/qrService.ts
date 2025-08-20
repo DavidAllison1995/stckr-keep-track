@@ -23,11 +23,12 @@ export interface QRClaimResponse {
 export const qrService = {
   /**
    * Normalize QR input to a canonical UPPER alphanumeric key
+   * This is the single source of truth for QR key normalization
    */
   normalizeQRKey(input: string): string {
     let s = (input || '').trim();
 
-    // If it's a URL, try to extract last path seg or ?code= param
+    // If it's a URL, try to extract last path seg or query params
     try {
       const u = new URL(s);
       const qp = u.searchParams.get('code') || u.searchParams.get('qr') || u.searchParams.get('codeId') || u.searchParams.get('qrCodeId');
@@ -51,6 +52,7 @@ export const qrService = {
 
   /**
    * Check if a QR code is assigned for the current user
+   * Uses the new v2 RPC with canonical keys and single source of truth
    */
   async checkQRAssignment(qrKey: string): Promise<QRAssignmentResponse> {
     try {
@@ -58,7 +60,7 @@ export const qrService = {
       
       console.log('Checking QR assignment for key:', normalizedKey);
       
-      const { data, error } = await supabase.rpc('check_qr_assignment', {
+      const { data, error } = await supabase.rpc('check_qr_assignment_v2', {
         p_qr_key: normalizedKey
       });
 
@@ -74,7 +76,7 @@ export const qrService = {
 
       return data as unknown as QRAssignmentResponse;
     } catch (error) {
-      console.error('Error calling check_qr_assignment:', error);
+      console.error('Error calling check_qr_assignment_v2:', error);
       return {
         success: false,
         assigned: false,
@@ -86,6 +88,7 @@ export const qrService = {
 
   /**
    * Atomically create a new item and assign QR code to it
+   * Uses the new v2 RPC with single source of truth
    */
   async createItemAndClaimQR(qrKey: string, itemData: {
     name: string;
@@ -101,7 +104,7 @@ export const qrService = {
       
       console.log('Creating item and claiming QR:', { qrKey: normalizedKey, itemData });
       
-      const { data: itemId, error } = await supabase.rpc('create_item_and_claim_qr', {
+      const { data: itemId, error } = await supabase.rpc('create_item_and_claim_qr_v2', {
         p_qr_key: normalizedKey,
         p_name: itemData.name,
         p_category: itemData.category || null,
@@ -120,13 +123,14 @@ export const qrService = {
       console.log('Successfully created item and claimed QR:', itemId);
       return itemId as string;
     } catch (error) {
-      console.error('Error calling create_item_and_claim_qr:', error);
+      console.error('Error calling create_item_and_claim_qr_v2:', error);
       throw error;
     }
   },
 
   /**
    * Assign a QR code to an existing item
+   * Uses the new v2 RPC with single source of truth
    */
   async claimQRForItem(qrKey: string, itemId: string): Promise<QRClaimResponse> {
     try {
@@ -134,7 +138,7 @@ export const qrService = {
       
       console.log('Claiming QR key for item:', { qrKey: normalizedKey, itemId });
       
-      const { data, error } = await supabase.rpc('claim_qr_for_item', {
+      const { data, error } = await supabase.rpc('claim_qr_for_item_v2', {
         p_qr_key: normalizedKey,
         p_item_id: itemId
       });
@@ -146,13 +150,14 @@ export const qrService = {
 
       return data as unknown as QRClaimResponse;
     } catch (error) {
-      console.error('Error calling claim_qr_for_item:', error);
+      console.error('Error calling claim_qr_for_item_v2:', error);
       throw error;
     }
   },
 
   /**
    * Unassign a QR code from an item
+   * Uses the new v2 RPC with single source of truth
    */
   async unassignQR(qrKey: string): Promise<{ success: boolean; deleted: boolean }> {
     try {
@@ -160,7 +165,7 @@ export const qrService = {
       
       console.log('Unassigning QR key:', normalizedKey);
       
-      const { data, error } = await supabase.rpc('unassign_qr', {
+      const { data, error } = await supabase.rpc('unassign_qr_v2', {
         p_qr_key: normalizedKey
       });
 
@@ -171,7 +176,7 @@ export const qrService = {
 
       return data as unknown as { success: boolean; deleted: boolean };
     } catch (error) {
-      console.error('Error calling unassign_qr:', error);
+      console.error('Error calling unassign_qr_v2:', error);
       throw error;
     }
   },
@@ -200,21 +205,31 @@ export const qrService = {
 
   /**
    * Get QR assignments for current user
+   * Uses the new qr_codes table as single source of truth
    */
   async getUserQRAssignments(): Promise<any[]> {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
       const { data, error } = await supabase
-        .from('item_qr_links')
+        .from('qr_codes')
         .select(`
-          *,
-          items (
+          id,
+          code_printed,
+          qr_key_canonical,
+          claimed_at,
+          claimed_item_id,
+          items:claimed_item_id (
             id,
             name,
             category,
             photo_url
           )
         `)
-        .order('assigned_at', { ascending: false });
+        .eq('claimed_by_user_id', user.id)
+        .not('claimed_item_id', 'is', null)
+        .order('claimed_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching user QR assignments:', error);

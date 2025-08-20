@@ -58,6 +58,15 @@ verify_jwt = true
 [functions.qr-assign]
 verify_jwt = false
 
+[functions.qr-generate-v2]
+verify_jwt = false
+
 [functions.qr-resolve]
+verify_jwt = false
+
+[functions.qr-resolve-v2]
+verify_jwt = false
+
+[functions.qr-claim-v2]
 verify_jwt = false
 

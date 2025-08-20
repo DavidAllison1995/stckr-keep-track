@@ -93,6 +93,7 @@ export type Database = {
           notes: string | null
           photo_url: string | null
           purchase_date: string | null
+          qr_code_id: string | null
           room: string | null
           updated_at: string
           user_id: string
@@ -109,6 +110,7 @@ export type Database = {
           notes?: string | null
           photo_url?: string | null
           purchase_date?: string | null
+          qr_code_id?: string | null
           room?: string | null
           updated_at?: string
           user_id: string
@@ -125,12 +127,21 @@ export type Database = {
           notes?: string | null
           photo_url?: string | null
           purchase_date?: string | null
+          qr_code_id?: string | null
           room?: string | null
           updated_at?: string
           user_id?: string
           warranty_date?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "items_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "qr_codes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       maintenance_tasks: {
         Row: {
@@ -503,7 +514,11 @@ export type Database = {
       }
       qr_codes: {
         Row: {
+          claimed_at: string | null
+          claimed_by_user_id: string | null
+          claimed_item_id: string | null
           code: string
+          code_printed: string
           created_at: string
           id: string
           image_url: string | null
@@ -511,7 +526,11 @@ export type Database = {
           qr_key_canonical: string
         }
         Insert: {
+          claimed_at?: string | null
+          claimed_by_user_id?: string | null
+          claimed_item_id?: string | null
           code: string
+          code_printed: string
           created_at?: string
           id?: string
           image_url?: string | null
@@ -519,7 +538,11 @@ export type Database = {
           qr_key_canonical: string
         }
         Update: {
+          claimed_at?: string | null
+          claimed_by_user_id?: string | null
+          claimed_item_id?: string | null
           code?: string
+          code_printed?: string
           created_at?: string
           id?: string
           image_url?: string | null
@@ -527,6 +550,13 @@ export type Database = {
           qr_key_canonical?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "qr_codes_claimed_item_id_fkey"
+            columns: ["claimed_item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "qr_codes_pack_id_fkey"
             columns: ["pack_id"]
@@ -969,6 +999,10 @@ export type Database = {
         Args: { p_qr_key: string }
         Returns: Json
       }
+      check_qr_assignment_v2: {
+        Args: { p_qr_key: string }
+        Returns: Json
+      }
       claim_qr: {
         Args: { p_code: string; p_item_id: string; p_user_id: string }
         Returns: Json
@@ -977,7 +1011,24 @@ export type Database = {
         Args: { p_item_id: string; p_qr_key: string }
         Returns: Json
       }
+      claim_qr_for_item_v2: {
+        Args: { p_item_id: string; p_qr_key: string }
+        Returns: Json
+      }
       create_item_and_claim_qr: {
+        Args: {
+          p_category?: string
+          p_description?: string
+          p_icon_id?: string
+          p_name: string
+          p_notes?: string
+          p_photo_url?: string
+          p_qr_key: string
+          p_room?: string
+        }
+        Returns: string
+      }
+      create_item_and_claim_qr_v2: {
         Args: {
           p_category?: string
           p_description?: string
@@ -1004,6 +1055,10 @@ export type Database = {
         Returns: boolean
       }
       unassign_qr: {
+        Args: { p_qr_key: string }
+        Returns: Json
+      }
+      unassign_qr_v2: {
         Args: { p_qr_key: string }
         Returns: Json
       }

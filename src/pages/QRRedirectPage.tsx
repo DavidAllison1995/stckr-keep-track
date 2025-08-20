@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
@@ -8,26 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QrCode, Smartphone, Monitor, Loader2 } from 'lucide-react';
 import { qrService } from '@/services/qrService';
 import { QRClaimFlow } from '@/components/qr/QRClaimFlow';
-import ItemForm from '@/components/items/ItemForm';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-
-
-// Extract clean QR code from potentially malformed URL parameter
-const extractCleanCode = (rawCode: string): string => {
-  // If the code contains the full URL, extract just the code part
-  if (rawCode.includes('https://stckr.io/qr/')) {
-    const urlParts = rawCode.split('https://stckr.io/qr/');
-    return urlParts[urlParts.length - 1]; // Get the last part (the actual code)
-  }
-  
-  // If it contains query parameters, extract just the code
-  if (rawCode.includes('?')) {
-    return rawCode.split('?')[0];
-  }
-  
-  // Return the code as-is if it's already clean
-  return rawCode;
-};
 
 const QRRedirectPage = () => {
   const { code } = useParams<{ code: string }>();
@@ -37,9 +16,7 @@ const QRRedirectPage = () => {
   const { toast } = useToast();
   const [isChecking, setIsChecking] = useState(true);
   const [showClaimFlow, setShowClaimFlow] = useState(false);
-  
-  // Extract clean code from potentially malformed URL parameter
-  const cleanCode = code ? extractCleanCode(code) : null;
+  const [qrExists, setQrExists] = useState(true);
 
   // Detect device type for future deep linking
   const detectDevice = () => {
@@ -52,116 +29,122 @@ const QRRedirectPage = () => {
   const device = detectDevice();
 
   const attemptAppRedirect = (itemId: string) => {
-    // We are (usually) already in the app context here.
-    // Navigate directly. If this page is reached on web, the SPA route works too.
     navigate(`/items/${itemId}`);
   };
 
   useEffect(() => {
-    console.log('=== QR REDIRECT DEBUG ===');
-    console.log('Raw URL:', window.location.href);
-    console.log('Code from params:', code);
-    console.log('Search params:', searchParams.toString());
-    console.log('Clean code extracted:', cleanCode);
-    
-    const checkQRCodeAssignment = async () => {
-      setIsChecking(true);
-      
-      // If still loading auth state, wait
-      if (isLoading) {
-        return;
-      }
+    async function handleRedirect() {
+      try {
+        setIsChecking(true);
+        console.log('=== QR REDIRECT V2 DEBUG ===');
+        console.log('Raw URL:', window.location.href);
+        console.log('Code from params:', code);
 
-      // Check if this is a direct link format (userID + itemID)
-      const userID = searchParams.get('userID');
-      const itemID = searchParams.get('itemID');
-      
-      if (userID && itemID) {
-        // Direct link format: https://stckr.io/qr?userID={userID}&itemID={itemID}
-        if (!isAuthenticated) {
-          navigate(`/auth?redirect=${encodeURIComponent(`/qr?userID=${userID}&itemID=${itemID}`)}`);
+        // If still loading auth state, wait
+        if (isLoading) {
           return;
         }
 
-        // Check if current user matches the userID
-        if (user?.id !== userID) {
-          toast({
-            title: "Access Denied",
-            description: "This QR code belongs to a different user.",
-            variant: "destructive",
-          });
-          navigate('/');
-          return;
-        }
+        const searchParams = new URLSearchParams(window.location.search);
+        const userID = searchParams.get('userID');
+        const itemID = searchParams.get('itemID');
 
-        // For direct links, redirect directly to item
-        console.log('Direct link detected, redirecting to item:', itemID);
-        navigate(`/items/${itemID}`);
-        return;
-      } else if (cleanCode) {
-        // QR code format: https://stckr.io/qr/{code}
-        if (!isAuthenticated) {
-          navigate(`/auth?redirect=${encodeURIComponent(`/qr/${cleanCode}`)}`);
-          return;
-        }
-
-        try {
-          // Log the scan for analytics
-          await qrService.logQRScan(cleanCode, device, 'web');
-          
-          // ALWAYS fresh-check the database for assignment status (no cache)
-          console.log('Fresh checking QR assignment for:', cleanCode);
-          const result = await qrService.checkQRAssignment(cleanCode);
-          
-          console.log('QR assignment check result:', result);
-          
-          if (!result.success) {
+        // Handle direct link format: ?userID=...&itemID=... (legacy support)
+        if (userID && itemID) {
+          console.log('Direct link detected (legacy):', { userID, itemID });
+          if (user && user.id === userID) {
+            attemptAppRedirect(itemID);
+            return;
+          } else if (!user) {
+            navigate('/auth', { 
+              state: { returnTo: window.location.pathname + window.location.search }
+            });
+            return;
+          } else {
             toast({
-              title: "Error",
-              description: result.error || "Failed to check QR code",
+              title: "Access Denied",
+              description: "This item belongs to a different user.",
               variant: "destructive",
             });
             navigate('/');
             return;
           }
+        }
 
-          if (!result.authenticated) {
-            // Not authenticated - redirect to auth with QR code in redirect
-            navigate(`/auth?redirect=${encodeURIComponent(`/qr/${cleanCode}`)}`);
-            return;
-          }
-
-          if (result.assigned && result.item) {
-            // QR code is assigned to an item - redirect directly to item card
-            console.log('QR code is assigned, redirecting to item:', result.item.id);
-            attemptAppRedirect(result.item.id);
-            return;
-          } else {
-            // QR code is not assigned - show assignment UI
-            console.log('QR code not assigned, showing claim flow');
-            setShowClaimFlow(true);
-          }
-        } catch (error) {
-          console.error('Error checking QR code status:', error);
+        // Handle standard QR code format: /qr/CODE
+        if (!code) {
           toast({
-            title: "Error",
-            description: "Failed to check QR code status. Please try again.",
+            title: "Invalid QR Code",
+            description: "No QR code provided.",
             variant: "destructive",
           });
           navigate('/');
           return;
         }
-      } else {
-        // No valid parameters, redirect to home
-        navigate('/');
-        return;
-      }
-      
-      setIsChecking(false);
-    };
 
-    checkQRCodeAssignment();
-  }, [code, cleanCode, searchParams, navigate, toast, isAuthenticated, isLoading, user]);
+        // Normalize the QR key using the single source of truth
+        const normalizedKey = qrService.normalizeQRKey(code);
+        console.log('Processing QR code:', { original: code, normalized: normalizedKey });
+
+        // Log the scan for analytics
+        await qrService.logQRScan(normalizedKey, device, 'web');
+
+        if (!user) {
+          console.log('User not authenticated, redirecting to login');
+          navigate('/auth', { 
+            state: { returnTo: `/qr/${normalizedKey}` }
+          });
+          return;
+        }
+
+        // Use the new unified assignment check with single source of truth
+        const assignmentResult = await qrService.checkQRAssignment(normalizedKey);
+        
+        console.log('QR assignment result:', assignmentResult);
+
+        if (!assignmentResult.success) {
+          if (assignmentResult.error === 'QR code not found') {
+            console.log('QR code not found in database');
+            setQrExists(false);
+          } else {
+            console.error('Error checking QR assignment:', assignmentResult.error);
+            toast({
+              title: "Error",
+              description: assignmentResult.error || "Failed to check QR code",
+              variant: "destructive",
+            });
+            navigate('/');
+          }
+          return;
+        }
+
+        setQrExists(true);
+
+        if (assignmentResult.assigned && assignmentResult.item) {
+          console.log('QR code already assigned to user, redirecting to item');
+          attemptAppRedirect(assignmentResult.item.id);
+          return;
+        }
+
+        // QR code exists but not assigned to user - show claim flow
+        console.log('QR code exists but not assigned, showing claim options');
+        setShowClaimFlow(true);
+
+      } catch (error) {
+        console.error('Error in QR redirect:', error);
+        toast({
+          title: "Error",
+          description: "Failed to process QR code. Please try again.",
+          variant: "destructive",
+        });
+        navigate('/');
+      } finally {
+        setIsChecking(false);
+      }
+    }
+
+    handleRedirect();
+  }, [code, user, navigate, toast, isLoading]);
 
   const handleAssignQRCode = () => {
     setShowClaimFlow(true);
@@ -174,13 +157,11 @@ const QRRedirectPage = () => {
 
   const handleDownloadApp = () => {
     if (device === 'ios') {
-      // Future: redirect to App Store
       toast({
         title: "Coming Soon",
         description: "iOS app will be available in the App Store soon",
       });
     } else if (device === 'android') {
-      // Future: redirect to Play Store
       toast({
         title: "Coming Soon", 
         description: "Android app will be available in the Play Store soon",
@@ -201,10 +182,34 @@ const QRRedirectPage = () => {
     );
   }
 
-  // This section is now removed since we redirect directly to item cards
-  // instead of showing the holding page
+  // QR code doesn't exist
+  if (!qrExists) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50 p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center">
+            <QrCode className="w-12 h-12 text-red-600 mx-auto mb-2" />
+            <CardTitle className="text-red-700">Invalid QR Code</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6 text-center">
+            <p className="text-gray-600">
+              This QR code is not valid or has been removed from the system.
+            </p>
+            <Button 
+              onClick={() => navigate('/')}
+              className="w-full"
+            >
+              Go to Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-  // QR code not assigned - show assignment UI
+  // QR code exists but not assigned - show assignment UI
+  const normalizedKey = code ? qrService.normalizeQRKey(code) : '';
+
   return (
     <>
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-4">
@@ -216,7 +221,10 @@ const QRRedirectPage = () => {
           <CardContent className="space-y-6">
             <div className="text-center">
               <p className="text-gray-600 mb-4">
-                This QR code (ID: <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{cleanCode}</span>) is not assigned to any item yet.
+                This QR code is not assigned to any item yet.
+              </p>
+              <p className="text-xs text-gray-500 mb-6 font-mono bg-gray-100 px-2 py-1 rounded">
+                {normalizedKey}
               </p>
               <p className="text-sm text-gray-500 mb-6">
                 Would you like to assign it to one of your items?
@@ -246,7 +254,7 @@ const QRRedirectPage = () => {
             {device !== 'desktop' && (
               <div className="pt-4 border-t border-gray-200">
                 <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
-                  {device === 'ios' ? <Smartphone className="w-4 h-4" /> : <Smartphone className="w-4 h-4" />}
+                  <Smartphone className="w-4 h-4" />
                   <span>Prefer using the mobile app?</span>
                 </div>
                 <Button 
@@ -273,7 +281,7 @@ const QRRedirectPage = () => {
       </div>
 
       <QRClaimFlow
-        qrKey={cleanCode || ''}
+        qrKey={normalizedKey}
         isOpen={showClaimFlow}
         onClose={handleClaimFlowClose}
       />
