@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Package, Plus, Link2, Loader2 } from 'lucide-react';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
+import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
+import { useNavigate } from 'react-router-dom';
 import { qrService } from '@/services/qrService';
+import { useToast } from '@/hooks/use-toast';
+import { Package, Plus, Link2, Check } from 'lucide-react';
 import ItemForm from '@/components/items/ItemForm';
 
 interface QRClaimFlowProps {
@@ -16,35 +17,40 @@ interface QRClaimFlowProps {
 }
 
 export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
+  const { items } = useSupabaseItems();
+  const { user } = useSupabaseAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { items } = useSupabaseItems();
   const [selectedItemId, setSelectedItemId] = useState<string>('');
   const [isClaiming, setIsClaiming] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  const handleClaimToExisting = async () => {
-    if (!selectedItemId) return;
+  const handleAssignToExisting = async () => {
+    if (!selectedItemId || !user) return;
 
     setIsClaiming(true);
-    try {
-      await qrService.claimQRForItem(qrKey, selectedItemId);
-      
-      // Navigate immediately and verify in background
-      navigate(`/items/${selectedItemId}`);
-      qrService.checkQRAssignment(qrKey).catch(() => {});
-      
-      toast({
-        title: "Success", 
-        description: "QR code assigned to item successfully",
-      });
-      
-      onClose();
+      try {
+        const result = await qrService.claimQRForItem(qrKey, selectedItemId);
+
+        if (result.success) {
+          toast({
+            title: "Success",
+            description: "QR code assigned successfully",
+          });
+          navigate(`/items/${selectedItemId}`);
+          onClose();
+        } else {
+          toast({
+            title: "Error", 
+            description: "Failed to assign QR code",
+            variant: "destructive",
+          });
+        }
     } catch (error) {
-      console.error('Failed to claim QR code:', error);
+      console.error('Failed to assign QR code:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to assign QR code to item",
+        description: "Failed to assign QR code to item",
         variant: "destructive",
       });
     } finally {
@@ -57,52 +63,44 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
   };
 
   const handleItemCreated = async (createdItem?: any) => {
-    if (!createdItem) {
-      console.error('No item provided to handleItemCreated');
-      toast({
-        title: "Error", 
-        description: "Failed to get created item",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    if (!createdItem) return;
+    
     try {
-      const newItemId = await qrService.createItemAndClaimQR(qrKey, {
-        name: createdItem.name,
-        category: createdItem.category,
-        notes: createdItem.notes,
-        photo_url: createdItem.photo_url,
-        room: createdItem.room,
-        description: createdItem.description,
-        icon_id: createdItem.icon_id,
-      });
-
-      // Navigate immediately using the authoritative return
-      navigate(`/items/${newItemId}`);
-
-      // Optional: verify in background (do not block UX)
-      qrService.checkQRAssignment(qrKey).catch(() => {});
-
-      toast({
-        title: "Success",
-        description: "New item created and QR code assigned",
-      });
-
-      onClose();
+      const result = await qrService.claimQRForItem(qrKey, createdItem.id);
+      
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "New item created and QR code assigned",
+        });
+        navigate(`/items/${createdItem.id}`);
+        onClose();
+      } else {
+        toast({
+          title: "Error",
+          description: "Item created but failed to assign QR code",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
-      console.error('Failed to create item and claim QR code:', error);
+      console.error('Failed to claim QR code for new item:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create item and assign QR code",
+        description: "Item created but failed to assign QR code",
         variant: "destructive",
       });
     }
   };
 
+  const handleClose = () => {
+    setSelectedItemId('');
+    setShowCreateForm(false);
+    onClose();
+  };
+
   if (showCreateForm) {
     return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen} onOpenChange={handleClose}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Item</DialogTitle>
@@ -110,7 +108,6 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
           <ItemForm 
             onSuccess={handleItemCreated}
             onCancel={() => setShowCreateForm(false)}
-            mode="collectOnly"
           />
         </DialogContent>
       </Dialog>
@@ -118,7 +115,7 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Assign QR Code</DialogTitle>
@@ -126,24 +123,24 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
         
         <div className="space-y-6">
           <div className="text-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Package className="w-8 h-8 text-blue-600" />
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Package className="w-8 h-8 text-primary" />
             </div>
             <h3 className="font-semibold text-lg mb-2">Unassigned QR Code</h3>
-            <p className="text-gray-600 text-sm mb-2">
-              QR Code: <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{qrKey}</span>
+            <p className="text-muted-foreground text-sm">
+              This QR code isn't assigned to any of your items yet. What would you like to do?
             </p>
-            <p className="text-gray-600 text-sm">
-              This QR code isn't linked to any of your items yet. What would you like to do?
-            </p>
+            <div className="mt-2 text-xs text-muted-foreground font-mono bg-muted px-2 py-1 rounded">
+              {qrKey}
+            </div>
           </div>
 
           <div className="space-y-4">
             {/* Create New Item Option */}
             <Button
               onClick={handleCreateNewItem}
-              className="w-full h-12 bg-primary hover:bg-primary/90"
-              disabled={isClaiming}
+              className="w-full h-12"
+              size="lg"
             >
               <Plus className="w-5 h-5 mr-2" />
               Create New Item
@@ -151,12 +148,12 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
 
             {/* Assign to Existing Item */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <Link2 className="w-4 h-4" />
                 Or assign to existing item:
               </div>
               
-              <Select value={selectedItemId} onValueChange={setSelectedItemId} disabled={isClaiming}>
+              <Select value={selectedItemId} onValueChange={setSelectedItemId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select an item..." />
                 </SelectTrigger>
@@ -176,24 +173,27 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
               </Select>
 
               <Button
-                onClick={handleClaimToExisting}
+                onClick={handleAssignToExisting}
                 disabled={!selectedItemId || isClaiming || selectedItemId === 'no-items'}
                 variant="outline"
                 className="w-full"
               >
                 {isClaiming ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <div className="w-4 h-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
                     Assigning...
                   </>
                 ) : (
-                  'Assign to Selected Item'
+                  <>
+                    <Check className="w-4 h-4 mr-2" />
+                    Assign to Selected Item
+                  </>
                 )}
               </Button>
             </div>
           </div>
 
-          <Button variant="outline" onClick={onClose} className="w-full" disabled={isClaiming}>
+          <Button variant="outline" onClick={handleClose} className="w-full">
             Cancel
           </Button>
         </div>

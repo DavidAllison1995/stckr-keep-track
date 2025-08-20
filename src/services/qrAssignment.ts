@@ -48,8 +48,8 @@ export const qrAssignmentService = {
       console.log('=== QR CHECK ===');
       console.log('Checking QR code:', qrCode, 'for user:', userId);
 
-      const { data, error } = await supabase.functions.invoke('qr-check', {
-        body: { qrCode, userId }
+      const { data, error } = await supabase.rpc('check_qr_assignment_v2', {
+        p_qr_key: qrCode
       });
 
       console.log('QR check result:', { data, error });
@@ -59,7 +59,7 @@ export const qrAssignmentService = {
         throw new Error(error.message || 'QR check failed');
       }
 
-      return data;
+      return data as unknown as QRCheckResult;
     } catch (error) {
       console.error('Error in checkQRCode:', error);
       return {
@@ -79,8 +79,9 @@ export const qrAssignmentService = {
       console.log('=== QR ASSIGN ===');
       console.log('Assigning QR code:', qrCode, 'to item:', itemId, 'for user:', userId);
 
-      const { data, error } = await supabase.functions.invoke('qr-claim-v2', {
-        body: { codeId: qrCode, itemId }
+      const { data, error } = await supabase.rpc('claim_qr_for_item_v2', {
+        p_qr_key: qrCode,
+        p_item_id: itemId
       });
 
       console.log('QR assign result:', { data, error });
@@ -90,12 +91,12 @@ export const qrAssignmentService = {
         throw new Error(error.message || 'QR assignment failed');
       }
 
-      if (!data?.success) {
-        console.error('QR assignment failed:', data?.error);
-        throw new Error(data?.error || 'QR assignment failed');
+      if (!(data as any)?.success) {
+        console.error('QR assignment failed:', (data as any)?.error);
+        throw new Error((data as any)?.error || 'QR assignment failed');
       }
 
-      return data;
+      return data as unknown as QRAssignResult;
     } catch (error) {
       console.error('Error in assignQRCode:', error);
       return {
@@ -113,34 +114,18 @@ export const qrAssignmentService = {
       console.log('=== QR UNASSIGN ===');
       console.log('Unassigning QR code:', qrCode, 'for user:', userId);
 
-      // First find the QR code
-      const { data: qrCodeData, error: qrError } = await supabase
-        .from('qr_codes')
-        .select('id')
-        .eq('code', qrCode)
-        .single();
+      const { data, error } = await supabase.rpc('unassign_qr_v2', {
+        p_qr_key: qrCode
+      });
 
-      if (qrError || !qrCodeData) {
-        throw new Error('QR code not found');
+      console.log('QR unassign result:', { data, error });
+
+      if (error) {
+        console.error('Error from qr-unassign function:', error);
+        throw new Error(error.message || 'QR unassignment failed');
       }
 
-      // Remove the user's link to this QR code
-      const { error: deleteError } = await supabase
-        .from('user_qr_links')
-        .delete()
-        .eq('qr_code_id', qrCodeData.id)
-        .eq('user_id', userId);
-
-      if (deleteError) {
-        console.error('Error deleting QR link:', deleteError);
-        throw new Error('Failed to unassign QR code');
-      }
-
-      console.log('QR code unassigned successfully');
-      return {
-        success: true,
-        message: 'QR code unassigned successfully'
-      };
+      return data as unknown as QRUnassignResult;
     } catch (error) {
       console.error('Error in unassignQRCode:', error);
       return {
@@ -151,7 +136,7 @@ export const qrAssignmentService = {
   },
 
   /**
-   * Get all QR codes assigned to the current user
+   * Get all QR codes assigned to a user
    */
   async getUserQRAssignments(userId: string): Promise<Array<{
     qrCode: string;
@@ -162,40 +147,44 @@ export const qrAssignmentService = {
     imageUrl?: string;
   }>> {
     try {
+      console.log('=== GET USER QR ASSIGNMENTS ===');
+      console.log('Fetching QR assignments for user:', userId);
+
       const { data, error } = await supabase
-        .from('user_qr_links')
+        .from('qr_codes')
         .select(`
-          id,
-          qr_code_id,
-          item_id,
-          assigned_at,
-          qr_code:qr_codes(id, code, image_url),
-          item:items(id, name)
+          qr_key_canonical,
+          claimed_item_id,
+          claimed_at,
+          image_url,
+          items!inner(id, name)
         `)
-        .eq('user_id', userId)
-        .order('assigned_at', { ascending: false });
+        .eq('claimed_by_user_id', userId)
+        .not('claimed_item_id', 'is', null);
+
+      console.log('User QR assignments result:', { data, error });
 
       if (error) {
-        console.error('Error getting user QR assignments:', error);
-        return [];
+        console.error('Error from getUserQRAssignments:', error);
+        throw new Error(error.message || 'Failed to fetch QR assignments');
       }
 
-      return (data || []).map(link => ({
-        qrCode: link.qr_code.code,
-        qrCodeId: link.qr_code.id,
-        itemId: link.item.id,
-        itemName: link.item.name,
-        assignedAt: link.assigned_at,
-        imageUrl: link.qr_code.image_url
+      return (data || []).map((assignment: any) => ({
+        qrCode: assignment.qr_key_canonical,
+        qrCodeId: assignment.qr_key_canonical,
+        itemId: assignment.claimed_item_id,
+        itemName: assignment.items.name,
+        assignedAt: assignment.claimed_at,
+        imageUrl: assignment.image_url,
       }));
     } catch (error) {
-      console.error('Error in getUserQRAssignments:', error);
-      return [];
+      console.error('getUserQRAssignments failed:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch QR assignments');
     }
   },
 
   /**
-   * Get QR code assignment for a specific item
+   * Get the QR code assignment for a specific item
    */
   async getItemQRAssignment(itemId: string, userId: string): Promise<{
     qrCode: string;
@@ -204,36 +193,36 @@ export const qrAssignmentService = {
     assignedAt: string;
   } | null> {
     try {
+      console.log('=== GET ITEM QR ASSIGNMENT ===');
+      console.log('Fetching QR assignment for item:', itemId, 'user:', userId);
+
       const { data, error } = await supabase
-        .from('user_qr_links')
-        .select(`
-          id,
-          qr_code_id,
-          assigned_at,
-          qr_code:qr_codes(id, code, image_url)
-        `)
-        .eq('item_id', itemId)
-        .eq('user_id', userId)
+        .from('qr_codes')
+        .select('qr_key_canonical, claimed_at, image_url')
+        .eq('claimed_item_id', itemId)
+        .eq('claimed_by_user_id', userId)
         .maybeSingle();
 
+      console.log('Item QR assignment result:', { data, error });
+
       if (error) {
-        console.error('Error getting item QR assignment:', error);
-        return null;
+        console.error('Error from getItemQRAssignment:', error);
+        throw new Error(error.message || 'Failed to fetch item QR assignment');
       }
 
-      if (!data || !data.qr_code) {
+      if (!data) {
         return null;
       }
 
       return {
-        qrCode: data.qr_code.code,
-        qrCodeId: data.qr_code.id,
-        imageUrl: data.qr_code.image_url,
-        assignedAt: data.assigned_at
+        qrCode: data.qr_key_canonical,
+        qrCodeId: data.qr_key_canonical,
+        assignedAt: data.claimed_at,
+        imageUrl: data.image_url,
       };
     } catch (error) {
-      console.error('Error in getItemQRAssignment:', error);
-      return null;
+      console.error('getItemQRAssignment failed:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to fetch item QR assignment');
     }
-  }
+  },
 };

@@ -90,10 +90,9 @@ const QRRedirectPage = () => {
         await qrService.logQRScan(normalizedKey, device, 'web');
 
         if (!user) {
-          console.log('User not authenticated, redirecting to login');
-          navigate('/auth', { 
-            state: { returnTo: `/qr/${normalizedKey}` }
-          });
+          // Don't redirect to login - show sign in to view message
+          console.log('User not authenticated, showing sign in message');
+          setShowClaimFlow(false);
           return;
         }
 
@@ -207,8 +206,55 @@ const QRRedirectPage = () => {
     );
   }
 
-  // QR code exists but not assigned - show assignment UI
+  // QR code exists but not assigned - show assignment UI or sign in message
   const normalizedKey = code ? qrService.normalizeQRKey(code) : '';
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center">
+            <QrCode className="w-12 h-12 text-blue-600 mx-auto mb-2" />
+            <CardTitle>Sign In to View Your Item</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="text-center">
+              <p className="text-gray-600 mb-4">
+                This QR code might be assigned to one of your items.
+              </p>
+              <p className="text-xs text-gray-500 mb-6 font-mono bg-gray-100 px-2 py-1 rounded">
+                {normalizedKey}
+              </p>
+              <p className="text-sm text-gray-500 mb-6">
+                Sign in to see if this code belongs to you.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <Button 
+                onClick={() => navigate('/auth', { 
+                  state: { returnTo: `/qr/${normalizedKey}` }
+                })}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                size="lg"
+              >
+                Sign In
+              </Button>
+
+              <Button 
+                onClick={() => navigate('/')}
+                variant="outline"
+                className="w-full"
+                size="lg"
+              >
+                Go to Home
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <>

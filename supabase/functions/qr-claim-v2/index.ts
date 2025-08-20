@@ -25,8 +25,14 @@ function normalizeCode(raw: string): string {
   return s.toUpperCase();
 }
 
-async function logAuditEvent(supabase: any, eventType: string, userId: string, eventData: any, req: Request) {
+async function logAuditEvent(eventType: string, userId: string, eventData: any, req: Request) {
   try {
+    // Create a service role client for audit logging to bypass RLS
+    const auditClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+    
     // Extract IP from headers - handle forwarded IPs properly
     const forwardedFor = req.headers.get('x-forwarded-for') || '';
     const realIp = req.headers.get('x-real-ip') || '';
@@ -48,7 +54,7 @@ async function logAuditEvent(supabase: any, eventType: string, userId: string, e
 
     const userAgent = req.headers.get('user-agent') || 'unknown';
 
-    await supabase.from('security_audit_log').insert({
+    await auditClient.from('security_audit_log').insert({
       event_type: eventType,
       user_id: userId,
       event_data: eventData,
@@ -153,7 +159,7 @@ serve(async (req) => {
 
       if (error) {
         console.error("Error claiming QR code:", error);
-        await logAuditEvent(supabase, 'qr_claim_failed', user.id, {
+        await logAuditEvent('qr_claim_failed', user.id, {
           qr_key: canonicalKey,
           item_id: itemId,
           error: error.message
@@ -165,7 +171,7 @@ serve(async (req) => {
       }
 
       // Log successful claim
-      await logAuditEvent(supabase, 'qr_claim_success', user.id, {
+      await logAuditEvent('qr_claim_success', user.id, {
         qr_key: canonicalKey,
         item_id: itemId
       }, req);
