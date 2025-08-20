@@ -29,30 +29,19 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
     if (!selectedItemId || !user) return;
 
     setIsClaiming(true);
-      try {
-        const result = await qrService.claimQRForItem(qrKey, selectedItemId);
+    try {
+      const result = await qrService.claimQRForItem(qrKey, selectedItemId);
 
-        if (result.success) {
-          toast({
-            title: "Success",
-            description: "QR code assigned successfully",
-          });
-          navigate(`/items/${selectedItemId}`);
-          onClose();
-        } else {
-          toast({
-            title: "Error", 
-            description: "Failed to assign QR code",
-            variant: "destructive",
-          });
-        }
+      if (result.success) {
+        toast({ title: "Success", description: "QR code assigned successfully" });
+        navigate(`/items/${selectedItemId}`);
+        onClose();
+      } else {
+        toast({ title: "Error", description: "Failed to assign QR code", variant: "destructive" });
+      }
     } catch (error) {
       console.error('Failed to assign QR code:', error);
-      toast({
-        title: "Error",
-        description: "Failed to assign QR code to item",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to assign QR code to item", variant: "destructive" });
     } finally {
       setIsClaiming(false);
     }
@@ -62,33 +51,40 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
     setShowCreateForm(true);
   };
 
-  const handleItemCreated = async (createdItem?: any) => {
-    if (!createdItem) return;
-    
+  const handleItemCreated = async (created?: any) => {
     try {
-      const result = await qrService.claimQRForItem(qrKey, createdItem.id);
-      
-      if (result.success) {
-        toast({
-          title: "Success",
-          description: "New item created and QR code assigned",
-        });
-        navigate(`/items/${createdItem.id}`);
-        onClose();
-      } else {
-        toast({
-          title: "Error",
-          description: "Item created but failed to assign QR code",
-          variant: "destructive",
-        });
+      // If we received a created item with id (fallback), claim it
+      if (created?.id) {
+        const result = await qrService.claimQRForItem(qrKey, created.id);
+        if (result.success) {
+          toast({ title: "Success", description: "New item created and QR code assigned" });
+          navigate(`/items/${created.id}`);
+          onClose();
+          return;
+        }
+        throw new Error('Failed to assign QR code');
       }
-    } catch (error) {
-      console.error('Failed to claim QR code for new item:', error);
-      toast({
-        title: "Error",
-        description: "Item created but failed to assign QR code",
-        variant: "destructive",
+
+      // Otherwise, ItemForm is in collect-only mode and returned item data
+      setIsClaiming(true);
+      const newItemId = await qrService.createItemAndClaimQR(qrKey, {
+        name: created?.name,
+        category: created?.category,
+        notes: created?.notes,
+        photo_url: created?.photo_url,
+        room: created?.room,
+        description: created?.description,
+        icon_id: created?.icon_id,
       });
+
+      toast({ title: "Success", description: "New item created and QR code assigned" });
+      navigate(`/items/${newItemId}`);
+      onClose();
+    } catch (error) {
+      console.error('Failed to create item and assign QR:', error);
+      toast({ title: "Error", description: "Item created but failed to assign QR code", variant: "destructive" });
+    } finally {
+      setIsClaiming(false);
     }
   };
 
@@ -108,6 +104,7 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
           <ItemForm 
             onSuccess={handleItemCreated}
             onCancel={() => setShowCreateForm(false)}
+            mode="collectOnly"
           />
         </DialogContent>
       </Dialog>
