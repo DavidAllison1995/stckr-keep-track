@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -41,7 +42,8 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
       }
     } catch (error) {
       console.error('Failed to assign QR code:', error);
-      toast({ title: "Error", description: "Failed to assign QR code to item", variant: "destructive" });
+      const message = error instanceof Error ? error.message : 'Failed to assign QR code to item';
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setIsClaiming(false);
     }
@@ -52,6 +54,7 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
   };
 
   const handleItemCreated = async (created?: any) => {
+    setIsClaiming(true);
     try {
       // If we received a created item with id (fallback), claim it
       if (created?.id) {
@@ -82,7 +85,8 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
       onClose();
     } catch (error) {
       console.error('Failed to create item and assign QR:', error);
-      toast({ title: "Error", description: "Item created but failed to assign QR code", variant: "destructive" });
+      const message = error instanceof Error ? error.message : 'Item created but failed to assign QR code';
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setIsClaiming(false);
     }
@@ -138,9 +142,10 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
               onClick={handleCreateNewItem}
               className="w-full h-12"
               size="lg"
+              disabled={isClaiming}
             >
               <Plus className="w-5 h-5 mr-2" />
-              Create New Item
+              {isClaiming ? 'Processing...' : 'Create New Item'}
             </Button>
 
             {/* Assign to Existing Item */}
@@ -190,7 +195,7 @@ export const QRClaimFlow = ({ qrKey, isOpen, onClose }: QRClaimFlowProps) => {
             </div>
           </div>
 
-          <Button variant="outline" onClick={handleClose} className="w-full">
+          <Button variant="outline" onClick={handleClose} className="w-full" disabled={isClaiming}>
             Cancel
           </Button>
         </div>

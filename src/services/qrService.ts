@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface QRAssignmentResponse {
@@ -99,10 +100,20 @@ export const qrService = {
     description?: string;
     icon_id?: string;
   }): Promise<string> {
+    const normalizedKey = this.normalizeQRKey(qrKey);
+    console.log('=== CREATE+CLAIM (pre) ===', { normalizedKey, itemData });
+
+    // Pre-flight: check QR exists and claim status
+    const pre = await supabase
+      .from('qr_codes')
+      .select('id, qr_key_canonical, claimed_item_id, claimed_by_user_id, claimed_at')
+      .eq('qr_key_canonical', normalizedKey)
+      .maybeSingle();
+
+    console.log('Pre-flight qr_codes lookup:', pre);
+
     try {
-      const normalizedKey = this.normalizeQRKey(qrKey);
-      
-      console.log('Creating item and claiming QR:', { qrKey: normalizedKey, itemData });
+      console.log('Creating item and claiming QR:', { qrKey: normalizedKey });
       
       const { data: itemId, error } = await supabase.rpc('create_item_and_claim_qr_v2', {
         p_qr_key: normalizedKey,
@@ -117,11 +128,23 @@ export const qrService = {
 
       if (error) {
         console.error('Error creating item and claiming QR:', error);
-        throw new Error(error.message);
+        throw new Error(error.message || 'create_item_and_claim_qr_v2 failed');
       }
 
-      console.log('Successfully created item and claimed QR:', itemId);
-      return itemId as string;
+      console.log('RPC success create_item_and_claim_qr_v2, new item id:', itemId);
+
+      // Post-flight verification
+      const verify = await this.checkQRAssignment(normalizedKey);
+      console.log('=== CREATE+CLAIM (post verify) ===', verify);
+
+      if (!verify.success) {
+        throw new Error(`Post-verify failed: ${verify.error || 'unknown error'}`);
+      }
+      if (!verify.assigned || !verify.item?.id) {
+        throw new Error('Post-verify: QR still appears unassigned after RPC');
+      }
+
+      return (itemId as string) ?? verify.item.id;
     } catch (error) {
       console.error('Error calling create_item_and_claim_qr_v2:', error);
       throw error;
@@ -133,9 +156,18 @@ export const qrService = {
    * Uses the new v2 RPC with single source of truth
    */
   async claimQRForItem(qrKey: string, itemId: string): Promise<QRClaimResponse> {
+    const normalizedKey = this.normalizeQRKey(qrKey);
+    console.log('=== CLAIM (pre) ===', { normalizedKey, itemId });
+
+    // Pre-flight: check QR exists and claim status
+    const pre = await supabase
+      .from('qr_codes')
+      .select('id, qr_key_canonical, claimed_item_id, claimed_by_user_id, claimed_at')
+      .eq('qr_key_canonical', normalizedKey)
+      .maybeSingle();
+    console.log('Pre-flight qr_codes lookup:', pre);
+
     try {
-      const normalizedKey = this.normalizeQRKey(qrKey);
-      
       console.log('Claiming QR key for item:', { qrKey: normalizedKey, itemId });
       
       const { data, error } = await supabase.rpc('claim_qr_for_item_v2', {
@@ -145,7 +177,20 @@ export const qrService = {
 
       if (error) {
         console.error('Error claiming QR for item:', error);
-        throw new Error(error.message);
+        throw new Error(error.message || 'claim_qr_for_item_v2 failed');
+      }
+
+      console.log('RPC success claim_qr_for_item_v2:', data);
+
+      // Post-flight verification
+      const verify = await this.checkQRAssignment(normalizedKey);
+      console.log('=== CLAIM (post verify) ===', verify);
+
+      if (!verify.success) {
+        throw new Error(`Post-verify failed: ${verify.error || 'unknown error'}`);
+      }
+      if (!verify.assigned || verify.item?.id !== itemId) {
+        throw new Error('Post-verify: QR still appears unassigned or assigned to a different item');
       }
 
       return data as unknown as QRClaimResponse;
