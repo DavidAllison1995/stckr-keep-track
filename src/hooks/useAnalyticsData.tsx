@@ -135,17 +135,18 @@ export const useAnalyticsData = () => {
       throw qrError;
     }
 
-    const { data: claims, error: claimsError } = await supabase
-      .from('user_qr_claims')
-      .select('qr_code_id');
+    // Count claimed QR codes from qr_codes table directly  
+    const { count: claimedCount, error: claimedError } = await supabase
+      .from('qr_codes')
+      .select('id', { count: 'exact', head: true })
+      .not('claimed_item_id', 'is', null);
 
-    if (claimsError) {
-      console.error('Error fetching QR claims:', claimsError);
-      throw claimsError;
+    if (claimedError) {
+      console.error('Error fetching claimed QR codes:', claimedError);
+      throw claimedError;
     }
 
-    const uniqueClaimedCodes = new Set(claims?.map(claim => claim.qr_code_id) || []);
-    const claimed = uniqueClaimedCodes.size;
+    const claimed = claimedCount || 0;
     const unclaimed = (totalCodes || 0) - claimed;
 
     const result = { claimed, unclaimed };

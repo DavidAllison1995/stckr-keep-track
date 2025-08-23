@@ -32,7 +32,7 @@ import CameraTestPage from "./pages/CameraTestPage";
 
 // Route components
 import PublicRoutes from "./routes/PublicRoutes";
-import ClaimRoutes from "./routes/ClaimRoutes";
+
 import ShopRoutes from "./routes/ShopRoutes";
 import AdminRoutes from "./routes/AdminRoutes";
 import CalendarRoutes from "./routes/CalendarRoutes";
@@ -129,7 +129,7 @@ function App() {
                      />
                      
                      <Route path="/public/*" element={<PublicRoutes />} />
-                     <Route path="/claim/*" element={<ClaimRoutes />} />
+                     
                     
                     {/* Legacy route for backward compatibility */}
                     <Route 

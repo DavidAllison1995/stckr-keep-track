@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
-import { qrService } from '@/services/qr';
+import { qrService } from '@/services/qrService';
 import { useToast } from '@/hooks/use-toast';
 import { Package, Plus, Link2 } from 'lucide-react';
 
@@ -26,8 +26,8 @@ const QRAssignmentModal = ({ isOpen, onClose, onCreateNewItem, qrCode }: QRAssig
 
     setIsAssigning(true);
     try {
-      // Update the item with the QR code
-      await updateItem(selectedItemId, { qr_code_id: qrCode });
+      // Use the v2 claiming system
+      await qrService.claimQRForItem(qrCode, selectedItemId);
       
       toast({
         title: "Success",
@@ -88,7 +88,6 @@ const QRAssignmentModal = ({ isOpen, onClose, onCreateNewItem, qrCode }: QRAssig
                 </SelectTrigger>
                 <SelectContent>
                   {items
-                    .filter(item => !item.qr_code_id) // Only show items without QR codes
                     .map(item => (
                       <SelectItem key={item.id} value={item.id}>
                         {item.name}

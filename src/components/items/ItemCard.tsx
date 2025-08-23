@@ -21,7 +21,7 @@ import { Item } from '@/hooks/useSupabaseItems';
 import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
-import { qrLinkingService, QRLinkStatus } from '@/services/qrLinking';
+import { qrAssignmentService } from '@/services/qrAssignment';
 import TwemojiIcon from '@/components/icons/TwemojiIcon';
 import NotoEmojiIcon from '@/components/icons/NotoEmojiIcon';
 import { QrCode, Download, Clock, AlertTriangle, CheckCircle2, Trash2, ChevronRight, Check, X, Eye, Edit } from 'lucide-react';
@@ -41,7 +41,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-  const [qrLinkStatus, setQrLinkStatus] = useState<QRLinkStatus>({ isLinked: false });
+  const [qrLinkStatus, setQrLinkStatus] = useState<{ isLinked: boolean; qrCodeId?: string; imageUrl?: string }>({ isLinked: false });
   const [isLoadingQR, setIsLoadingQR] = useState(true);
   
   const { getTasksByItem, tasks } = useSupabaseMaintenance();
@@ -66,8 +66,16 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
     
     setIsLoadingQR(true);
     try {
-      const status = await qrLinkingService.getItemQRLink(item.id, user.id);
-      setQrLinkStatus(status);
+      const assignment = await qrAssignmentService.getItemQRAssignment(item.id, user.id);
+      if (assignment) {
+        setQrLinkStatus({ 
+          isLinked: true, 
+          qrCodeId: assignment.qrCodeId || assignment.qrCode, 
+          imageUrl: assignment.imageUrl 
+        });
+      } else {
+        setQrLinkStatus({ isLinked: false });
+      }
     } catch (error) {
       console.error('Error loading QR link status:', error);
     } finally {

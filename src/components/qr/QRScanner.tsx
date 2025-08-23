@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Camera, Scan, Zap, ShoppingCart } from 'lucide-react';
 import SimpleQRScanner from './SimpleQRScanner';
-import { qrService } from '@/services/qr';
+import { qrService } from '@/services/qrService';
 import { useSupabaseItems } from '@/hooks/useSupabaseItems';
 import { useToast } from '@/hooks/use-toast';
 import QRAssignmentModal from './QRAssignmentModal';
@@ -25,21 +25,23 @@ const QRScanner = () => {
     console.log('QR Code scanned:', code);
     
     try {
-      const status = await qrService.getStatus(code);
-      console.log('QR status:', status);
+      // Normalize QR key and check assignment using v2 system
+      const qrKey = qrService.normalizeQRKey(code);
+      const response = await qrService.checkQRAssignment(qrKey);
+      console.log('QR assignment response:', response);
       
-      if (status.isAssigned && status.itemId) {
+      if (response.assigned && response.item) {
         // Navigate to item details
-        navigate(`/items/${status.itemId}?tab=maintenance`);
+        navigate(`/items/${response.item.id}?tab=maintenance`);
         setShowScanner(false);
         
         toast({
           title: "Item Found",
-          description: `Opened ${status.itemName || 'item'}`,
+          description: `Opened ${response.item.name || 'item'}`,
         });
       } else {
         // Show assignment modal for unassigned QR codes
-        setCurrentQrCode(code);
+        setCurrentQrCode(qrKey);
         setShowScanner(false);
         setShowAssignmentModal(true);
       }

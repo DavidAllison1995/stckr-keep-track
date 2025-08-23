@@ -84,25 +84,12 @@ const QRClaimPage = () => {
     }
   };
 
-  const claimQRCode = async () => {
-    if (!selectedItemId || !user || !code) return;
-
-    setIsClaiming(true);
-    try {
-      // QR claiming is now deprecated
-      // Redirect to the new QR redirect page for proper handling
-      navigate(`/qr/${code}`);
-    } catch (error) {
-      console.error('Error claiming QR code:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to claim QR code',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsClaiming(false);
+  // Immediately redirect to new QR system
+  useEffect(() => {
+    if (code) {
+      navigate(`/qr/${code}`, { replace: true });
     }
-  };
+  }, [code, navigate]);
 
   if (isLoading) {
     return (
@@ -175,63 +162,19 @@ const QRClaimPage = () => {
     );
   }
 
-  // Claim interface
+  // Show redirecting message
   return (
     <div className="flex items-center justify-center min-h-screen">
       <Card className="max-w-md mx-auto">
         <CardHeader>
-          <CardTitle className="text-center">Claim QR Sticker</CardTitle>
+          <CardTitle className="text-center">Redirecting...</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="text-center">
-            <Package className="w-16 h-16 mx-auto text-blue-500 mb-4" />
-            <p className="text-gray-600">
-              Assign this QR sticker to one of your items:
-            </p>
-            <div className="text-sm text-gray-500 mt-2">
-              Code: <span className="font-mono font-semibold">{code}</span>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Select Item:</label>
-            <Select value={selectedItemId} onValueChange={setSelectedItemId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Choose an item..." />
-              </SelectTrigger>
-              <SelectContent>
-                {items.length === 0 ? (
-                  <SelectItem value="no-items" disabled>
-                    No items available
-                  </SelectItem>
-                ) : (
-                  items.map(item => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {item.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Button
-            onClick={claimQRCode}
-            disabled={!selectedItemId || isClaiming || selectedItemId === 'no-items'}
-            className="w-full"
-          >
-            {isClaiming ? 'Claiming...' : 'Claim and Open in App'}
-          </Button>
-
-          <div className="text-center">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/items')}
-              className="text-sm"
-            >
-              Manage Items
-            </Button>
-          </div>
+        <CardContent className="text-center space-y-4">
+          <Package className="w-16 h-16 mx-auto text-blue-500" />
+          <p className="text-gray-600">
+            Redirecting to the updated QR system...
+          </p>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto"></div>
         </CardContent>
       </Card>
     </div>

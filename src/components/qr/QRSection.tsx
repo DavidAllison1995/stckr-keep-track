@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { qrService } from '@/services/qr';
+import { qrService } from '@/services/qrService';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2, QrCode } from 'lucide-react';
 
@@ -28,9 +28,11 @@ const QRSection = ({ itemId, qrCodeId, onUpdate }: QRSectionProps) => {
   const [isUnassigning, setIsUnassigning] = useState(false);
 
   const handleUnassign = async () => {
+    if (!qrCodeId) return;
+    
     setIsUnassigning(true);
     try {
-      await qrService.unassignFromItem(itemId);
+      await qrService.unassignQR(qrCodeId);
       toast({
         title: 'QR Code Unassigned',
         description: 'The QR code has been removed from this item.',

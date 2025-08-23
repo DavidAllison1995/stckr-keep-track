@@ -50,12 +50,12 @@ export const qrGenerator = {
   },
 
   /**
-   * @deprecated - Use qrLinkingService instead
+   * @deprecated - Use qrService instead
    * This method is deprecated and will be removed in a future version
    */
   async updateItemWithQRCode(itemId: string, qrData: QRCodeData): Promise<void> {
-    console.warn('qrGenerator.updateItemWithQRCode is deprecated - use qrLinkingService');
-    throw new Error('This method is deprecated - use qrLinkingService.linkQRToItem instead');
+    console.warn('qrGenerator.updateItemWithQRCode is deprecated - use qrService');
+    throw new Error('This method is deprecated - use qrService.claimQRForItem instead');
   },
 
   /**

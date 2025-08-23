@@ -57,7 +57,7 @@ const AdminDashboardPage = () => {
           .eq('status', 'paid') // Only paid orders
           .not('stripe_session_id', 'is', null), // Must have Stripe session
         supabase.from('qr_codes').select('*', { count: 'exact', head: true }),
-        supabase.from('user_qr_claims').select('*', { count: 'exact', head: true })
+        supabase.from('qr_codes').select('*', { count: 'exact', head: true }).not('claimed_item_id', 'is', null)
       ]);
 
       const newStats = {
