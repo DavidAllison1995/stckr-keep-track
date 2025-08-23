@@ -20,14 +20,21 @@ import { useSupabaseAuth } from '@/hooks/useSupabaseAuth';
 import { QrCode, Trash2, Scan, Plus, Copy, Download } from 'lucide-react';
 import { Item } from '@/types/item';
 import SimpleQRScanner from '@/components/qr/SimpleQRScanner';
-import { qrLinkingService, QRLinkStatus } from '@/services/qrLinking';
-import { globalQrService } from '@/services/globalQr';
-import { supabase } from '@/integrations/supabase/client';
+import { qrAssignmentService } from '@/services/qrAssignment';
+import { qrService } from '@/services/qrService';
 import { createPortal } from 'react-dom';
 
 interface ItemQRTabProps {
   item: Item;
   onQRStatusChange?: () => void;
+}
+
+interface QRLinkStatus {
+  isLinked: boolean;
+  qrCodeId?: string;
+  imageUrl?: string;
+  itemId?: string;
+  itemName?: string;
 }
 
 const ItemQRTab = ({ item, onQRStatusChange }: ItemQRTabProps) => {
@@ -53,8 +60,12 @@ const ItemQRTab = ({ item, onQRStatusChange }: ItemQRTabProps) => {
     
     setIsLoading(true);
     try {
-      const status = await qrLinkingService.getItemQRLink(item.id, user.id);
-      setQrLinkStatus(status);
+      const assignment = await qrAssignmentService.getItemQRAssignment(item.id, user.id);
+      if (assignment) {
+        setQrLinkStatus({ isLinked: true, qrCodeId: assignment.qrCodeId || assignment.qrCode, imageUrl: assignment.imageUrl });
+      } else {
+        setQrLinkStatus({ isLinked: false });
+      }
     } catch (error) {
       console.error('Error loading QR link status:', error);
     } finally {
@@ -67,7 +78,8 @@ const ItemQRTab = ({ item, onQRStatusChange }: ItemQRTabProps) => {
     
     setIsDeleting(true);
     try {
-      await qrLinkingService.unlinkQRFromItem(item.id, user.id);
+      if (!qrLinkStatus.qrCodeId) throw new Error('No QR linked');
+      await qrService.unassignQR(qrLinkStatus.qrCodeId);
       setQrLinkStatus({ isLinked: false });
       toast({
         title: 'QR Code Removed',
@@ -101,22 +113,8 @@ const ItemQRTab = ({ item, onQRStatusChange }: ItemQRTabProps) => {
     
     setIsAssigning(true);
     try {
-      // Use the qr-claim-v2 edge function for the new system
-      const { data, error } = await supabase.functions.invoke('qr-claim-v2', {
-        body: { codeId: code, itemId: item.id }
-      });
-
-      console.log('QR claim response:', { data, error });
-
-      if (error) {
-        console.error('Error from qr-claim function:', error);
-        throw new Error(error.message || 'QR assignment failed');
-      }
-
-      if (!data?.success) {
-        console.error('QR assignment failed:', data?.error || data?.message);
-        throw new Error(data?.error || data?.message || 'QR assignment failed');
-      }
+      // Assign using the canonical RPC flow with post-verify
+      await qrService.claimQRForItem(code, item.id);
 
       console.log('QR code claimed successfully, refreshing status...');
       await loadQRLinkStatus(); // Refresh the status
@@ -150,12 +148,8 @@ const ItemQRTab = ({ item, onQRStatusChange }: ItemQRTabProps) => {
     }
     setIsAssigning(true);
     try {
-      const { data, error } = await supabase.functions.invoke('qr-claim-v2', {
-        body: { codeId: manualCode.trim(), itemId: item.id },
-      });
-      console.log('Manual claim response:', { data, error });
-      if (error) throw new Error(error.message || 'QR assignment failed');
-      if (!data?.success) throw new Error(data?.error || data?.message || 'QR assignment failed');
+      await qrService.claimQRForItem(manualCode.trim(), item.id);
+      console.log('Manual claim success');
       setShowManualDialog(false);
       setManualCode('');
       await loadQRLinkStatus();
