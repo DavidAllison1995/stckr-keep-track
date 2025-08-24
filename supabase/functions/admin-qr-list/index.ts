@@ -37,39 +37,38 @@ serve(async (req) => {
     
     console.log('Service client created')
     
-    // Create anon client for user verification
-    const anonClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: {
-            Authorization: authHeader,
-          },
-        },
-      }
-    )
-    
-    // Verify user with the token
-    const { data: { user }, error: authError } = await anonClient.auth.getUser(token)
-    console.log('User verification result:', { user: !!user, error: authError?.message })
-    
-    if (authError || !user) {
-      console.error('Auth verification failed:', authError)
+    // Decode JWT payload to get user info (gateway verifies JWT)
+    let userId: string | null = null;
+    let userEmail: string | null = null;
+    try {
+      const payloadPart = token.split('.')[1];
+      const payloadJson = JSON.parse(atob(payloadPart.replace(/-/g, '+').replace(/_/g, '/')));
+      userId = payloadJson.sub || null;
+      userEmail = payloadJson.email || null;
+      console.log('JWT decoded. userId:', userId, 'email:', userEmail);
+    } catch (e) {
+      console.error('Failed to decode JWT:', e);
       return new Response(
-        JSON.stringify({ error: 'Unauthorized - Invalid token', details: authError?.message }), 
+        JSON.stringify({ error: 'Unauthorized - Invalid token payload' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      );
     }
 
-    console.log('User authenticated:', user.email, 'ID:', user.id)
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Missing user id in token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
+    console.log('User authenticated:', userEmail, 'ID:', userId)
+    
     // Check if user is admin using service client
-    console.log('Checking admin status for user:', user.id)
+    console.log('Checking admin status for user:', userId)
     const { data: profile, error: profileError } = await serviceClient
       .from('profiles')
       .select('is_admin')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single()
 
     console.log('Profile query result:', { profile, error: profileError })
@@ -90,7 +89,7 @@ serve(async (req) => {
       )
     }
 
-    console.log('Admin access confirmed for user:', user.email)
+    console.log('Admin access confirmed for user:', userEmail)
 
     // Get all QR codes with pack information using service role client to bypass RLS
     console.log('Fetching QR codes from qr_codes table...')

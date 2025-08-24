@@ -30,25 +30,25 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
     
-    // Create anon client for user verification
-    const anonClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: {
-            Authorization: authHeader,
-          },
-        },
-      }
-    )
-    
-    // Verify user with the token
-    const { data: { user }, error: authError } = await anonClient.auth.getUser(token)
-    
-    if (authError || !user) {
+    // Decode JWT payload to get user info (gateway verifies JWT)
+    let userId: string | null = null;
+    let userEmail: string | null = null;
+    try {
+      const payloadPart = token.split('.')[1];
+      const payloadJson = JSON.parse(atob(payloadPart.replace(/-/g, '+').replace(/_/g, '/')));
+      userId = payloadJson.sub || null;
+      userEmail = payloadJson.email || null;
+      console.log('JWT decoded. userId:', userId, 'email:', userEmail);
+    } catch (e) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized - Invalid token', details: authError?.message }), 
+        JSON.stringify({ error: 'Unauthorized - Invalid token payload' }), 
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Missing user id in token' }), 
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -57,7 +57,7 @@ serve(async (req) => {
     const { data: profile, error: profileError } = await serviceClient
       .from('profiles')
       .select('is_admin')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single()
 
     if (profileError) {
@@ -140,7 +140,7 @@ serve(async (req) => {
           name,
           description,
           physical_product_info: physicalProductInfo,
-          created_by: user.id
+          created_by: userId
         })
         .select()
         .single()
