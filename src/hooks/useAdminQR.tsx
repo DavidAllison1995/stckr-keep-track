@@ -8,8 +8,13 @@ interface QRCodeData {
   created_at: string;
   is_active: boolean;
   code?: string;
+  code_printed?: string;
+  qr_key_canonical?: string;
   image_url?: string;
   pack_id?: string;
+  claimed_item_id?: string;
+  claimed_by_user_id?: string;
+  claimed_at?: string;
   pack?: {
     id: string;
     name: string;
@@ -49,7 +54,12 @@ export const useAdminQR = () => {
 
       if (error) throw error;
       
-      setCodes(data?.codes || []);
+      // Map the response data to include the code field for compatibility
+      const mappedCodes = (data?.codes || []).map(code => ({
+        ...code,
+        code: code.code_printed || code.qr_key_canonical || code.code // Ensure backward compatibility
+      }));
+      setCodes(mappedCodes);
     } catch (error) {
       toast({
         title: 'Error',
