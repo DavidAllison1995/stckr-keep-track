@@ -17,25 +17,55 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const authHeader = req.headers.get('Authorization')!
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - No auth header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
     const token = authHeader.replace('Bearer ', '')
     
-    // Verify user is authenticated and is admin
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
-    if (authError || !user) {
+    // Decode JWT payload to get user info (gateway verifies JWT)
+    let userId: string | null = null;
+    let userEmail: string | null = null;
+    try {
+      const payloadPart = token.split('.')[1];
+      const payloadJson = JSON.parse(atob(payloadPart.replace(/-/g, '+').replace(/_/g, '/')));
+      userId = payloadJson.sub || null;
+      userEmail = payloadJson.email || null;
+      console.log('JWT decoded. userId:', userId, 'email:', userEmail);
+    } catch (e) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }), 
+        JSON.stringify({ error: 'Unauthorized - Invalid token payload' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Missing user id in token' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     // Check if user is admin
-    const { data: isAdmin, error: adminError } = await supabaseClient
-      .rpc('is_user_admin', { user_id: user.id })
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', userId)
+      .single()
 
-    if (adminError || !isAdmin) {
+    if (profileError) {
       return new Response(
-        JSON.stringify({ error: 'Forbidden - Admin access required' }), 
+        JSON.stringify({ error: 'Failed to verify admin status' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (!profile?.is_admin) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden - Admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
