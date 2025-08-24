@@ -44,11 +44,11 @@ serve(async (req) => {
     )
     
     // Verify user with the token
-    const { data: { user }, error: authError } = await anonClient.auth.getUser()
+    const { data: { user }, error: authError } = await anonClient.auth.getUser(token)
     
     if (authError || !user) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized - Invalid token' }), 
+        JSON.stringify({ error: 'Unauthorized - Invalid token', details: authError?.message }), 
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }

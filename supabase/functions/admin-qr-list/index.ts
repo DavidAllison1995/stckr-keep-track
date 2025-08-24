@@ -51,7 +51,7 @@ serve(async (req) => {
     )
     
     // Verify user with the token
-    const { data: { user }, error: authError } = await anonClient.auth.getUser()
+    const { data: { user }, error: authError } = await anonClient.auth.getUser(token)
     console.log('User verification result:', { user: !!user, error: authError?.message })
     
     if (authError || !user) {
