@@ -7,10 +7,12 @@ import QRScannerOverlay from '@/components/qr/QRScannerOverlay';
 import { downloadPrintableStickers } from '@/utils/printableStickers';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useSubscription } from '@/hooks/useSubscription';
 
 const ScannerPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { isPremium } = useSubscription();
   const [showScanner, setShowScanner] = useState(false);
   const [scannedCode, setScannedCode] = useState<string | null>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -52,6 +54,16 @@ const ScannerPage = () => {
   };
 
   const handlePrintAtHome = async () => {
+    if (!isPremium) {
+      toast({
+        title: "Premium Feature",
+        description: "Print at Home is a premium feature. Upgrade to access printable stickers.",
+        variant: "destructive",
+      });
+      navigate('/premium');
+      return;
+    }
+
     if (!hasPrintableFile) {
       toast({
         title: "File Unavailable",
@@ -114,7 +126,7 @@ const ScannerPage = () => {
 
       {/* Secondary Action Buttons - Icon Only, Side by Side */}
       <div className="flex justify-center gap-4">
-        {hasPrintableFile ? (
+        {hasPrintableFile && isPremium ? (
           <div className="text-center">
             <Button 
               onClick={handlePrintAtHome}
@@ -130,14 +142,14 @@ const ScannerPage = () => {
         ) : (
           <div className="text-center">
             <Button 
-              disabled
+              onClick={handlePrintAtHome}
               variant="outline"
               size="icon"
-              className="w-12 h-12 border-gray-700 text-gray-500 cursor-not-allowed rounded-lg"
+              className="w-12 h-12 border-gray-700 text-gray-500 hover:bg-gray-600 rounded-lg transition-colors duration-200"
             >
               <Printer className="w-5 h-5" />
             </Button>
-            <p className="text-xs text-red-400 mt-1">Unavailable</p>
+            <p className="text-xs text-orange-400 mt-1">{!isPremium ? 'Premium' : 'Unavailable'}</p>
           </div>
         )}
         
