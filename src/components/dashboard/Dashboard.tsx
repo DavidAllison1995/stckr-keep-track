@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { Package, Calendar, Wrench, QrCode } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns';
 import NotoEmojiIcon from '@/components/icons/NotoEmojiIcon';
+import TaskDetailModal from '@/components/maintenance/TaskDetailModal';
 
 interface DashboardProps {
   onTabChange?: (tab: string) => void;
@@ -18,6 +20,8 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
   const { items } = useSupabaseItems();
   const { tasks, getTasksByStatus } = useSupabaseMaintenance();
   const navigate = useNavigate();
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [showTaskDetail, setShowTaskDetail] = useState(false);
 
   const overdueTasks = getTasksByStatus('overdue');
   const dueSoonTasks = getTasksByStatus('due_soon');
@@ -107,9 +111,25 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
     navigate(`/items/${itemId}`);
   };
 
-  const handleDayClick = () => {
-    // Navigate to maintenance calendar view
-    navigate('/maintenance');
+  const handleDayClick = (dayData: any, event: React.MouseEvent) => {
+    event.stopPropagation();
+    // If there are tasks for this day, show the first task in modal
+    if (dayData.tasks && dayData.tasks.length > 0) {
+      setSelectedTask(dayData.tasks[0]);
+      setShowTaskDetail(true);
+    } else {
+      // Navigate to maintenance calendar view if no tasks
+      navigate('/maintenance');
+    }
+  };
+
+  const handleNavigateToItem = (itemId: string, taskId?: string) => {
+    const params = new URLSearchParams();
+    params.set('tab', 'maintenance');
+    if (taskId) {
+      params.set('highlight', taskId);
+    }
+    navigate(`/items/${itemId}?${params.toString()}`);
   };
 
   // Get user's first name from metadata or email
@@ -257,7 +277,7 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
                   <div 
                     key={dayData.day}
                     className="flex items-center justify-between cursor-pointer hover:bg-gray-800 p-1 rounded transition-colors"
-                    onClick={handleDayClick}
+                    onClick={(e) => handleDayClick(dayData, e)}
                   >
                     <span className="text-sm text-gray-300">{dayData.day.slice(0, 3)}</span>
                     <div className={`w-6 h-6 ${colors.bg} rounded ${colors.text} text-xs flex items-center justify-center`}>
@@ -303,6 +323,14 @@ const Dashboard = ({ onTabChange }: DashboardProps) => {
           </Card>
         </div>
       </div>
+
+      {/* Task Detail Modal */}
+      <TaskDetailModal
+        task={selectedTask}
+        open={showTaskDetail}
+        onOpenChange={setShowTaskDetail}
+        onNavigateToItem={handleNavigateToItem}
+      />
     </div>
   );
 };
