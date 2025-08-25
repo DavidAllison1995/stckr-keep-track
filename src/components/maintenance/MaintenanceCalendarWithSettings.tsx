@@ -7,6 +7,7 @@ import { useSupabaseMaintenance } from '@/hooks/useSupabaseMaintenance';
 import { useUserSettingsContext } from '@/contexts/UserSettingsContext';
 import MaintenanceTaskForm from './MaintenanceTaskForm';
 import TaskEditDialog from './TaskEditDialog';
+import TaskDetailModal from './TaskDetailModal';
 import MaintenanceCalendar from './MaintenanceCalendar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
@@ -20,15 +21,11 @@ const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalend
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showForm, setShowForm] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
-  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showTaskDetail, setShowTaskDetail] = useState(false);
 
   const handleTaskClick = (task: any) => {
-    if (onNavigateToItem && task.item_id) {
-      onNavigateToItem(task.item_id, task.id);
-    } else {
-      setSelectedTask(task);
-      setShowEditDialog(true);
-    }
+    setSelectedTask(task);
+    setShowTaskDetail(true);
   };
 
   const handleDateSelect = (date: Date) => {
@@ -61,7 +58,7 @@ const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalend
 
       <Card className="p-4">
         <MaintenanceCalendar
-          onNavigateToItem={onNavigateToItem}
+          onTaskClick={handleTaskClick}
         />
       </Card>
 
@@ -76,17 +73,12 @@ const MaintenanceCalendarWithSettings = ({ onNavigateToItem }: MaintenanceCalend
         </DialogContent>
       </Dialog>
 
-      {selectedTask && (
-        <TaskEditDialog
-          task={selectedTask}
-          open={showEditDialog}
-          onOpenChange={setShowEditDialog}
-          onSuccess={() => {
-            setShowEditDialog(false);
-            setSelectedTask(null);
-          }}
-        />
-      )}
+      <TaskDetailModal
+        task={selectedTask}
+        open={showTaskDetail}
+        onOpenChange={setShowTaskDetail}
+        onNavigateToItem={onNavigateToItem}
+      />
     </div>
   );
 };

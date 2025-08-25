@@ -12,13 +12,13 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { calculateTaskStatus, getStatusLabel, getStatusColor, getStatusBorderColor, getTaskStatusCounts, TaskStatus } from '@/utils/taskStatus';
 
 interface MaintenanceCalendarProps {
-  onNavigateToItem?: (itemId: string, taskId?: string) => void;
+  onTaskClick?: (task: any) => void;
   onAddTask?: () => void;
 }
 
 type ViewMode = 'month' | 'week' | 'day';
 
-const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalendarProps) => {
+const MaintenanceCalendar = ({ onTaskClick, onAddTask }: MaintenanceCalendarProps) => {
   const { tasks } = useSupabaseMaintenance();
   const { settings } = useUserSettingsContext();
   const navigate = useNavigate();
@@ -123,14 +123,8 @@ const MaintenanceCalendar = ({ onNavigateToItem, onAddTask }: MaintenanceCalenda
   };
 
   const handleTaskClick = (task: MaintenanceTask) => {
-    console.log('Task clicked:', task.id, 'Item ID:', task.item_id);
-    if (onNavigateToItem && task.item_id) {
-      onNavigateToItem(task.item_id, task.id);
-    } else if (task.item_id) {
-      // Navigate to item detail page with tasks tab and highlight the specific task
-      const url = `/items/${task.item_id}?tab=tasks&highlight=${task.id}`;
-      console.log('Navigating to:', url);
-      navigate(url);
+    if (onTaskClick) {
+      onTaskClick(task);
     }
   };
 
