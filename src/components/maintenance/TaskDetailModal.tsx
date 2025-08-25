@@ -55,7 +55,7 @@ const TaskDetailModal = ({ task, open, onOpenChange, onNavigateToItem }: TaskDet
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md mx-4 max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-md mx-4 max-h-[90vh] overflow-y-auto fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
           <DialogHeader className="space-y-3">
             <DialogTitle className="text-lg font-semibold leading-tight">
               {task.title}
