@@ -34,6 +34,10 @@ const ProductDetailModal = ({ product, isOpen, onClose, onAddToCart }: ProductDe
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={`bg-gray-900 border-gray-800 text-white ${isMobile ? 'w-[95vw] max-w-none mx-auto' : 'max-w-2xl'} max-h-[90vh] overflow-auto`}>
+        {/* Hidden accessible title for all viewports */}
+        <DialogHeader className="sr-only">
+          <DialogTitle>{product.name}</DialogTitle>
+        </DialogHeader>
         {/* Mobile Header with Close Button */}
         {isMobile && (
           <div className="flex items-center justify-between p-4 border-b border-gray-800 -m-6 mb-4">
@@ -91,7 +95,7 @@ const ProductDetailModal = ({ product, isOpen, onClose, onAddToCart }: ProductDe
                 {product.name}
               </h3>
               {product.description && (
-                <p className={`text-gray-300 leading-relaxed ${isMobile ? 'text-sm' : 'text-base'}`}>
+                <p className={`text-gray-300 leading-relaxed whitespace-pre-line ${isMobile ? 'text-sm' : 'text-base'}`}>
                   {product.description}
                 </p>
               )}

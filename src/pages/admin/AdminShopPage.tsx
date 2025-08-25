@@ -39,6 +39,7 @@ interface Product {
   id: string;
   name: string;
   description: string | null;
+  short_description: string | null;
   price: number;
   image_url: string | null;
   printful_product_id: string | null;
@@ -88,7 +89,7 @@ const AdminShopPage = () => {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, description, price, image_url, printful_product_id, printful_variant_id, template_url, is_active, created_at, updated_at')
+        .select('id, name, description, short_description, price, image_url, printful_product_id, printful_variant_id, template_url, is_active, created_at, updated_at')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
