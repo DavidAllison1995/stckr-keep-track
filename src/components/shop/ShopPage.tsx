@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ShoppingCart, Plus, Minus, Package, Printer, ArrowLeft } from 'lucide-react';
-import { useShop } from '@/hooks/useShop';
+import { useShop, Product } from '@/hooks/useShop';
 import { useCart } from '@/contexts/CartContext';
 import { downloadPrintableStickers } from '@/utils/printableStickers';
 import { useToast } from '@/hooks/use-toast';
@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSubscriptionLimits } from '@/hooks/useSubscriptionLimits';
 import { UpgradeModal } from '@/components/subscription/UpgradeModal';
 import CartDrawer from './CartDrawer';
+import ProductDetailModal from './ProductDetailModal';
 
 const ShopPage = () => {
   const { products } = useShop();
@@ -22,6 +23,7 @@ const ShopPage = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { usageLimits } = useSubscriptionLimits();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const getQuantity = (productId: string) => quantities[productId] || 1;
 
@@ -30,13 +32,22 @@ const ShopPage = () => {
     setQuantities(prev => ({ ...prev, [productId]: quantity }));
   };
 
-  const handleAddToCart = async (productId: string) => {
-    const quantity = getQuantity(productId);
-    await addToCart(productId, quantity);
+  const handleAddToCart = async (productId: string, quantity?: number) => {
+    const qty = quantity || getQuantity(productId);
+    await addToCart(productId, qty);
     setQuantities(prev => ({ ...prev, [productId]: 1 }));
     
     // Auto-open cart drawer after adding item
     setIsCartOpen(true);
+  };
+
+  const handleProductClick = (product: Product) => {
+    setSelectedProduct(product);
+  };
+
+  const truncateDescription = (description: string, maxLength: number = 100) => {
+    if (description.length <= maxLength) return description;
+    return description.substring(0, maxLength).trim() + '...';
   };
 
   const handlePrintAtHome = async () => {
@@ -135,7 +146,8 @@ const ShopPage = () => {
             {products.map((product) => (
               <Card 
                 key={product.id} 
-                className="group bg-gray-900/50 border-gray-800 hover:border-purple-500/50 hover:bg-gray-900/70 transition-all duration-300 overflow-hidden animate-fade-in"
+                className="group bg-gray-900/50 border-gray-800 hover:border-purple-500/50 hover:bg-gray-900/70 transition-all duration-300 overflow-hidden animate-fade-in cursor-pointer"
+                onClick={() => handleProductClick(product)}
               >
                 {/* Product Image */}
                 <div className="aspect-square bg-gray-800/50 flex items-center justify-center relative overflow-hidden">
@@ -171,8 +183,8 @@ const ShopPage = () => {
                       {product.name}
                     </h3>
                     {product.description && (
-                      <p className="text-xs md:text-sm text-gray-400 line-clamp-2 md:line-clamp-3 leading-relaxed">
-                        {product.description}
+                      <p className="text-xs md:text-sm text-gray-400 line-clamp-2 leading-relaxed">
+                        {truncateDescription(product.description, 80)}
                       </p>
                     )}
                   </div>
@@ -184,42 +196,24 @@ const ShopPage = () => {
                     </span>
                   </div>
                   
-                  {/* Quantity Controls */}
+                  {/* Quick Actions */}
                   <div className="space-y-3">
-                    <div className="flex items-center justify-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => updateQuantity(product.id, getQuantity(product.id) - 1)}
-                        className="h-8 w-8 p-0 rounded-lg border-gray-600 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:border-purple-500"
-                      >
-                        <Minus className="w-3 h-3" />
-                      </Button>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={getQuantity(product.id)}
-                        onChange={(e) => updateQuantity(product.id, parseInt(e.target.value) || 1)}
-                        className="w-16 h-8 text-center text-sm border-gray-600 bg-gray-800 text-white focus:border-purple-500 focus:ring-purple-500/20 rounded-lg font-semibold"
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => updateQuantity(product.id, getQuantity(product.id) + 1)}
-                        className="h-8 w-8 p-0 rounded-lg border-gray-600 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:border-purple-500"
-                      >
-                        <Plus className="w-3 h-3" />
-                      </Button>
-                    </div>
-                    
-                    {/* Add to Cart Button */}
+                    {/* Quick Add Button */}
                     <Button
-                      onClick={() => handleAddToCart(product.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToCart(product.id);
+                      }}
                       className="w-full py-2.5 md:py-3 text-white rounded-lg bg-purple-600 hover:bg-purple-700 transition-all duration-200 font-semibold text-sm md:text-base hover-scale"
                     >
                       <ShoppingCart className="w-4 h-4 mr-2" />
-                      Add to Cart
+                      Quick Add
                     </Button>
+
+                    {/* View Details Text */}
+                    <p className="text-xs text-center text-gray-500">
+                      Tap to view details & customize quantity
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -243,6 +237,12 @@ const ShopPage = () => {
       <UpgradeModal 
         isOpen={showUpgradeModal} 
         onClose={() => setShowUpgradeModal(false)} 
+      />
+      <ProductDetailModal
+        product={selectedProduct}
+        isOpen={!!selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+        onAddToCart={handleAddToCart}
       />
     </div>
   );
