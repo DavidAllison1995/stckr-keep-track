@@ -361,7 +361,7 @@ const AdminShopPage = () => {
                             <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                               {product.image_url ? (
                                 <img 
-                                  src={product.image_url} 
+                                  src={`${product.image_url}?v=${new Date(product.updated_at).getTime()}`} 
                                   alt={product.name}
                                   className="w-full h-full object-cover"
                                 />
