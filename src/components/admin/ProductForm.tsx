@@ -11,11 +11,21 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
+const urlOrPathSchema = z
+  .string()
+  .trim()
+  .refine(
+    (val) => val === '' || /^https?:\/\/.+/i.test(val) || /^\/[A-Za-z0-9._\-\/]+$/.test(val),
+    {
+      message: 'Invalid URL. Use https://… or a site path starting with /',
+    }
+  );
+
 const productSchema = z.object({
   name: z.string().min(1, 'Product name is required'),
   description: z.string().optional(),
   price: z.number().min(0, 'Price must be positive'),
-  image_url: z.string().url().optional().or(z.literal('')),
+  image_url: urlOrPathSchema.optional().or(z.literal('')),
   printful_product_id: z.string().optional(),
   printful_variant_id: z.string().optional(),
   template_url: z.string().url().optional().or(z.literal('')),
@@ -114,7 +124,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               <Input
                 id="image_url"
                 {...form.register('image_url')}
-                placeholder="https://example.com/image.jpg"
+                placeholder="https://example.com/image.jpg or /lovable-uploads/your-file.png"
               />
               {form.formState.errors.image_url && (
                 <p className="text-sm text-red-600">{form.formState.errors.image_url.message}</p>
