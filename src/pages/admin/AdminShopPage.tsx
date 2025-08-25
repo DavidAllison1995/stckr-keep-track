@@ -363,7 +363,8 @@ const AdminShopPage = () => {
                                 <img 
                                   src={`${product.image_url}?v=${new Date(product.updated_at).getTime()}`} 
                                   alt={product.name}
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-contain bg-gray-50"
+                                  loading="lazy"
                                 />
                               ) : (
                                 <Package className="w-6 h-6 text-gray-400" />
