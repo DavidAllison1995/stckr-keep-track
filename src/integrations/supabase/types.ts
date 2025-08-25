@@ -397,6 +397,7 @@ export type Database = {
           price: number
           printful_product_id: string | null
           printful_variant_id: string | null
+          short_description: string | null
           template_url: string | null
           updated_at: string | null
         }
@@ -410,6 +411,7 @@ export type Database = {
           price: number
           printful_product_id?: string | null
           printful_variant_id?: string | null
+          short_description?: string | null
           template_url?: string | null
           updated_at?: string | null
         }
@@ -423,6 +425,7 @@ export type Database = {
           price?: number
           printful_product_id?: string | null
           printful_variant_id?: string | null
+          short_description?: string | null
           template_url?: string | null
           updated_at?: string | null
         }

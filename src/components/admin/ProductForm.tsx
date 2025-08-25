@@ -24,6 +24,7 @@ const urlOrPathSchema = z
 const productSchema = z.object({
   name: z.string().min(1, 'Product name is required'),
   description: z.string().optional(),
+  short_description: z.string().optional(),
   price: z.number().min(0, 'Price must be positive'),
   image_url: urlOrPathSchema.optional().or(z.literal('')),
   printful_product_id: z.string().optional(),
@@ -52,6 +53,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     defaultValues: {
       name: product?.name || '',
       description: product?.description || '',
+      short_description: product?.short_description || '',
       price: product?.price || 0,
       image_url: product?.image_url || '',
       printful_product_id: product?.printful_product_id || '',
@@ -96,13 +98,30 @@ const ProductForm: React.FC<ProductFormProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="short_description">Short Description</Label>
+              <Textarea
+                id="short_description"
+                {...form.register('short_description')}
+                placeholder="Brief description for product cards (recommended: 80 characters or less)"
+                rows={2}
+                maxLength={150}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                This will appear on product cards. Keep it concise and engaging.
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="description">Full Description</Label>
               <Textarea
                 id="description"
                 {...form.register('description')}
-                placeholder="Enter product description"
+                placeholder="Detailed product description for the product detail popup"
                 rows={4}
               />
+              <p className="text-xs text-gray-500 mt-1">
+                This will appear in the product detail popup when users click on a product.
+              </p>
             </div>
 
             <div>

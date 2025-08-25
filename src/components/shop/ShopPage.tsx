@@ -182,11 +182,15 @@ const ShopPage = () => {
                     <h3 className="font-bold text-white text-base md:text-lg mb-1 line-clamp-1">
                       {product.name}
                     </h3>
-                    {product.description && (
+                    {product.short_description ? (
+                      <p className="text-xs md:text-sm text-gray-400 line-clamp-2 leading-relaxed">
+                        {product.short_description}
+                      </p>
+                    ) : product.description ? (
                       <p className="text-xs md:text-sm text-gray-400 line-clamp-2 leading-relaxed">
                         {truncateDescription(product.description, 80)}
                       </p>
-                    )}
+                    ) : null}
                   </div>
 
                   {/* Desktop Price Display */}
