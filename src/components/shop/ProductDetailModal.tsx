@@ -60,9 +60,9 @@ const ProductDetailModal = ({ product, isOpen, onClose, onAddToCart }: ProductDe
           </DialogHeader>
         )}
 
-        <div className={`space-y-6 ${isMobile ? 'pb-4' : ''}`}>
+        <div className={`space-y-4 ${isMobile ? 'pb-4' : ''}`}>
           {/* Product Image */}
-          <div className={`${isMobile ? 'aspect-square' : 'aspect-video'} bg-gray-800/50 rounded-lg flex items-center justify-center relative overflow-hidden`}>
+          <div className={`${isMobile ? 'aspect-square' : 'aspect-[4/3]'} bg-gray-800/50 rounded-lg flex items-center justify-center relative overflow-hidden`}>
             {product.image_url ? (
               <img 
                 src={`${product.image_url}?v=${new Date(product.updated_at || product.created_at).getTime()}`} 
@@ -76,43 +76,28 @@ const ProductDetailModal = ({ product, isOpen, onClose, onAddToCart }: ProductDe
             ) : null}
             
             {/* Fallback Icon */}
-            <div className={`${isMobile ? 'w-24 h-24' : 'w-32 h-32'} bg-purple-600 rounded-xl flex items-center justify-center shadow-lg ${product.image_url ? 'hidden' : ''}`}>
-              <Package className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} text-white`} />
+            <div className={`${isMobile ? 'w-20 h-20' : 'w-24 h-24'} bg-purple-600 rounded-xl flex items-center justify-center shadow-lg ${product.image_url ? 'hidden' : ''}`}>
+              <Package className={`${isMobile ? 'w-10 h-10' : 'w-12 h-12'} text-white`} />
             </div>
 
             {/* Price Badge */}
-            <div className="absolute top-4 right-4 bg-black/80 backdrop-blur-sm px-3 py-2 rounded-lg">
-              <span className={`${isMobile ? 'text-lg' : 'text-xl'} font-bold text-green-400`}>
+            <div className="absolute top-3 right-3 bg-black/80 backdrop-blur-sm px-2 py-1 rounded-lg">
+              <span className={`${isMobile ? 'text-base' : 'text-lg'} font-bold text-green-400`}>
                 £{product.price.toFixed(2)}
               </span>
             </div>
           </div>
 
-          {/* Product Info */}
-          <div className="space-y-4">
-            <div>
-              <h3 className={`font-bold text-white ${isMobile ? 'text-xl' : 'text-2xl'} mb-2`}>
-                {product.name}
-              </h3>
-              {product.description && (
-                <p className={`text-gray-300 leading-relaxed whitespace-pre-line ${isMobile ? 'text-sm' : 'text-base'}`}>
-                  {product.description}
-                </p>
-              )}
+          {/* Product Description */}
+          {product.description && (
+            <div className="bg-gray-800/30 rounded-lg p-3">
+              <p className={`text-gray-300 leading-relaxed whitespace-pre-line ${isMobile ? 'text-sm' : 'text-sm'}`}>
+                {product.description}
+              </p>
             </div>
-
-            {/* Price Display (Desktop) */}
-            {!isMobile && (
-              <div className="flex items-center justify-center py-2">
-                <span className="text-3xl font-bold text-green-400 bg-green-900/20 px-4 py-2 rounded-lg border border-green-700/30">
-                  £{product.price.toFixed(2)}
-                </span>
-              </div>
-            )}
-          </div>
-
+          )}
           {/* Quantity Controls and Add to Cart */}
-          <div className="space-y-4 pt-4 border-t border-gray-800">
+          <div className="space-y-3 pt-3 border-t border-gray-800">
             {/* Quantity Controls */}
             <div className="flex items-center justify-center gap-3">
               <span className={`text-gray-300 font-medium ${isMobile ? 'text-sm' : 'text-base'}`}>
@@ -123,24 +108,24 @@ const ProductDetailModal = ({ product, isOpen, onClose, onAddToCart }: ProductDe
                   variant="outline"
                   size={isMobile ? "sm" : "default"}
                   onClick={() => updateQuantity(quantity - 1)}
-                  className="h-10 w-10 p-0 rounded-lg border-gray-600 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:border-purple-500"
+                  className="h-8 w-8 p-0 rounded-lg border-gray-600 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:border-purple-500"
                 >
-                  <Minus className="w-4 h-4" />
+                  <Minus className="w-3 h-3" />
                 </Button>
                 <Input
                   type="number"
                   min="1"
                   value={quantity}
                   onChange={(e) => updateQuantity(parseInt(e.target.value) || 1)}
-                  className={`${isMobile ? 'w-16 h-10' : 'w-20 h-10'} text-center border-gray-600 bg-gray-800 text-white focus:border-purple-500 focus:ring-purple-500/20 rounded-lg font-semibold`}
+                  className={`${isMobile ? 'w-14 h-8' : 'w-16 h-8'} text-center border-gray-600 bg-gray-800 text-white focus:border-purple-500 focus:ring-purple-500/20 rounded-lg font-semibold text-sm`}
                 />
                 <Button
                   variant="outline"
                   size={isMobile ? "sm" : "default"}
                   onClick={() => updateQuantity(quantity + 1)}
-                  className="h-10 w-10 p-0 rounded-lg border-gray-600 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:border-purple-500"
+                  className="h-8 w-8 p-0 rounded-lg border-gray-600 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:border-purple-500"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-3 h-3" />
                 </Button>
               </div>
             </div>
@@ -148,16 +133,16 @@ const ProductDetailModal = ({ product, isOpen, onClose, onAddToCart }: ProductDe
             {/* Total Price */}
             <div className="text-center">
               <span className={`text-gray-400 ${isMobile ? 'text-sm' : 'text-base'}`}>
-                Total: <span className="text-green-400 font-bold text-lg">£{(product.price * quantity).toFixed(2)}</span>
+                Total: <span className="text-green-400 font-bold">£{(product.price * quantity).toFixed(2)}</span>
               </span>
             </div>
 
             {/* Add to Cart Button */}
             <Button
               onClick={handleAddToCart}
-              className={`w-full ${isMobile ? 'py-3 text-base' : 'py-4 text-lg'} text-white rounded-lg bg-purple-600 hover:bg-purple-700 transition-all duration-200 font-semibold hover-scale`}
+              className={`w-full ${isMobile ? 'py-2 text-sm' : 'py-3 text-base'} text-white rounded-lg bg-purple-600 hover:bg-purple-700 transition-all duration-200 font-semibold`}
             >
-              <ShoppingCart className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} mr-2`} />
+              <ShoppingCart className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} mr-2`} />
               Add {quantity} to Cart
             </Button>
           </div>
